@@ -3,7 +3,7 @@ if (!isConnect('admin')) {
 	throw new Exception('{{401 - Accès non autorisé}}');
 }
 // Déclaration des variables obligatoires
-$plugin = plugin::byId('template');
+$plugin = plugin::byId('reolink');
 sendVarToJS('eqType', $plugin->getId());
 $eqLogics = eqLogic::byType($plugin->getId());
 ?>
@@ -25,10 +25,10 @@ $eqLogics = eqLogic::byType($plugin->getId());
 				<span>{{Configuration}}</span>
 			</div>
 		</div>
-		<legend><i class="fas fa-table"></i> {{Mes templates}}</legend>
+		<legend><i class="fas fa-table"></i> {{Mes caméras}}</legend>
 		<?php
 		if (count($eqLogics) == 0) {
-			echo '<br/><div class="text-center" style="font-size:1.2em;font-weight:bold;">{{Aucun équipement Template n\'est paramétré, cliquer sur "Ajouter" pour commencer}}</div>';
+			echo '<br/><div class="text-center" style="font-size:1.2em;font-weight:bold;">{{Aucune caméra Reolink n\'est paramétré, cliquer sur "Ajouter" pour commencer}}</div>';
 		} else {
 			// Champ de recherche
 			echo '<div class="input-group" style="margin:5px;">';
@@ -70,6 +70,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 		<ul class="nav nav-tabs" role="tablist">
 			<li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fas fa-arrow-circle-left"></i></a></li>
 			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i> {{Equipement}}</a></li>
+		<!--	<li role="presentation"><a href="#ability" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-info-circle"></i> {{Informations}}</a></li>-->
 			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i> {{Commandes}}</a></li>
 		</ul>
 		<div class="tab-content">
@@ -122,14 +123,29 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked/>{{Visible}}</label>
 								</div>
 							</div>
-
-							<legend><i class="fas fa-cogs"></i> {{Paramètres spécifiques}}</legend>
+							<legend><i class="fas fa-cogs"></i> {{Paramètres d'accès à la caméra}}</legend>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">{{Nom du paramètre n°1}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le paramètre n°1 de l'équipement}}"></i></sup>
+								<label class="col-sm-3 control-label">{{Adresse IP}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez l'adresse IP de la caméra}}"></i></sup>
 								</label>
 								<div class="col-sm-7">
-									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="param1" placeholder="{{Paramètre n°1}}"/>
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="adresseip"/>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{Port}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port de la caméra}}"></i></sup>
+								</label>
+								<div class="col-sm-7">
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" placeholder="{{80}}"/>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{Login}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le login de la caméras}}"></i></sup>
+								</label>
+								<div class="col-sm-7">
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="login"/>
 								</div>
 							</div>
 							<div class="form-group">
@@ -140,21 +156,19 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<input type="text" class="eqLogicAttr form-control inputPassword" data-l1key="configuration" data-l2key="password"/>
 								</div>
 							</div>
-							<!-- Champ de saisie du cron d'auto-actualisation + assistant cron -->
-							<!-- La fonction cron de la classe du plugin doit contenir le code prévu pour que ce champ soit fonctionnel -->
-							<div class="form-group">
-								<label class="col-sm-3 control-label">{{Auto-actualisation}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Fréquence de rafraîchissement de l'équipement}}"></i></sup>
-								</label>
-								<div class="col-sm-7">
-									<div class="input-group">
-										<input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="autorefresh" placeholder="{{Cliquer sur ? pour afficher l'assistant cron}}"/>
-										<span class="input-group-btn">
-											<a class="btn btn-default cursor jeeHelper roundedRight" data-helper="cron" title="Assistant cron">
-												<i class="fas fa-question-circle"></i>
-											</a>
-										</span>
+							<div class="form-group expertModeVisible">
+								<label class="col-sm-3 control-label">{{Auto-actualisation (cron)}}</label>
+									<div class="col-sm-3">
+										<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="autorefresh" placeholder="*/15 * * * *"/>
 									</div>
+									<div class="col-sm-1">
+										<i class="fas fa-question-circle cursor floatright" id="bt_cronGenerator"></i>
+									</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{}}</label>
+								<div class="col-sm-3">
+									<a class="btn btn-default" id="btCheckConnexion"><i class='fa fa-refresh'></i> {{Tester la connexion}}</a>
 								</div>
 							</div>
 						</div>
@@ -165,14 +179,95 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							<legend><i class="fas fa-info"></i> {{Informations}}</legend>
 							<div class="form-group">
 								<div class="text-center">
-									<img name="icon_visu" src="<?= $plugin->getPathImgIcon(); ?>" style="max-width:160px;"/>
+									<img name="icon_visu" src="<?php echo $plugin->getPathImgIcon(); ?>" style="max-width:160px;"/>
 								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label"> {{Nom de la caméra}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="name"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{Modèle}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="model"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label"> {{UID}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="serial"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label"> {{Build No}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="buildDay"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{Version hardware}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="hardVer"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label"> {{Version config}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="cfgVer"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label"> {{Version firmware}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="firmVer"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{Détail}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="detail"></span>
+								</div>
+							</div>
+							<hr>
+							<div class="container-fluid">
+									<div class="form-group">
+											<a class="btn btn-block btn-default eqLogicAction" id="btGetCamNFO"><i class="fas fa-download"></i> {{Récupérer les informations}}</a>
+									</div>
+									<br>
 							</div>
 						</div>
 					</fieldset>
 				</form>
 				<hr>
 			</div><!-- /.tabpanel #eqlogictab-->
+			<div role="tabpanel" class="tab-pane" id="ability">
+				<div class="col-lg-7" style="padding:10px 35px">
+						<legend>
+								<span>{{Capacité Hardware/Software de la caméra}}</span>
+						</legend>
+						<br />
+						<div class="container" style="width: 90%;">
+								<div class="form-group">
+										<!-- table  -->
+										<table class="table table-bordered table-condensed" style="text-align:center">
+												<tbody>
+														<tr>
+														</tr>
+												</tbody>
+										</table>
+								</div>
+						</div>
+				</div>
+
+
+				<div class="col-lg-5" style="padding:15px 35px">
+						<legend>
+								<span style="text-align:left">{{Action}}</span>
+						</legend>
+				</div>
+			</div>
 
 			<!-- Onglet des commandes de l'équipement -->
 			<div role="tabpanel" class="tab-pane" id="commandtab">
@@ -200,7 +295,53 @@ $eqLogics = eqLogic::byType($plugin->getId());
 	</div><!-- /.eqLogic -->
 </div><!-- /.row row-overflow -->
 
+<script>
+$('#btCheckConnexion').on('click', function () {
+		$.ajax({// fonction permettant de faire de l'ajax
+				type: "POST", // methode de transmission des données au fichier php
+				url: "plugins/reolink/core/ajax/reolink.ajax.php", // url du fichier php
+				data: {
+					action: "CheckConnexion",
+					id : $('.eqLogicAttr[data-l1key=id]').value()
+				},
+				dataType: 'json',
+				error: function (request, status, error) {
+					handleAjaxError(request, status, error);
+				},
+				success: function (data) { // si l'appel a bien fonctionné
+				if (data.state != 'ok') {
+					$('#div_alert').showAlert({message: data.result, level: 'danger'});
+					return;
+				}
+				$('#div_alert').showAlert({message: '{{Connexion à la caméra réussie}}', level: 'success'});
+			}
+		});
+});
+
+$('#btGetCamNFO').on('click', function () {
+		$.ajax({// fonction permettant de faire de l'ajax
+				type: "POST", // methode de transmission des données au fichier php
+				url: "plugins/reolink/core/ajax/reolink.ajax.php", // url du fichier php
+				data: {
+					action: "CheckDeviceInfo",
+					id : $('.eqLogicAttr[data-l1key=id]').value()
+				},
+				dataType: 'json',
+				error: function (request, status, error) {
+					handleAjaxError(request, status, error);
+				},
+				success: function (data) { // si l'appel a bien fonctionné
+				if (data.state != 'ok') {
+					$('#div_alert').showAlert({message: data.result, level: 'danger'});
+					return;
+				}
+				$('#div_alert').showAlert({message: '{{Information récupérer avec succès}}', level: 'success'});
+				window.location.reload();
+			}
+		});
+});
+</script>
 <!-- Inclusion du fichier javascript du plugin (dossier, nom_du_fichier, extension_du_fichier, id_du_plugin) -->
-<?php include_file('desktop', 'template', 'js', 'template');?>
+<?php include_file('desktop', 'reolink', 'js', 'reolink');?>
 <!-- Inclusion du fichier javascript du core - NE PAS MODIFIER NI SUPPRIMER -->
 <?php include_file('core', 'plugin.template', 'js');?>
