@@ -253,7 +253,55 @@ class reolink extends eqLogic {
  // Fonction exécutée automatiquement après la sauvegarde (création ou mise à jour) de l'équipement
     public function postSave() {
       //reolink::GetCamNFO($this->getId());
-
+      $order = 0;
+      //=======================================
+      // Refresh
+      //=======================================
+      $cmd = $this->getCmd(null, 'refresh');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('refresh');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Rafraichir', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('other');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // System REBOOT
+      //=======================================
+      $cmd = $this->getCmd(null, 'Reboot');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('Reboot');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Redémarrer', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('other');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Push Notification (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetPushState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetPushState');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Notification push (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('binary');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
       //=======================================
       // On/Off Push Notification
       //=======================================
@@ -267,10 +315,30 @@ class reolink extends eqLogic {
       $cmd->setType('action');
       $cmd->setSubType('select');
       $cmd->setConfiguration('listValue', '1|Activer;0|Désactiver');
+      $linkcmd = $this->getCmd(null, 'SetPushState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
+      $order++;
       //=======================================
-      // On/Off SDCARD Record
+      // SDCARD Record (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetRecordState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetRecordState');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Enregistrement SDCARD (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('binary');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set On/Off SDCARD Record
       //=======================================
       $cmd = $this->getCmd(null, 'SetRecord');
       if (!is_object($cmd)) {
@@ -282,10 +350,30 @@ class reolink extends eqLogic {
       $cmd->setType('action');
       $cmd->setSubType('select');
       $cmd->setConfiguration('listValue', '1|Activer;0|Désactiver');
+      $linkcmd = $this->getCmd(null, 'SetRecordState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
+      $order++;
       //=======================================
-      // On/Off Mail
+      // Send Mail (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetEmailState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetEmailState');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Envoi email (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('binary');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set On/Off Send Mail
       //=======================================
       $cmd = $this->getCmd(null, 'SetEmail');
       if (!is_object($cmd)) {
@@ -297,10 +385,30 @@ class reolink extends eqLogic {
       $cmd->setType('action');
       $cmd->setSubType('select');
       $cmd->setConfiguration('listValue', '1|Activer;0|Désactiver');
+      $linkcmd = $this->getCmd(null, 'SetEmailState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
+      $order++;
       //=======================================
-      // On/Off FTP
+      // Send FTP (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetFTPState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetFTPState');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Envoi FTP (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('binary');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set On/Off Send FTP
       //=======================================
       $cmd = $this->getCmd(null, 'SetFTP');
       if (!is_object($cmd)) {
@@ -312,10 +420,30 @@ class reolink extends eqLogic {
       $cmd->setType('action');
       $cmd->setSubType('select');
       $cmd->setConfiguration('listValue', '1|Activer;0|Désactiver');
+      $linkcmd = $this->getCmd(null, 'SetFTPState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
+      $order++;
       //=======================================
-      // IR Light On/Off/Auto
+      // IR Light (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetIrLightsState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetIrLightsState');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Led infra rouge (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('string');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set IR Light On/Off/Auto
       //=======================================
       $cmd = $this->getCmd(null, 'SetIrLights');
       if (!is_object($cmd)) {
@@ -327,10 +455,30 @@ class reolink extends eqLogic {
       $cmd->setType('action');
       $cmd->setSubType('select');
       $cmd->setConfiguration('listValue', 'Auto|Auto;Off|Désactivé;On|Toujours activé');
+      $linkcmd = $this->getCmd(null, 'SetIrLightsState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
+      $order++;
       //=======================================
-      // On/Off Sound Alarm
+      // Sound Alarm (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetAudioAlarmState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetAudioAlarmState');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Alarme Audio (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('binary');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set On/Off Sound Alarm
       //=======================================
       $cmd = $this->getCmd(null, 'SetAudioAlarm');
       if (!is_object($cmd)) {
@@ -342,10 +490,30 @@ class reolink extends eqLogic {
       $cmd->setType('action');
       $cmd->setSubType('select');
       $cmd->setConfiguration('listValue', '1|Activer;0|Désactiver');
+      $linkcmd = $this->getCmd(null, 'SetAudioAlarmState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
+      $order++;
       //=======================================
-      // Power LED On/Off
+      // Power LED (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetPowerLedState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetPowerLedState');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Power LED (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('binary');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set Power LED On/Off
       //=======================================
       $cmd = $this->getCmd(null, 'SetPowerLed');
       if (!is_object($cmd)) {
@@ -357,8 +525,12 @@ class reolink extends eqLogic {
       $cmd->setType('action');
       $cmd->setSubType('select');
       $cmd->setConfiguration('listValue', 'On|Activer;Off|Désactiver');
+      $linkcmd = $this->getCmd(null, 'SetPowerLedState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
+      $order++;
       //=======================================
       // Get PTZ Preset
       //=======================================
@@ -371,8 +543,10 @@ class reolink extends eqLogic {
       }
       $cmd->setType('action');
       $cmd->setSubType('other');
+      $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
+      $order++;
       //=======================================
       // Set PTZ Control (by preset)
       //=======================================
@@ -385,8 +559,10 @@ class reolink extends eqLogic {
       }
       $cmd->setType('action');
       $cmd->setSubType('select');
+      $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
+      $order++;
       //=======================================
       // Set PTZ ZOOM
       //=======================================
@@ -402,8 +578,10 @@ class reolink extends eqLogic {
       $cmd->setConfiguration('option', 'slider');
       $cmd->setConfiguration('minValue', 0);
       $cmd->setConfiguration('maxValue', 249);
+      $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
+      $order++;
     }
 
  // Fonction exécutée automatiquement avant la suppression de l'équipement
