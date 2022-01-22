@@ -387,6 +387,23 @@ class reolink extends eqLogic {
       $cmd->setSubType('select');
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
+      //=======================================
+      // Set PTZ ZOOM
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetZoom');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetZoom');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Zoom', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('slider');
+      $cmd->setConfiguration('option', 'slider');
+      $cmd->setConfiguration('minValue', 0);
+      $cmd->setConfiguration('maxValue', 249);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
     }
 
  // Fonction exécutée automatiquement avant la suppression de l'équipement
@@ -510,6 +527,14 @@ class reolinkCmd extends cmd {
                              "speed" => 32
                             );
               $data = $cam->SendCMD('PtzCtrl', $param);
+              break;
+          case 'SetZoom':
+              $param = array("ZoomFocus" =>
+                            array("channel" => 0,
+                                   "pos" => intval($_options['slider']),
+                                   "op" => "ZoomPos")
+                            );
+              $data = $cam->SendCMD('StartZoomFocus', $param);
               break;
           case 'SetIrLights':
               $param = array("channel" => 0,
