@@ -5,6 +5,7 @@ class reolinkAPI {
     private $port;
     private $token;
     private $tokenexp;
+    private $tagtoken;
     private $user;
     private $password;
 
@@ -142,17 +143,23 @@ class reolinkAPI {
 
 
     public function __construct(array $cnxinfo) {
+        $this->$is_loggedin = false;
         $this->ip = trim($cnxinfo['adresseIP']);
         $this->port = trim($cnxinfo['port']);
+        $this->user = trim($cnxinfo['username']);
+        $this->password = trim($cnxinfo['password']);
+        $this->tagtoken = str_replace(".", "", $this->ip);
 
-        if ($cnxinfo['token'] == NULL) {
-          $this->$is_loggedin = false;
-          $this->token = NULL;
-          $this->user = trim($cnxinfo['username']);
-          $this->password = trim($cnxinfo['password']);
+        // Try to get Token from Config
+        $this->token = config::byKey("token".$this->tagtoken, 'reolink');
+        $this->tokenexp = config::byKey("tokenEXP".$this->tagtoken, 'reolink');
+
+        if ($this->reolinkTokenValidity() == false)
+        {
+            // TOKEN NOK (get new one)
+            $this->login();
         } else {
-          $this->$is_loggedin = true;
-          $this->token = trim($cnxinfo['token']);
+            $this->$is_loggedin = true;
         }
     }
 
@@ -165,7 +172,7 @@ class reolinkAPI {
 
     private function request($cmd, $payload) {
         $ch = curl_init();
-        $url = "http://$this->ip/cgi-bin/api.cgi?cmd=$cmd";
+        $url = "http://$this->ip:$this->port/cgi-bin/api.cgi?cmd=$cmd";
         log::add('reolink', 'debug', 'Request URL => ' . $url );
         curl_setopt($ch, CURLOPT_URL, $url );
         curl_setopt($ch, CURLOPT_POST, 1);
@@ -181,11 +188,33 @@ class reolinkAPI {
         return $response;
     }
 
+    private function reolinkTokenValidity() {
+      $date_utc = new DateTime("now", new DateTimeZone("UTC"));
+      $tsnow = $date_utc->getTimestamp();
+
+      log::add('reolink', 'debug', 'Vérification à '.$tsnow.' du TOKEN : '. $this->token . ' Valable jusqu\'a : '. $this->tokenexp. '/'.($this->tokenexp -15));
+
+      if ($this->token == NULL)
+      {
+        log::add('reolink', 'warning', 'Aucun API Token > log nécéssaire');
+        return false;
+      }
+
+      if (($tsnow > ($this->tokenexp) -15))
+      {
+        log::add('reolink', 'warning', 'API Token non valable > renouvellement requis.');
+        return false;
+      } else {
+        log::add('reolink', 'debug', 'API Token OK');
+        return true;
+      }
+    }
+
     /**
      * Login to the camera.
      * @return boolean a boolean indicating if the login was successful
      */
-    public function login() {
+    private function login() {
         log::add('reolink', 'debug', 'Camera login...');
 
         if ($this->is_loggedin) {
@@ -200,14 +229,22 @@ class reolinkAPI {
         // query camera with parameters and return true if successful else false
         $response = $this->SendCMD('Login', $loginParameters);
 
-        log::add('reolink', 'debug', 'Retour SENDCMD = ' . print_r($response, true));
-
-        if (is_array($response)) {
-            $this->token = $response['name'];
-            return $response;
+        log::add('reolink', 'debug', 'Enregistrement du TOKEN = ' . print_r($response, true));
+        if (isset($response['leaseTime']) && isset($response['name']))
+        {
+          // Login OK
+            $token = $response['name'];
+            $date_utc = new DateTime("now", new DateTimeZone("UTC"));
+            $tokenexp = intval($response['leaseTime']) + ($date_utc->getTimestamp());
         } else {
-            return false;
+          // Login FAILED
+          $token = NULL;
+          $tokenexp = NULL;
+          $this->$is_loggedin = false;
         }
+        config::save("token".$this->tagtoken, $token, 'reolink');
+        config::save("tokenEXP".$this->tagtoken, $tokenexp, 'reolink');
+        return true;
     }
 
     /**
@@ -260,37 +297,6 @@ class reolinkAPI {
         return $this->checkResponse($response, $APIRequest);
     }
 
-    public function ReadFile($file) {
-      $filetoread = realpath(dirname(__FILE__) . '/../resources/data').'/'.$file;
-
-      log::add('reolink', 'debug', 'Lecture du fichier : '.$filetoread);
-        // Save Folder/Files structures to file
-        try {
-          $filecontent = file_get_contents($filetoread);
-          return $filecontent;
-        } catch (Exception $e) {
-            log::add('reolink', 'debug', 'Erreur : '.$e->getMessage());
-        }
-    }
-
-    public function SaveFile($file, $content) {
-      $filetosave = realpath(dirname(__FILE__) . '/../resources/data').'/'.$file;
-
-      //log::add('reolink', 'debug', 'Chemin de la sauvegarde : '.$filetosave);
-      //log::add('reolink', 'debug', 'Content to save : '.print_r($content, true));
-        // Save Folder/Files structures to file
-        try {
-            if (file_put_contents($filetosave, $content)) {
-              log::add('reolink', 'debug', 'Ecriture du fichier OK '.$filetosave);
-            } else {
-              log::add('reolink', 'debug', 'Ecriture du fichier NOK '.$filetosave);
-            }
-            chmod($filetosave, 0770);
-        } catch (Exception $e) {
-            log::add('reolink', 'debug', 'Erreur : '.$e->getMessage());
-        }
-    }
-
     /*
     Check Response validity
     */
@@ -317,13 +323,14 @@ class reolinkAPI {
         switch ($command) {
             case reolinkAPI::CAM_LOGIN:
                 return $data[0]['value']['Token'];
-            // Caméra Informations
+            // Informations
             case reolinkAPI::CAM_GET_DEVINFO:
                 return $data[0]['value']['DevInfo'];
             case reolinkAPI::CAM_GET_DEVNAME:
                 return $data[0]['value']['DevName'];
             case reolinkAPI::CAM_GET_ABILITY:
                 return $data[0]['value']['Ability'];
+            // Notifications
             case reolinkAPI::CAM_GET_PUSH:
                 return $data[0]['value']['Push'];
             case reolinkAPI::CAM_GET_FTP:
@@ -336,12 +343,12 @@ class reolinkAPI {
                 return $data[0]['value']['Rec'];
             case reolinkAPI::CAM_GET_AUDIOALARM:
                 return $data[0]['value']['Audio'];
-            // Camera PTZ
+            // PTZ
             case reolinkAPI::CAM_GET_PTZPRESET:
                 return $data[0]['value']['PtzPreset'];
             case reolinkAPI::CAM_GET_AUTOFOCUS:
                 return $data[0]['value']['AutoFocus'];
-            // Caméra Lights
+            // Lights
             case reolinkAPI::CAM_GET_IRLIGHTS:
                 return $data[0]['value']['IrLights'];
             case reolinkAPI::CAM_GET_POWERLED:

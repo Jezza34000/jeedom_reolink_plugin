@@ -134,7 +134,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Port}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port de la caméra}}"></i></sup>
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port de la caméra. Si vous n'avez pas modifier ce paramètre dans votre caméra laisser vide.}}"></i></sup>
 								</label>
 								<div class="col-sm-7">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" placeholder="{{80}}"/>
@@ -142,7 +142,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Login}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le login de la caméras}}"></i></sup>
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le login de la caméras, celui utiliser pour accéder à l'interface web}}"></i></sup>
 								</label>
 								<div class="col-sm-7">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="login"/>
@@ -192,6 +192,12 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<label class="col-sm-3 control-label">{{Modèle}}</label>
 								<div class="col-sm-7">
 									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="model"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{Channel}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="channelNum"></span>
 								</div>
 							</div>
 							<div class="form-group">

@@ -25,49 +25,21 @@ class reolink extends eqLogic {
     /************* Static methods ************/
     public static function getReolinkConnection($id) {
       $camera = reolink::byId($id, 'reolink');
-      $reolink = NULL;
-
       $adresseIP = $camera->getConfiguration('adresseip');
       $port = $camera->getConfiguration('port');
-      $token = $camera->getConfiguration('token');
-      $tokenexp = $camera->getConfiguration('tokenexp');
       $username = $camera->getConfiguration('login');
       $password = $camera->getConfiguration('password');
 
-      if (reolink::reolinkTokenValidity($token, $tokenexp) == false) {
+      if (!empty($adresseIP) && !empty($username) && !empty($password))
+      {
         $cnxinfo = array("adresseIP" => $adresseIP, "port" => $port, "username" => $username, "password" => $password);
-        $reolink = new reolinkAPI($cnxinfo);
-        // TOKEN NOK (get new one)
-        if (!empty($adresseIP) && !empty($username) && !empty($password)){
-          $LogCredential = $reolink->login();
-          $date_utc = new DateTime("now", new DateTimeZone("UTC"));
-          $tokenexp = intval($LogCredential['leaseTime']) + ($date_utc->getTimestamp());
-          $camera->SetConfiguration('token', $LogCredential['name']);
-          $camera->SetConfiguration('tokenexp', $tokenexp);
-          $camera->Save();
-        } else {
-          log::add('reolink', 'warning', "Information de connexion manquantes : connexion à la caméra impossible");
-          return false;
-        }
+        $camcnx = new reolinkAPI($cnxinfo);
+        return $camcnx;
       } else {
-        $cnxinfo = array("adresseIP" => $adresseIP, "port" => $port, "token" => $token);
-        $reolink = new reolinkAPI($cnxinfo);
-      }
-  		return $reolink;
-  	}
-
-    public static function reolinkTokenValidity($token, $tsexpiration) {
-      $date_utc = new DateTime("now", new DateTimeZone("UTC"));
-      $tsnow = $date_utc->getTimestamp();
-
-      if (($tsexpiration -15) < $tsnow || $token == NULL) {
-        log::add('reolink', 'warning', 'API Token expiré renouvellement requis.');
+        log::add('reolink', 'warning', "Information de connexion manquantes : connexion à la caméra impossible");
         return false;
-      } else {
-        log::add('reolink', 'debug', 'API Token OK');
-        return true;
       }
-    }
+  	}
 
     public function TryConnect($id) {
       $reolinkConn = reolink::getReolinkConnection($id);
