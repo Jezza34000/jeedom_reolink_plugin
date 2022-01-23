@@ -622,6 +622,59 @@ class reolink extends eqLogic {
       $cmd->save();
       $order++;
       //=======================================
+      // PTZ Control
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetPTZmoove');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetPTZmoove');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Mouvement PTZ', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('select');
+      $cmd->setConfiguration('listValue', 'Auto|Auto;Stop|Stop;Left|Gauche;Right|Droite;Up|Haut;Down|Bas;LeftUp|Haut-Gauche;LeftDown|Bas-Gauche;RightUp|Haut-Droit;RightDown|Bas-Droite');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set PTZ ZOOM
+      //=======================================
+      $cmd = $this->getCmd(null, 'PtzSpeed');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('PtzSpeed');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Vitesse PTZ', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('slider');
+      $cmd->setConfiguration('option', 'slider');
+      $cmd->setConfiguration('minValue', 1);
+      $cmd->setConfiguration('maxValue', 64);
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // PTZ Patrol
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetPTZpatrol');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetPTZpatrol');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('PTZ Patrol', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('select');
+      $cmd->setConfiguration('listValue', 'StartPatrol|Démarrer;StopPatrol|Arrêter');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
       // AutoFocus (etat)
       //=======================================
       $cmd = $this->getCmd(null, 'SetAutoFocusState');
@@ -783,6 +836,20 @@ class reolinkCmd extends cmd {
                                    "op" => "ZoomPos")
                             );
               $data = $cam->SendCMD(reolinkAPI::CAM_STARTZOOMFOCUS, $param);
+              break;
+          case 'SetPTZmoove':
+              $param = array("channel" => 0,
+                             "op" => $_options['select'],
+                             "speed" => 32
+                            );
+              $data = $cam->SendCMD(reolinkAPI::CAM_PTZCTRL, $param);
+              break;
+          case 'SetPTZpatrol':
+              $param = array("channel" => 0,
+                             "op" => $_options['select'],
+                             "speed" => 32
+                            );
+              $data = $cam->SendCMD(reolinkAPI::CAM_PTZCTRL, $param);
               break;
           case 'SetFocus':
               $param = array("ZoomFocus" =>

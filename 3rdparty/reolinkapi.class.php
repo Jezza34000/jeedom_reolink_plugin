@@ -145,7 +145,7 @@ class reolinkAPI {
     public function __construct(array $cnxinfo) {
         $this->$is_loggedin = false;
         $this->ip = trim($cnxinfo['adresseIP']);
-        $this->port = trim($cnxinfo['port']);
+        ($cnxinfo['port'] == NULL ) ? $this->port = 80 : $this->port = trim($cnxinfo['port']);
         $this->user = trim($cnxinfo['username']);
         $this->password = trim($cnxinfo['password']);
         $this->tagtoken = str_replace(".", "", $this->ip);
@@ -186,7 +186,8 @@ class reolinkAPI {
         $response = curl_exec($ch);
         curl_close($ch);
         // Debug REMOVE PWD
-        $payload = str_replace('password":"*"}}}', 'password":(hidden)}}}', $payload);
+        $payload = preg_replace('/password":"(.*?)"}}}/', 'password":"******"}}}', $payload);
+
         log::add('reolink', 'debug', 'Payload => '.print_r($payload, true));
         log::add('reolink', 'debug', 'Réponse caméra >> ' . print_r($response, true));
         return $response;
@@ -247,6 +248,7 @@ class reolinkAPI {
           $this->$is_loggedin = false;
           log::add('reolink', 'error', 'Echec > Login impossible');
         }
+        $this->$token = $token;
         config::save("token".$this->tagtoken, $token, 'reolink');
         config::save("tokenEXP".$this->tagtoken, $tokenexp, 'reolink');
         return true;
