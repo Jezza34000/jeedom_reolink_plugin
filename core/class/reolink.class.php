@@ -21,6 +21,7 @@ require_once __DIR__  . '/../../../../core/php/core.inc.php';
 require_once dirname(__FILE__).'/../../3rdparty/reolinkapi.class.php';
 
 class reolink extends eqLogic {
+
     /************* Static methods ************/
     public static function getReolinkConnection($id) {
       $camera = reolink::byId($id, 'reolink');
@@ -134,9 +135,40 @@ class reolink extends eqLogic {
         $cmd->setConfiguration('listValue', $ptzlist);
         $cmd->save();
       }
-
     }
 
+    public static function refreshNFO($camcnx, $id) {
+      $camcmd = reolink::byId($id, 'reolink');
+
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_PUSH, array());
+      $camcmd->checkAndUpdateCmd('SetPushState', $res['schedule']['enable']);
+
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_FTP, array());
+      $camcmd->checkAndUpdateCmd('SetFTPState', $res['schedule']['enable']);
+
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_EMAIL, array());
+      $camcmd->checkAndUpdateCmd('SetEmailState', $res['schedule']['enable']);
+
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_ENC, array("channel" => 0));
+      $camcmd->checkAndUpdateCmd('SetMicrophoneState', $res['audio']);
+
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_REC, array("channel" => 0));
+      $camcmd->checkAndUpdateCmd('SetRecordState', $res['schedule']['enable']);
+
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_AUDIOALARM, array());
+      $camcmd->checkAndUpdateCmd('SetAudioAlarmState', $res['schedule']['enable']);
+
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_IRLIGHTS, array());
+      $camcmd->checkAndUpdateCmd('SetIrLightsState', $res['state']);
+
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_POWERLED, array());
+      ($res['state'] == 0) ? $value = "Off" : $value = "On";
+      $camcmd->checkAndUpdateCmd('SetPowerLedState', $value);
+
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_AUTOFOCUS, array("channel" => 0));
+      $camcmd->checkAndUpdateCmd('SetAutoFocusState', $res['disable']);
+
+    }
 
     /*public function CheckConnection() {
       if ($this->reolinkTokenValidity()) {
@@ -225,17 +257,17 @@ class reolink extends eqLogic {
 
  // Fonction exécutée automatiquement avant la mise à jour de l'équipement
     public function preUpdate() {
-      if ($this->getConfiguration('login') == NULL) {
-        throw new Exception(__('Le champ login est obligatoire', __FILE__));
-      }
-      if ($this->getConfiguration('password') == NULL) {
-        throw new Exception(__('Le mot de passe ne peut pas être vide', __FILE__));
-      }
       if ($this->getConfiguration('adresseip') == NULL) {
         throw new Exception(__('L\'adresse IP est obligatoire', __FILE__));
       }
       if (!filter_var($this->getConfiguration('adresseip'), FILTER_VALIDATE_IP)) {
         throw new Exception("Adresse IP de la caméra invalide " . $this->ip);
+      }
+      if ($this->getConfiguration('login') == NULL) {
+        throw new Exception(__('Le champ login est obligatoire', __FILE__));
+      }
+      if ($this->getConfiguration('password') == NULL) {
+        throw new Exception(__('Le mot de passe ne peut pas être vide', __FILE__));
       }
       // Champs OK
     }
@@ -293,7 +325,7 @@ class reolink extends eqLogic {
       if (!is_object($cmd)) {
         $cmd = new reolinkCmd();
         $cmd->setLogicalId('SetPushState');
-        $cmd->setIsVisible(1);
+        $cmd->setIsVisible(0);
         $cmd->setName(__('Notification push (état)', __FILE__));
       }
       $cmd->setType('info');
@@ -328,7 +360,7 @@ class reolink extends eqLogic {
       if (!is_object($cmd)) {
         $cmd = new reolinkCmd();
         $cmd->setLogicalId('SetRecordState');
-        $cmd->setIsVisible(1);
+        $cmd->setIsVisible(0);
         $cmd->setName(__('Enregistrement SDCARD (état)', __FILE__));
       }
       $cmd->setType('info');
@@ -363,7 +395,7 @@ class reolink extends eqLogic {
       if (!is_object($cmd)) {
         $cmd = new reolinkCmd();
         $cmd->setLogicalId('SetEmailState');
-        $cmd->setIsVisible(1);
+        $cmd->setIsVisible(0);
         $cmd->setName(__('Envoi email (état)', __FILE__));
       }
       $cmd->setType('info');
@@ -398,7 +430,7 @@ class reolink extends eqLogic {
       if (!is_object($cmd)) {
         $cmd = new reolinkCmd();
         $cmd->setLogicalId('SetFTPState');
-        $cmd->setIsVisible(1);
+        $cmd->setIsVisible(0);
         $cmd->setName(__('Envoi FTP (état)', __FILE__));
       }
       $cmd->setType('info');
@@ -433,7 +465,7 @@ class reolink extends eqLogic {
       if (!is_object($cmd)) {
         $cmd = new reolinkCmd();
         $cmd->setLogicalId('SetIrLightsState');
-        $cmd->setIsVisible(1);
+        $cmd->setIsVisible(0);
         $cmd->setName(__('Led infra rouge (état)', __FILE__));
       }
       $cmd->setType('info');
@@ -468,7 +500,7 @@ class reolink extends eqLogic {
       if (!is_object($cmd)) {
         $cmd = new reolinkCmd();
         $cmd->setLogicalId('SetAudioAlarmState');
-        $cmd->setIsVisible(1);
+        $cmd->setIsVisible(0);
         $cmd->setName(__('Alarme Audio (état)', __FILE__));
       }
       $cmd->setType('info');
@@ -503,7 +535,7 @@ class reolink extends eqLogic {
       if (!is_object($cmd)) {
         $cmd = new reolinkCmd();
         $cmd->setLogicalId('SetPowerLedState');
-        $cmd->setIsVisible(1);
+        $cmd->setIsVisible(0);
         $cmd->setName(__('Power LED (état)', __FILE__));
       }
       $cmd->setType('info');
@@ -526,6 +558,41 @@ class reolink extends eqLogic {
       $cmd->setSubType('select');
       $cmd->setConfiguration('listValue', 'On|Activer;Off|Désactiver');
       $linkcmd = $this->getCmd(null, 'SetPowerLedState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Microphone (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetMicrophoneState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetMicrophoneState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Microphone (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('binary');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set Microphone On/Off
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetMicrophone');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetMicrophone');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Microphone', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('select');
+      $cmd->setConfiguration('listValue', '1|Activer;0|Désactiver');
+      $linkcmd = $this->getCmd(null, 'SetMicrophoneState');
       $cmd->setValue($linkcmd->getId());
       $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
@@ -578,6 +645,41 @@ class reolink extends eqLogic {
       $cmd->setConfiguration('option', 'slider');
       $cmd->setConfiguration('minValue', 0);
       $cmd->setConfiguration('maxValue', 249);
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // AutoFocus (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetAutoFocusState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetAutoFocusState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Autofocus (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('binary');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set AutoFocus
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetAutoFocus');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetAutoFocus');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Autofocus', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('select');
+      $cmd->setConfiguration('listValue', '0|Activer;1|Désactiver');
+      $linkcmd = $this->getCmd(null, 'SetAutoFocusState');
+      $cmd->setValue($linkcmd->getId());
       $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
@@ -642,69 +744,65 @@ class reolinkCmd extends cmd {
       $cam = reolink::getReolinkConnection($EqId);
 
        switch ($this->getLogicalId()) {
+          case 'refresh':
+              reolink::refreshNFO($cam, $EqId);
+              break;
           case 'SetPush':
               $param = array("Push" =>
                             array("schedule" =>
-                                  array("enable" => intval($_options['select']),
-                                  "table" => "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",)
+                                  array("enable" => intval($_options['select']))
                                   )
-
                           );
-              $cam->SendCMD('SetPush', $param);
+              $cam->SendCMD(reolinkAPI::CAM_SET_PUSH, $param);
               break;
           case 'SetRecord':
               $param = array("Rec" =>
                           array("schedule" =>
-                                  array("enable" => intval($_options['select']),
-                                  "table" => "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",)
-                                  )
+                                  array("enable" => intval($_options['select']))
+                                )
                           );
-              $cam->SendCMD('SetRec', $param);
+              $cam->SendCMD(reolinkAPI::CAM_SET_REC, $param);
               break;
           case 'SetEmail':
               $param = array("Email" =>
                               array("schedule" =>
-                                    array("enable" => intval($_options['select']),
-                                    "table" => "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",)
-                                    )
+                                    array("enable" => intval($_options['select']))
+                                  )
 
                             );
-              $cam->SendCMD('SetEmail', $param);
+              $cam->SendCMD(reolinkAPI::CAM_SET_EMAIL, $param);
               break;
           case 'SetFTP':
               $param = array("Ftp" =>
                               array("schedule" =>
-                                    array("enable" => intval($_options['select']),
-                                    "table" => "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",)
-                                    )
+                                    array("enable" => intval($_options['select']))
+                                  )
 
                             );
-              $cam->SendCMD('SetFtp', $param);
+              $cam->SendCMD(reolinkAPI::CAM_SET_FTP, $param);
               break;
           case 'SetAudioAlarm':
               $param = array("Audio" =>
                               array("schedule" =>
-                                    array("enable" => intval($_options['select']),
-                                    "table" => "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",)
-                                    )
+                                    array("enable" => intval($_options['select']))
+                                  )
 
                             );
-              $cam->SendCMD('SetAudioAlarm', $param);
+              $cam->SendCMD(reolinkAPI::CAM_SET_AUDIOALARM, $param);
               break;
           case 'GetPtzPreset':
               $param = array("channel" => 0);
-              $data = $cam->SendCMD('GetPtzPreset', $param);
+              $data = $cam->SendCMD(reolinkAPI::CAM_GET_PTZPRESET, $param);
               $cam->SaveFile("ptzpreset", $data);
               reolink::updatePTZpreset($EqId, $data);
               break;
           case 'SetPtzByPreset':
-              $param =
               $param = array("channel" => 0,
                              "op" => "ToPos",
                              "id" => intval($_options['select']),
                              "speed" => 32
                             );
-              $data = $cam->SendCMD('PtzCtrl', $param);
+              $data = $cam->SendCMD(reolinkAPI::CAM_PTZCTRL, $param);
               break;
           case 'SetZoom':
               $param = array("ZoomFocus" =>
@@ -712,32 +810,54 @@ class reolinkCmd extends cmd {
                                    "pos" => intval($_options['slider']),
                                    "op" => "ZoomPos")
                             );
-              $data = $cam->SendCMD('StartZoomFocus', $param);
+              $data = $cam->SendCMD(reolinkAPI::CAM_STARTZOOMFOCUS, $param);
+              break;
+          case 'SetFocus':
+              $param = array("ZoomFocus" =>
+                            array("channel" => 0,
+                                   "pos" => intval($_options['slider']),
+                                   "op" => "FocusPos")
+                            );
+              $data = $cam->SendCMD(reolinkAPI::CAM_STARTZOOMFOCUS, $param);
               break;
           case 'SetIrLights':
-              $param = array("channel" => 0,
-                              "state" => $_options['select']);
-              $data = $cam->SendCMD('SetIrLights', $param);
+              $param = array("IrLights" =>
+                              array("channel" => 0,
+                                    "state" => $_options['select'])
+                            );
+              $data = $cam->SendCMD(reolinkAPI::CAM_SET_IRLIGHTS, $param);
               break;
           case 'SetPowerLed':
-              $param =
               $param = array("PowerLed" =>
                               array("channel" => 0,
                                     "state" => $_options['select'])
                             );
-              $data = $cam->SendCMD('SetPowerLed', $param);
+              $data = $cam->SendCMD(reolinkAPI::CAM_SET_POWERLED, $param);
+              break;
+          case 'SetAutoFocus':
+              $param = array("AutoFocus" =>
+                              array("channel" => 0,
+                                    "disable" => intval($_options['select']))
+                            );
+              $data = $cam->SendCMD(reolinkAPI::CAM_SET_AUTOFOCUS, $param);
+              break;
+          case 'SetMicrophone':
+              $param = array("Enc" =>
+                              array("audio" => intval($_options['select']))
+                            );
+              $data = $cam->SendCMD(reolinkAPI::CAM_SET_ENC, $param);
               break;
           case 'Reboot':
               $param = array();
-              $data = $cam->SendCMD('Reboot', $param);
+              $data = $cam->SendCMD(reolinkAPI::CAM_REBOOT, $param);
               break;
           case 'CheckFirmware':
               $param = array();
-              $data = $cam->SendCMD('CheckFirmware', $param);
+              $data = $cam->SendCMD(reolinkAPI::CAM_CHECKFIRMWARE, $param);
               break;
           case 'UpgradeOnline':
               $param = array();
-              $data = $cam->SendCMD('UpgradeOnline', $param);
+              $data = $cam->SendCMD(reolinkAPI::CAM_UPGRADEONLINE, $param);
               break;
         }
 
