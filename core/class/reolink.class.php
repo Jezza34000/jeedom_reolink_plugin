@@ -818,7 +818,6 @@ class reolinkCmd extends cmd {
           case 'GetPtzPreset':
               $param = array("channel" => 0);
               $data = $cam->SendCMD(reolinkAPI::CAM_GET_PTZPRESET, $param);
-              $cam->SaveFile("ptzpreset", $data);
               reolink::updatePTZpreset($EqId, $data);
               break;
           case 'SetPtzByPreset':
