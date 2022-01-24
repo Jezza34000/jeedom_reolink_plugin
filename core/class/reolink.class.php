@@ -29,10 +29,11 @@ class reolink extends eqLogic {
       $port = $camera->getConfiguration('port');
       $username = $camera->getConfiguration('login');
       $password = $camera->getConfiguration('password');
+      $cnxtype = $camera->getConfiguration('cnxtype');
 
       if (!empty($adresseIP) && !empty($username) && !empty($password))
       {
-        $cnxinfo = array("adresseIP" => $adresseIP, "port" => $port, "username" => $username, "password" => $password);
+        $cnxinfo = array("adresseIP" => $adresseIP, "port" => $port, "username" => $username, "password" => $password, "cnxtype" => $cnxtype);
         $camcnx = new reolinkAPI($cnxinfo);
         return $camcnx;
       } else {
@@ -41,13 +42,13 @@ class reolink extends eqLogic {
       }
   	}
 
-    public function TryConnect($id) {
+    public static function TryConnect($id) {
       $reolinkConn = reolink::getReolinkConnection($id);
-      if (is_object($reolinkConn)) {
-        log::add('reolink', 'warning', 'Connection à la caméra OK');
+      if ($reolinkConn->$is_loggedin == true) {
+        log::add('reolink', 'info', 'Connection à la caméra réussie');
         return true;
       } else {
-        log::add('reolink', 'warning', 'Connection à la caméra NOK');
+        log::add('reolink', 'error', 'Connection à la caméra NOK');
         return false;
       }
     }
@@ -140,6 +141,8 @@ class reolink extends eqLogic {
       $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_AUTOFOCUS, array("channel" => 0));
       $camcmd->checkAndUpdateCmd('SetAutoFocusState', $res['disable']);
 
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_AUTOMAINT, array("channel" => 0));
+      $camcmd->checkAndUpdateCmd('SetAutoMaintState', $res['enable']);
     }
 
     /*public function CheckConnection() {
@@ -170,11 +173,25 @@ class reolink extends eqLogic {
 
     /*     * ***********************Methode static*************************** */
 
-    /*
-     * Fonction exécutée automatiquement toutes les minutes par Jeedom
       public static function cron() {
+        $eqLogics = ($_eqlogic_id !== null) ? array(eqLogic::byId($_eqlogic_id)) : eqLogic::byType('reolink', true);
+        foreach ($eqLogics as $camera) {
+          $autorefresh = $camera->getConfiguration('autorefresh','*/15 * * * *');
+          if ($autorefresh != '') {
+            try {
+              $c = new Cron\CronExpression(checkAndFixCron($autorefresh), new Cron\FieldFactory);
+              if ($c->isDue()) {
+                log::add('reolink', 'debug', '#### CRON refresh '.$camera->getHumanName());
+
+                $camera->refreshNFO($camera , $camera->getId());
+              }
+            } catch (Exception $exc) {
+              log::add('reolink', 'error', __('Expression cron non valide pour ', __FILE__) . $camera->getHumanName() . ' : ' . $autorefresh);
+            }
+          }
+        }
       }
-     */
+
 
     /*
      * Fonction exécutée automatiquement toutes les 5 minutes par Jeedom
@@ -639,7 +656,7 @@ class reolink extends eqLogic {
       $cmd->save();
       $order++;
       //=======================================
-      // Set PTZ ZOOM
+      // Set PTZ Speed
       //=======================================
       $cmd = $this->getCmd(null, 'PtzSpeed');
       if (!is_object($cmd)) {
@@ -653,6 +670,7 @@ class reolink extends eqLogic {
       $cmd->setConfiguration('option', 'slider');
       $cmd->setConfiguration('minValue', 1);
       $cmd->setConfiguration('maxValue', 64);
+      $cmd->setValue(32);
       $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
@@ -697,13 +715,48 @@ class reolink extends eqLogic {
       if (!is_object($cmd)) {
         $cmd = new reolinkCmd();
         $cmd->setLogicalId('SetAutoFocus');
-        $cmd->setIsVisible(1);
+        $cmd->setIsVisible(0);
         $cmd->setName(__('Autofocus', __FILE__));
       }
       $cmd->setType('action');
       $cmd->setSubType('select');
       $cmd->setConfiguration('listValue', '0|Activer;1|Désactiver');
       $linkcmd = $this->getCmd(null, 'SetAutoFocusState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // AutoReboot (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetAutoMaintState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetAutoMaintState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Auto reboot (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('string');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // AutoReboot On/Off
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetAutoMaint');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetAutoMaint');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Auto reboot', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('select');
+      $cmd->setConfiguration('listValue', '0|Désactivé;1|Activé');
+      $linkcmd = $this->getCmd(null, 'SetAutoMaintState');
       $cmd->setValue($linkcmd->getId());
       $cmd->setOrder($order);
       $cmd->setEqLogic_id($this->getId());
@@ -793,7 +846,6 @@ class reolinkCmd extends cmd {
                               array("schedule" =>
                                     array("enable" => intval($_options['select']))
                                   )
-
                             );
               $cam->SendCMD(reolinkAPI::CAM_SET_EMAIL, $param);
               break;
@@ -896,6 +948,12 @@ class reolinkCmd extends cmd {
           case 'UpgradeOnline':
               $param = array();
               $data = $cam->SendCMD(reolinkAPI::CAM_UPGRADEONLINE, $param);
+              break;
+          case 'SetAutoMaint':
+              $param = array("AutoMaint" =>
+                              array("enable" => intval($_options['select']))
+                            );
+              $data = $cam->SendCMD(reolinkAPI::CAM_SET_AUTOMAINT, $param);
               break;
         }
 

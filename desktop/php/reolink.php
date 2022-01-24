@@ -134,10 +134,10 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Port}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port de la caméra. Si vous n'avez pas modifier ce paramètre dans votre caméra laisser vide.}}"></i></sup>
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port de la caméra uniquement si vous l'avez modifier. Sinon laisser ce champ vide}}"></i></sup>
 								</label>
 								<div class="col-sm-7">
-									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" placeholder="{{80}}"/>
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" placeholder="{{(facultatif)}}"/>
 								</div>
 							</div>
 							<div class="form-group">
@@ -155,6 +155,15 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<div class="col-sm-7">
 									<input type="text" class="eqLogicAttr form-control inputPassword" data-l1key="configuration" data-l2key="password"/>
 								</div>
+							</div>
+							<div class="form-group">
+									<label class="col-sm-3 control-label">{{Type de connexion}}<sup><i class="fas fa-question-circle tooltips" title="{{Type de connexion pour se connecter à la caméra, attention HTTPS doit être activé sur la caméra pour fonctionner}}"></i></sup></label>
+									<div class="col-sm-3">
+											<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="cnxtype">
+													<option value="http">{{HTTP}}</option>
+													<option value="https">{{HTTPS}}</option>
+											</select>
+									</div>
 							</div>
 							<div class="form-group expertModeVisible">
 								<label class="col-sm-3 control-label">{{Auto-actualisation (cron)}}</label>

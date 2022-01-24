@@ -11,7 +11,7 @@
 		}
 	},
 	"description" : {
-		"fr_FR": "PLUGIN EN COURS DE DEV : Plugin permettant le paramétrage et contrôle des caméras Reolink via l'API officiel."
+		"fr_FR": "PLUGIN EN COURS DE DEV : Plugin permettant le paramétrage et contrôle des caméras Reolink via l'API officiel. Fonctionne uniquement avec les modèles de la marque qui supporte le CGI. (Les modèles : E1, Keen, Lumus, et les séries ARGUS & GO ne sont pas supportés)"
 	},
 	"licence" : "AGPL",
 	"author" : "Jeedom SAS",
