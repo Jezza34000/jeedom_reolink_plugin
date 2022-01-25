@@ -202,8 +202,6 @@ class reolinkAPI {
           log::add('reolink', 'error', 'HTTP code '.$httpcode.' NOK '.curl_error($ch));
           return false;
         }
-
-
         curl_close($ch);
         // Debug REMOVE PWD
         $payload = preg_replace('/password":"(.*?)"}}}/', 'password":"******"}}}', $payload);
@@ -242,6 +240,9 @@ class reolinkAPI {
      */
     private function login() {
         log::add('reolink', 'debug', 'Camera login...');
+        $this->$is_loggedin = false;
+        $this->$token = NULL;
+        $this->$tokenexp = NULL;
 
         $loginParameters = array( "User" =>
                                 array('userName' => $this->user,
@@ -259,11 +260,12 @@ class reolinkAPI {
             $this->$is_loggedin = true;
             log::add('reolink', 'debug', 'TOKEN récupéré, enregistrement OK');
         } else {
-          // Login FAILED
-          $token = NULL;
-          $tokenexp = NULL;
-          $this->$is_loggedin = false;
-          log::add('reolink', 'error', 'Echec > Login impossible');
+            // Login FAILED
+            $token = NULL;
+            $tokenexp = NULL;
+            $this->$is_loggedin = false;
+            log::add('reolink', 'error', 'Echec > Login impossible');
+            return false;
         }
         $this->$token = $token;
         config::save("token".$this->tagtoken, $token, 'reolink');
@@ -341,6 +343,8 @@ class reolinkAPI {
             if ($data[0]['error']['rspCode'] == -6) {
               // Login failed, re-authentification need
               $this->login();
+
+              return retry;
             }
 
             $errorNFO = $this->GetErrorNFO($data[0]['error']['rspCode']);

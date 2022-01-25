@@ -110,8 +110,10 @@ class reolink extends eqLogic {
       }
     }
 
-    public static function refreshNFO($camcnx, $id) {
+    public static function refreshNFO($id) {
       $camcmd = reolink::byId($id, 'reolink');
+      $camcnx = reolink::getReolinkConnection($id);
+
 
       $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_PUSH, array());
       $camcmd->checkAndUpdateCmd('SetPushState', $res['schedule']['enable']);
@@ -183,7 +185,7 @@ class reolink extends eqLogic {
               if ($c->isDue()) {
                 log::add('reolink', 'debug', '#### CRON refresh '.$camera->getHumanName());
 
-                $camera->refreshNFO($camera , $camera->getId());
+                $camera->refreshNFO($camera->getId());
               }
             } catch (Exception $exc) {
               log::add('reolink', 'error', __('Expression cron non valide pour ', __FILE__) . $camera->getHumanName() . ' : ' . $autorefresh);
@@ -819,11 +821,10 @@ class reolinkCmd extends cmd {
      public function execute($_options = array()) {
       log::add('reolink', 'debug', 'Action demandé : '.$this->getLogicalId());
       $EqId = $this->getEqLogic_id();
-      $cam = reolink::getReolinkConnection($EqId);
 
        switch ($this->getLogicalId()) {
           case 'refresh':
-              reolink::refreshNFO($cam, $EqId);
+              reolink::refreshNFO($EqId);
               break;
           case 'SetPush':
               $param = array("Push" =>

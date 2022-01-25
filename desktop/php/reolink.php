@@ -157,7 +157,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 							<div class="form-group">
-									<label class="col-sm-3 control-label">{{Type de connexion}}<sup><i class="fas fa-question-circle tooltips" title="{{Type de connexion pour se connecter à la caméra, attention HTTPS doit être activé sur la caméra pour fonctionner}}"></i></sup></label>
+									<label class="col-sm-3 control-label">{{Type de connexion}}
+										<sup><i class="fas fa-question-circle tooltips" title="{{Type de connexion pour se connecter à la caméra, attention HTTPS doit être activé sur la caméra pour fonctionner}}"></i></sup></label>
 									<div class="col-sm-3">
 											<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="cnxtype">
 													<option value="http">{{HTTP}}</option>
