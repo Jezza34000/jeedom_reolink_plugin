@@ -372,6 +372,11 @@ class reolinkAPI {
                 return $data[0]['value']['DevName'];
             case reolinkAPI::CAM_GET_ABILITY:
                 return $data[0]['value']['Ability'];
+            // Video Param
+            case reolinkAPI::CAM_GET_ISP:
+                return $data[0]['value']['Isp'];
+            case reolinkAPI::CAM_GET_IMAGE:
+                return $data[0]['value']['Image'];
             // Notifications
             case reolinkAPI::CAM_GET_PUSH:
                 return $data[0]['value']['Push'];

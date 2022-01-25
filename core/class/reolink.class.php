@@ -186,6 +186,26 @@ class reolink extends eqLogic {
 
       $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_AUTOMAINT, array("channel" => 0));
       $camcmd->checkAndUpdateCmd('SetAutoMaintState', $res['enable']);
+
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_ISP, array("channel" => 0));
+        $camcmd->checkAndUpdateCmd('SetRotationState', $res['rotation']);
+        $camcmd->checkAndUpdateCmd('SetMirroringState', $res['mirroring']);
+        $camcmd->checkAndUpdateCmd('SetAntiFlickerState', $res['antiFlicker']);
+        $camcmd->checkAndUpdateCmd('SetBackLightState', $res['backLight']);
+        $camcmd->checkAndUpdateCmd('SetBlcState', $res['blc']);
+        $camcmd->checkAndUpdateCmd('SetBlueGainState', $res['blueGain']); // ???
+        $camcmd->checkAndUpdateCmd('SetDayNightState', $res['dayNight']);
+        $camcmd->checkAndUpdateCmd('SetDrcState', $res['drc']);
+        $camcmd->checkAndUpdateCmd('SetNr3dState', $res['nr3d']);
+        $camcmd->checkAndUpdateCmd('SetRedGainState', $res['redGain']); // ???
+        $camcmd->checkAndUpdateCmd('SetWhiteBalanceState', $res['whiteBalance']); // ???
+
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_IMAGE, array("channel" => 0));
+        $camcmd->checkAndUpdateCmd('SetBrightState', $res['bright']);
+        $camcmd->checkAndUpdateCmd('SetContrastState', $res['contrast']);
+        $camcmd->checkAndUpdateCmd('SetSaturationState', $res['saturation']);
+        $camcmd->checkAndUpdateCmd('SetHueState', $res['hue']);
+        $camcmd->checkAndUpdateCmd('SetSharpenState', $res['sharpen']);
     }
 
     /*public function CheckConnection() {
@@ -805,6 +825,339 @@ class reolink extends eqLogic {
       $cmd->setEqLogic_id($this->getId());
       $cmd->save();
       $order++;
+
+
+      //=======================================
+      // Rotation (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetRotationState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetRotationState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Retourner verticalement (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('binary');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Mirroring (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetMirroringState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetMirroringState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Retourner horizontalement (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('binary');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // AntiFlicker(etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetAntiFlickerState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetAntiFlickerState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Anti-scintillement (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('string');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // BackLight (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetBackLightState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetBackLightState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Rétro éclairage (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('string');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // BackLight (value)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetBlcState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetBlcState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Rétro éclairage (valeur)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('numeric');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // DayNight (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetDayNightState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetDayNightState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Nuit/Jour (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('numeric');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // DayNight DynamicRange  (value)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetDrcState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetDrcState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Dynamique (valeur)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('string');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // 3D DNR (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetNr3dState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetNr3dState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('3D DNR (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('binary');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Balance des Blanc (etat)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetWhiteBalanceState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetWhiteBalanceState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Balance des blancs (état)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('string');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+
+
+      //=======================================
+      // Brightness (value)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetBrightState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetBrightState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Luminosité (valeur)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('numeric');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set Brightness
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetBright');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetBright');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Luminosité', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('slider');
+      $cmd->setConfiguration('option', 'slider');
+      $cmd->setConfiguration('minValue', 1);
+      $cmd->setConfiguration('maxValue', 255);
+      $linkcmd = $this->getCmd(null, 'SetBrightState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Contrast (value)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetContrastState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetContrastState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Contraste (valeur)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('numeric');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set Contrast
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetContrast');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetContrast');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Contraste', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('slider');
+      $cmd->setConfiguration('option', 'slider');
+      $cmd->setConfiguration('minValue', 1);
+      $cmd->setConfiguration('maxValue', 255);
+      $linkcmd = $this->getCmd(null, 'SetContrastState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Saturation (value)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetSaturationState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetSaturationState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Saturation (valeur)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('numeric');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set Saturation
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetSaturation');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetSaturation');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Saturation', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('slider');
+      $cmd->setConfiguration('option', 'slider');
+      $cmd->setConfiguration('minValue', 1);
+      $cmd->setConfiguration('maxValue', 255);
+      $linkcmd = $this->getCmd(null, 'SetSaturationState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Hue (value)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetHueState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetHueState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Teinte (valeur)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('numeric');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set Hue
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetHue');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetHue');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Teinte', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('slider');
+      $cmd->setConfiguration('option', 'slider');
+      $cmd->setConfiguration('minValue', 1);
+      $cmd->setConfiguration('maxValue', 255);
+      $linkcmd = $this->getCmd(null, 'SetHueState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Sharpen (value)
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetSharpenState');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetSharpenState');
+        $cmd->setIsVisible(0);
+        $cmd->setName(__('Netteté (valeur)', __FILE__));
+      }
+      $cmd->setType('info');
+      $cmd->setSubType('numeric');
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
+      //=======================================
+      // Set Sharpen
+      //=======================================
+      $cmd = $this->getCmd(null, 'SetSharpen');
+      if (!is_object($cmd)) {
+        $cmd = new reolinkCmd();
+        $cmd->setLogicalId('SetSharpen');
+        $cmd->setIsVisible(1);
+        $cmd->setName(__('Netteté', __FILE__));
+      }
+      $cmd->setType('action');
+      $cmd->setSubType('slider');
+      $cmd->setConfiguration('option', 'slider');
+      $cmd->setConfiguration('minValue', 1);
+      $cmd->setConfiguration('maxValue', 255);
+      $linkcmd = $this->getCmd(null, 'SetSharpenState');
+      $cmd->setValue($linkcmd->getId());
+      $cmd->setOrder($order);
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->save();
+      $order++;
     }
 
  // Fonction exécutée automatiquement avant la suppression de l'équipement
@@ -998,6 +1351,41 @@ class reolinkCmd extends cmd {
                             );
               $data = $cam->SendCMD(reolinkAPI::CAM_SET_AUTOMAINT, $param);
               break;
+        case 'SetBright':
+            $param = array("Image" =>
+                            array("channel" => 0,
+                                  "bright" => intval($_options['slider']))
+                          );
+            $data = $cam->SendCMD(reolinkAPI::CAM_SET_IMAGE, $param);
+            break;
+        case 'SetContrast':
+                      $param = array("Image" =>
+                                      array("channel" => 0,
+                                          "contrast" => intval($_options['slider']))
+                                    );
+                      $data = $cam->SendCMD(reolinkAPI::CAM_SET_IMAGE, $param);
+                      break;
+        case 'SetSaturation':
+            $param = array("Image" =>
+                            array("channel" => 0,
+                                "saturation" => intval($_options['slider']))
+                          );
+            $data = $cam->SendCMD(reolinkAPI::CAM_SET_IMAGE, $param);
+            break;
+        case 'SetHue':
+            $param = array("Image" =>
+                            array("channel" => 0,
+                                "hue" => intval($_options['slider']))
+                          );
+            $data = $cam->SendCMD(reolinkAPI::CAM_SET_IMAGE, $param);
+            break;
+        case 'SetSharpen':
+            $param = array("Image" =>
+                            array("channel" => 0,
+                                "sharpen" => intval($_options['slider']))
+                          );
+            $data = $cam->SendCMD(reolinkAPI::CAM_SET_IMAGE, $param);
+            break;
         }
 
      }
