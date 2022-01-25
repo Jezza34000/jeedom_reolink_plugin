@@ -201,10 +201,13 @@ class reolinkAPI {
          );
         $response = curl_exec($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $header = substr($response, 0, $header_size);
+
         if ($httpcode == 200) {
           log::add('reolink', 'debug', 'HTTP code 200 OK');
         } else {
-          log::add('reolink', 'error', 'HTTP code '.$httpcode.' NOK '.curl_error($ch));
+          log::add('reolink', 'error', 'HTTP code '.$httpcode.' NOK '.curl_error($ch). ' Entête : '.$header);
           return false;
         }
         curl_close($ch);
