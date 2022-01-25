@@ -146,12 +146,17 @@ class reolinkAPI {
     public function __construct(array $cnxinfo) {
         $this->$is_loggedin = false;
         $this->ip = trim($cnxinfo['adresseIP']);
-        $this->cnxtype = strtolower($cnxinfo['cnxtype']);
+
+        if (strtolower($cnxinfo['cnxtype'] == NULL)) {
+          $this->cnxtype = "http";
+        } else {
+          $this->cnxtype = strtolower($cnxinfo['cnxtype']);
+        }
 
         if ($this->cnxtype == "http") {
-          ($cnxinfo['port'] == NULL ) ? $this->port = 80 : $this->port = trim($cnxinfo['port']);
+          ($cnxinfo['port'] == NULL || !is_numeric($cnxinfo['port'])) ? $this->port = 80 : $this->port = trim($cnxinfo['port']);
         } else {
-          ($cnxinfo['port'] == NULL ) ? $this->port = 443 : $this->port = trim($cnxinfo['port']);
+          ($cnxinfo['port'] == NULL || !is_numeric($cnxinfo['port'])) ? $this->port = 443 : $this->port = trim($cnxinfo['port']);
         }
 
         $this->user = trim($cnxinfo['username']);
