@@ -821,6 +821,7 @@ class reolinkCmd extends cmd {
      public function execute($_options = array()) {
       log::add('reolink', 'debug', 'Action demandé : '.$this->getLogicalId());
       $EqId = $this->getEqLogic_id();
+      $cam = reolink::getReolinkConnection($EqId);
 
        switch ($this->getLogicalId()) {
           case 'refresh':
