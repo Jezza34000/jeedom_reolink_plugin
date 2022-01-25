@@ -68,9 +68,45 @@ class reolink extends eqLogic {
         $camera->setConfiguration($key, $value);
 
         if ($key == "model") {
-          // Get CAM img ICON
+          // Download CAM img ICON
           $modelURL = urlencode($value);
-          $camera->setConfiguration("camicon", "https://cdn.reolink.com/wp-content/assets/app/model-images/$modelURL/light_off.png");
+          $iconurl = "https://cdn.reolink.com/wp-content/assets/app/model-images/$modelURL/light_off.png";
+          $camera->setConfiguration("camicon", $iconurl);
+
+          $file = realpath(dirname(__FILE__) . '/../../desktop/img').'/camera.png';
+          log::add('reolink', 'debug', 'Enregistrement du visuel de la caméra '.$value.' depuis serveur Reolink ('.$iconurl. ' => '.$file.')');
+
+          /*if (file_put_contents($file, file_get_contents($iconurl)))
+          {
+              log::add('reolink', 'debug', 'Enregistrement OK');
+          } else {
+              log::add('reolink', 'debug', 'Enregistrement NOK');
+          }*/
+
+          $ch = curl_init ($iconurl);
+          curl_setopt($ch, CURLOPT_HEADER, false);
+          curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+          curl_setopt($ch, CURLOPT_BINARYTRANSFER,true);
+          curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+          curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+          curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+          $rawdata=curl_exec($ch);
+
+          $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+          $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+          $header = substr($response, 0, $header_size);
+
+          if ($httpcode == 200) {
+            log::add('reolink', 'debug', 'HTTP code 200 OK');
+          } else {
+            log::add('reolink', 'error', 'HTTP code '.$httpcode.' NOK '.curl_error($ch). ' Entête : '.$header);
+            return false;
+          }
+          curl_close ($ch);
+          $fp = fopen($file,'w');
+          fwrite($fp, $rawdata);
+          fclose($fp);
+          log::add('reolink', 'debug', 'Ecriture OK');
         }
       }
       log::add('reolink', 'debug', 'GetDeviceInfo ajout de '.count($deviceInfo). ' items');
@@ -104,9 +140,14 @@ class reolink extends eqLogic {
               $ptzlist .=  $value['id'].'|'.$value['name'].";";
           }
         }
+        log::add('reolink', 'debug',  'fin boucle');
         $ptzlist = substr($ptzlist, 0, -1);
         $cmd->setConfiguration('listValue', $ptzlist);
         $cmd->save();
+        $cmd->getEqLogic()->refreshWidget();
+        return true;
+      } else {
+        return false;
       }
     }
 

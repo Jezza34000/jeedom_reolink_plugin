@@ -11,7 +11,7 @@
 		}
 	},
 	"description" : {
-		"fr_FR": "PLUGIN EN COURS DE DEV : Plugin permettant le paramétrage et contrôle des caméras Reolink via l'API officiel. Fonctionne uniquement avec les modèles de la marque qui ont l'API (Séries : RLC-xxxx, Série : DUO, Séries C1 & C2, etc...). Les modèles : E1, B400, D400, Keen, Lumus, et les séries ARGUS & GO n'ayant pas d'API ne sont pas supportés."
+		"fr_FR": "PLUGIN EN COURS DE DEV : Plugin permettant le paramétrage et contrôle des caméras Reolink via l'API officiel. Fonctionne uniquement avec les modèles de la marque qui ont l'API (Séries : RLC-xxxx, Série : DUO, Séries C1 & C2, etc...). Les modèles : E1, Bxxx, Dxxx, Keen, Lumus, et les séries ARGUS & GO n'ayant pas d'API ne sont pas supportés."
 	},
 	"licence" : "AGPL",
 	"author" : "Jeedom SAS",
