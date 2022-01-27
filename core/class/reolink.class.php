@@ -73,15 +73,8 @@ class reolink extends eqLogic {
           $iconurl = "https://cdn.reolink.com/wp-content/assets/app/model-images/$modelURL/light_off.png";
           $camera->setConfiguration("camicon", $iconurl);
 
-          $file = realpath(dirname(__FILE__) . '/../../desktop/img').'/camera.png';
+          $file = realpath(dirname(__FILE__) . '/../../desktop/img').'/camera'.$id.'.png';
           log::add('reolink', 'debug', 'Enregistrement du visuel de la caméra '.$value.' depuis serveur Reolink ('.$iconurl. ' => '.$file.')');
-
-          /*if (file_put_contents($file, file_get_contents($iconurl)))
-          {
-              log::add('reolink', 'debug', 'Enregistrement OK');
-          } else {
-              log::add('reolink', 'debug', 'Enregistrement NOK');
-          }*/
 
           $ch = curl_init ($iconurl);
           curl_setopt($ch, CURLOPT_HEADER, false);
@@ -110,24 +103,36 @@ class reolink extends eqLogic {
         }
       }
       log::add('reolink', 'debug', 'GetDeviceInfo ajout de '.count($deviceInfo). ' items');
-      // Devices Ability
-      $deviceAbility = $reolinkConn->SendCMD('GetAbility', array("User" => array("userName" => "admin")));
-      if (!$deviceAbility) {
-        return false;
-      }
 
-      foreach ($deviceAbility  as $key => $value) {
-        $camera->setConfiguration($key, $value);
-      }
-      log::add('reolink', 'debug', 'GetAbility ajout de '.count($deviceAbility). ' items');
 
-      if (count($deviceInfo) > 1 && count($deviceAbility) > 1) {
+      if (count($deviceInfo) > 1) {
         $camera->Save();
         return true;
       } else {
         return false;
       }
     }
+
+    public static function GetCamAbility($id) {
+      log::add('reolink', 'debug', 'Interrogation de la caméra sur ses capacités hardware/software...');
+      $reolinkConn = reolink::getReolinkConnection($id);
+
+      // Devices Ability
+      if (is_object($reolinkConn)) {
+        $deviceAbility = $reolinkConn->SendCMD('GetAbility', array("User" => array("userName" => "admin")));
+        log::add('reolink', 'debug', 'GetAbility à récupérer : '.count($deviceAbility). ' items');
+
+        if (count($deviceAbility) > 1) {
+          return $deviceAbility;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+
+    }
+
 
     public static function updatePTZpreset($id, $data) {
       $camera=reolink::byId($id, 'reolink');
@@ -336,828 +341,9 @@ class reolink extends eqLogic {
 
  // Fonction exécutée automatiquement après la sauvegarde (création ou mise à jour) de l'équipement
     public function postSave() {
-      //reolink::GetCamNFO($this->getId());
-      $order = 0;
-      //=======================================
-      // Refresh
-      //=======================================
-      $cmd = $this->getCmd(null, 'refresh');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('refresh');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Rafraichir', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('other');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // System REBOOT
-      //=======================================
-      $cmd = $this->getCmd(null, 'Reboot');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('Reboot');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Redémarrer', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('other');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Push Notification (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetPushState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetPushState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Notification push (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('binary');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // On/Off Push Notification
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetPush');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetPush');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Notification push', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('select');
-      $cmd->setConfiguration('listValue', '1|Activer;0|Désactiver');
-      $linkcmd = $this->getCmd(null, 'SetPushState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // SDCARD Record (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetRecordState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetRecordState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Enregistrement SDCARD (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('binary');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set On/Off SDCARD Record
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetRecord');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetRecord');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Enregistrement SDCARD', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('select');
-      $cmd->setConfiguration('listValue', '1|Activer;0|Désactiver');
-      $linkcmd = $this->getCmd(null, 'SetRecordState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Send Mail (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetEmailState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetEmailState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Envoi email (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('binary');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set On/Off Send Mail
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetEmail');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetEmail');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Envoi email', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('select');
-      $cmd->setConfiguration('listValue', '1|Activer;0|Désactiver');
-      $linkcmd = $this->getCmd(null, 'SetEmailState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Send FTP (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetFTPState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetFTPState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Envoi FTP (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('binary');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set On/Off Send FTP
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetFTP');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetFTP');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Envoi FTP', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('select');
-      $cmd->setConfiguration('listValue', '1|Activer;0|Désactiver');
-      $linkcmd = $this->getCmd(null, 'SetFTPState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // IR Light (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetIrLightsState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetIrLightsState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Led infra rouge (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('string');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set IR Light On/Off/Auto
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetIrLights');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetIrLights');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Led infra rouge', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('select');
-      $cmd->setConfiguration('listValue', 'Auto|Auto;Off|Désactivé;On|Toujours activé');
-      $linkcmd = $this->getCmd(null, 'SetIrLightsState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Sound Alarm (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetAudioAlarmState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetAudioAlarmState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Alarme Audio (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('binary');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set On/Off Sound Alarm
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetAudioAlarm');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetAudioAlarm');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Alarme Audio', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('select');
-      $cmd->setConfiguration('listValue', '1|Activer;0|Désactiver');
-      $linkcmd = $this->getCmd(null, 'SetAudioAlarmState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Power LED (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetPowerLedState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetPowerLedState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Power LED (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('binary');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set Power LED On/Off
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetPowerLed');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetPowerLed');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Power LED', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('select');
-      $cmd->setConfiguration('listValue', 'On|Activer;Off|Désactiver');
-      $linkcmd = $this->getCmd(null, 'SetPowerLedState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Microphone (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetMicrophoneState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetMicrophoneState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Microphone (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('binary');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set Microphone On/Off
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetMicrophone');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetMicrophone');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Microphone', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('select');
-      $cmd->setConfiguration('listValue', '1|Activer;0|Désactiver');
-      $linkcmd = $this->getCmd(null, 'SetMicrophoneState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Get PTZ Preset
-      //=======================================
-      $cmd = $this->getCmd(null, 'GetPtzPreset');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('GetPtzPreset');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Récupérer les presets PTZ', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('other');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set PTZ Control (by preset)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetPtzByPreset');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetPtzByPreset');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Utiliser un preset PTZ', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('select');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set PTZ ZOOM
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetZoom');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetZoom');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Zoom', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('slider');
-      $cmd->setConfiguration('option', 'slider');
-      $cmd->setConfiguration('minValue', 0);
-      $cmd->setConfiguration('maxValue', 249);
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // PTZ Control
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetPTZmoove');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetPTZmoove');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Mouvement PTZ', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('select');
-      $cmd->setConfiguration('listValue', 'Auto|Auto;Stop|Stop;Left|Gauche;Right|Droite;Up|Haut;Down|Bas;LeftUp|Haut-Gauche;LeftDown|Bas-Gauche;RightUp|Haut-Droit;RightDown|Bas-Droite');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set PTZ Speed
-      //=======================================
-      $cmd = $this->getCmd(null, 'PtzSpeed');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('PtzSpeed');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Vitesse PTZ', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('slider');
-      $cmd->setConfiguration('option', 'slider');
-      $cmd->setConfiguration('minValue', 1);
-      $cmd->setConfiguration('maxValue', 64);
-      $cmd->setValue(32);
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // PTZ Patrol
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetPTZpatrol');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetPTZpatrol');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('PTZ Patrol', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('select');
-      $cmd->setConfiguration('listValue', 'StartPatrol|Démarrer;StopPatrol|Arrêter');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // AutoFocus (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetAutoFocusState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetAutoFocusState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Autofocus (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('binary');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set AutoFocus
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetAutoFocus');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetAutoFocus');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Autofocus', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('select');
-      $cmd->setConfiguration('listValue', '0|Activer;1|Désactiver');
-      $linkcmd = $this->getCmd(null, 'SetAutoFocusState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // AutoReboot (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetAutoMaintState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetAutoMaintState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Auto reboot (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('string');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // AutoReboot On/Off
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetAutoMaint');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetAutoMaint');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Auto reboot', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('select');
-      $cmd->setConfiguration('listValue', '0|Désactivé;1|Activé');
-      $linkcmd = $this->getCmd(null, 'SetAutoMaintState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
 
+      reolink::loadCmdFromConf($this->getId());
 
-      //=======================================
-      // Rotation (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetRotationState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetRotationState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Retourner verticalement (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('binary');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Mirroring (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetMirroringState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetMirroringState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Retourner horizontalement (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('binary');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // AntiFlicker(etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetAntiFlickerState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetAntiFlickerState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Anti-scintillement (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('string');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // BackLight (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetBackLightState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetBackLightState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Rétro éclairage (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('string');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // BackLight (value)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetBlcState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetBlcState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Rétro éclairage (valeur)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('numeric');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // DayNight (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetDayNightState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetDayNightState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Nuit/Jour (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('numeric');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // DayNight DynamicRange  (value)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetDrcState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetDrcState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Dynamique (valeur)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('string');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // 3D DNR (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetNr3dState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetNr3dState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('3D DNR (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('binary');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Balance des Blanc (etat)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetWhiteBalanceState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetWhiteBalanceState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Balance des blancs (état)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('string');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-
-
-      //=======================================
-      // Brightness (value)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetBrightState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetBrightState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Luminosité (valeur)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('numeric');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set Brightness
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetBright');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetBright');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Luminosité', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('slider');
-      $cmd->setConfiguration('option', 'slider');
-      $cmd->setConfiguration('minValue', 1);
-      $cmd->setConfiguration('maxValue', 255);
-      $linkcmd = $this->getCmd(null, 'SetBrightState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Contrast (value)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetContrastState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetContrastState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Contraste (valeur)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('numeric');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set Contrast
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetContrast');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetContrast');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Contraste', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('slider');
-      $cmd->setConfiguration('option', 'slider');
-      $cmd->setConfiguration('minValue', 1);
-      $cmd->setConfiguration('maxValue', 255);
-      $linkcmd = $this->getCmd(null, 'SetContrastState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Saturation (value)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetSaturationState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetSaturationState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Saturation (valeur)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('numeric');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set Saturation
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetSaturation');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetSaturation');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Saturation', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('slider');
-      $cmd->setConfiguration('option', 'slider');
-      $cmd->setConfiguration('minValue', 1);
-      $cmd->setConfiguration('maxValue', 255);
-      $linkcmd = $this->getCmd(null, 'SetSaturationState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Hue (value)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetHueState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetHueState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Teinte (valeur)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('numeric');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set Hue
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetHue');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetHue');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Teinte', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('slider');
-      $cmd->setConfiguration('option', 'slider');
-      $cmd->setConfiguration('minValue', 1);
-      $cmd->setConfiguration('maxValue', 255);
-      $linkcmd = $this->getCmd(null, 'SetHueState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Sharpen (value)
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetSharpenState');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetSharpenState');
-        $cmd->setIsVisible(0);
-        $cmd->setName(__('Netteté (valeur)', __FILE__));
-      }
-      $cmd->setType('info');
-      $cmd->setSubType('numeric');
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
-      //=======================================
-      // Set Sharpen
-      //=======================================
-      $cmd = $this->getCmd(null, 'SetSharpen');
-      if (!is_object($cmd)) {
-        $cmd = new reolinkCmd();
-        $cmd->setLogicalId('SetSharpen');
-        $cmd->setIsVisible(1);
-        $cmd->setName(__('Netteté', __FILE__));
-      }
-      $cmd->setType('action');
-      $cmd->setSubType('slider');
-      $cmd->setConfiguration('option', 'slider');
-      $cmd->setConfiguration('minValue', 1);
-      $cmd->setConfiguration('maxValue', 255);
-      $linkcmd = $this->getCmd(null, 'SetSharpenState');
-      $cmd->setValue($linkcmd->getId());
-      $cmd->setOrder($order);
-      $cmd->setEqLogic_id($this->getId());
-      $cmd->save();
-      $order++;
     }
 
  // Fonction exécutée automatiquement avant la suppression de l'équipement
@@ -1168,6 +354,121 @@ class reolink extends eqLogic {
  // Fonction exécutée automatiquement après la suppression de l'équipement
     public function postRemove() {
 
+    }
+
+
+    public function loadCmdFromConf($id) {
+      $devAbilityReturn = reolink::GetCamAbility($id);
+
+      if (!$devAbilityReturn) {
+        log::add('reolink', 'debug', 'Erreur lors de l\'obtention des capacités hardware/software de la caméra');
+        return false;
+      }
+
+      log::add('reolink', 'debug', 'Chargement des commandes depuis le fichiers de config : '.dirname(__FILE__) . '/../config/reolinkapicmd.json');
+      $content = file_get_contents(dirname(__FILE__) . '/../config/reolinkapicmd.json');
+
+
+      if (!is_json($content)) {
+        log::add('reolink', 'error', 'Format du fichier de configuration n\'est pas du JSON valide !');
+        return;
+      }
+      $device = json_decode($content, true);
+      if (!is_array($device) || !isset($device['commands'])) {
+        log::add('reolink', 'error', 'Pas de configuration valide trouvé dans le fichier');
+        return true;
+      }
+      log::add('reolink', 'info', 'Nombre de commandes dans le fichier de configuration : '.count($device['commands']));
+      $cmd_order = 0;
+
+      foreach ($device['commands'] as $command) {
+          // Chack cam ability
+          $cmd = null;
+          foreach ($this->getCmd() as $liste_cmd) {
+            if ((isset($command['logicalId']) && $liste_cmd->getLogicalId() == $command['logicalId'])
+            || (isset($command['name']) && $liste_cmd->getName() == $command['name'])) {
+              $cmd = $liste_cmd;
+              break;
+            }
+          }
+
+          if ($cmd == null || !is_object($cmd))
+          {
+            // Check cam ability
+            $ability = false;
+            $abilityfound = false;
+            // Global Ability
+            foreach ($devAbilityReturn as $abilityName => $abilityParam) {
+
+                if ($command['abilityneed'] == "none") {
+                  $ability = true;
+                  break;
+                }
+
+                if ($command['abilityneed'] == $abilityName) {
+                  $abilityfound = true;
+                  if ($abilityParam['permit'] != 0) {
+                    // Function available for this model ADD
+                    log::add('reolink', 'info', '=> Capacité hardware/software OK pour : '.$command['name']);
+                    $ability = true;
+                    break;
+                  } else {
+                    // Function NOT available for this model DO NOT ADD
+                    log::add('reolink', 'debug', '=> Ignorer, capacité hardware/software NOK pour : '.$command['name']);
+                    break;
+                  }
+                  break;
+                }
+              }
+            // Channel Ability
+            if (!$ability) {
+              foreach ($devAbilityReturn['abilityChn'][0] as $abilityName => $abilityParam) {
+                  if ($command['abilityneed'] == $abilityName) {
+                    $abilityfound = true;
+                    if ($abilityParam['permit'] != 0) {
+                      // Function available for this model ADD
+                      log::add('reolink', 'info', '=> Capacité hardware/software OK pour : '.$command['name']);
+                      $ability = true;
+                      break;
+                    } else {
+                      // Function NOT available for this model DO NOT ADD
+                      log::add('reolink', 'debug', '=> Ignorer, capacité hardware/software NOK pour : '.$command['name']);
+                      break;
+                    }
+                    break;
+                  }
+                }
+            }
+
+            if (!$abilityfound && !$ability) {
+              log::add('reolink', 'error', 'Aucun match de capacité '.$command['abilityneed'].' pour la CMD : '.$command['name']);
+            }
+
+            if ($ability) {
+              log::add('reolink', 'info', '-> Ajout de : '.$command['name']);
+              $cmd = new reolinkCmd();
+              $cmd->setOrder($cmd_order);
+              $cmd->setEqLogic_id($this->getId());
+              utils::a2o($cmd, $command);
+              $cmd->save();
+              if ($cmd->getConfiguration('valueFrom') != "") {
+                $valueLink = $cmd->getConfiguration('valueFrom');
+                $camera = reolink::byId($id, 'reolink');
+                $cmdlogic = reolinkCmd::byEqLogicIdAndLogicalId($camera->getId(), $valueLink);
+                if (is_object($cmdlogic)) {
+                  $cmd->setValue($cmdlogic->getId());
+                  $cmd->save();
+                  log::add('reolink', 'debug', '--> Valeur lier depuis : '.$valueLink." (".$cmdlogic->getId().")");
+                } else {
+                  log::add('reolink', 'warning', 'X--> Liaison impossible objet introuvable : '.$valueLink);
+                }
+              }
+              $cmd_order++;
+            }
+          } else {
+            log::add('reolink', 'debug', 'Commande déjà présente : '.$command['name']);
+          }
+      }
     }
 
     /*
@@ -1221,173 +522,24 @@ class reolinkCmd extends cmd {
           case 'refresh':
               reolink::refreshNFO($EqId);
               break;
-          case 'SetPush':
-              $param = array("Push" =>
-                            array("schedule" =>
-                                  array("enable" => intval($_options['select']))
-                                  )
-                          );
-              $cam->SendCMD(reolinkAPI::CAM_SET_PUSH, $param);
-              break;
-          case 'SetRecord':
-              $param = array("Rec" =>
-                          array("schedule" =>
-                                  array("enable" => intval($_options['select']))
-                                )
-                          );
-              $cam->SendCMD(reolinkAPI::CAM_SET_REC, $param);
-              break;
-          case 'SetEmail':
-              $param = array("Email" =>
-                              array("schedule" =>
-                                    array("enable" => intval($_options['select']))
-                                  )
-                            );
-              $cam->SendCMD(reolinkAPI::CAM_SET_EMAIL, $param);
-              break;
-          case 'SetFTP':
-              $param = array("Ftp" =>
-                              array("schedule" =>
-                                    array("enable" => intval($_options['select']))
-                                  )
+          default:
+            $speed = 32;
+            $channel = $this->getConfiguration('channel');
+            if ($channel == NULL) {
+              $channel = 0;
+            }
+            $actionAPI = $this->getConfiguration('actionapi');
+            if ($actionAPI != NULL) {
+              $payload = str_replace('\\', '', $this->getConfiguration('payload'));
+              $payload = str_replace('#OPTSELECTEDINT#', intval($_options['select']), $payload);
+              $payload = str_replace('#OPTSELECTEDSTR#', '"'.$_options['select'].'"', $payload);
+              $payload = str_replace('#OPTSLIDER#', intval($_options['slider']), $payload);
+              $payload = str_replace('#CHANNEL#', 0, $payload);
+              $payload = str_replace('#SPEED#', $speed, $payload);
 
-                            );
-              $cam->SendCMD(reolinkAPI::CAM_SET_FTP, $param);
-              break;
-          case 'SetAudioAlarm':
-              $param = array("Audio" =>
-                              array("schedule" =>
-                                    array("enable" => intval($_options['select']))
-                                  )
-
-                            );
-              $cam->SendCMD(reolinkAPI::CAM_SET_AUDIOALARM, $param);
-              break;
-          case 'GetPtzPreset':
-              $param = array("channel" => 0);
-              $data = $cam->SendCMD(reolinkAPI::CAM_GET_PTZPRESET, $param);
-              reolink::updatePTZpreset($EqId, $data);
-              break;
-          case 'SetPtzByPreset':
-              $param = array("channel" => 0,
-                             "op" => "ToPos",
-                             "id" => intval($_options['select']),
-                             "speed" => 32
-                            );
-              $data = $cam->SendCMD(reolinkAPI::CAM_PTZCTRL, $param);
-              break;
-          case 'SetZoom':
-              $param = array("ZoomFocus" =>
-                            array("channel" => 0,
-                                   "pos" => intval($_options['slider']),
-                                   "op" => "ZoomPos")
-                            );
-              $data = $cam->SendCMD(reolinkAPI::CAM_STARTZOOMFOCUS, $param);
-              break;
-          case 'SetPTZmoove':
-              $param = array("channel" => 0,
-                             "op" => $_options['select'],
-                             "speed" => 32
-                            );
-              $data = $cam->SendCMD(reolinkAPI::CAM_PTZCTRL, $param);
-              break;
-          case 'SetPTZpatrol':
-              $param = array("channel" => 0,
-                             "op" => $_options['select'],
-                             "speed" => 32
-                            );
-              $data = $cam->SendCMD(reolinkAPI::CAM_PTZCTRL, $param);
-              break;
-          case 'SetFocus':
-              $param = array("ZoomFocus" =>
-                            array("channel" => 0,
-                                   "pos" => intval($_options['slider']),
-                                   "op" => "FocusPos")
-                            );
-              $data = $cam->SendCMD(reolinkAPI::CAM_STARTZOOMFOCUS, $param);
-              break;
-          case 'SetIrLights':
-              $param = array("IrLights" =>
-                              array("channel" => 0,
-                                    "state" => $_options['select'])
-                            );
-              $data = $cam->SendCMD(reolinkAPI::CAM_SET_IRLIGHTS, $param);
-              break;
-          case 'SetPowerLed':
-              $param = array("PowerLed" =>
-                              array("channel" => 0,
-                                    "state" => $_options['select'])
-                            );
-              $data = $cam->SendCMD(reolinkAPI::CAM_SET_POWERLED, $param);
-              break;
-          case 'SetAutoFocus':
-              $param = array("AutoFocus" =>
-                              array("channel" => 0,
-                                    "disable" => intval($_options['select']))
-                            );
-              $data = $cam->SendCMD(reolinkAPI::CAM_SET_AUTOFOCUS, $param);
-              break;
-          case 'SetMicrophone':
-              $param = array("Enc" =>
-                              array("audio" => intval($_options['select']))
-                            );
-              $data = $cam->SendCMD(reolinkAPI::CAM_SET_ENC, $param);
-              break;
-          case 'Reboot':
-              $param = array();
-              $data = $cam->SendCMD(reolinkAPI::CAM_REBOOT, $param);
-              break;
-          case 'CheckFirmware':
-              $param = array();
-              $data = $cam->SendCMD(reolinkAPI::CAM_CHECKFIRMWARE, $param);
-              break;
-          case 'UpgradeOnline':
-              $param = array();
-              $data = $cam->SendCMD(reolinkAPI::CAM_UPGRADEONLINE, $param);
-              break;
-          case 'SetAutoMaint':
-              $param = array("AutoMaint" =>
-                              array("enable" => intval($_options['select']))
-                            );
-              $data = $cam->SendCMD(reolinkAPI::CAM_SET_AUTOMAINT, $param);
-              break;
-        case 'SetBright':
-            $param = array("Image" =>
-                            array("channel" => 0,
-                                  "bright" => intval($_options['slider']))
-                          );
-            $data = $cam->SendCMD(reolinkAPI::CAM_SET_IMAGE, $param);
-            break;
-        case 'SetContrast':
-                      $param = array("Image" =>
-                                      array("channel" => 0,
-                                          "contrast" => intval($_options['slider']))
-                                    );
-                      $data = $cam->SendCMD(reolinkAPI::CAM_SET_IMAGE, $param);
-                      break;
-        case 'SetSaturation':
-            $param = array("Image" =>
-                            array("channel" => 0,
-                                "saturation" => intval($_options['slider']))
-                          );
-            $data = $cam->SendCMD(reolinkAPI::CAM_SET_IMAGE, $param);
-            break;
-        case 'SetHue':
-            $param = array("Image" =>
-                            array("channel" => 0,
-                                "hue" => intval($_options['slider']))
-                          );
-            $data = $cam->SendCMD(reolinkAPI::CAM_SET_IMAGE, $param);
-            break;
-        case 'SetSharpen':
-            $param = array("Image" =>
-                            array("channel" => 0,
-                                "sharpen" => intval($_options['slider']))
-                          );
-            $data = $cam->SendCMD(reolinkAPI::CAM_SET_IMAGE, $param);
-            break;
+              $cam->SendCMD($actionAPI, json_decode($payload, true));
+            }
         }
-
      }
 
     /*     * **********************Getteur Setteur*************************** */

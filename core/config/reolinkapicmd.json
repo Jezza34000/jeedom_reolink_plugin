@@ -1,0 +1,746 @@
+{
+	"name": "allparam",
+	"commands": [
+		{
+			"abilityneed":"none",
+			"name": "Rafraîchir",
+			"type": "action",
+			"subtype": "other",
+			"isVisible": 1,
+			"logicalId": "refresh"
+		},
+		{
+			"abilityneed":"reboot",
+			"name": "Redémarrer",
+			"type": "action",
+			"subtype": "other",
+			"configuration": {
+				"actionapi": "Reboot",
+				"payload": ""
+			},
+			"isVisible": 1,
+			"logicalId": "reboot"
+		},
+		{
+			"abilityneed":"push",
+			"name": "Notification push (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetPushState"
+		},
+		{
+			"abilityneed":"push",
+			"name": "Notification push",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetPushState",
+				"actionapi": "SetPush",
+				"payload": "{\"Push\":{\"schedule\":{\"enable\":#OPTSELECTEDINT#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetPush"
+		},
+		{
+			"abilityneed":"sdCard",
+			"name": "Enregistrement SDCARD (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetRecordState"
+		},
+		{
+			"abilityneed":"sdCard",
+			"name": "Enregistrement SDCARD",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetRecordState",
+				"actionapi": "SetRec",
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"schedule\":{\"enable\":#OPTSELECTEDINT#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetRecord"
+		},
+		{
+			"abilityneed":"sdCard",
+			"name": "Enregistrement avant détection (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetPreRecordState"
+		},
+		{
+			"abilityneed":"sdCard",
+			"name": "Enregistrement avant détection",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|Désactivé;1|Activé",
+				"valueFrom" : "SetPreRecordState",
+				"actionapi": "SetRec",
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"preRec\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetPreRecord"
+		},
+		{
+			"abilityneed":"sdCard",
+			"name": "Ecraser les enregistrements (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetOverwriteState"
+		},
+		{
+			"abilityneed":"sdCard",
+			"name": "Ecraser les enregistrements",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|Désactivé;1|Activé",
+				"valueFrom" : "SetOverwriteState",
+				"actionapi": "SetRec",
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"overwrite\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetOverwrite"
+		},
+		{
+			"abilityneed":"sdCard",
+			"name": "Durée enregistrement après détection (état)",
+			"type": "info",
+			"subtype": "string",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetPostRecordState"
+		},
+		{
+			"abilityneed":"sdCard",
+			"name": "Durée enregistrement après détection",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "15 Seconds|15 Sec;30 Seconds|30 Sec;1 Minute|1 Min;10 Minutes|10 Min",
+				"valueFrom" : "SetPostRecordState",
+				"actionapi": "SetRec",
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"postRec\":#OPTSELECTEDSTR#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetPostRecord"
+		},
+		{
+			"abilityneed":"email",
+			"name": "Envoi email (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetEmailState"
+		},
+		{
+			"abilityneed":"email",
+			"name": "Envoi email",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetEmailState",
+				"actionapi": "SetEmail",
+				"payload": "{\"Email\":{\"schedule\":{\"enable\":#OPTSELECTEDINT#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetEmail"
+		},
+		{
+			"abilityneed":"ftp",
+			"name": "Envoi FTP (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetFTPState"
+		},
+		{
+			"abilityneed":"ftp",
+			"name": "Envoi FTP",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetFTPState",
+				"actionapi": "SetFtp",
+				"payload": "{\"Ftp\":{\"schedule\":{\"enable\":#OPTSELECTEDINT#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetFTP"
+		},
+		{
+			"abilityneed":"ledControl",
+			"name": "Led infra rouge (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetIrLightsState"
+		},
+		{
+			"abilityneed":"ledControl",
+			"name": "Led infra rouge",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "Auto|Auto;Off|Désactivé",
+				"valueFrom" : "SetIrLightsState",
+				"actionapi": "SetIrLights",
+				"payload": "{\"IrLights\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDSTR#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetIrLights"
+		},
+		{
+			"abilityneed":"alarmAudio",
+			"name": "Alarme Audio (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAudioAlarmState"
+		},
+		{
+			"abilityneed":"alarmAudio",
+			"name": "Alarme Audio",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetAudioAlarmState",
+				"actionapi": "SetAudioAlarm",
+				"payload": "{\"Audio\":{\"schedule\":{\"enable\":#OPTSELECTEDINT#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetAudioAlarm"
+		},
+		{
+			"abilityneed":"powerLed",
+			"name": "Power LED (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetPowerLedState"
+		},
+		{
+			"abilityneed":"powerLed",
+			"name": "Power LED",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "On|Activer;Off|Désactiver",
+				"valueFrom" : "SetPowerLedState",
+				"actionapi": "SetPowerLed",
+				"payload": "{\"PowerLed\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDSTR#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetPowerLed"
+		},
+		{
+			"abilityneed":"enc",
+			"name": "Microphone (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetMicrophoneState"
+		},
+		{
+			"abilityneed":"enc",
+			"name": "Microphone",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetMicrophoneState",
+				"actionapi": "SetEnc",
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"audio\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetMicrophone"
+		},
+		{
+			"abilityneed":"disableAutoFocus",
+			"name": "Autofocus (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAutoFocusState"
+		},
+		{
+			"abilityneed":"disableAutoFocus",
+			"name": "Autofocus",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|Activer;1|Désactiver",
+				"valueFrom" : "SetAutoFocusState",
+				"actionapi": "SetAutoFocus",
+				"payload": "{\"AutoFocus\":{\"channel\":#CHANNEL#,\"disable\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAutoFocus"
+		},
+		{
+			"abilityneed":"autoMaint",
+			"name": "Auto reboot (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAutoMaintState"
+		},
+		{
+			"abilityneed":"autoMaint",
+			"name": "Auto reboot",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|Activer;1|Désactiver",
+				"valueFrom" : "SetAutoMaintState",
+				"actionapi": "SetEnc",
+				"payload": "{\"AutoMaint\":{\"enable\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAutoMaint"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"name": "Récupérer les presets PTZ",
+			"type": "action",
+			"subtype": "other",
+			"configuration": {
+				"actionapi": "GetPtzPreset",
+				"payload": "{\"channel\":#CHANNEL#}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "GetPtzPreset"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"name": "Utiliser un preset PTZ",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|(Cliquez sur Récupérer les presets PTZ pour obtenir la liste)",
+				"actionapi": "SetPtzPreset",
+				"payload": "{\"channel\":#CHANNEL#,\"op\":\"ToPos\",\"id\":#OPTSELECTEDINT#,\"speed\":#SPEED#}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetPtzByPreset"
+		},
+		{
+			"abilityneed":"ptzType",
+			"name": "Mouvement PTZ",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "Stop|Stop;Left|Gauche;Right|Droite;Up|Haut;Down|Bas",
+				"actionapi": "PtzCtrl",
+				"payload": "{\"channel\":#CHANNEL#,\"op\":#OPTSELECTEDSTR#,\"speed\":#SPEED#}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetPTZmoove"
+		},
+		{
+			"abilityneed":"ptzCtrl",
+			"name": "Vitesse",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": "1",
+				"maxValue" : "64",
+				"setValue": "32"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetFocus"
+		},
+		{
+			"abilityneed":"ptzCtrl",
+			"name": "Zoom",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": "0",
+				"maxValue" : "249",
+				"actionapi": "StartZoomFocus",
+				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"ZoomPos\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetZoom"
+		},
+		{
+			"abilityneed":"ptzCtrl",
+			"name": "Focus",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": "0",
+				"maxValue" : "32",
+				"actionapi": "StartZoomFocus",
+				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"FocusPos\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetFocus"
+		},
+		{
+			"abilityneed":"ptzPatrol",
+			"name": "PTZ Patrol",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "StartPatrol|Démarrer;StopPatrol|Arrêter",
+				"actionapi": "SetPtzPatrol",
+				"payload": "{\"channel\":#CHANNEL#,\"op\":#OPTSELECTEDSTR#,\"speed\":#SPEED#}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetPTZpatrol"
+		},
+		{
+			"abilityneed":"isp",
+			"name": "Retourner verticalement (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetRotationState"
+		},
+		{
+			"abilityneed":"isp",
+			"name": "Retourner horizontalement (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetMirroringState"
+		},
+		{
+			"abilityneed":"isp",
+			"name": "Rétro éclairage (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetBacklightState"
+		},
+		{
+			"abilityneed":"isp",
+			"name": "Jour Nuit (état)",
+			"type": "info",
+			"subtype": "string",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetDayNightState"
+		},
+		{
+			"abilityneed":"isp",
+			"name": "Jour Nuit",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "Auto|Auto;Color|Couleur;Black&White|Noir&Blanc",
+				"valueFrom" : "SetDayNightState",
+				"actionapi": "SetIsp",
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"dayNight\":#OPTSELECTEDSTR#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetDayNight"
+		},
+		{
+			"abilityneed":"isp",
+			"name": "Anti-scintillement (état)",
+			"type": "info",
+			"subtype": "string",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAntiFlickerState"
+		},
+		{
+			"abilityneed":"isp",
+			"name": "Anti-scintillement",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "Outdoor|Extérieur;50HZ|50Hz;60HZ|60Hz;Off|Désactivé",
+				"valueFrom" : "SetAntiFlickerState",
+				"actionapi": "SetIsp",
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"antiFlicker\":#OPTSELECTEDSTR#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetAntiFlicker"
+		},
+		{
+			"abilityneed":"isp",
+			"name": "3D DNR (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetNr3dState"
+		},
+		{
+			"abilityneed":"isp",
+			"name": "3D DNR",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetNr3dState",
+				"actionapi": "SetIsp",
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"nr3d\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetNr3d"
+		},
+		{
+			"abilityneed":"isp",
+			"name": "Masque de vie privée (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetMaskState"
+		},
+		{
+			"abilityneed":"isp",
+			"name": "Masque de vie privée",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetMaskState",
+				"actionapi": "SetMask",
+				"payload": "{\"Mask\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetMask"
+		},
+		{
+			"abilityneed":"isp",
+			"name": "Balance des blancs (etat)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetWhiteBalanceState"
+		},
+		{
+			"abilityneed":"image",
+			"name": "Luminosité (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetBrightState"
+		},
+		{
+			"abilityneed":"image",
+			"name": "Luminosité",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": "1",
+				"maxValue" : "255",
+				"valueFrom" : "SetBrightState",
+				"actionapi": "SetIsp",
+				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"bright\":#OPTSLIDER#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetBright"
+		},
+		{
+			"abilityneed":"image",
+			"name": "Contraste (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetContrastState"
+		},
+		{
+			"abilityneed":"image",
+			"name": "Contraste",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": "1",
+				"maxValue" : "255",
+				"valueFrom" : "SetContrastState",
+				"actionapi": "SetIsp",
+				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"contrast\":#OPTSLIDER#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetContrast"
+		},
+		{
+			"abilityneed":"image",
+			"name": "Saturation (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetSaturationState"
+		},
+		{
+			"abilityneed":"image",
+			"name": "Saturation",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": "1",
+				"maxValue" : "255",
+				"valueFrom" : "SetSaturationState",
+				"actionapi": "SetIsp",
+				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"saturation\":#OPTSLIDER#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetSaturation"
+		},
+		{
+			"abilityneed":"image",
+			"name": "Teinte (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetHueState"
+		},
+		{
+			"abilityneed":"image",
+			"name": "Teinte",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": "1",
+				"maxValue" : "255",
+				"valueFrom" : "SetHueState",
+				"actionapi": "SetIsp",
+				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"hue\":#OPTSLIDER#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetHue"
+		},
+		{
+			"abilityneed":"image",
+			"name": "Netteté (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetSharpenState"
+		},
+		{
+			"abilityneed":"image",
+			"name": "Netteté",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": "1",
+				"maxValue" : "255",
+				"valueFrom" : "SetSharpenState",
+				"actionapi": "SetIsp",
+				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"sharpen\":#OPTSLIDER#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetSharpen"
+		},
+		{
+			"abilityneed":"waterMark",
+			"name": "Filigrane Reolink (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetWatermarkState"
+		},
+		{
+			"abilityneed":"waterMark",
+			"name": "Filigrane Reolink",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetWatermarkState",
+				"actionapi": "SetOsd",
+				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"watermark\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetWatermark"
+		}
+	]
+}

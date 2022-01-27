@@ -189,6 +189,7 @@ class reolinkAPI {
         $url = "$this->cnxtype://$this->ip:$this->port/cgi-bin/api.cgi?cmd=$cmd";
         log::add('reolink', 'debug', '=========================================================');
         log::add('reolink', 'debug', 'URL de requête => '.$url);
+        log::add('reolink', 'debug', 'Payload => '.$payload);
         curl_setopt($ch, CURLOPT_URL, $url );
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
@@ -351,7 +352,6 @@ class reolinkAPI {
             if ($data[0]['error']['rspCode'] == -6) {
               // Login failed, re-authentification need
               $this->login();
-
               return retry;
             }
 
