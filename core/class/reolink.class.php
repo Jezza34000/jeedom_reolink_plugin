@@ -133,7 +133,6 @@ class reolink extends eqLogic {
 
     }
 
-
     public static function updatePTZpreset($id, $data) {
       $camera=reolink::byId($id, 'reolink');
       $cmd = $camera->getCmd(null, 'SetPtzByPreset');
@@ -518,16 +517,21 @@ class reolinkCmd extends cmd {
       $EqId = $this->getEqLogic_id();
       $cam = reolink::getReolinkConnection($EqId);
 
+      $channel = $this->getConfiguration('channel');
+      if ($channel == NULL) {
+        $channel = 0;
+      }
+
        switch ($this->getLogicalId()) {
           case 'refresh':
               reolink::refreshNFO($EqId);
               break;
+          case 'GetPtzPreset':
+              $data = $cam->SendCMD(reolinkAPI::CAM_GET_PTZPRESET, array("channel" => $channel));
+              reolink::updatePTZpreset($EqId, $data);
+              break;
           default:
             $speed = 32;
-            $channel = $this->getConfiguration('channel');
-            if ($channel == NULL) {
-              $channel = 0;
-            }
             $actionAPI = $this->getConfiguration('actionapi');
             if ($actionAPI != NULL) {
               $payload = str_replace('\\', '', $this->getConfiguration('payload'));

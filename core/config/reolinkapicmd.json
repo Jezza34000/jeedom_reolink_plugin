@@ -367,7 +367,7 @@
 			"configuration": {
 				"option": "select",
 				"listValue": "0|(Cliquez sur Récupérer les presets PTZ pour obtenir la liste)",
-				"actionapi": "SetPtzPreset",
+				"actionapi": "PtzCtrl",
 				"payload": "{\"channel\":#CHANNEL#,\"op\":\"ToPos\",\"id\":#OPTSELECTEDINT#,\"speed\":#SPEED#}"
 			},
 			"IsHistorized": 0,
