@@ -191,7 +191,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							<legend><i class="fas fa-info"></i> {{Informations}}</legend>
 							<div class="form-group">
 								<div class="text-center">
-									<img name="icon_visu" src="plugins/reolink/desktop/img/camera<?php echo $eqLogic->getId(); ?>.png" style="max-width:160px;" onerror="this.onerror=null; this.src='<?php echo $plugin->getPathImgIcon(); ?>'"/>
+									<img name="icon_visu" id="icon_visu" src= "<?php echo $plugin->getPathImgIcon(); ?>" style="max-width:160px;"/>
 								</div>
 							</div>
 							<div class="form-group">

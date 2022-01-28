@@ -26,6 +26,10 @@ $("#table_cmd").sortable({
   forcePlaceholderSize: true
 });
 
+function printEqLogic(_eqLogic) {
+    $('#icon_visu').attr('src', 'plugins/reolink/desktop/img/camera' + _eqLogic.id + '.png')
+}
+
 /* Fonction permettant l'affichage des commandes dans l'équipement */
 function addCmdToTable(_cmd) {
   if (!isset(_cmd)) {
