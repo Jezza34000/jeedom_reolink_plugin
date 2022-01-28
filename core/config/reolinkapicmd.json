@@ -375,7 +375,7 @@
 			"logicalId": "SetPtzByPreset"
 		},
 		{
-			"abilityneed":"ptzType",
+			"abilityneed":"ptzDirection",
 			"name": "Mouvement PTZ",
 			"type": "action",
 			"subtype": "select",
@@ -398,11 +398,12 @@
 				"option": "slider",
 				"minValue": "1",
 				"maxValue" : "64",
-				"setValue": "32"
+				"setValue": "32",
+				"speedvalue":"32"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetFocus"
+			"logicalId": "SetSpeed"
 		},
 		{
 			"abilityneed":"ptzCtrl",
@@ -719,7 +720,7 @@
 		},
 		{
 			"abilityneed":"waterMark",
-			"name": "Filigrane Reolink (état)",
+			"name": "OSD Filigrane Reolink (état)",
 			"type": "info",
 			"subtype": "binary",
 			"IsHistorized": 0,
@@ -728,12 +729,12 @@
 		},
 		{
 			"abilityneed":"waterMark",
-			"name": "Filigrane Reolink",
+			"name": "OSD Filigrane Reolink",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "1|Activer;0|Désactiver",
+				"listValue": "1|Afficher;0|Masquer",
 				"valueFrom" : "SetWatermarkState",
 				"actionapi": "SetOsd",
 				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"watermark\":#OPTSELECTEDINT#}}"
@@ -741,6 +742,192 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetWatermark"
+		},
+		{
+			"abilityneed":"osd",
+			"name": "OSD Date & Heure (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetOsdTimeState"
+		},
+		{
+			"abilityneed":"osd",
+			"name": "OSD Date & Heure",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Afficher;0|Masquer",
+				"valueFrom" : "SetOsdTimeState",
+				"actionapi": "SetOsd",
+				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdTime\":{\"enable\":#OPTSELECTEDINT#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetOsdTime"
+		},
+		{
+			"abilityneed":"osd",
+			"name": "Position OSD Date & Heure (état)",
+			"type": "info",
+			"subtype": "string",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetPosOsdTimeState"
+		},
+		{
+			"abilityneed":"osd",
+			"name": "Position OSD Date & Heure",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "Upper Left|Haut-Gauche;Top Center|Haut-Milieu;Upper Right|Haut-Droit;Lower Left|Bas-Gauche;Bottom Center|Bas-Milieu;Lower Right|Bas-Droite",
+				"valueFrom" : "SetPosOsdTimeState",
+				"actionapi": "SetOsd",
+				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdTime\":{\"pos\":#OPTSELECTEDSTR#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetPosOsdTime"
+		},
+		{
+			"abilityneed":"osd",
+			"name": "OSD Nom de la caméra (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetOsdChannelState"
+		},
+		{
+			"abilityneed":"osd",
+			"name": "OSD Nom de la caméra",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Afficher;0|Masquer",
+				"valueFrom" : "SetOsdChannelState",
+				"actionapi": "SetOsd",
+				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdChannel\":{\"enable\":#OPTSELECTEDINT#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetOsdChannel"
+		},
+		{
+			"abilityneed":"osd",
+			"name": "Position OSD nom de la caméra (état)",
+			"type": "info",
+			"subtype": "string",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetPosOsdChannelState"
+		},
+		{
+			"abilityneed":"osd",
+			"name": "Position OSD nom de la caméra",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "Upper Left|Haut-Gauche;Top Center|Haut-Milieu;Upper Right|Haut-Droit;Lower Left|Bas-Gauche;Bottom Center|Bas-Milieu;Lower Right|Bas-Droite",
+				"valueFrom" : "SetPosOsdChannelState",
+				"actionapi": "SetOsd",
+				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdChannel\":{\"pos\":#OPTSELECTEDSTR#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetPosOsdChannel"
+		},
+		{
+			"abilityneed":"enc",
+			"name": "Résolution (Stream1)",
+			"type": "info",
+			"subtype": "string",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetResolutionst1State"
+		},
+		{
+			"abilityneed":"enc",
+			"name": "Fréquence image FPS (Stream1)",
+			"type": "info",
+			"subtype": "numeric",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetFPSst1State"
+		},
+		{
+			"abilityneed":"enc",
+			"name": "Débit kbps (Stream1)",
+			"type": "info",
+			"subtype": "numeric",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetBitratest1State"
+		},
+		{
+			"abilityneed":"enc",
+			"name": "Résolution (Stream2)",
+			"type": "info",
+			"subtype": "string",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetResolutionst2State"
+		},
+		{
+			"abilityneed":"enc",
+			"name": "Fréquence image FPS (Stream2)",
+			"type": "info",
+			"subtype": "numeric",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetFPSst2State"
+		},
+		{
+			"abilityneed":"enc",
+			"name": "Débit kbps (Stream2)",
+			"type": "info",
+			"subtype": "numeric",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetBitratest2State"
+		},
+		{
+			"abilityneed":"sdCard",
+			"name": "Mémoire disponible",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "driveAvailable"
+		},
+		{
+			"abilityneed":"sdCard",
+			"name": "Espace disponible",
+			"type": "info",
+			"Unite": "%",
+			"subtype": "numeric",
+			"configuration": {
+				"minValue": 0,
+				"maxValue": 100
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "driveSpaceAvailable"
+		},
+		{
+			"abilityneed":"sdCard",
+			"name": "Type de stockage",
+			"type": "info",
+			"subtype": "string",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "driveType"
 		}
 	]
 }

@@ -30,6 +30,20 @@ try {
   */
     ajax::init();
 
+    if (init('action') == 'CreateCMD') {
+        $camera = reolink::byId(init('id'));
+        if (!is_object($camera)) {
+          throw new Exception(__('Impossible de trouver la caméra : ' . init('id'), __FILE__));
+        }
+        $res = $camera->loadCmdFromConf(init('id'));
+
+        if (is_numeric($res)) {
+          ajax::success();
+        } elseif ($res === false) {
+          throw new Exception(__('Erreur lors de la création des commandes', __FILE__));
+        }
+    }
+
     if (init('action') == 'CheckConnexion') {
         $camera = reolink::byId(init('id'));
         if (!is_object($camera)) {
@@ -54,6 +68,35 @@ try {
         } else {
           throw new Exception(__('Impossible de se connecter à la caméra ('.$res.')', __FILE__));
         }
+    }
+
+    if (init('action') == 'SetCAMConfig') {
+      $camera = reolink::byId(init('id'));
+      if (!is_object($camera)) {
+        throw new Exception(__('Impossible de trouver la caméra : ' . init('id'), __FILE__));
+      }
+      $cfgGroup = init('group');
+      if ($cfgGroup == 'EMAIL'){
+        $res = reolink::setEmail(init('id'));
+      }
+      if ($cfgGroup == 'FTP'){
+        $res = reolink::setFTP(init('id'));
+      }
+
+      if ($res == 200) {
+        ajax::success();
+      } else {
+        throw new Exception(__('Echec du paramétrage de la caméra (consultez le log pour plus de détails)', __FILE__));
+      }
+    }
+
+    if (init('action') == 'GetCAMConfig') {
+      $camera = reolink::byId(init('id'));
+      if (!is_object($camera)) {
+        throw new Exception(__('Impossible de trouver la caméra : ' . init('id'), __FILE__));
+      }
+      $res = reolink::refreshNFO(init('id'));
+      ajax::success();
     }
 
     throw new Exception(__('Aucune méthode correspondante à : ', __FILE__) . init('action'));

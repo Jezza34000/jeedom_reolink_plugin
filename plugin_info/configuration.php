@@ -24,5 +24,16 @@ if (!isConnect()) {
 ?>
 <form class="form-horizontal">
   <fieldset>
+    <div class="form-group">
+      <label class="col-md-4 control-label">{{Methode d'authentification GET}}
+        <sup><i class="fas fa-question-circle tooltips" title="{{Methode par laquelle le plugin va envoyer les commandes API (ne pas modifier ce paramètre sauf si vous savez ce que vous faites)}}"></i></sup>
+      </label>
+      <div class="col-md-4">
+        <select class="configKey form-control" data-l1key="authmethod">
+            <option value="0">Token</option>
+            <option value="1">Login & Pass</option>
+        </select>
+      </div>
+    </div>
   </fieldset>
 </form>

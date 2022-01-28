@@ -155,6 +155,50 @@ class reolink extends eqLogic {
       }
     }
 
+    public static function setFTP($id) {
+      $camcmd = reolink::byId($id, 'reolink');
+      $cam = reolink::getReolinkConnection($id);
+
+      $param = array ("Ftp" => array(
+                      	"anonymous" => intval($camcmd->getConfiguration("ftp_anonymous")),
+                      	"interval" => intval($camcmd->getConfiguration("ftp_interval")),
+                      	"maxSize" => intval($camcmd->getConfiguration("ftp_maxfilesize")),
+                      	"mode" => intval($camcmd->getConfiguration("ftp_mode")),
+                      	"ssl" => intval($camcmd->getConfiguration("ftp_usessltls")),
+                      	"password" => $camcmd->getConfiguration("ftp_passwd"),
+                      	"port" => intval($camcmd->getConfiguration("ftp_port")),
+                      	"remoteDir" => $camcmd->getConfiguration("ftp_path"),
+                      	"server" => $camcmd->getConfiguration("ftp_server"),
+                      	"userName" => $camcmd->getConfiguration("ftp_account")
+                      	)
+                      );
+      $camresp = $cam->SendCMD(reolinkAPI::CAM_SET_FTP, $param);
+      return $camresp;
+    }
+
+    public static function setEmail($id) {
+      $camcmd = reolink::byId($id, 'reolink');
+      $cam = reolink::getReolinkConnection($id);
+
+      $param = array ("Email" => array(
+                        "addr1" => $camcmd->getConfiguration("mailto_addr1"),
+                        "addr2" => $camcmd->getConfiguration("mailto_addr2"),
+                        "addr3" => $camcmd->getConfiguration("mailto_addr3"),
+                        "attachmentType" => $camcmd->getConfiguration("smtp_attachement"),
+                        "interval" => $camcmd->getConfiguration("smtp_interval"),
+                        "nickName" => $camcmd->getConfiguration("mailfrom_name"),
+                        "password" => $camcmd->getConfiguration("smtp_password"),
+                        "smtpPort" => intval($camcmd->getConfiguration("smtp_port")),
+                        "smtpServer" => $camcmd->getConfiguration("smtp_server"),
+                        "ssl" => intval($camcmd->getConfiguration("smtp_usessltls")),
+                        "userName" => $camcmd->getConfiguration("smtp_login")
+                        )
+                      );
+      $camresp = $cam->SendCMD(reolinkAPI::CAM_SET_EMAIL, $param);
+      return $camresp;
+    }
+
+
     public static function refreshNFO($id) {
       $camcmd = reolink::byId($id, 'reolink');
       $camcnx = reolink::getReolinkConnection($id);
@@ -164,13 +208,40 @@ class reolink extends eqLogic {
       $camcmd->checkAndUpdateCmd('SetPushState', $res['schedule']['enable']);
 
       $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_FTP, array());
-      $camcmd->checkAndUpdateCmd('SetFTPState', $res['schedule']['enable']);
+        $camcmd->checkAndUpdateCmd('SetFTPState', $res['schedule']['enable']);
+        $camcmd->setConfiguration("ftp_state", $res['schedule']['enable']);
+        $camcmd->setConfiguration("ftp_server", $res['server']);
+        $camcmd->setConfiguration("ftp_anonymous", $res['anonymous']);
+        $camcmd->setConfiguration("ftp_account", $res['userName']);
+        $camcmd->setConfiguration("ftp_passwd", $res['password']);
+        $camcmd->setConfiguration("ftp_path", $res['remoteDir']);
+        $camcmd->setConfiguration("ftp_port", $res['port']);
+        $camcmd->setConfiguration("ftp_mode", $res['mode']);
+        $camcmd->setConfiguration("ftp_maxfilesize", $res['maxSize']);
+        $camcmd->setConfiguration("ftp_filetosend", $res['streamType']);
 
       $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_EMAIL, array());
-      $camcmd->checkAndUpdateCmd('SetEmailState', $res['schedule']['enable']);
+        $camcmd->checkAndUpdateCmd('SetEmailState', $res['schedule']['enable']);
+        $camcmd->setConfiguration("smtp_state", $res['schedule']['enable']);
+        $camcmd->setConfiguration("smtp_server", $res['smtpServer']);
+        $camcmd->setConfiguration("smtp_port", $res['smtpPort']);
+        $camcmd->setConfiguration("mailto_addr1", $res['addr1']);
+        $camcmd->setConfiguration("mailto_addr2", $res['addr2']);
+        $camcmd->setConfiguration("mailto_addr3", $res['addr3']);
+        $camcmd->setConfiguration("smtp_password", $res['password']);
+        $camcmd->setConfiguration("smtp_login", $res['userName']);
+        $camcmd->setConfiguration("smtp_usessltls", $res['ssl']);
+        $camcmd->setConfiguration("smtp_interval", $res['interval']);
+        $camcmd->setConfiguration("smtp_attachement", $res['attachment']);
 
       $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_ENC, array("channel" => 0));
-      $camcmd->checkAndUpdateCmd('SetMicrophoneState', $res['audio']);
+        $camcmd->checkAndUpdateCmd('SetMicrophoneState', $res['audio']);
+        $camcmd->checkAndUpdateCmd('SetResolutionst1State', $res['mainStream']['size']);
+        $camcmd->checkAndUpdateCmd('SetFPSst1State', $res['mainStream']['size']);
+        $camcmd->checkAndUpdateCmd('SetBitratest1State', $res['mainStream']['bitRate']);
+        $camcmd->checkAndUpdateCmd('SetResolutionst2State', $res['subStream']['size']);
+        $camcmd->checkAndUpdateCmd('SetFPSst2State', $res['subStream']['size']);
+        $camcmd->checkAndUpdateCmd('SetBitratest2State', $res['subStream']['size']);
 
       $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_REC, array("channel" => 0));
       $camcmd->checkAndUpdateCmd('SetRecordState', $res['schedule']['enable']);
@@ -204,33 +275,38 @@ class reolink extends eqLogic {
         $camcmd->checkAndUpdateCmd('SetRedGainState', $res['redGain']); // ???
         $camcmd->checkAndUpdateCmd('SetWhiteBalanceState', $res['whiteBalance']); // ???
 
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_OSD, array("channel" => 0));
+        $camcmd->checkAndUpdateCmd('SetWatermarkState', $res['watermark']);
+        $camcmd->checkAndUpdateCmd('SetOsdTimeState', $res['osdTime']['enable']);
+        $camcmd->checkAndUpdateCmd('SetOsdChannelState', $res['osdChannel']['enable']);
+        $camcmd->checkAndUpdateCmd('SetPosOsdTimeState', $res['osdTime']['pos']);
+        $camcmd->checkAndUpdateCmd('SetPosOsdChannelState', $res['osdChannel']['pos']);
+
       $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_IMAGE, array("channel" => 0));
         $camcmd->checkAndUpdateCmd('SetBrightState', $res['bright']);
         $camcmd->checkAndUpdateCmd('SetContrastState', $res['contrast']);
         $camcmd->checkAndUpdateCmd('SetSaturationState', $res['saturation']);
         $camcmd->checkAndUpdateCmd('SetHueState', $res['hue']);
         $camcmd->checkAndUpdateCmd('SetSharpenState', $res['sharpen']);
+
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_HDDINFO, array());
+        if ($res['format'] == 1 && $res['mount'] == 1) {
+          $camcmd->checkAndUpdateCmd('driveAvailable', 1);
+        } else {
+          $camcmd->checkAndUpdateCmd('driveAvailable', 0);
+        }
+        if (is_numeric($res['size']) && is_numeric($res['capacity'])) {
+          $percoccupancy = round(($res['size'] * 100) / $res['capacity'], 0);
+          $camcmd->checkAndUpdateCmd('driveSpaceAvailable', $percoccupancy);
+        }
+        if ($res['storageType'] == 1) {
+          $camcmd->checkAndUpdateCmd('driveType', "HDD");
+        } elseif ($res['storageType'] == 2) {
+          $camcmd->checkAndUpdateCmd('driveType', "Sdcard");
+        }
+
+        $camcmd->save();
     }
-
-    /*public function CheckConnection() {
-      if ($this->reolinkTokenValidity()) {
-        // TOKEN OK
-        $reolink_connection = new reolinkAPI($adresseIP, $token, NULL, NULL, $port);
-      } else {
-        // TOKEN NOK
-        $this->setConfiguration("token", $loginresult[0]);
-        $this->setConfiguration("token_expiration", $loginresult[1]);
-        $this->save();
-
-      }
-      // TODO: Error connection
-      return true;
-    }
-
-*/
-
-
-
 
   /*
    * Permet de définir les possibilités de personnalisation du widget (en cas d'utilisation de la fonction 'toHtml' par exemple)
@@ -341,8 +417,6 @@ class reolink extends eqLogic {
  // Fonction exécutée automatiquement après la sauvegarde (création ou mise à jour) de l'équipement
     public function postSave() {
 
-      reolink::loadCmdFromConf($this->getId());
-
     }
 
  // Fonction exécutée automatiquement avant la suppression de l'équipement
@@ -370,12 +444,12 @@ class reolink extends eqLogic {
 
       if (!is_json($content)) {
         log::add('reolink', 'error', 'Format du fichier de configuration n\'est pas du JSON valide !');
-        return;
+        return false;
       }
       $device = json_decode($content, true);
       if (!is_array($device) || !isset($device['commands'])) {
         log::add('reolink', 'error', 'Pas de configuration valide trouvé dans le fichier');
-        return true;
+        return false;
       }
       log::add('reolink', 'info', 'Nombre de commandes dans le fichier de configuration : '.count($device['commands']));
       $cmd_order = 0;
@@ -468,6 +542,7 @@ class reolink extends eqLogic {
             log::add('reolink', 'debug', 'Commande déjà présente : '.$command['name']);
           }
       }
+      return $cmd_order;
     }
 
     /*
@@ -530,9 +605,21 @@ class reolinkCmd extends cmd {
               $data = $cam->SendCMD(reolinkAPI::CAM_GET_PTZPRESET, array("channel" => $channel));
               reolink::updatePTZpreset($EqId, $data);
               break;
+          case 'SetSpeed':
+              $this->setConfiguration('speedvalue', $_options['slider']);
+              break;
           default:
-            $speed = 32;
+            // Speed NFO
+            $cmd = reolinkCmd::byEqLogicIdAndLogicalId($EqId, "SetSpeed");
+            if (is_object($cmd)) {
+              $speed = $cmd->getConfiguration('speedvalue');
+            } else {
+              $speed = 32;
+            }
+
+
             $actionAPI = $this->getConfiguration('actionapi');
+            $linkedvalue = $this->getConfiguration('valueFrom');
             if ($actionAPI != NULL) {
               $payload = str_replace('\\', '', $this->getConfiguration('payload'));
               $payload = str_replace('#OPTSELECTEDINT#', intval($_options['select']), $payload);
@@ -541,7 +628,20 @@ class reolinkCmd extends cmd {
               $payload = str_replace('#CHANNEL#', 0, $payload);
               $payload = str_replace('#SPEED#', $speed, $payload);
 
-              $cam->SendCMD($actionAPI, json_decode($payload, true));
+              log::add('reolink', 'debug', 'Payload avec paramètre utilisateur demandé = '.$payload);
+
+              $camresp = $cam->SendCMD($actionAPI, json_decode($payload, true));
+
+              // Check return and update CMD State
+              if ($camresp == 200) {
+                // CMD OK cam return code 200
+                if ($linkedvalue != NULL) {
+                  // UPDATE VALUE
+                }
+              } else {
+                throw new Exception(__('Echec d\'execution de la commande (consultez le log pour plus de détails)', __FILE__));
+              }
+
             }
         }
      }

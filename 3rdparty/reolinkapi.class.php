@@ -9,6 +9,7 @@ class reolinkAPI {
     private $user;
     private $password;
     private $cnxtype;
+    private $authmethod;
 
     var $is_loggedin;
 
@@ -168,7 +169,9 @@ class reolinkAPI {
         $this->token = config::byKey("token".$this->tagtoken, 'reolink');
         $this->tokenexp = config::byKey("tokenEXP".$this->tagtoken, 'reolink');
 
-        if ($this->reolinkTokenValidity() == false)
+        $this->authmethod = config::byKey("authmethod", 'reolink');
+
+        if ($this->authmethod == 0 && $this->reolinkTokenValidity() == false)
         {
             // TOKEN NOK (get new one)
             $this->login();
@@ -188,7 +191,9 @@ class reolinkAPI {
         $ch = curl_init();
         $url = "$this->cnxtype://$this->ip:$this->port/cgi-bin/api.cgi?cmd=$cmd";
         log::add('reolink', 'debug', '=========================================================');
-        log::add('reolink', 'debug', 'URL de requête => '.$url);
+        // Debug REMOVE PWD
+        $urldebug = preg_replace('/password=(.*?)$/', 'password=******', $url);
+        log::add('reolink', 'debug', 'URL de requête => '.$urldebug);
         log::add('reolink', 'debug', 'Payload => '.$payload);
         curl_setopt($ch, CURLOPT_URL, $url );
         curl_setopt($ch, CURLOPT_POST, 1);
@@ -213,7 +218,7 @@ class reolinkAPI {
         }
         curl_close($ch);
         // Debug REMOVE PWD
-        $payload = preg_replace('/password":"(.*?)"}}}/', 'password":"******"}}}', $payload);
+        //$payload = preg_replace('/password":"(.*?)"}}}/', 'password":"******"}}}', $payload);
 
         log::add('reolink', 'debug', 'Payload => '.print_r($payload, true));
         $debugResp = preg_replace('/\s+/', '', print_r($response, true));
@@ -326,8 +331,14 @@ class reolinkAPI {
 
         $paramtoSend = json_encode([0 => $params]);
 
+        if ($this->authmethod == 0) {
+          $authURL = '&token='.$this->token;
+        } else {
+          $authURL = '&user='.$this->user.'&password='.$this->password;
+        }
+
         // Send Request
-        $response = $this->request($APIRequest.'&token='.$this->token, $paramtoSend);
+        $response = $this->request($APIRequest.$authURL, $paramtoSend);
         return $this->checkResponse($response, $APIRequest);
     }
 
@@ -372,11 +383,15 @@ class reolinkAPI {
                 return $data[0]['value']['DevName'];
             case reolinkAPI::CAM_GET_ABILITY:
                 return $data[0]['value']['Ability'];
+            case reolinkAPI::CAM_GET_HDDINFO:
+                return $data[0]['value']['HddInfo']['0'];
             // Video Param
             case reolinkAPI::CAM_GET_ISP:
                 return $data[0]['value']['Isp'];
             case reolinkAPI::CAM_GET_IMAGE:
                 return $data[0]['value']['Image'];
+            case reolinkAPI::CAM_GET_OSD:
+                return $data[0]['value']['Osd'];
             // Notifications
             case reolinkAPI::CAM_GET_PUSH:
                 return $data[0]['value']['Push'];

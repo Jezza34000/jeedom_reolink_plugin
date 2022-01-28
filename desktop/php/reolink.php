@@ -72,6 +72,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i> {{Equipement}}</a></li>
 		<!--	<li role="presentation"><a href="#ability" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-info-circle"></i> {{Informations}}</a></li>-->
 			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i> {{Commandes}}</a></li>
+			<li role="presentation"><a href="#mailnotif" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-envelope-open-text"></i><span class="hidden-xs"> {{Email}}</span></a></li>
+			<li role="presentation"><a href="#ftpsend" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-file-upload"></i><span class="hidden-xs"> {{FTP}}</span></a></li>
 		</ul>
 		<div class="tab-content">
 			<!-- Onglet de configuration de l'équipement -->
@@ -189,7 +191,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							<legend><i class="fas fa-info"></i> {{Informations}}</legend>
 							<div class="form-group">
 								<div class="text-center">
-									<img name="icon_visu" src="plugins/reolink/desktop/img/camera.png" style="max-width:160px;" onerror="this.onerror=null; this.src='<?php echo $plugin->getPathImgIcon(); ?>'"/>
+									<img name="icon_visu" src="plugins/reolink/desktop/img/camera<?php echo $eqLogic->getId(); ?>.png" style="max-width:160px;" onerror="this.onerror=null; this.src='<?php echo $plugin->getPathImgIcon(); ?>'"/>
 								</div>
 							</div>
 							<div class="form-group">
@@ -249,7 +251,13 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							<hr>
 							<div class="container-fluid">
 									<div class="form-group">
-											<a class="btn btn-block btn-default eqLogicAction" id="btGetCamNFO"><i class="fas fa-download"></i> {{Récupérer les informations}}</a>
+											<a class="btn btn-block btn-primary eqLogicAction" id="btGetCamNFO"><i class="fas fa-download"></i> {{Récupérer les informations}}</a>
+									</div>
+									<br>
+							</div>
+							<div class="container-fluid">
+									<div class="form-group">
+											<a class="btn btn-block btn-default eqLogicAction" id="btGetCMD"><i class="fas fa-plus-circle"></i> {{Créer (recréer) les commander}}</a>
 									</div>
 									<br>
 							</div>
@@ -306,12 +314,280 @@ $eqLogics = eqLogic::byType($plugin->getId());
 					</table>
 				</div>
 			</div><!-- /.tabpanel #commandtab-->
+			<!--
+			MAIL Notif
+			--->
+						<div role="tabpanel" class="tab-pane" id="mailnotif">
+							<div class="col-lg-7" style="padding:10px 35px">
+									<legend>
+											<span>{{Réglage des notifications email}}</span>
+									</legend>
+									<br />
+									<div class="container" style="width: 90%;">
+											<div class="form-group">
+													<!-- table  -->
+													<legend>
+															<span>{{Serveur SMTP}}</span>
+													</legend>
+													<table class="table table-bordered table-condensed" style="text-align:center">
+															<tbody>
+																<tr style="height: 50px !important;">
+																		<td><label class="control-label">{{Etat}}</label>&nbsp;(l'activation/désactivation s'effectue par la commande "Envoi email")</td>
+																		<td>
+																			<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_state" disabled>
+																				<option value="0">Désactivé</option>
+																				<option value="1">Activé</option>
+																			</select>
+																		</td>
+																</tr>
+																	<tr>
+																			<td><label class="control-label">{{Serveur}}</label></td>
+																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_server" placeholder="{{smtp.free.fr}}"/></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label">{{Port}}</label></td>
+																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_port" placeholder="{{25}}"/></td>
+																	</tr>
+																	<tr style="height: 50px !important;">
+																			<td><label class="control-label ">{{Utiliser SSL/TLS}}</label></td>
+																			<td><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="smtp_usessltls" /></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Login}}</label></td>
+																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_login"/></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Mot de passe}}</label></td>
+																			<td><input type="password" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_password"/></td>
+																	</tr>
+																</tbody>
+														</table>
+														<!-- table  -->
+														<legend>
+																<span>{{Paramètre email}}</span>
+														</legend>
+														<table class="table table-bordered table-condensed" style="text-align:center">
+																<tbody>
+																	<tr>
+																			<td><label class="control-label ">{{Expéditeur (email)}}</label></td>
+																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mailfrom_addr"/></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Expéditeur (nom/prénom)}}</label></td>
+																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mailfrom_name"/></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Sujet}}</label></td>
+																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mail_subject" placeholder="{{Nouvel évènement}}"/></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Destinataire n°1}}</label></td>
+																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mailto_addr1"/></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Destinataire n°2}}</label></td>
+																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mailto_addr2"/></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Destinataire n°3}}</label></td>
+																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mailto_addr3"/></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Fichier joint}}</label></td>
+																			<td>
+																					<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_attachement">
+																							<option value="no">Aucun (texte seul)</option>
+																							<option value="onlyPicture">Image</option>
+																							<option value="picture">Image (avec texte)</option>
+																							<option value="video">Vidéo (avec texte)</option>
+																					</select>
+																			</td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Intervale}}</label></td>
+																			<td>
+																					<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_interval">
+																							<option value="30 Seconds">30 Seconds</option>
+																							<option value="1 Minute">1 Minute</option>
+																							<option value="5 Minutes">5 Minutes</option>
+																							<option value="10 Minutes">10 Minutes</option>
+																							<option value="30 Minutes">30 Minutes</option>
+																					</select>
+																			</td>
+																	</tr>
+															</tbody>
+													</table>
+											</div>
+									</div>
+							</div>
+
+							<div class="col-lg-5" style="padding:15px 35px">
+									<legend>
+											<span style="text-align:left">{{Action}}</span>
+									</legend>
+									<div class="container-fluid">
+											<div class="form-group">
+													<a  id="btGetEMAIL" onclick="GetCAMinfo('EMAIL')" class="btn btn-block btn-primary eqLogicAction"><i class="fas fa-download"></i> {{Lire la configuration depuis la caméra}}</a>
+											</div>
+											<br>
+									</div>
+									<div class="container-fluid">
+											<div class="form-group">
+													<a  id="btSetEMAIL" onclick="SetCAMconfig('EMAIL')" class="btn btn-block btn-success eqLogicAction"><i class="fas fa-upload"></i> {{Envoyer la configuration dans la caméra}}</a>
+													(Cliquez sur "Sauvegarder" avant d'envoyer la config)
+											</div>
+											<br>
+									</div>
+							</div>
+						</div>
+						<!--
+						FTP Send
+						--->
+						<div role="tabpanel" class="tab-pane" id="ftpsend">
+							<div class="col-lg-7" style="padding:10px 35px">
+									<legend>
+											<span>{{Réglage du FTP}}</span>
+									</legend>
+									<br />
+									<div class="container" style="width: 90%;">
+											<div class="form-group">
+												<legend>
+														<span>{{Serveur FTP}}</span>
+												</legend>
+													<table class="table table-bordered table-condensed" style="text-align:center">
+															<tbody>
+																	<tr style="height: 50px !important;">
+																			<td><label class="control-label">{{Etat}}</label>&nbsp;(l'activation/désactivation s'effectue par la commande "Envoi FTP")</td>
+																			<td>
+																				<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_state" disabled>
+																					<option value="0">Désactivé</option>
+																					<option value="1">Activé</option>
+																				</select>
+																			</td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label">{{Serveur}}</label></td>
+																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_server"/></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label">{{Anonyme}}</label></td>
+																			<td><input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_anonymous"/></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label">{{Login}}</label></td>
+																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_account"/></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Mot de passe}}</label></td>
+																			<td><input type="password" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_passwd"/></td>
+																	</tr>
+																	<tr style="height: 50px !important;">
+																			<td><label class="control-label ">{{Utiliser SSL/TLS}}</label></td>
+																			<td><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="ftp_usessltls" /></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Port}}</label></td>
+																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_port" placeholder="{{21}}"/></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Mode}}</label></td>
+																				<td>
+																					<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_mode">
+																						<option value="0">AUTO</option>
+																						<option value="1">PORT</option>
+																						<option value="2">PASV</option>
+																					</select>
+																				</td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Chemin distant d'upload}}</label></td>
+																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_path"/></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Taille maximale de fichier à envoyer (en MB)}}</label></td>
+																			<td><input type="text" class="eqLogicAttr" data-l1key="configuration" data-l2key="ftp_maxfilesize" /></td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Type de fichier à envoyer}}</label></td>
+																			<td>
+																					<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_filetosend">
+																							<option value="0">Image et vidéo (Qualité haute)</option>
+																							<option value="1">Image et vidéo (Qualité moyenne)</option>
+																							<option value="2">Image et vidéo (Qualité basse)</option>
+																							<option value="3">Image seulement</option>
+																					</select>
+																			</td>
+																	</tr>
+																	<tr>
+																			<td><label class="control-label ">{{Intervale}}</label></td>
+																			<td>
+																					<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_interval">
+																							<option value="30">30 Seconds</option>
+																							<option value="60">1 Minute</option>
+																							<option value="300">5 Minutes</option>
+																							<option value="600">10 Minutes</option>
+																							<option value="1800">30 Minutes</option>
+																					</select>
+																			</td>
+																	</tr>
+																</tr>
+														</tbody>
+												</table>
+											</div>
+									</div>
+							</div>
+
+							<div class="col-lg-5" style="padding:15px 35px">
+									<legend>
+											<span style="text-align:left">{{Action}}</span>
+									</legend>
+									<div class="container-fluid">
+											<div class="form-group">
+													<a  id="btGetFTP" onclick="GetCAMinfo('FTP')" class="btn btn-block btn-primary eqLogicAction"><i class="fas fa-download"></i> {{Lire la configuration depuis la caméra}}</a>
+											</div>
+											<br>
+									</div>
+									<div class="container-fluid">
+											<div class="form-group">
+													<a  id="btSetFTP" onclick="SetCAMconfig('FTP')" class="btn btn-block btn-success eqLogicAction"><i class="fas fa-upload"></i> {{Envoyer la configuration dans la caméra}}</a>
+													(Cliquez sur "Sauvegarder" avant d'envoyer la config)
+											</div>
+											<br>
+									</div>
+							</div>
+						</div>
 
 		</div><!-- /.tab-content -->
 	</div><!-- /.eqLogic -->
 </div><!-- /.row row-overflow -->
 
 <script>
+
+
+$('#btGetCMD').on('click', function () {
+		$.ajax({// fonction permettant de faire de l'ajax
+				type: "POST", // methode de transmission des données au fichier php
+				url: "plugins/reolink/core/ajax/reolink.ajax.php", // url du fichier php
+				data: {
+					action: "CreateCMD",
+					id : $('.eqLogicAttr[data-l1key=id]').value()
+				},
+				dataType: 'json',
+				error: function (request, status, error) {
+					handleAjaxError(request, status, error);
+				},
+				success: function (data) { // si l'appel a bien fonctionné
+				if (data.state != 'ok') {
+					$('#div_alert').showAlert({message: data.result, level: 'danger'});
+					return;
+				}
+				$('#div_alert').showAlert({message: '{{Commandes créer avec succès}}', level: 'success'});
+				window.location.reload();
+			}
+		});
+});
+
+
 $('#btCheckConnexion').on('click', function () {
 		$.ajax({// fonction permettant de faire de l'ajax
 				type: "POST", // methode de transmission des données au fichier php
@@ -356,6 +632,54 @@ $('#btGetCamNFO').on('click', function () {
 			}
 		});
 });
+/* Actions des boutons sur la page */
+function SetCAMconfig(REQgroup){
+	$.ajax({// fonction permettant de faire de l'ajax
+			type: "POST", // methode de transmission des données au fichier php
+			url: "plugins/reolink/core/ajax/reolink.ajax.php", // url du fichier php
+			data: {
+				action: "SetCAMConfig",
+				group:REQgroup,
+				id : $('.eqLogicAttr[data-l1key=id]').value()
+			},
+			dataType: 'json',
+			error: function (request, status, error) {
+				handleAjaxError(request, status, error);
+			},
+			success: function (data) { // si l'appel a bien fonctionné
+			if (data.state != 'ok') {
+				$('#div_alert').showAlert({message: data.result, level: 'danger'});
+				return;
+			}
+			$('#div_alert').showAlert({message: '{{OK configuration envoyé avec succès}}', level: 'success'});
+			//window.location.reload();
+		}
+	});
+}
+/* Actions des boutons sur la page */
+function GetCAMinfo(REQgroup){
+	$.ajax({// fonction permettant de faire de l'ajax
+			type: "POST", // methode de transmission des données au fichier php
+			url: "plugins/reolink/core/ajax/reolink.ajax.php", // url du fichier php
+			data: {
+				action: "GetCAMConfig",
+				group:REQgroup,
+				id : $('.eqLogicAttr[data-l1key=id]').value()
+			},
+			dataType: 'json',
+			error: function (request, status, error) {
+				handleAjaxError(request, status, error);
+			},
+			success: function (data) { // si l'appel a bien fonctionné
+			if (data.state != 'ok') {
+				$('#div_alert').showAlert({message: data.result, level: 'danger'});
+				return;
+			}
+			$('#div_alert').showAlert({message: '{{Lecture OK}}', level: 'success'});
+			window.location.reload();
+		}
+	});
+}
 </script>
 <!-- Inclusion du fichier javascript du plugin (dossier, nom_du_fichier, extension_du_fichier, id_du_plugin) -->
 <?php include_file('desktop', 'reolink', 'js', 'reolink');?>
