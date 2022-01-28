@@ -73,8 +73,16 @@ class reolink extends eqLogic {
           $iconurl = "https://cdn.reolink.com/wp-content/assets/app/model-images/$modelURL/light_off.png";
           $camera->setConfiguration("camicon", $iconurl);
 
-          $file = realpath(dirname(__FILE__) . '/../../desktop/img').'/camera'.$id.'.png';
-          log::add('reolink', 'debug', 'Enregistrement du visuel de la caméra '.$value.' depuis serveur Reolink ('.$iconurl. ' => '.$file.')');
+          $dir = realpath(dirname(__FILE__) . '/../../desktop');
+
+          if (!file_exists($dir.'/img')) {
+              mkdir($dir.'/img', 0775, true);
+              log::add('reolink', 'debug', 'Création du répertoire visuel caméra = '.$dir.'/img');
+          }
+
+          $fileToWrite = $dir.'/img/camera'.$id.'.png';
+
+          log::add('reolink', 'debug', 'Enregistrement du visuel de la caméra '.$value.' depuis serveur Reolink ('.$iconurl. ' => '.$fileToWrite.')');
 
           $ch = curl_init ($iconurl);
           curl_setopt($ch, CURLOPT_HEADER, false);
@@ -96,7 +104,7 @@ class reolink extends eqLogic {
             return false;
           }
           curl_close ($ch);
-          $fp = fopen($file,'w');
+          $fp = fopen($fileToWrite,'w');
           fwrite($fp, $rawdata);
           fclose($fp);
           log::add('reolink', 'debug', 'Ecriture OK');
@@ -144,7 +152,6 @@ class reolink extends eqLogic {
               $ptzlist .=  $value['id'].'|'.$value['name'].";";
           }
         }
-        log::add('reolink', 'debug',  'fin boucle');
         $ptzlist = substr($ptzlist, 0, -1);
         $cmd->setConfiguration('listValue', $ptzlist);
         $cmd->save();
