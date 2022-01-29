@@ -303,7 +303,7 @@ class reolink extends eqLogic {
           $camcmd->checkAndUpdateCmd('driveAvailable', 0);
         }
         if (is_numeric($res['size']) && is_numeric($res['capacity'])) {
-          $percoccupancy = round(($res['size'] * 100) / $res['capacity'], 0);
+          $percoccupancy = round(($res['size'] * 100) / $res['capacity'], 0, PHP_ROUND_HALF_DOWN);
           $camcmd->checkAndUpdateCmd('driveSpaceAvailable', $percoccupancy);
         }
         if ($res['storageType'] == 1) {
