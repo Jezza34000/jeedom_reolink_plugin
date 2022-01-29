@@ -31,9 +31,9 @@ Non-supportés :
 - [ ] Gestion des utilisateurs (ajout/supression/modification)
 - [ ] Gestion de l'heure
 - [ ] Restaurer la config par défaut
-- [ ] Formaté l'espace de stockage
+- [ ] Formattage de l'espace de stockage
 - [x] Contrôle de la Led d'état
-- [ ] Mise à jour & info
+- [ ] Controle des mise à jour logiciel
 
 #### PTZ
 - [x] Zoom
@@ -62,15 +62,15 @@ Non-supportés :
 - [ ] Configuration du masque de vie privée
 
 #### Surveillance/Notification
-- [x] Email
+- [x] Activation/désactivation email
 - [ ] Planning email
-- [x] Push
+- [x] Activation/désactivation push
 - [ ] Planning push
-- [x] FTP
+- [x] Activation/désactivation FTP
 - [ ] Planning FTP
-- [x] Enregistrement SDCARD/HDD
+- [x] Activation/désactivation enregistrement SDCARD/HDD
 - [ ] Planning enregistrement SDCARD/HDD
-- [x] Alarme Audio
+- [x] Activation/désactivation alarme audio
 - [ ] Planning alarme audio
 - [ ] Configuration de la détection de mouvement
 - [ ] Configuration des fonctions AI
