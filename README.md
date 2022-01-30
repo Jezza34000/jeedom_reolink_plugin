@@ -57,7 +57,8 @@ Non-supportés :
 - [x] Retourner Verticalement/Horizontalement
 - [ ] Avancée (Anti-scintillement, Exposition, Balance des blancs, Jour/nuit, Rétroeclairage, 3D-NR)
 - [x] Contrôle des Leds Infra Rouge
-- [ ] Contrôle des Leds blanches d'éclairage
+- [x] Activation/désactivation des Leds blanches d'éclairage
+- [ ] Configuration des Leds blanches d'eclairage (intensité/planning/)
 - [x] Activation/désactivation masque de vie privée
 - [ ] Configuration du masque de vie privée
 
