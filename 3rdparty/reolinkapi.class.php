@@ -339,7 +339,9 @@ class reolinkAPI {
 
         // Send Request
         $response = $this->request($APIRequest.$authURL, $paramtoSend);
-        return $this->checkResponse($response, $APIRequest);
+        $checkedresponse = $this->checkResponse($response, $APIRequest);
+
+        return $checkedresponse;
     }
 
     /*
@@ -363,7 +365,7 @@ class reolinkAPI {
             if ($data[0]['error']['rspCode'] == -6) {
               // Login failed, re-authentification need
               $this->login();
-              return retry;
+              return "retry";
             }
 
             $errorNFO = $this->GetErrorNFO($data[0]['error']['rspCode']);
@@ -392,6 +394,8 @@ class reolinkAPI {
                 return $data[0]['value']['Image'];
             case reolinkAPI::CAM_GET_OSD:
                 return $data[0]['value']['Osd'];
+            case reolinkAPI::CAM_GET_MASK:
+                return $data[0]['value']['Mask'];
             // Notifications
             case reolinkAPI::CAM_GET_PUSH:
                 return $data[0]['value']['Push'];

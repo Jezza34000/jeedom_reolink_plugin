@@ -222,6 +222,31 @@
 			"logicalId": "SetIrLights"
 		},
 		{
+			"abilityneed":"supportFLswitch",
+			"name": "Led blanche (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetWhitLedState"
+		},
+		{
+			"abilityneed":"supportFLswitch",
+			"name": "Led blanche",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetWhitLedState",
+				"actionapi": "SetWhiteLed",
+				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetWhitLed"
+		},
+		{
 			"abilityneed":"alarmAudio",
 			"name": "Alarme Audio (état)",
 			"type": "info",

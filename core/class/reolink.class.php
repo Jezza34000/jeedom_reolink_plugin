@@ -251,7 +251,11 @@ class reolink extends eqLogic {
         $camcmd->checkAndUpdateCmd('SetBitratest2State', $res['subStream']['size']);
 
       $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_REC, array("channel" => 0));
-      $camcmd->checkAndUpdateCmd('SetRecordState', $res['schedule']['enable']);
+        $camcmd->checkAndUpdateCmd('SetRecordState', $res['schedule']['enable']);
+        $camcmd->checkAndUpdateCmd('SetPreRecordState', $res['preRec']);
+        $camcmd->checkAndUpdateCmd('SetOverwriteState', $res['overwrite']);
+        $camcmd->checkAndUpdateCmd('SetPostRecordState', $res['postRec']);
+
 
       $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_AUDIOALARM, array());
       $camcmd->checkAndUpdateCmd('SetAudioAlarmState', $res['schedule']['enable']);
@@ -265,6 +269,9 @@ class reolink extends eqLogic {
 
       $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_AUTOFOCUS, array("channel" => 0));
       $camcmd->checkAndUpdateCmd('SetAutoFocusState', $res['disable']);
+
+      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_MASK, array("channel" => 0));
+      $camcmd->checkAndUpdateCmd('SetMaskState', $res['enable']);
 
       $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_AUTOMAINT, array("channel" => 0));
       $camcmd->checkAndUpdateCmd('SetAutoMaintState', $res['enable']);
