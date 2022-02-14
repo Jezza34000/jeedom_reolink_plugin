@@ -59,12 +59,15 @@ class reolink extends eqLogic {
 
       // Devices Info
       $reolinkConn = reolink::getReolinkConnection($id);
-      $deviceInfo = $reolinkConn->SendCMD('GetDevInfo', array());
+      $deviceInfo = $reolinkConn->SendCMD('[{"cmd":"GetDevInfo"}]');
+
       if (!$deviceInfo) {
         return false;
       }
 
-      foreach ($deviceInfo  as $key => $value) {
+      foreach ($deviceInfo[0]['value']["DevInfo"] as $key => $value) {
+
+        log::add('reolink', 'debug', 'Enregistrement : K='.$key. ' V='.$value);
         $camera->setConfiguration($key, $value);
 
         if ($key == "model") {
@@ -110,10 +113,19 @@ class reolink extends eqLogic {
           log::add('reolink', 'debug', 'Ecriture OK');
         }
       }
-      log::add('reolink', 'debug', 'GetDeviceInfo ajout de '.count($deviceInfo). ' items');
 
+      /* Get flux URLs
+      $deviceInfo = $reolinkConn->SendCMD('[{"cmd": "GetRtspUrl","action": 0,"param": {"channel": '.$reolinkConn->$channels.'}}]');
 
-      if (count($deviceInfo) > 1) {
+      if (!$deviceInfo) {
+        return false;
+      } else {
+        $camera->setConfiguration("rtspurl1", $reolinkConn->rtspurl1);
+        $camera->setConfiguration("rtspurl2", $reolinkConn->rtspurl2);
+      }*/
+
+      log::add('reolink', 'debug', 'GetDeviceInfo ajout de '.count($deviceInfo[0]['value']["DevInfo"]). ' items');
+      if (count($deviceInfo[0]['value']["DevInfo"]) > 1) {
         $camera->Save();
         return true;
       } else {
@@ -124,10 +136,25 @@ class reolink extends eqLogic {
     public static function GetCamAbility($id) {
       log::add('reolink', 'debug', 'Interrogation de la caméra sur ses capacités hardware/software...');
       $reolinkConn = reolink::getReolinkConnection($id);
+      $camera = reolink::byId($id, 'reolink');
+
+      $username = $camera->getConfiguration('login');
+      if (empty($username)) {
+        $username = "admin";
+      }
 
       // Devices Ability
       if (is_object($reolinkConn)) {
-        $deviceAbility = $reolinkConn->SendCMD('GetAbility', array("User" => array("userName" => "admin")));
+        $deviceAbility = $reolinkConn->SendCMD('[{"cmd":"GetAbility","param":{"User":{"userName":"'.$username.'"}}}]');
+
+      log::add('reolink', 'debug', print_r($deviceAbility ,true));
+
+        $ab1 = $deviceAbility[0]["value"]["Ability"];
+        unset($ab1["abilityChn"]);
+        $ab2 = $deviceAbility[0]["value"]["Ability"]["abilityChn"][0];
+        $deviceAbility = array_merge($ab1, $ab2);
+
+
         log::add('reolink', 'debug', 'GetAbility à récupérer : '.count($deviceAbility). ' items');
 
         if (count($deviceAbility) > 1) {
@@ -144,7 +171,7 @@ class reolink extends eqLogic {
     public static function updatePTZpreset($id, $data) {
       $camera=reolink::byId($id, 'reolink');
       $cmd = $camera->getCmd(null, 'SetPtzByPreset');
-      $ptzlist = NULL;
+      $ptzlist = "";
       if (is_object($cmd) && is_array($data)) {
         foreach ($data  as $key => $value) {
           if ($value['enable'] == 1) {
@@ -209,25 +236,236 @@ class reolink extends eqLogic {
     public static function refreshNFO($id) {
       $camcmd = reolink::byId($id, 'reolink');
       $camcnx = reolink::getReolinkConnection($id);
+      $cmdget = NULL;
 
+      // Prepare request with INFO needed
+      foreach (reolinkCmd::byEqLogicId($id) as $cmd) {
+          $payload = $cmd->getConfiguration('payload');
+          if ($cmd->getType() == "info" && $payload != NULL) {
+            $payload = str_replace('#CHANNEL#', 0, $payload);
+            $payload = str_replace('\\', '', $payload);
 
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_PUSH, array());
-      $camcmd->checkAndUpdateCmd('SetPushState', $res['schedule']['enable']);
+            if (!in_array($payload, $cmdarr))
+            {
+                $cmdarr[] = $payload;
+            }
+            log::add('reolink', 'debug', 'CMD > ' . $cmd->getName() . " Payload = " . $cmd->getConfiguration('payload'));
+          }
+      }
 
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_FTP, array());
-        $camcmd->checkAndUpdateCmd('SetFTPState', $res['schedule']['enable']);
-        $camcmd->setConfiguration("ftp_state", $res['schedule']['enable']);
-        $camcmd->setConfiguration("ftp_server", $res['server']);
-        $camcmd->setConfiguration("ftp_anonymous", $res['anonymous']);
-        $camcmd->setConfiguration("ftp_account", $res['userName']);
-        $camcmd->setConfiguration("ftp_passwd", $res['password']);
-        $camcmd->setConfiguration("ftp_path", $res['remoteDir']);
-        $camcmd->setConfiguration("ftp_port", $res['port']);
-        $camcmd->setConfiguration("ftp_mode", $res['mode']);
-        $camcmd->setConfiguration("ftp_maxfilesize", $res['maxSize']);
-        $camcmd->setConfiguration("ftp_filetosend", $res['streamType']);
+      foreach ($cmdarr as &$value) {
+          $cmdget .= $value.",";
+      }
+      $cmdget = substr($cmdget, 0, -1);
+      log::add('reolink', 'debug', 'Payload multiple GetSetting = ' . $cmdget);
 
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_EMAIL, array());
+      $res = $camcnx->SendCMD("[$cmdget]");
+
+      log::add('reolink', 'debug', 'Retour > ' . print_r($res ,true));
+
+      foreach ($res as &$json_data) {
+        log::add('reolink', 'debug', 'Lecture info > ' . preg_replace('/\s+/', '', print_r($json_data, true)));
+        switch ($json_data['cmd']) {
+          /*case reolinkAPI::CAM_GET_DEVINFO:
+              $camcnx->device_info = $json_data;
+              $camcnx->serial = $json_data['value']['DevInfo']['serial'];
+              $camcnx->name = $json_data['value']['DevInfo']['name'];
+              $camcnx->sw_version = $json_data['value']['DevInfo']['firmVer'];
+              $camcnx->model = $json_data['value']['DevInfo']['model'];
+              $camcnx->channels = $json_data['value']['DevInfo']['channelNum'];
+              $camcnx->reolink_type = $json_data['value']['DevInfo']['type'];
+              break;*/
+
+          case reolinkAPI::CAM_GET_REC:
+              $camcmd->checkAndUpdateCmd('SetRecordState', $json_data['value']['Rec']['schedule']['enable']);
+              $camcmd->checkAndUpdateCmd('SetPreRecordState', $json_data['value']['Rec']['preRec']);
+              $camcmd->checkAndUpdateCmd('SetOverwriteState', $json_data['value']['Rec']['overwrite']);
+              $camcmd->checkAndUpdateCmd('SetPostRecordState', $json_data['value']['Rec']['postRec']);
+              break;
+
+          case reolinkAPI::CAM_GET_RECV20:
+              $camcnx->recording_settings = $json_data;
+              $camcnx->recording_state = $json_data['value']['Rec']['enable'];
+              break;
+
+          case reolinkAPI::CAM_GET_MDSTATE:
+              $camcnx->motion_state = $json_data['value']['state'];
+              break;
+
+          case reolinkAPI::CAM_GET_AISTATE:
+              $camcnx->ai_state = $json_data['value'];
+              break;
+
+          case reolinkAPI::CAM_GET_HDDINFO:
+              if ($json_data['value']['HddInfo']['format'] == 1 && $json_data['value']['HddInfo']['mount'] == 1) {
+                $camcmd->checkAndUpdateCmd('driveAvailable', 1);
+              } else {
+                $camcmd->checkAndUpdateCmd('driveAvailable', 0);
+              }
+              if (is_numeric($json_data['value']['HddInfo']['size']) && is_numeric($json_data['value']['HddInfo']['capacity'])) {
+                $percoccupancy = round(($json_data['value']['HddInfo']['size'] * 100) / $json_data['value']['HddInfo']['capacity'], 0, PHP_ROUND_HALF_DOWN);
+                $camcmd->checkAndUpdateCmd('driveSpaceAvailable', $percoccupancy);
+              }
+              if ($json_data['value']['HddInfo']['storageType'] == 1) {
+                $camcmd->checkAndUpdateCmd('driveType', "HDD");
+              } elseif ($json_data['value']['HddInfo']['storageType'] == 2) {
+                $camcmd->checkAndUpdateCmd('driveType', "Sdcard");
+              }
+              break;
+
+          case reolinkAPI::CAM_GET_OSD:
+              $camcmd->checkAndUpdateCmd('SetWatermarkState', $json_data['value']['Osd']['watermark']);
+              $camcmd->checkAndUpdateCmd('SetOsdTimeState', $json_data['value']['Osd']['osdTime']['enable']);
+              $camcmd->checkAndUpdateCmd('SetOsdChannelState', $json_data['value']['Osd']['osdChannel']['enable']);
+              $camcmd->checkAndUpdateCmd('SetPosOsdTimeState', $json_data['value']['Osd']['osdTime']['pos']);
+              $camcmd->checkAndUpdateCmd('SetPosOsdChannelState', $json_data['value']['Osd']['osdChannel']['pos']);
+              break;
+
+          case reolinkAPI::CAM_GET_FTP:
+              $camcmd->checkAndUpdateCmd('SetFTPState', $json_data['value']['Ftp']['schedule']['enable']);
+              break;
+
+          case reolinkAPI::CAM_GET_FTPV20:
+              $camcmd->checkAndUpdateCmd('SetFTPState', $json_data['value']['Ftp']['enable']);
+              break;
+
+          case reolinkAPI::CAM_GET_PUSH:
+              $camcmd->checkAndUpdateCmd('SetPushState', $json_data['value']['Push']['schedule']['enable']);
+              break;
+
+          case reolinkAPI::CAM_GET_PUSHV20:
+              $camcmd->checkAndUpdateCmd('SetPushState', $json_data['value']['Push']['enable']);
+              break;
+
+          case reolinkAPI::CAM_GET_ENC:
+              $camcmd->checkAndUpdateCmd('SetMicrophoneState', $json_data['value']['audio']);
+              $camcmd->checkAndUpdateCmd('SetResolutionst1State', $json_data['value']['mainStream']['size']);
+              $camcmd->checkAndUpdateCmd('SetFPSst1State', $json_data['value']['mainStream']['size']);
+              $camcmd->checkAndUpdateCmd('SetBitratest1State', $json_data['value']['mainStream']['bitRate']);
+              $camcmd->checkAndUpdateCmd('SetResolutionst2State', $json_data['value']['subStream']['size']);
+              $camcmd->checkAndUpdateCmd('SetFPSst2State', $json_data['value']['subStream']['size']);
+              $camcmd->checkAndUpdateCmd('SetBitratest2State', $json_data['value']['subStream']['size']);
+              break;
+
+          case reolinkAPI::CAM_GET_EMAIL:
+              $camcmd->checkAndUpdateCmd('SetEmailState', $json_data['value']['Email']['schedule']['enable']);
+              break;
+
+          case reolinkAPI::CAM_GET_ISP:
+              $camcmd->checkAndUpdateCmd('SetRotationState', $json_data['value']['rotation']);
+              $camcmd->checkAndUpdateCmd('SetMirroringState', $json_data['value']['mirroring']);
+              $camcmd->checkAndUpdateCmd('SetAntiFlickerState', $json_data['value']['antiFlicker']);
+              $camcmd->checkAndUpdateCmd('SetBackLightState', $json_data['value']['backLight']);
+              $camcmd->checkAndUpdateCmd('SetBlcState', $json_data['value']['blc']);
+              $camcmd->checkAndUpdateCmd('SetBlueGainState', $json_data['value']['blueGain']); // ???
+              $camcmd->checkAndUpdateCmd('SetDayNightState', $json_data['value']['dayNight']);
+              $camcmd->checkAndUpdateCmd('SetDrcState', $json_data['value']['drc']);
+              $camcmd->checkAndUpdateCmd('SetNr3dState', $json_data['value']['nr3d']);
+              $camcmd->checkAndUpdateCmd('SetRedGainState', $json_data['value']['redGain']); // ???
+              $camcmd->checkAndUpdateCmd('SetWhiteBalanceState', $json_data['value']['whiteBalance']); // ???
+              break;
+
+          case reolinkAPI::CAM_GET_IRLIGHTS:
+              $camcmd->checkAndUpdateCmd('SetIrLightsState', $json_data['value']['IrLights']['state']);
+              break;
+
+          case reolinkAPI::CAM_GET_IMAGE:
+              $camcmd->checkAndUpdateCmd('SetBrightState', $json_data['value']['bright']);
+              $camcmd->checkAndUpdateCmd('SetContrastState', $json_data['value']['contrast']);
+              $camcmd->checkAndUpdateCmd('SetSaturationState', $json_data['value']['saturation']);
+              $camcmd->checkAndUpdateCmd('SetHueState', $json_data['value']['hue']);
+              $camcmd->checkAndUpdateCmd('SetSharpenState', $json_data['value']['sharpen']);
+              break;
+
+          case reolinkAPI::CAM_GET_WHITELED:
+              $camcmd->checkAndUpdateCmd('SetWhitLedState', $json_data['value']['WhiteLed']['state']);
+              break;
+
+          case reolinkAPI::CAM_GET_PTZPRESET:
+              $camcnx->ptz_presets_settings = $json_data;
+              break;
+
+          case reolinkAPI::CAM_GET_ALARM:
+              $camcnx->alarm_settings = $json_data;
+              $camcnx->motion_detection_state = $json_data['value']['Alarm']['enable'];
+              $camcnx->sensitivity_presets = $json_data['value']['Alarm']['sens'];
+              break;
+
+          case reolinkAPI::CAM_GET_AUDIOALARM:
+              $camcmd->checkAndUpdateCmd('SetAudioAlarmState', $json_data['value']['Audio']['schedule']['enable']);
+              break;
+
+          case reolinkAPI::CAM_GET_AUDIOALARMV20:
+              $camcnx->audio_alarm_settings = $json_data;
+              $camcnx->audio_alarm_state = $json_data['value']['Audio']['enable'];
+              break;
+
+          case reolinkAPI::CAM_GET_POWERLED:
+              $camcmd->checkAndUpdateCmd('SetPowerLedState', $json_data['value']['PowerLed']['state']);
+              break;
+
+          case reolinkAPI::CAM_GET_ABILITY:
+              $ab1 = $json_data['value']['Ability'];
+              unset($ab1['abilityChn']);
+              $ab2 = $json_data['value']['Ability']['abilityChn']['0'];
+              $camcnx->ability_settings = array_merge($ab1, $ab2);
+              break;
+
+          case reolinkAPI::CAM_GET_AUTOFOCUS:
+              $camcmd->checkAndUpdateCmd('SetAutoFocusState', $json_data['value']['AutoFocus']['disable']);
+              break;
+
+          case reolinkAPI::CAM_GET_MASK:
+              $camcmd->checkAndUpdateCmd('SetMaskState', $json_data['value']['Mask']['enable']);
+              break;
+
+          case reolinkAPI::CAM_GET_AUTOMAINT:
+              $camcmd->checkAndUpdateCmd('SetAutoMaintState', $json_data['value']['AutoMaint']['enable']);
+              break;
+
+          case reolinkAPI::CAM_GET_ZOOMFOCUS:
+              $camcmd->checkAndUpdateCmd('SetZoomState', $json_data['value']['ZoomFocus']['zoom']['pos']);
+              $camcmd->checkAndUpdateCmd('SetFocusState', $json_data['value']['ZoomFocus']['focus']['pos']);
+              break;
+
+          case reolinkAPI::CAM_GET_LOCALLINK:
+              $camcnx->local_link = $json_data;
+              $camcnx->mac_address = $json_data['value']['LocalLink']['mac'];
+              break;
+
+          case reolinkAPI::CAM_GET_NETPORT:
+              $camcnx->netport_settings = $json_data;
+              $camcnx->rtsp_port = $json_data['value']['NetPort']['rtspPort'];
+              $camcnx->rtmp_port = $json_data['value']['NetPort']['rtmpPort'];
+              $camcnx->onvifport = $json_data['value']['NetPort']['onvifPort'];
+              break;
+
+          case reolinkAPI::CAM_GET_RTSPURL:
+              $camcnx->rtspurls = $json_data;
+              $camcnx->rtspurl1 = $json_data['value']['rtspUrl']['mainStream'];
+              $camcnx->rtspurl2 = $json_data['value']['rtspUrl']['subStream'];
+              break;
+
+          case reolinkAPI::CAM_GET_NTP:
+              break;
+
+          case reolinkAPI::CAM_GET_TIME:
+              break;
+
+          case reolinkAPI::CAM_GET_USER:
+              break;
+
+          default:
+              log::add('reolink', 'error', 'JSON map résultat à echouer avec le retour : '. print_r($json_data, true));
+              $res = false;
+        }
+      }
+
+    }
+/*
+      $cmd = $camcmd->getCmd(null, 'SetEmailState');
+      if (is_object($cmd) ) {
+        $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_EMAIL, array());
         $camcmd->checkAndUpdateCmd('SetEmailState', $res['schedule']['enable']);
         $camcmd->setConfiguration("smtp_state", $res['schedule']['enable']);
         $camcmd->setConfiguration("smtp_server", $res['smtpServer']);
@@ -240,84 +478,8 @@ class reolink extends eqLogic {
         $camcmd->setConfiguration("smtp_usessltls", $res['ssl']);
         $camcmd->setConfiguration("smtp_interval", $res['interval']);
         $camcmd->setConfiguration("smtp_attachement", $res['attachment']);
+      }
 
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_ENC, array("channel" => 0));
-        $camcmd->checkAndUpdateCmd('SetMicrophoneState', $res['audio']);
-        $camcmd->checkAndUpdateCmd('SetResolutionst1State', $res['mainStream']['size']);
-        $camcmd->checkAndUpdateCmd('SetFPSst1State', $res['mainStream']['size']);
-        $camcmd->checkAndUpdateCmd('SetBitratest1State', $res['mainStream']['bitRate']);
-        $camcmd->checkAndUpdateCmd('SetResolutionst2State', $res['subStream']['size']);
-        $camcmd->checkAndUpdateCmd('SetFPSst2State', $res['subStream']['size']);
-        $camcmd->checkAndUpdateCmd('SetBitratest2State', $res['subStream']['size']);
-
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_REC, array("channel" => 0));
-        $camcmd->checkAndUpdateCmd('SetRecordState', $res['schedule']['enable']);
-        $camcmd->checkAndUpdateCmd('SetPreRecordState', $res['preRec']);
-        $camcmd->checkAndUpdateCmd('SetOverwriteState', $res['overwrite']);
-        $camcmd->checkAndUpdateCmd('SetPostRecordState', $res['postRec']);
-
-
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_AUDIOALARM, array());
-      $camcmd->checkAndUpdateCmd('SetAudioAlarmState', $res['schedule']['enable']);
-
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_IRLIGHTS, array());
-      $camcmd->checkAndUpdateCmd('SetIrLightsState', $res['state']);
-
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_POWERLED, array());
-      ($res['state'] == 0) ? $value = "Off" : $value = "On";
-      $camcmd->checkAndUpdateCmd('SetPowerLedState', $value);
-
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_AUTOFOCUS, array("channel" => 0));
-      $camcmd->checkAndUpdateCmd('SetAutoFocusState', $res['disable']);
-
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_MASK, array("channel" => 0));
-      $camcmd->checkAndUpdateCmd('SetMaskState', $res['enable']);
-
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_AUTOMAINT, array("channel" => 0));
-      $camcmd->checkAndUpdateCmd('SetAutoMaintState', $res['enable']);
-
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_ISP, array("channel" => 0));
-        $camcmd->checkAndUpdateCmd('SetRotationState', $res['rotation']);
-        $camcmd->checkAndUpdateCmd('SetMirroringState', $res['mirroring']);
-        $camcmd->checkAndUpdateCmd('SetAntiFlickerState', $res['antiFlicker']);
-        $camcmd->checkAndUpdateCmd('SetBackLightState', $res['backLight']);
-        $camcmd->checkAndUpdateCmd('SetBlcState', $res['blc']);
-        $camcmd->checkAndUpdateCmd('SetBlueGainState', $res['blueGain']); // ???
-        $camcmd->checkAndUpdateCmd('SetDayNightState', $res['dayNight']);
-        $camcmd->checkAndUpdateCmd('SetDrcState', $res['drc']);
-        $camcmd->checkAndUpdateCmd('SetNr3dState', $res['nr3d']);
-        $camcmd->checkAndUpdateCmd('SetRedGainState', $res['redGain']); // ???
-        $camcmd->checkAndUpdateCmd('SetWhiteBalanceState', $res['whiteBalance']); // ???
-
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_OSD, array("channel" => 0));
-        $camcmd->checkAndUpdateCmd('SetWatermarkState', $res['watermark']);
-        $camcmd->checkAndUpdateCmd('SetOsdTimeState', $res['osdTime']['enable']);
-        $camcmd->checkAndUpdateCmd('SetOsdChannelState', $res['osdChannel']['enable']);
-        $camcmd->checkAndUpdateCmd('SetPosOsdTimeState', $res['osdTime']['pos']);
-        $camcmd->checkAndUpdateCmd('SetPosOsdChannelState', $res['osdChannel']['pos']);
-
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_IMAGE, array("channel" => 0));
-        $camcmd->checkAndUpdateCmd('SetBrightState', $res['bright']);
-        $camcmd->checkAndUpdateCmd('SetContrastState', $res['contrast']);
-        $camcmd->checkAndUpdateCmd('SetSaturationState', $res['saturation']);
-        $camcmd->checkAndUpdateCmd('SetHueState', $res['hue']);
-        $camcmd->checkAndUpdateCmd('SetSharpenState', $res['sharpen']);
-
-      $res = $camcnx->SendCMD(reolinkAPI::CAM_GET_HDDINFO, array());
-        if ($res['format'] == 1 && $res['mount'] == 1) {
-          $camcmd->checkAndUpdateCmd('driveAvailable', 1);
-        } else {
-          $camcmd->checkAndUpdateCmd('driveAvailable', 0);
-        }
-        if (is_numeric($res['size']) && is_numeric($res['capacity'])) {
-          $percoccupancy = round(($res['size'] * 100) / $res['capacity'], 0, PHP_ROUND_HALF_DOWN);
-          $camcmd->checkAndUpdateCmd('driveSpaceAvailable', $percoccupancy);
-        }
-        if ($res['storageType'] == 1) {
-          $camcmd->checkAndUpdateCmd('driveType', "HDD");
-        } elseif ($res['storageType'] == 2) {
-          $camcmd->checkAndUpdateCmd('driveType', "Sdcard");
-        }
 
         $camcmd->save();
     }
@@ -469,7 +631,7 @@ class reolink extends eqLogic {
       $cmd_order = 0;
 
       foreach ($device['commands'] as $command) {
-          // Chack cam ability
+          // Check cam ability
           $cmd = null;
           foreach ($this->getCmd() as $liste_cmd) {
             if ((isset($command['logicalId']) && $liste_cmd->getLogicalId() == $command['logicalId'])
@@ -604,7 +766,6 @@ class reolinkCmd extends cmd {
      public function execute($_options = array()) {
       log::add('reolink', 'debug', 'Action demandé : '.$this->getLogicalId());
       $EqId = $this->getEqLogic_id();
-      $cam = reolink::getReolinkConnection($EqId);
 
       $channel = $this->getConfiguration('channel');
       if ($channel == NULL) {
@@ -616,13 +777,15 @@ class reolinkCmd extends cmd {
               reolink::refreshNFO($EqId);
               break;
           case 'GetPtzPreset':
-              $data = $cam->SendCMD(reolinkAPI::CAM_GET_PTZPRESET, array("channel" => $channel));
+              $camcnx = reolink::getReolinkConnection($EqId);
+              $data = $camcnx->SendCMD('[{"cmd":"GetPtzPreset","action":1,"param":{"channel":'.$channel.'}}]');
               reolink::updatePTZpreset($EqId, $data);
               break;
           case 'SetSpeed':
               $this->setConfiguration('speedvalue', $_options['slider']);
               break;
           default:
+            $camcnx = reolink::getReolinkConnection($EqId);
             // Speed NFO
             $cmd = reolinkCmd::byEqLogicIdAndLogicalId($EqId, "SetSpeed");
             if (is_object($cmd)) {
@@ -641,21 +804,35 @@ class reolinkCmd extends cmd {
               $payload = str_replace('#OPTSLIDER#', intval($_options['slider']), $payload);
               $payload = str_replace('#CHANNEL#', 0, $payload);
               $payload = str_replace('#SPEED#', $speed, $payload);
+              $payload = '[{"cmd":"'.$actionAPI.'","param":'.$payload.'}]';
 
               log::add('reolink', 'debug', 'Payload avec paramètre utilisateur demandé = '.$payload);
 
-              $camresp = $cam->SendCMD($actionAPI, json_decode($payload, true));
-
+              $camresp = $camcnx->SendCMD($payload);
               // Check return and update CMD State
-              if ($camresp == 200) {
-                // CMD OK cam return code 200
-                if ($linkedvalue != NULL) {
-                  // UPDATE VALUE
+              if ($camresp[0]["value"]["rspCode"] == 200) {
+                log::add('reolink', 'debug', 'OK > Action réalisé avec succès sur la caméra');
+
+                if (!empty($linkedvalue)) {
+                  $camcmd = reolink::byId($EqId, 'reolink');
+                  $cmd = $camcmd->getCmd(null, $linkedvalue);
+                  if (is_object($cmd) ) {
+                    if (isset($_options['select'])) {
+                      $updtval = $_options['select'];
+                    } elseif (isset($_options['slider'])) {
+                      $updtval = $_options['select'];
+                    } else {
+                      $updtval = 0;
+                      log::add('reolink', 'error', 'Impossible de trouver la valeur à inserer');
+                    }
+                    $camcmd->checkAndUpdateCmd($linkedvalue, $updtval);
+                    $camcmd->save();
+                    log::add('reolink', 'debug', 'Mise à jour de l\'info liée : '.$linkedvalue. " Valeur=".$updtval);
+                  }
                 }
               } else {
                 throw new Exception(__('Echec d\'execution de la commande (consultez le log pour plus de détails)', __FILE__));
               }
-
             }
         }
      }

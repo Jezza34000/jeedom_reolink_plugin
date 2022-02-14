@@ -26,6 +26,23 @@
 			"name": "Notification push (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"actionapi": "GetPush",
+				"payload": "{\"cmd\":\"GetPush\"}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetPushState"
+		},
+		{
+			"abilityneed":"push",
+			"name": "Mouvement détecté (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"actionapi": "GetPush",
+				"payload": "{\"cmd\":\"GetMdState\",\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPushState"
@@ -51,6 +68,9 @@
 			"name": "Enregistrement SDCARD (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetRec\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetRecordState"
@@ -76,6 +96,9 @@
 			"name": "Enregistrement avant détection (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetRec\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPreRecordState"
@@ -101,6 +124,9 @@
 			"name": "Ecraser les enregistrements (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetRec\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetOverwriteState"
@@ -126,6 +152,9 @@
 			"name": "Durée enregistrement après détection (état)",
 			"type": "info",
 			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetRec\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPostRecordState"
@@ -200,7 +229,7 @@
 			"abilityneed":"ledControl",
 			"name": "Led infra rouge (état)",
 			"type": "info",
-			"subtype": "binary",
+			"subtype": "string",
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetIrLightsState"
@@ -251,6 +280,9 @@
 			"name": "Alarme Audio (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAudioAlarm\"}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAudioAlarmState"
@@ -275,7 +307,10 @@
 			"abilityneed":"powerLed",
 			"name": "Power LED (état)",
 			"type": "info",
-			"subtype": "binary",
+			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetPowerLed\"}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPowerLedState"
@@ -301,6 +336,9 @@
 			"name": "Microphone (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetMicrophoneState"
@@ -326,6 +364,9 @@
 			"name": "Autofocus (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAutoFocus\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAutoFocusState"
@@ -351,6 +392,9 @@
 			"name": "Auto reboot (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAutoMaint\",\"action\":1}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAutoMaintState"
@@ -432,6 +476,18 @@
 		},
 		{
 			"abilityneed":"ptzCtrl",
+			"name": "Zoom (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetZoomFocus\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetZoomState"
+		},
+		{
+			"abilityneed":"ptzCtrl",
 			"name": "Zoom",
 			"type": "action",
 			"subtype": "slider",
@@ -439,12 +495,25 @@
 				"option": "slider",
 				"minValue": "0",
 				"maxValue" : "249",
+				"valueFrom" : "SetZoomState",
 				"actionapi": "StartZoomFocus",
 				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"ZoomPos\"}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetZoom"
+		},
+		{
+			"abilityneed":"ptzCtrl",
+			"name": "Focus (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetZoomFocus\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetFocusState"
 		},
 		{
 			"abilityneed":"ptzCtrl",
@@ -455,6 +524,7 @@
 				"option": "slider",
 				"minValue": "0",
 				"maxValue" : "32",
+				"valueFrom" : "SetFocusState",
 				"actionapi": "StartZoomFocus",
 				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"FocusPos\"}}"
 			},
@@ -478,19 +548,25 @@
 			"logicalId": "SetPTZpatrol"
 		},
 		{
-			"abilityneed":"isp",
+			"abilityneed":"ispMirror",
 			"name": "Retourner verticalement (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetRotationState"
 		},
 		{
-			"abilityneed":"isp",
+			"abilityneed":"ispFlip",
 			"name": "Retourner horizontalement (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetMirroringState"
@@ -500,6 +576,9 @@
 			"name": "Rétro éclairage (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetBacklightState"
@@ -509,6 +588,9 @@
 			"name": "Jour Nuit (état)",
 			"type": "info",
 			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetDayNightState"
@@ -530,16 +612,19 @@
 			"logicalId": "SetDayNight"
 		},
 		{
-			"abilityneed":"isp",
+			"abilityneed":"ispAntiFlick",
 			"name": "Anti-scintillement (état)",
 			"type": "info",
 			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAntiFlickerState"
 		},
 		{
-			"abilityneed":"isp",
+			"abilityneed":"ispAntiFlick",
 			"name": "Anti-scintillement",
 			"type": "action",
 			"subtype": "select",
@@ -555,10 +640,13 @@
 			"logicalId": "SetAntiFlicker"
 		},
 		{
-			"abilityneed":"isp",
+			"abilityneed":"isp3Dnr",
 			"name": "3D DNR (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetNr3dState"
@@ -580,16 +668,19 @@
 			"logicalId": "SetNr3d"
 		},
 		{
-			"abilityneed":"isp",
+			"abilityneed":"mask",
 			"name": "Masque de vie privée (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetMask\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetMaskState"
 		},
 		{
-			"abilityneed":"isp",
+			"abilityneed":"mask",
 			"name": "Masque de vie privée",
 			"type": "action",
 			"subtype": "select",
@@ -605,10 +696,13 @@
 			"logicalId": "SetMask"
 		},
 		{
-			"abilityneed":"isp",
+			"abilityneed":"white_balance",
 			"name": "Balance des blancs (etat)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetImage\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetWhiteBalanceState"
@@ -618,6 +712,9 @@
 			"name": "Luminosité (valeur)",
 			"type": "info",
 			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetImage\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetBrightState"
@@ -632,7 +729,7 @@
 				"minValue": "1",
 				"maxValue" : "255",
 				"valueFrom" : "SetBrightState",
-				"actionapi": "SetIsp",
+				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"bright\":#OPTSLIDER#}}"
 			},
 			"IsHistorized": 0,
@@ -644,6 +741,9 @@
 			"name": "Contraste (valeur)",
 			"type": "info",
 			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetImage\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetContrastState"
@@ -658,7 +758,7 @@
 				"minValue": "1",
 				"maxValue" : "255",
 				"valueFrom" : "SetContrastState",
-				"actionapi": "SetIsp",
+				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"contrast\":#OPTSLIDER#}}"
 			},
 			"IsHistorized": 0,
@@ -670,6 +770,9 @@
 			"name": "Saturation (valeur)",
 			"type": "info",
 			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetImage\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetSaturationState"
@@ -684,7 +787,7 @@
 				"minValue": "1",
 				"maxValue" : "255",
 				"valueFrom" : "SetSaturationState",
-				"actionapi": "SetIsp",
+				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"saturation\":#OPTSLIDER#}}"
 			},
 			"IsHistorized": 0,
@@ -692,16 +795,19 @@
 			"logicalId": "SetSaturation"
 		},
 		{
-			"abilityneed":"image",
+			"abilityneed":"ispHue",
 			"name": "Teinte (valeur)",
 			"type": "info",
 			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetImage\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetHueState"
 		},
 		{
-			"abilityneed":"image",
+			"abilityneed":"ispHue",
 			"name": "Teinte",
 			"type": "action",
 			"subtype": "slider",
@@ -710,7 +816,7 @@
 				"minValue": "1",
 				"maxValue" : "255",
 				"valueFrom" : "SetHueState",
-				"actionapi": "SetIsp",
+				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"hue\":#OPTSLIDER#}}"
 			},
 			"IsHistorized": 0,
@@ -718,16 +824,19 @@
 			"logicalId": "SetHue"
 		},
 		{
-			"abilityneed":"image",
+			"abilityneed":"ispSharpen",
 			"name": "Netteté (valeur)",
 			"type": "info",
 			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetImage\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetSharpenState"
 		},
 		{
-			"abilityneed":"image",
+			"abilityneed":"ispSharpen",
 			"name": "Netteté",
 			"type": "action",
 			"subtype": "slider",
@@ -736,7 +845,7 @@
 				"minValue": "1",
 				"maxValue" : "255",
 				"valueFrom" : "SetSharpenState",
-				"actionapi": "SetIsp",
+				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"sharpen\":#OPTSLIDER#}}"
 			},
 			"IsHistorized": 0,
@@ -748,6 +857,9 @@
 			"name": "OSD Filigrane Reolink (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetWatermarkState"
@@ -773,6 +885,9 @@
 			"name": "OSD Date & Heure (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetOsdTimeState"
@@ -798,6 +913,9 @@
 			"name": "Position OSD Date & Heure (état)",
 			"type": "info",
 			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPosOsdTimeState"
@@ -823,6 +941,9 @@
 			"name": "OSD Nom de la caméra (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetOsdChannelState"
@@ -848,6 +969,9 @@
 			"name": "Position OSD nom de la caméra (état)",
 			"type": "info",
 			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPosOsdChannelState"
@@ -873,6 +997,9 @@
 			"name": "Résolution (Stream1)",
 			"type": "info",
 			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetResolutionst1State"
@@ -882,6 +1009,9 @@
 			"name": "Fréquence image FPS (Stream1)",
 			"type": "info",
 			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetFPSst1State"
@@ -891,6 +1021,9 @@
 			"name": "Débit kbps (Stream1)",
 			"type": "info",
 			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetBitratest1State"
@@ -900,6 +1033,9 @@
 			"name": "Résolution (Stream2)",
 			"type": "info",
 			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetResolutionst2State"
@@ -909,6 +1045,9 @@
 			"name": "Fréquence image FPS (Stream2)",
 			"type": "info",
 			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetFPSst2State"
@@ -918,6 +1057,9 @@
 			"name": "Débit kbps (Stream2)",
 			"type": "info",
 			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetBitratest2State"
@@ -927,6 +1069,9 @@
 			"name": "Mémoire disponible",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetHddInfo\"}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "driveAvailable"
@@ -939,7 +1084,8 @@
 			"subtype": "numeric",
 			"configuration": {
 				"minValue": 0,
-				"maxValue": 100
+				"maxValue": 100,
+				"payload": "{\"cmd\":\"GetHddInfo\"}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -950,6 +1096,9 @@
 			"name": "Type de stockage",
 			"type": "info",
 			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetHddInfo\"}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "driveType"

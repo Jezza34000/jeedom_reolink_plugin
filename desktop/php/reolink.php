@@ -248,6 +248,19 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="detail"></span>
 								</div>
 							</div>
+							<!--<hr>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{URL rtsp (flux 1)}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtspurl1"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{URL rtsp (flux 2)}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtspurl2"></span>
+								</div>
+							</div>-->
 							<hr>
 							<div class="container-fluid">
 									<div class="form-group">
@@ -257,7 +270,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							</div>
 							<div class="container-fluid">
 									<div class="form-group">
-											<a class="btn btn-block btn-default eqLogicAction" id="btGetCMD"><i class="fas fa-plus-circle"></i> {{Créer (recréer) les commander}}</a>
+											<a class="btn btn-block btn-default eqLogicAction" id="btGetCMD"><i class="fas fa-plus-circle"></i> {{Créer (recréer) les commandes}}</a>
 									</div>
 									<br>
 							</div>
