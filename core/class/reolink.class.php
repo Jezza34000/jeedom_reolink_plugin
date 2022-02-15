@@ -172,8 +172,9 @@ class reolink extends eqLogic {
       $camera=reolink::byId($id, 'reolink');
       $cmd = $camera->getCmd(null, 'SetPtzByPreset');
       $ptzlist = "";
+      log::add('reolink', 'debug',  'PTZ à parser = '. print_r($data['value']['PtzPreset'], true));
       if (is_object($cmd) && is_array($data)) {
-        foreach ($data  as $key => $value) {
+        foreach ($data['value']['PtzPreset']  as $key => $value) {
           if ($value['enable'] == 1) {
               log::add('reolink', 'debug',  'Ajout du PTZ preset = '.$value['id'].'|'.$value['name']);
               $ptzlist .=  $value['id'].'|'.$value['name'].";";
@@ -337,6 +338,14 @@ class reolink extends eqLogic {
               $camcmd->checkAndUpdateCmd('SetPushState', $json_data['value']['Push']['enable']);
               break;
 
+          case reolinkAPI::CAM_GET_EMAIL:
+              $camcmd->checkAndUpdateCmd('SetEmailState', $json_data['value']['Email']['schedule']['enable']);
+              break;
+
+          case reolinkAPI::CAM_GET_EMAILV20:
+              $camcmd->checkAndUpdateCmd('SetEmailState', $json_data['value']['Email']['schedule']['enable']);
+              break;
+
           case reolinkAPI::CAM_GET_ENC:
               $camcmd->checkAndUpdateCmd('SetMicrophoneState', $json_data['value']['audio']);
               $camcmd->checkAndUpdateCmd('SetResolutionst1State', $json_data['value']['mainStream']['size']);
@@ -345,10 +354,6 @@ class reolink extends eqLogic {
               $camcmd->checkAndUpdateCmd('SetResolutionst2State', $json_data['value']['subStream']['size']);
               $camcmd->checkAndUpdateCmd('SetFPSst2State', $json_data['value']['subStream']['size']);
               $camcmd->checkAndUpdateCmd('SetBitratest2State', $json_data['value']['subStream']['size']);
-              break;
-
-          case reolinkAPI::CAM_GET_EMAIL:
-              $camcmd->checkAndUpdateCmd('SetEmailState', $json_data['value']['Email']['schedule']['enable']);
               break;
 
           case reolinkAPI::CAM_GET_ISP:
@@ -779,7 +784,7 @@ class reolinkCmd extends cmd {
           case 'GetPtzPreset':
               $camcnx = reolink::getReolinkConnection($EqId);
               $data = $camcnx->SendCMD('[{"cmd":"GetPtzPreset","action":1,"param":{"channel":'.$channel.'}}]');
-              reolink::updatePTZpreset($EqId, $data);
+              reolink::updatePTZpreset($EqId, $data[0]);
               break;
           case 'SetSpeed':
               $this->setConfiguration('speedvalue', $_options['slider']);
