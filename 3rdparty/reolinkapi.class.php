@@ -192,9 +192,9 @@ class reolinkAPI {
         // Debug REMOVE PWD
         $urldebug = preg_replace('/password=(.*?)$/', 'password=******', $url);
         // Debug REMOVE PWD
-        $payload = preg_replace('/password":"(.*?)"}}}/', 'password":"******"}}}', $payload);
+        $payloadLOG = preg_replace('/password":"(.*?)"}}}/', 'password":"******"}}}', $payload);
         log::add('reolink', 'debug', 'URL de requête => '.$urldebug);
-        log::add('reolink', 'debug', 'Payload => '.$payload);
+        log::add('reolink', 'debug', 'Payload => '.$payloadLOG);
         curl_setopt($ch, CURLOPT_URL, $url );
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
