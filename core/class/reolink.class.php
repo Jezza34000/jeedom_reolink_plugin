@@ -132,16 +132,6 @@ class reolink extends eqLogic {
         $camera->setConfiguration("supportai", "Non");
       }
 
-      /* Get flux URLs
-      $deviceInfo = $reolinkConn->SendCMD('[{"cmd": "GetRtspUrl","action": 0,"param": {"channel": '.$reolinkConn->$channels.'}}]');
-
-      if (!$deviceInfo) {
-        return false;
-      } else {
-        $camera->setConfiguration("rtspurl1", $reolinkConn->rtspurl1);
-        $camera->setConfiguration("rtspurl2", $reolinkConn->rtspurl2);
-      }*/
-
       log::add('reolink', 'debug', 'GetDeviceInfo ajout de '.count($deviceInfo[0]['value']["DevInfo"]). ' items');
       if (count($deviceInfo[0]['value']["DevInfo"]) > 1) {
         $camera->Save();

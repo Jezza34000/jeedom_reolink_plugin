@@ -184,9 +184,6 @@ class reolinkAPI {
 
     public function __destruct() {
         log::add('reolink', 'debug', str_repeat("=", 60));
-        /*if ($this->is_loggedin) {
-            $this->logout();
-        }*/
     }
 
     private function request($cmd, $payload) {
@@ -294,29 +291,6 @@ class reolinkAPI {
         }
     }
 
-    /*public function logout() {
-        if (!$this->is_loggedin) {
-            log::add('reolink', 'debug', "Logout déjà OK");
-            return true;
-        }
-
-        $response = $this->SendCMD();
-
-        if (is_array($response) && $response['rspCode'] == 200) {
-            $this->is_loggedin = false;
-            $this->token = '';
-            $this->$tokenexp = '';
-            log::add('reolink', 'debug', 'Logout OK');
-            return true;
-        } else {
-            return false;
-        }
-
-        if ($this->checkResponse($this->SendCMD('Logout', $logoutParameters))) {
-        } else {
-            return false;
-        }
-    }*/
 
     public function SendCMD($POSTparameters, $URLrequest = NULL) {
 
@@ -331,7 +305,6 @@ class reolinkAPI {
           $authURL = 'user='.$this->user.'&password='.$this->password;
         }
         // Send Request
-        //$paramtoSend = json_encode(array(0 => $POSTparameters));
 
         if (!is_json($POSTparameters)) {
           log::add('reolink', 'error', 'Format du payload POST n\'est pas un JSON valide, envoi commande échoué');
