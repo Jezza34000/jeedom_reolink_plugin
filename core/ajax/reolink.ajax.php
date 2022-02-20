@@ -35,6 +35,7 @@ try {
         if (!is_object($camera)) {
           throw new Exception(__('Impossible de trouver la caméra : ' . init('id'), __FILE__));
         }
+        $camera->GetCamNFO(init('id'));
         $res = $camera->loadCmdFromConf(init('id'));
 
         if (is_numeric($res)) {

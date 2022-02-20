@@ -72,8 +72,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i> {{Equipement}}</a></li>
 		<!--	<li role="presentation"><a href="#ability" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-info-circle"></i> {{Informations}}</a></li>-->
 			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i> {{Commandes}}</a></li>
-			<li role="presentation"><a href="#mailnotif" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-envelope-open-text"></i><span class="hidden-xs"> {{Email}}</span></a></li>
-			<li role="presentation"><a href="#ftpsend" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-file-upload"></i><span class="hidden-xs"> {{FTP}}</span></a></li>
+		<!--<li role="presentation"><a href="#mailnotif" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-envelope-open-text"></i><span class="hidden-xs"> {{Email}}</span></a></li>
+			<li role="presentation"><a href="#ftpsend" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-file-upload"></i><span class="hidden-xs"> {{FTP}}</span></a></li>-->
 		</ul>
 		<div class="tab-content">
 			<!-- Onglet de configuration de l'équipement -->
@@ -215,7 +215,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							<div class="form-group">
 								<label class="col-sm-3 control-label"> {{UID}}</label>
 								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="serial"></span>
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="uid"></span>
 								</div>
 							</div>
 							<div class="form-group">
@@ -248,6 +248,19 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="detail"></span>
 								</div>
 							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{Connectivité}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="linkconnection"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{Caméra IA}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="supportai"></span>
+								</div>
+							</div>
+
 							<!--<hr>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{URL rtsp (flux 1)}}</label>

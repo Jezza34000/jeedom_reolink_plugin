@@ -16,13 +16,26 @@
 			"subtype": "other",
 			"configuration": {
 				"actionapi": "Reboot",
-				"payload": ""
+				"payload": "{\"cmd\":\"Reboot\"}"
 			},
 			"isVisible": 1,
 			"logicalId": "reboot"
 		},
 		{
+			"abilityneed":"alarmMd",
+			"name": "Mouvement détecté (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetMdState\",\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "MdState"
+		},
+		{
 			"abilityneed":"push",
+			"iastate":0,
 			"name": "Notification push (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -36,19 +49,7 @@
 		},
 		{
 			"abilityneed":"push",
-			"name": "Mouvement détecté (état)",
-			"type": "info",
-			"subtype": "binary",
-			"configuration": {
-				"actionapi": "GetPush",
-				"payload": "{\"cmd\":\"GetMdState\",\"param\":{\"channel\":#CHANNEL#}}"
-			},
-			"IsHistorized": 0,
-			"isVisible": 0,
-			"logicalId": "SetPushState"
-		},
-		{
-			"abilityneed":"push",
+			"iastate":0,
 			"name": "Notification push",
 			"type": "action",
 			"subtype": "select",
@@ -64,7 +65,39 @@
 			"logicalId": "SetPush"
 		},
 		{
+			"abilityneed":"push",
+			"iastate":1,
+			"name": "Notification push AI (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"actionapi": "GetPushV20",
+				"payload": "{\"cmd\":\"GetPushV20\"}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetPushStateV20"
+		},
+		{
+			"abilityneed":"push",
+			"iastate":1,
+			"name": "Notification push AI",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetPushStateV20",
+				"actionapi": "SetPushV20",
+				"payload": "{\"Push\":{\"enable\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetPushV20"
+		},
+		{
 			"abilityneed":"sdCard",
+			"iastate":0,
 			"name": "Enregistrement SDCARD (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -77,6 +110,7 @@
 		},
 		{
 			"abilityneed":"sdCard",
+			"iastate":0,
 			"name": "Enregistrement SDCARD",
 			"type": "action",
 			"subtype": "select",
@@ -90,6 +124,36 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetRecord"
+		},
+		{
+			"abilityneed":"sdCard",
+			"iastate":1,
+			"name": "Enregistrement SDCARD AI (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetRecV20\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetRecordStateV20"
+		},
+		{
+			"abilityneed":"sdCard",
+			"iastate":1,
+			"name": "Enregistrement SDCARD AI",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetRecordStateV20",
+				"actionapi": "SetRecV20",
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"schedule\":{\"enable\":#OPTSELECTEDINT#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetRecordV20"
 		},
 		{
 			"abilityneed":"sdCard",
@@ -177,15 +241,20 @@
 		},
 		{
 			"abilityneed":"email",
+			"iastate":0,
 			"name": "Envoi email (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetEmail\",\"action\":1}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetEmailState"
 		},
 		{
 			"abilityneed":"email",
+			"iastate":0,
 			"name": "Envoi email",
 			"type": "action",
 			"subtype": "select",
@@ -202,15 +271,20 @@
 		},
 		{
 			"abilityneed":"ftp",
+			"iastate":0,
 			"name": "Envoi FTP (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetFtp\",\"action\":1}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetFTPState"
 		},
 		{
 			"abilityneed":"ftp",
+			"iastate":0,
 			"name": "Envoi FTP",
 			"type": "action",
 			"subtype": "select",
@@ -544,7 +618,7 @@
 				"payload": "{\"channel\":#CHANNEL#,\"op\":#OPTSELECTEDSTR#,\"speed\":#SPEED#}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetPTZpatrol"
 		},
 		{
@@ -608,7 +682,7 @@
 				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"dayNight\":#OPTSELECTEDSTR#}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetDayNight"
 		},
 		{
@@ -636,7 +710,7 @@
 				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"antiFlicker\":#OPTSELECTEDSTR#}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetAntiFlicker"
 		},
 		{
@@ -664,7 +738,7 @@
 				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"nr3d\":#OPTSELECTEDINT#}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetNr3d"
 		},
 		{
