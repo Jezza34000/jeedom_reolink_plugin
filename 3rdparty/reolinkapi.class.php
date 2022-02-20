@@ -216,7 +216,7 @@ class reolinkAPI {
         }
         curl_close($ch);
         // Debug REMOVE PWD
-        //$payload = preg_replace('/password":"(.*?)"}}}/', 'password":"******"}}}', $payload);
+        $payload = preg_replace('/password":"(.*?)"}}}/', 'password":"******"}}}', $payload);
 
         //log::add('reolink', 'debug', 'Payload => '.print_r($payload, true));
         $debugResp = preg_replace('/\s+/', '', print_r($response, true));
