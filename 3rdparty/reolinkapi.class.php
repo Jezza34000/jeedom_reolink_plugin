@@ -191,6 +191,8 @@ class reolinkAPI {
         $url = "$this->cnxtype://$this->ip:$this->port/cgi-bin/api.cgi?$cmd";
         // Debug REMOVE PWD
         $urldebug = preg_replace('/password=(.*?)$/', 'password=******', $url);
+        // Debug REMOVE PWD
+        $payload = preg_replace('/password":"(.*?)"}}}/', 'password":"******"}}}', $payload);
         log::add('reolink', 'debug', 'URL de requête => '.$urldebug);
         log::add('reolink', 'debug', 'Payload => '.$payload);
         curl_setopt($ch, CURLOPT_URL, $url );
@@ -215,8 +217,6 @@ class reolinkAPI {
           return false;
         }
         curl_close($ch);
-        // Debug REMOVE PWD
-        $payload = preg_replace('/password":"(.*?)"}}}/', 'password":"******"}}}', $payload);
 
         //log::add('reolink', 'debug', 'Payload => '.print_r($payload, true));
         $debugResp = preg_replace('/\s+/', '', print_r($response, true));
