@@ -562,10 +562,22 @@ class reolink extends eqLogic {
 
                 if ($command['abilityneed'] == $abilityName) {
                   $abilityfound = true;
-                  if ($abilityParam['permit'] != 0 && $command['iastate'] == $camisIA) {
-                    // Function available for this model ADD
-                    log::add('reolink', 'info', '=> Capacité hardware/software OK pour : '.$command['name']);
-                    $ability = true;
+                  if ($abilityParam['permit'] != 0) {
+                      if (isset($command['iastate'])) {
+                        if ($command['iastate'] == $camisIA) {
+                          // Function available for this model ADD
+                          log::add('reolink', 'info', '=> (IA) Capacité hardware/software OK pour : '.$command['name']);
+                          $ability = true;
+                        } else {
+                          // Function IA NOT available for this model DO NOT ADD
+                          log::add('reolink', 'debug', '=> (IA) Ignorer, capacité hardware/software NOK pour : '.$command['name']);
+                          break;
+                        }
+                      } else {
+                        // Function available for this model ADD
+                        log::add('reolink', 'info', '=> Capacité hardware/software OK pour : '.$command['name']);
+                        $ability = true;
+                      }
                     break;
                   } else {
                     // Function NOT available for this model DO NOT ADD
