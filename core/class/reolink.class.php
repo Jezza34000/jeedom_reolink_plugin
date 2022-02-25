@@ -236,7 +236,7 @@ class reolink extends eqLogic {
               break;
 
           case reolinkAPI::CAM_GET_RECV20:
-              // Not supported for now
+              $camcmd->checkAndUpdateCmd('SetRecordStateV20', $json_data['value']['Rec']['enable']);
               break;
 
           case reolinkAPI::CAM_GET_MDSTATE:
@@ -273,7 +273,7 @@ class reolink extends eqLogic {
               break;
 
           case reolinkAPI::CAM_GET_FTPV20:
-              // Not supported for now
+              $camcmd->checkAndUpdateCmd('SetFTPStateV20', $json_data['value']['Ftp']['enable']);
               break;
 
           case reolinkAPI::CAM_GET_PUSH:
@@ -281,7 +281,11 @@ class reolink extends eqLogic {
               break;
 
           case reolinkAPI::CAM_GET_PUSHV20:
-              // Not supported for now
+              $camcmd->checkAndUpdateCmd('SetPushStateV20', $json_data['value']['Push']['enable']);
+              break;
+
+          case reolinkAPI::CAM_GET_PUSHCFG:
+              $camcmd->checkAndUpdateCmd('SetPushCfgState', $json_data['value']['PushCfg']['pushInterval']);
               break;
 
           case reolinkAPI::CAM_GET_EMAIL:
@@ -289,7 +293,7 @@ class reolink extends eqLogic {
               break;
 
           case reolinkAPI::CAM_GET_EMAILV20:
-              // Not supported for now
+              $camcmd->checkAndUpdateCmd('SetEmailStateV20', $json_data['value']['Email']['enable']);
               break;
 
           case reolinkAPI::CAM_GET_ENC:
@@ -330,6 +334,7 @@ class reolink extends eqLogic {
 
           case reolinkAPI::CAM_GET_WHITELED:
               $camcmd->checkAndUpdateCmd('SetWhitLedState', $json_data['value']['WhiteLed']['state']);
+              $camcmd->checkAndUpdateCmd('SetWhitLedLuxState', $json_data['value']['WhiteLed']['bright']);
               break;
 
           case reolinkAPI::CAM_GET_PTZPRESET:
@@ -345,7 +350,7 @@ class reolink extends eqLogic {
               break;
 
           case reolinkAPI::CAM_GET_AUDIOALARMV20:
-              // Not supported for now
+              $camcmd->checkAndUpdateCmd('SetAudioAlarmStateV20', $json_data['value']['Audio']['enable']);
               break;
 
           case reolinkAPI::CAM_GET_POWERLED:
