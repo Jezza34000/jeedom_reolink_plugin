@@ -72,7 +72,7 @@
 			"subtype": "binary",
 			"configuration": {
 				"actionapi": "GetPushV20",
-				"payload": "{\"cmd\":\"GetPushV20\"}"
+				"payload": "{\"cmd\":\"GetPushV20\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -95,6 +95,34 @@
 			"isVisible": 1,
 			"logicalId": "SetPushV20"
 		},
+        {
+            "abilityneed":"supportPushInterval",
+            "name": "Intervalle Push (valeur)",
+            "type": "info",
+            "subtype": "numeric",
+            "configuration": {
+                "payload": "{\"cmd\":\"GetPushCfg\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+            },
+            "IsHistorized": 0,
+            "isVisible": 0,
+            "logicalId": "SetPushCfgState"
+        },
+        {
+            "abilityneed":"supportPushInterval",
+            "name": "Intervalle Push",
+            "type": "action",
+            "subtype": "select",
+            "configuration": {
+                "option": "select",
+                "listValue": "20|20;30|30;60|60;120|120",
+                "valueFrom" : "SetPushCfgState",
+                "actionapi": "SetPushCfg",
+                "payload": "{\"PushCfg\":{\"pushInterval\":#OPTSELECTEDINT#}}"
+                },
+            "IsHistorized": 0,
+            "isVisible": 1,
+            "logicalId": "SetPushCfg"
+        },
 		{
 			"abilityneed":"sdCard",
 			"iastate":0,
@@ -157,6 +185,7 @@
 		},
 		{
 			"abilityneed":"sdCard",
+			"iastate":0,
 			"name": "Enregistrement avant détection (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -169,6 +198,7 @@
 		},
 		{
 			"abilityneed":"sdCard",
+			"iastate":0,
 			"name": "Enregistrement avant détection",
 			"type": "action",
 			"subtype": "select",
@@ -185,6 +215,7 @@
 		},
 		{
 			"abilityneed":"sdCard",
+			"iastate":0,
 			"name": "Ecraser les enregistrements (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -197,6 +228,7 @@
 		},
 		{
 			"abilityneed":"sdCard",
+			"iastate":0,
 			"name": "Ecraser les enregistrements",
 			"type": "action",
 			"subtype": "select",
@@ -213,6 +245,7 @@
 		},
 		{
 			"abilityneed":"sdCard",
+			"iastate":0,
 			"name": "Durée enregistrement après détection (état)",
 			"type": "info",
 			"subtype": "string",
@@ -225,6 +258,7 @@
 		},
 		{
 			"abilityneed":"sdCard",
+			"iastate":0,
 			"name": "Durée enregistrement après détection",
 			"type": "action",
 			"subtype": "select",
@@ -269,6 +303,36 @@
 			"isVisible": 1,
 			"logicalId": "SetEmail"
 		},
+        {
+            "abilityneed":"email",
+            "iastate":1,
+            "name": "Envoi email AI (état)",
+            "type": "info",
+            "subtype": "binary",
+            "configuration": {
+                "payload": "{\"cmd\":\"GetEmailV20\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+            },
+            "IsHistorized": 0,
+            "isVisible": 0,
+            "logicalId": "SetEmailStateV20"
+        },
+        {
+            "abilityneed":"email",
+            "iastate":1,
+            "name": "Envoi email AI",
+            "type": "action",
+            "subtype": "select",
+            "configuration": {
+                "option": "select",
+                "listValue": "1|Activer;0|Désactiver",
+                "valueFrom" : "SetEmailStateV20",
+                "actionapi": "SetEmailV20",
+                "payload": "{\"Email\":{\"enable\":#OPTSELECTEDINT#}}"
+            },
+            "IsHistorized": 0,
+            "isVisible": 1,
+            "logicalId": "SetEmailV20"
+        },
 		{
 			"abilityneed":"ftp",
 			"iastate":0,
@@ -299,6 +363,36 @@
 			"isVisible": 1,
 			"logicalId": "SetFTP"
 		},
+        {
+            "abilityneed":"ftp",
+            "iastate":1,
+            "name": "Envoi FTP AI (état)",
+            "type": "info",
+            "subtype": "binary",
+            "configuration": {
+                "payload": "{\"cmd\":\"GetFtpV20\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+            },
+            "IsHistorized": 0,
+            "isVisible": 0,
+            "logicalId": "SetFTPStateV20"
+        },
+        {
+            "abilityneed":"ftp",
+            "iastate":1,
+            "name": "Envoi FTP AI",
+            "type": "action",
+            "subtype": "select",
+            "configuration": {
+                "option": "select",
+                "listValue": "1|Activer;0|Désactiver",
+                "valueFrom" : "SetFTPStateV20",
+                "actionapi": "SetFtpV20",
+                "payload": "{\"Ftp\":{\"enable\":#OPTSELECTEDINT#}}"
+            },
+            "IsHistorized": 0,
+            "isVisible": 1,
+            "logicalId": "SetFTPV20"
+        },
 		{
 			"abilityneed":"ledControl",
 			"name": "Led infra rouge (état)",
@@ -349,8 +443,38 @@
 			"isVisible": 1,
 			"logicalId": "SetWhitLed"
 		},
+        {
+            "abilityneed":"supportFLswitch",
+            "name": "Luminosite Led Blanche (valeur)",
+            "type": "info",
+            "subtype": "numeric",
+            "configuration": {
+                "payload": "{\"cmd\":\"GetWhiteLed\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+            },
+            "IsHistorized": 0,
+            "isVisible": 0,
+            "logicalId": "SetWhitLedLuxState"
+        },
+        {
+            "abilityneed":"supportFLswitch",
+            "name": "Luminosite Led Blanche",
+            "type": "action",
+            "subtype": "slider",
+            "configuration": {
+                "option": "slider",
+                "minValue": "0",
+                "maxValue" : "100",
+                "valueFrom" : "SetWhitLedLuxState",
+                "actionapi": "SetWhiteLed",
+                "payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"bright\":#OPTSLIDER#}}"
+            },
+            "IsHistorized": 0,
+            "isVisible": 1,
+            "logicalId": "SetWhitLedLux"
+        },
 		{
 			"abilityneed":"alarmAudio",
+            "iastate":0,
 			"name": "Alarme Audio (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -363,6 +487,7 @@
 		},
 		{
 			"abilityneed":"alarmAudio",
+            "iastate":0,
 			"name": "Alarme Audio",
 			"type": "action",
 			"subtype": "select",
@@ -377,6 +502,36 @@
 			"isVisible": 1,
 			"logicalId": "SetAudioAlarm"
 		},
+        {
+            "abilityneed":"alarmAudio",
+            "iastate":1,
+            "name": "Alarme Audio AI (état)",
+            "type": "info",
+            "subtype": "binary",
+            "configuration": {
+                "payload": "{\"cmd\":\"GetAudioAlarmV20\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+            },
+            "IsHistorized": 0,
+            "isVisible": 0,
+            "logicalId": "SetAudioAlarmStateV20"
+        },
+        {
+            "abilityneed":"alarmAudio",
+            "iastate":1,
+            "name": "Alarme Audio AI",
+            "type": "action",
+            "subtype": "select",
+            "configuration": {
+                "option": "select",
+                "listValue": "1|Activer;0|Désactiver",
+                "valueFrom" : "SetAudioAlarmStateV20",
+                "actionapi": "SetAudioAlarmV20",
+                "payload": "{\"Audio\":{\"enable\":#OPTSELECTEDINT#}}"
+            },
+            "IsHistorized": 0,
+            "isVisible": 1,
+            "logicalId": "SetAudioAlarmV20"
+        },
 		{
 			"abilityneed":"powerLed",
 			"name": "Power LED (état)",
@@ -726,7 +881,7 @@
 			"logicalId": "SetNr3dState"
 		},
 		{
-			"abilityneed":"isp",
+			"abilityneed":"isp3Dnr",
 			"name": "3D DNR",
 			"type": "action",
 			"subtype": "select",
