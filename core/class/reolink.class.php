@@ -237,7 +237,10 @@ class reolink extends eqLogic {
 
           case reolinkAPI::CAM_GET_RECV20:
               $camcmd->checkAndUpdateCmd('SetRecordStateV20', $json_data['value']['Rec']['enable']);
-              break;
+	      $camcmd->checkAndUpdateCmd('SetPreRecordStateV20', $json_data['value']['Rec']['preRec']);
+	      $camcmd->checkAndUpdateCmd('SetOverwriteStateV20', $json_data['value']['Rec']['overwrite']);
+	      $camcmd->checkAndUpdateCmd('SetPostRecordStateV20', $json_data['value']['Rec']['postRec']);
+	      break;
 
           case reolinkAPI::CAM_GET_MDSTATE:
               $camcmd->checkAndUpdateCmd('MdState', $json_data['value']['state']);
@@ -318,6 +321,7 @@ class reolink extends eqLogic {
               $camcmd->checkAndUpdateCmd('SetNr3dState', $json_data['value']['Isp']['nr3d']);
               $camcmd->checkAndUpdateCmd('SetRedGainState', $json_data['value']['Isp']['redGain']); // ???
               $camcmd->checkAndUpdateCmd('SetWhiteBalanceState', $json_data['value']['Isp']['whiteBalance']); // ???
+              $camcmd->checkAndUpdateCmd('SetExposureState', $json_data['value']['Isp']['exposure']); // ???
               break;
 
           case reolinkAPI::CAM_GET_IRLIGHTS:
