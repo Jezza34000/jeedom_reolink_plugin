@@ -1,4 +1,8 @@
 # Change log
+
+27/02/2022
+- Merge Pull request depuis @mnpg (ajout de commandes AI)
+
 20/02/2022
 - Refonte de la gestion du refresh du plugin
 - Détection ou non si la caméra est IA (adaptation des commandes en fonction)
