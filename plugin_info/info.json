@@ -8,9 +8,9 @@
 	"author" : "Jeedom SAS",
 	"require" : "3.3.39",
 	"category" : "security",
-	"hasDependency" : false,
-	"hasOwnDeamon" : false,
-	"maxDependancyInstallTime" : 0,
+	"hasDependency" : true,
+	"hasOwnDeamon" : true,
+	"maxDependancyInstallTime" : 10,
 	"changelog" : "https://github.com/Jezza34000/reolink/blob/master/changelog.md",
 	"documentation" : "https://github.com/Jezza34000/reolink/blob/master/README.md",
 	"compatibility": [

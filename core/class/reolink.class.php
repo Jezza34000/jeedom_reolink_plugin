@@ -237,10 +237,10 @@ class reolink extends eqLogic {
 
           case reolinkAPI::CAM_GET_RECV20:
               $camcmd->checkAndUpdateCmd('SetRecordStateV20', $json_data['value']['Rec']['enable']);
-	      $camcmd->checkAndUpdateCmd('SetPreRecordStateV20', $json_data['value']['Rec']['preRec']);
-	      $camcmd->checkAndUpdateCmd('SetOverwriteStateV20', $json_data['value']['Rec']['overwrite']);
-	      $camcmd->checkAndUpdateCmd('SetPostRecordStateV20', $json_data['value']['Rec']['postRec']);
-	      break;
+      	      $camcmd->checkAndUpdateCmd('SetPreRecordStateV20', $json_data['value']['Rec']['preRec']);
+      	      $camcmd->checkAndUpdateCmd('SetOverwriteStateV20', $json_data['value']['Rec']['overwrite']);
+      	      $camcmd->checkAndUpdateCmd('SetPostRecordStateV20', $json_data['value']['Rec']['postRec']);
+      	      break;
 
           case reolinkAPI::CAM_GET_MDSTATE:
               $camcmd->checkAndUpdateCmd('MdState', $json_data['value']['state']);
@@ -457,7 +457,104 @@ class reolink extends eqLogic {
       }
      */
 
+      public static function deamon_info() {
+         $return = array();
+         $return['log'] = __CLASS__;
+         $return['state'] = 'nok';
+         $pid_file = jeedom::getTmpFolder(__CLASS__) . '/deamon.pid';
+         if (file_exists($pid_file)) {
+             if (@posix_getsid(trim(file_get_contents($pid_file)))) {
+                 $return['state'] = 'ok';
+             } else {
+                 shell_exec(system::getCmdSudo() . 'rm -rf ' . $pid_file . ' 2>&1 > /dev/null');
+             }
+         }
+         $return['launchable'] = 'ok';
 
+         $list_camera = eqLogic::byType('reolink') ;
+
+
+         /*
+         $adresseIP = $camera->getConfiguration('adresseip');
+         $username = $camera->getConfiguration('login');
+         $password = $camera->getConfiguration('password');
+        */
+         if (count($list_camera) == 0) {
+             $return['launchable'] = 'nok';
+             $return['launchable_message'] = __('Aucune caméra n\'est configuré', __FILE__);
+         } /*elseif ($password == '') {
+             $return['launchable'] = 'nok';
+             $return['launchable_message'] = __('Le mot de passe de la caméra n\'est pas configuré', __FILE__);
+         } elseif ($adresseIP == '') {
+             $return['launchable'] = 'nok';
+             $return['launchable_message'] = __('L\'IP de la caméra n\'est pas configurée', __FILE__);
+         }*/
+         return $return;
+      }
+
+      public static function deamon_start() {
+        self::deamon_stop();
+        $deamon_info = self::deamon_info();
+        if ($deamon_info['launchable'] != 'ok') {
+            throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
+        }
+
+        $path = realpath(dirname(__FILE__) . '/../../resources/demond');
+        $cmd = 'python3 ' . $path . '/reolinkd.py';
+        $cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel(__CLASS__));
+        $cmd .= ' --socketport ' . config::byKey('socketport', __CLASS__, '44009');
+        $cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/reolink/core/php/jeeReolink.php';
+        $cmd .= ' --user "' . trim(str_replace('"', '\"', config::byKey('user', __CLASS__))) . '"'; // on rajoute les paramètres utiles à votre démon, ici user
+        $cmd .= ' --pswd "' . trim(str_replace('"', '\"', config::byKey('password', __CLASS__))) . '"'; // et password
+        $cmd .= ' --apikey ' . jeedom::getApiKey(__CLASS__);
+        $cmd .= ' --pid ' . jeedom::getTmpFolder(__CLASS__) . '/deamon.pid';
+        log::add(__CLASS__, 'info', 'Lancement démon');
+        $result = exec($cmd . ' >> ' . log::getPathToLog('reolink_daemon') . ' 2>&1 &');
+        $i = 0;
+        while ($i < 20) {
+            $deamon_info = self::deamon_info();
+            if ($deamon_info['state'] == 'ok') {
+                break;
+            }
+            sleep(1);
+            $i++;
+        }
+        if ($i >= 30) {
+            log::add(__CLASS__, 'error', __('Impossible de lancer le démon, vérifiez le log', __FILE__), 'unableStartDeamon');
+            return false;
+        }
+        message::removeAll(__CLASS__, 'unableStartDeamon');
+        return true;
+      }
+
+
+      public static function deamon_stop() {
+          $pid_file = jeedom::getTmpFolder(__CLASS__) . '/deamon.pid';
+          if (file_exists($pid_file)) {
+              $pid = intval(trim(file_get_contents($pid_file)));
+              system::kill($pid);
+          }
+          system::kill('reolinkd.py');
+          sleep(1);
+      }
+
+      public static function sendToDaemon($params) {
+          $deamon_info = self::deamon_info();
+          if ($deamon_info['state'] != 'ok') {
+              throw new Exception("Le démon n'est pas démarré");
+          }
+          $params['apikey'] = jeedom::getApiKey(__CLASS__);
+          $payLoad = json_encode($params);
+          $socket = socket_create(AF_INET, SOCK_STREAM, 0);
+          socket_connect($socket, '127.0.0.1', config::byKey('socketport', __CLASS__, '44009'));
+          socket_write($socket, $payLoad, strlen($payLoad));
+          socket_close($socket);
+      }
+
+      public static function dependancy_install() {
+          log::remove(__CLASS__ . '_update');
+          return array('script' => dirname(__FILE__) . '/../../resources/install_#stype#.sh ' . jeedom::getTmpFolder(__CLASS__) . '/dependency', 'log' => log::getPathToLog(__CLASS__ . '_update'));
+      }
 
     /*     * *********************Méthodes d'instance************************* */
 
