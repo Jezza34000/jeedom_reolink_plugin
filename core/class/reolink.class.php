@@ -253,7 +253,7 @@ class reolink extends eqLogic {
                 $camcmd->checkAndUpdateCmd('driveAvailable', 0);
               }
               if (is_numeric($json_data['value']['HddInfo'][0]['size']) && is_numeric($json_data['value']['HddInfo'][0]['capacity'])) {
-                $percoccupancy = round(($json_data['value']['HddInfo']['size'] * 100) / $json_data['value']['HddInfo'][0]['capacity'], 0, PHP_ROUND_HALF_DOWN);
+                $percoccupancy = round(($json_data['value']['HddInfo'][0]['size'] * 100) / $json_data['value']['HddInfo'][0]['capacity'], 0, PHP_ROUND_HALF_DOWN);
                 $camcmd->checkAndUpdateCmd('driveSpaceAvailable', $percoccupancy);
               }
               if ($json_data['value']['HddInfo'][0]['storageType'] == 1) {
