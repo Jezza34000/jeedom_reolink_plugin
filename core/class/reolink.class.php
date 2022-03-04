@@ -385,6 +385,12 @@ class reolink extends eqLogic {
               $camcmd->checkAndUpdateCmd('SetFocusState', $json_data['value']['ZoomFocus']['focus']['pos']);
               break;
 
+	      case reolinkAPI::CAM_PERFORMANCE:
+              $camcmd->checkAndUpdateCmd('SetCpuUsedState', $json_data['value']['Performance']['cpuUsed']);
+              $camcmd->checkAndUpdateCmd('SetNetThroughputState', $json_data['value']['Performance']['netThroughput']);
+              $camcmd->checkAndUpdateCmd('SetCodecRateState', $json_data['value']['Performance']['codecRate']);
+	          break;
+
           default:
               log::add('reolink', 'error', 'JSON map résultat à echouer avec le retour : '. print_r($json_data, true));
               $res = false;
