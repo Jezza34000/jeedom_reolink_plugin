@@ -22,6 +22,42 @@
 			"logicalId": "reboot"
 		},
 		{
+			"abilityneed":"performance",
+			"name": "Débit codec",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetCodecRateState"
+		},
+		{
+			"abilityneed":"performance",
+			"name": "Utilisation CPU",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetCpuUsedState"
+		},
+		{
+			"abilityneed":"performance",
+			"name": "Debit réseau",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetNetThroughputState"
+		},
+		{
 			"abilityneed":"alarmMd",
 			"name": "Mouvement détecté (état)",
 			"type": "info",

@@ -26,6 +26,7 @@ class reolinkAPI {
     const CAM_UPGRADE ='Upgrade';
     const CAM_RESTORE ='Restore';
     const CAM_REBOOT ='Reboot';
+    const CAM_PERFORMANCE ='GetPerformance';
     const CAM_UPGRADEPREPARE ='UpgradePrepare';
     const CAM_GET_AUTOUPGRADE ='GetAutoUpgrade';
     const CAM_SET_AUTOUPGRADE ='SetAutoUpgrade';
