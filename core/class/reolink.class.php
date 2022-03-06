@@ -389,7 +389,7 @@ class reolink extends eqLogic {
               $camcmd->checkAndUpdateCmd('SetCpuUsedState', $json_data['value']['Performance']['cpuUsed']);
               $camcmd->checkAndUpdateCmd('SetNetThroughputState', $json_data['value']['Performance']['netThroughput']);
               $camcmd->checkAndUpdateCmd('SetCodecRateState', $json_data['value']['Performance']['codecRate']);
-	          break;
+	             break;
 
           default:
               log::add('reolink', 'error', 'JSON map résultat à echouer avec le retour : '. print_r($json_data, true));
@@ -560,6 +560,24 @@ class reolink extends eqLogic {
       public static function dependancy_install() {
           log::remove(__CLASS__ . '_update');
           return array('script' => dirname(__FILE__) . '/../../resources/install_#stype#.sh ' . jeedom::getTmpFolder(__CLASS__) . '/dependency', 'log' => log::getPathToLog(__CLASS__ . '_update'));
+      }
+
+      public static function dependancy_info() {
+          $return = array();
+          $return['log'] = log::getPathToLog(__CLASS__ . '_update');
+          $return['progress_file'] = jeedom::getTmpFolder(__CLASS__) . '/dependency';
+          if (file_exists(jeedom::getTmpFolder(__CLASS__) . '/dependency')) {
+              $return['state'] = 'in_progress';
+          } else {
+              if (exec(system::getCmdSudo() . system::get('cmd_check') . '-Ec "python3\-requests"') < 1) {
+                  $return['state'] = 'nok';
+              } elseif (exec(system::getCmdSudo() . 'pip3 list | grep -Ewc "aiohttp|asyncio|uuid|base64|hashlib"') < 5) {
+                  $return['state'] = 'nok';
+              } else {
+                  $return['state'] = 'ok';
+              }
+          }
+          return $return;
       }
 
     /*     * *********************Méthodes d'instance************************* */
