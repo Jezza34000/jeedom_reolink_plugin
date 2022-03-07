@@ -28,57 +28,62 @@ import json
 import argparse
 
 try:
-	from jeedom.jeedom import *
+    from jeedom.jeedom import *
 except ImportError:
-	print("Error: importing module jeedom.jeedom")
-	sys.exit(1)
+    print("Error: importing module jeedom.jeedom")
+    sys.exit(1)
+
 
 def read_socket():
-	global JEEDOM_SOCKET_MESSAGE
-	if not JEEDOM_SOCKET_MESSAGE.empty():
-		logging.debug("Message received in socket JEEDOM_SOCKET_MESSAGE")
-		message = json.loads(jeedom_utils.stripped(JEEDOM_SOCKET_MESSAGE.get()))
-		if message['apikey'] != _apikey:
-			logging.error("Invalid apikey from socket : " + str(message))
-			return
-		try:
-			print ('read')
-		except Exception, e:
-			logging.error('Send command to demon error : '+str(e))
+    global JEEDOM_SOCKET_MESSAGE
+    if not JEEDOM_SOCKET_MESSAGE.empty():
+        logging.debug("Message received in socket JEEDOM_SOCKET_MESSAGE")
+        message = json.loads(jeedom_utils.stripped(JEEDOM_SOCKET_MESSAGE.get()))
+        if message['apikey'] != _apikey:
+            logging.error("Invalid apikey from socket : " + str(message))
+            return
+        try:
+            print('read')
+        except Exception as e:
+            logging.error('Send command to demon error : ' + str(e))
+
 
 def listen():
-	jeedom_socket.open()
-	try:
-		while 1:
-			time.sleep(0.5)
-			read_socket()
-	except KeyboardInterrupt:
-		shutdown()
+    jeedom_socket.open()
+    try:
+        while 1:
+            time.sleep(0.5)
+            read_socket()
+    except KeyboardInterrupt:
+        shutdown()
+
 
 # ----------------------------------------------------------------------------
 
 def handler(signum=None, frame=None):
-	logging.debug("Signal %i caught, exiting..." % int(signum))
-	shutdown()
+    logging.debug("Signal %i caught, exiting..." % int(signum))
+    shutdown()
+
 
 def shutdown():
-	logging.debug("Shutdown")
-	logging.debug("Removing PID file " + str(_pidfile))
-	try:
-		os.remove(_pidfile)
-	except:
-		pass
-	try:
-		jeedom_socket.close()
-	except:
-		pass
-	try:
-		jeedom_serial.close()
-	except:
-		pass
-	logging.debug("Exit 0")
-	sys.stdout.flush()
-	os._exit(0)
+    logging.debug("Shutdown")
+    logging.debug("Removing PID file " + str(_pidfile))
+    try:
+        os.remove(_pidfile)
+    except:
+        pass
+    try:
+        jeedom_socket.close()
+    except:
+        pass
+    try:
+        jeedom_serial.close()
+    except:
+        pass
+    logging.debug("Exit 0")
+    sys.stdout.flush()
+    os._exit(0)
+
 
 # ----------------------------------------------------------------------------
 
@@ -99,11 +104,11 @@ parser.add_argument("--callback", help="Callback", type=str)
 parser.add_argument("--apikey", help="Apikey", type=str)
 parser.add_argument("--cycle", help="Cycle to send event", type=str)
 parser.add_argument("--pid", help="Pid file", type=str)
-parser.add_argument("--socketport", help="Port for Zigbee server", type=str)
+parser.add_argument("--socketport", help="Port for server", type=str)
 args = parser.parse_args()
 
 if args.device:
-	_device = args.device
+    _device = args.device
 if args.loglevel:
     _log_level = args.loglevel
 if args.callback:
@@ -115,28 +120,28 @@ if args.pid:
 if args.cycle:
     _cycle = float(args.cycle)
 if args.socketport:
-	_socketport = args.socketport
+    _socketport = args.socketport
 
 _socket_port = int(_socket_port)
 
 jeedom_utils.set_log_level(_log_level)
 
 logging.info('Start demond')
-logging.info('Log level : '+str(_log_level))
-logging.info('Socket port : '+str(_socket_port))
-logging.info('Socket host : '+str(_socket_host))
-logging.info('PID file : '+str(_pidfile))
-logging.info('Apikey : '+str(_apikey))
-logging.info('Device : '+str(_device))
+logging.info('Log level : ' + str(_log_level))
+logging.info('Socket port : ' + str(_socket_port))
+logging.info('Socket host : ' + str(_socket_host))
+logging.info('PID file : ' + str(_pidfile))
+logging.info('Apikey : ' + str(_apikey))
+logging.info('Device : ' + str(_device))
 
 signal.signal(signal.SIGINT, handler)
 signal.signal(signal.SIGTERM, handler)
 
 try:
-	jeedom_utils.write_pid(str(_pidfile))
-	jeedom_socket = jeedom_socket(port=_socket_port,address=_socket_host)
-	listen()
+    jeedom_utils.write_pid(str(_pidfile))
+    jeedom_socket = jeedom_socket(port=_socket_port, address=_socket_host)
+    listen()
 except Exception as e:
-	logging.error('Fatal error : '+str(e))
-	logging.info(traceback.format_exc())
-	shutdown()
+    logging.error('Fatal error : ' + str(e))
+    logging.info(traceback.format_exc())
+    shutdown()
