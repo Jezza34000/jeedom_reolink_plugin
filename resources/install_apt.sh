@@ -23,7 +23,7 @@ echo 60 > ${PROGRESS_FILE}
 echo "*************************************"
 echo "Install the required python libraries"
 echo "*************************************"
-python3 -m pip install "aiohttp" "asyncio" "uuid" "base64" "hashlib"
+python3 -m pip install "aiohttp" "asyncio" "fastapi" "uvicorn"
 echo 80 > ${PROGRESS_FILE}
 
 echo 100 > ${PROGRESS_FILE}

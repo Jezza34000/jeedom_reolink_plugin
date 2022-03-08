@@ -547,7 +547,8 @@ class reolink extends eqLogic {
       public static function sendToDaemon($params) {
           $deamon_info = self::deamon_info();
           if ($deamon_info['state'] != 'ok') {
-              throw new Exception("Le démon n'est pas démarré");
+              log::add('reolink', 'error', 'Envoi des infos de webhook impossible le daemon n\'est pas démarré');
+              return False;
           }
           $params['apikey'] = jeedom::getApiKey(__CLASS__);
           $payLoad = json_encode($params);
@@ -571,7 +572,7 @@ class reolink extends eqLogic {
           } else {
               if (exec(system::getCmdSudo() . system::get('cmd_check') . '-Ec "python3\-requests"') < 1) {
                   $return['state'] = 'nok';
-              } elseif (exec(system::getCmdSudo() . 'pip3 list | grep -Ewc "aiohttp|asyncio|uuid|base64|hashlib"') < 5) {
+              } elseif (exec(system::getCmdSudo() . 'pip3 list | grep -Ewc "aiohttp|asyncio|uvicorn|fastapi"') < 4) {
                   $return['state'] = 'nok';
               } else {
                   $return['state'] = 'ok';
