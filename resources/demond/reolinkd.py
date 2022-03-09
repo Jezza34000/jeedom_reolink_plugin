@@ -29,6 +29,7 @@ import argparse
 import uvicorn
 import subscription_manager
 import asyncio
+from multiprocessing import Process
 
 
 try:
@@ -42,7 +43,8 @@ def read_socket():
     global JEEDOM_SOCKET_MESSAGE
     if not JEEDOM_SOCKET_MESSAGE.empty():
         logging.debug("Message received in socket JEEDOM_SOCKET_MESSAGE")
-        message = json.loads(jeedom_utils.stripped(JEEDOM_SOCKET_MESSAGE.get()))
+        message = JEEDOM_SOCKET_MESSAGE.get().decode('utf-8')
+        message = json.loads(message)
         if message['apikey'] != _apikey:
             logging.error("Invalid apikey from socket : " + str(message))
             return
@@ -50,15 +52,13 @@ def read_socket():
             # ============================================
             # Receive message for handle
             if message['action'] == "sethook":
-                logging.debug("Requested to set the webhook inside CAM")
-                # Store information
-                cam_ip = message['cam_ip']
-                cam_onvif_port = message['cam_onvif_port']
-                cam_user = message['cam_user']
-                cam_pwd = message['cam_pwd']
-                if asyncio.run(subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd)):
-                    logging.debug("Subscribe OK, starting server to receive notification...")
-                    uvicorn.run("camhook:app", host=cam_ip, port=5555, log_level="info")
+                _cam_ip = message['cam_ip']
+                _cam_onvif_port = message['cam_onvif_port']
+                _cam_user = message['cam_user']
+                _cam_pwd = message['cam_pwd']
+                logging.debug(f"Requested to set the webhook inside CAM IP={_cam_ip}")
+                if asyncio.run(subscribe_onvif(_cam_ip, _cam_onvif_port, _cam_user, _cam_pwd)):
+                    logging.debug("Subscribe OK")
                 else:
                     logging.error("Error while trying to subscribe ONVIF event")
             else:
@@ -69,8 +69,7 @@ def read_socket():
 
 async def subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd):
     logging.debug(f"Request subscription_manager to set webhook on camera = {cam_ip}:{cam_onvif_port}")
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
+    local_ip = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) + ["no IP found"])[0]
     sman = subscription_manager.Manager(cam_ip, cam_onvif_port, cam_user, cam_pwd)
     res = await sman.subscribe(f"http://{local_ip}:5555/inbound_events")
     logging.debug(f"Starting local hook on : http://{local_ip}:5555/inbound_events")
@@ -85,7 +84,24 @@ def listen():
             read_socket()
     except KeyboardInterrupt:
         shutdown()
+# ----------------------------------------------------------------------------
+# UVICORN Handler
 
+def run_uvicorn():
+    logging.info('Starting webhook...')
+    uvicorn.run(app="camhook:app", host="0.0.0.0", port=5555, log_level="info")
+
+
+def start_uvicorn():
+    global proc
+    proc = Process(target=run_uvicorn, args=(), daemon=True)
+    proc.start()
+
+
+def stop_uvicorn():
+    global proc
+    if proc:
+        proc.join(0.25)
 
 # ----------------------------------------------------------------------------
 
@@ -151,6 +167,7 @@ if args.cycle:
 if args.socketport:
     _socketport = args.socketport
 
+
 _socket_port = int(_socket_port)
 
 jeedom_utils.set_log_level(_log_level)
@@ -162,12 +179,15 @@ logging.info('Socket host : ' + str(_socket_host))
 logging.info('PID file : ' + str(_pidfile))
 logging.info('Apikey : ' + str(_apikey))
 logging.info('Device : ' + str(_device))
+
 logging.info('Write creds file for camhook')
 lines = [_callback, _apikey]
 with open('jeedomcreds', 'w') as f:
     for line in lines:
         f.write(line)
         f.write('\n')
+
+start_uvicorn()
 
 signal.signal(signal.SIGINT, handler)
 signal.signal(signal.SIGTERM, handler)

@@ -16,14 +16,12 @@ try {
         die();
     }
 
-    if (isset($result['key1'])) {
-        // do something
-    } elseif (isset($result['key2'])) {
-        // do something else
+    if (isset($result['message']) && $result['message'] == "motion") {
+        log::add('reolink', 'debug', 'Evènement : "détection de mouvement" reçu depuis le daemon. IP='.$result['ip'].' Etat='.$result['motionstate']);
     } else {
         log::add('reolink', 'error', 'unknown message received from daemon');
     }
 } catch (Exception $e) {
-    log::add('reolink', 'error', displayException($e)); 
+    log::add('reolink', 'error', displayException($e));
 }
 ?>

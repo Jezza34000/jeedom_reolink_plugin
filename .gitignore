@@ -20,3 +20,6 @@ certbot
 resources/.idea/resources.iml
 resources/data/ptzpreset
 resources/demond/.idea/demond.iml
+desktop/img/camera.png
+desktop/img/camera1092.png
+resources/demond/.htaccess

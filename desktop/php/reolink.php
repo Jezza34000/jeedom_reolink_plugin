@@ -135,11 +135,19 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">{{Port}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port de la caméra uniquement si vous l'avez modifier. Sinon laisser ce champ vide}}"></i></sup>
+								<label class="col-sm-3 control-label">{{Port HTTP/HTTPS}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port de l'interface web de la caméra uniquement si vous l'avez modifier. Sinon laisser ce champ vide}}"></i></sup>
 								</label>
 								<div class="col-sm-7">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" placeholder="{{(facultatif)}}"/>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{Port ONVIF}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port du protocole ONVIF uniquement si vous l'avez modifier. Sinon laisser ce champ vide}}"></i></sup>
+								</label>
+								<div class="col-sm-7">
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port_onvif" placeholder="{{8000}}"/>
 								</div>
 							</div>
 							<div class="form-group">

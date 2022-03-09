@@ -24,16 +24,20 @@ app = FastAPI()
 
 @app.post("/inbound_events")
 async def get_body(request: Request):
-    logging.debug(f"Incoming XML camera event on webhook ")
+    ip = request.client.host
+    logging.debug(f"Incoming XML camera event on webhook from IP={ip}")
     xml_answer = await request.body()
-    file = minidom.parse(xml_answer)
+    logging.debug(f"XML frame ={xml_answer}")
+    file = minidom.parse(xml_answer.decode('utf-8'))
     models = file.getElementsByTagName('tt:SimpleItem')
     # a Python object (dict):
-    received_frame = {
-        "motion": models[3].attributes['Value'].value,
+    send_frame = {
+        "message": "motion",
+        "ip": ip,
+        "motionstate": models[3].attributes['Value'].value
     }
     # convert into JSON:
-    message = json.dumps(received_frame)
+    message = json.dumps(send_frame)
     logging.debug(f"Sending to jeedom : {message}")
     s = jeedom_com(_apikey, _callback)
     s.send_change_immediate(message)

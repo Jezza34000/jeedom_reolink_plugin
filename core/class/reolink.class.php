@@ -203,6 +203,14 @@ class reolink extends eqLogic {
       $camcnx = reolink::getReolinkConnection($id);
       $cmdget = NULL;
 
+      // Sending info to Daemon
+      $params['action'] = 'sethook';
+      $params['cam_ip'] = $camcmd->getConfiguration('adresseip');
+      $params['cam_onvif_port'] = $camcmd->getConfiguration('port_onvif');
+      $params['cam_user'] = $camcmd->getConfiguration('login');
+      $params['cam_pwd'] = $camcmd->getConfiguration('password');
+      reolink::sendToDaemon($params);
+
       // Prepare request with INFO needed
       foreach (reolinkCmd::byEqLogicId($id) as $cmd) {
           $payload = $cmd->getConfiguration('payload');
@@ -510,8 +518,6 @@ class reolink extends eqLogic {
         $cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel(__CLASS__));
         $cmd .= ' --socketport ' . config::byKey('socketport', __CLASS__, '44009');
         $cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/reolink/core/php/jeeReolink.php';
-        $cmd .= ' --user "' . trim(str_replace('"', '\"', config::byKey('user', __CLASS__))) . '"'; // on rajoute les paramètres utiles à votre démon, ici user
-        $cmd .= ' --pswd "' . trim(str_replace('"', '\"', config::byKey('password', __CLASS__))) . '"'; // et password
         $cmd .= ' --apikey ' . jeedom::getApiKey(__CLASS__);
         $cmd .= ' --pid ' . jeedom::getTmpFolder(__CLASS__) . '/deamon.pid';
         log::add(__CLASS__, 'info', 'Lancement démon');
