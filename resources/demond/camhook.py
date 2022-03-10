@@ -27,7 +27,6 @@ async def get_body(request: Request):
     ip = request.client.host
     logging.debug(f"Incoming XML camera event on webhook from IP={ip}")
     xml_answer = await request.body()
-    logging.debug(f"XML frame ={xml_answer}")
 
     detect_state = 0
     if re.search('IsMotion" Value="true"', xml_answer.decode('utf-8')):
