@@ -16,14 +16,21 @@ try {
         die();
     }
 
-    if (isset($result['key1'])) {
-        // do something
-    } elseif (isset($result['key2'])) {
-        // do something else
+    if (isset($result['message']) && $result['message'] == "motion") {
+        log::add('reolink', 'debug', 'Evènement : "détection de mouvement" reçu depuis le daemon. IP='.$result['ip'].' Etat='.$result['motionstate']);
+        $plugin = plugin::byId('reolink');
+        $eqLogics = eqLogic::byType($plugin->getId());
+
+        foreach ($eqLogics as $eqLogic) {
+          if ($eqLogic->getConfiguration('adresseip') == $result['ip']) {
+            log::add('reolink', 'debug', 'IP matché avec caméra, mise à jour des infos');
+            $eqLogic->checkAndUpdateCmd('MdState', $result['motionstate']);
+          }
+  			}
     } else {
         log::add('reolink', 'error', 'unknown message received from daemon');
     }
 } catch (Exception $e) {
-    log::add('reolink', 'error', displayException($e)); 
+    log::add('reolink', 'error', displayException($e));
 }
 ?>

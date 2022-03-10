@@ -203,6 +203,16 @@ class reolink extends eqLogic {
       $camcnx = reolink::getReolinkConnection($id);
       $cmdget = NULL;
 
+      $port_onvif = $camcmd->getConfiguration('port_onvif');
+      if ($port_onvif == "") { $port_onvif = "8000"; }
+      // Sending info to Daemon
+      $params['action'] = 'sethook';
+      $params['cam_ip'] = $camcmd->getConfiguration('adresseip');
+      $params['cam_onvif_port'] = $port_onvif;
+      $params['cam_user'] = $camcmd->getConfiguration('login');
+      $params['cam_pwd'] = $camcmd->getConfiguration('password');
+      reolink::sendToDaemon($params);
+
       // Prepare request with INFO needed
       foreach (reolinkCmd::byEqLogicId($id) as $cmd) {
           $payload = $cmd->getConfiguration('payload');
@@ -243,7 +253,7 @@ class reolink extends eqLogic {
       	      break;
 
           case reolinkAPI::CAM_GET_MDSTATE:
-              $camcmd->checkAndUpdateCmd('MdState', $json_data['value']['state']);
+              //$camcmd->checkAndUpdateCmd('MdState', $json_data['value']['state']);
               break;
 
           case reolinkAPI::CAM_GET_HDDINFO:
@@ -510,8 +520,6 @@ class reolink extends eqLogic {
         $cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel(__CLASS__));
         $cmd .= ' --socketport ' . config::byKey('socketport', __CLASS__, '44009');
         $cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/reolink/core/php/jeeReolink.php';
-        $cmd .= ' --user "' . trim(str_replace('"', '\"', config::byKey('user', __CLASS__))) . '"'; // on rajoute les paramètres utiles à votre démon, ici user
-        $cmd .= ' --pswd "' . trim(str_replace('"', '\"', config::byKey('password', __CLASS__))) . '"'; // et password
         $cmd .= ' --apikey ' . jeedom::getApiKey(__CLASS__);
         $cmd .= ' --pid ' . jeedom::getTmpFolder(__CLASS__) . '/deamon.pid';
         log::add(__CLASS__, 'info', 'Lancement démon');
@@ -547,7 +555,8 @@ class reolink extends eqLogic {
       public static function sendToDaemon($params) {
           $deamon_info = self::deamon_info();
           if ($deamon_info['state'] != 'ok') {
-              throw new Exception("Le démon n'est pas démarré");
+              log::add('reolink', 'error', 'Envoi des infos de webhook impossible le daemon n\'est pas démarré');
+              return False;
           }
           $params['apikey'] = jeedom::getApiKey(__CLASS__);
           $payLoad = json_encode($params);
@@ -571,7 +580,7 @@ class reolink extends eqLogic {
           } else {
               if (exec(system::getCmdSudo() . system::get('cmd_check') . '-Ec "python3\-requests"') < 1) {
                   $return['state'] = 'nok';
-              } elseif (exec(system::getCmdSudo() . 'pip3 list | grep -Ewc "aiohttp|asyncio|uuid|base64|hashlib"') < 5) {
+              } elseif (exec(system::getCmdSudo() . 'pip3 list | grep -Ewc "aiohttp|asyncio|uvicorn|fastapi"') < 4) {
                   $return['state'] = 'nok';
               } else {
                   $return['state'] = 'ok';
