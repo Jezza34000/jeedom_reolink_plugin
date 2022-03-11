@@ -1,5 +1,8 @@
 # Change log
 
+11/03/2022
+- Ajout d'un daemon permettre la souscription aux évènements ONVIF (détection de mouvement en temps réel)
+
 27/02/2022
 - Merge Pull request depuis @mnpg (ajout de commandes AI)
 

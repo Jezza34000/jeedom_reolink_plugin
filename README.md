@@ -75,6 +75,7 @@ Non-supportés :
 - [ ] Planning alarme audio
 - [ ] Configuration de la détection de mouvement
 - [ ] Configuration des fonctions AI
+- [x] Remontée des détections de mouvements en temps-réel
 
 #### OSD
 - [x] Afficher/Masquer Watermark

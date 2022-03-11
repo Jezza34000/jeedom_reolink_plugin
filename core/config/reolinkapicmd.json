@@ -18,8 +18,17 @@
 				"actionapi": "Reboot",
 				"payload": "{\"cmd\":\"Reboot\"}"
 			},
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "reboot"
+		},
+		{
+			"abilityneed":"alarmMd",
+			"name": "Mouvement détecté (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "MdState"
 		},
 		{
 			"abilityneed":"performance",
@@ -56,15 +65,6 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetNetThroughputState"
-		},
-		{
-			"abilityneed":"alarmMd",
-			"name": "Mouvement détecté (état)",
-			"type": "info",
-			"subtype": "binary",
-			"IsHistorized": 0,
-			"isVisible": 0,
-			"logicalId": "MdState"
 		},
 		{
 			"abilityneed":"push",
