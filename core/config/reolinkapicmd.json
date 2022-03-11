@@ -62,9 +62,6 @@
 			"name": "Mouvement détecté (état)",
 			"type": "info",
 			"subtype": "binary",
-			"configuration": {
-				"payload": "{\"cmd\":\"GetMdState\",\"param\":{\"channel\":#CHANNEL#}}"
-			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "MdState"

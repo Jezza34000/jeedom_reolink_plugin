@@ -203,16 +203,6 @@ class reolink extends eqLogic {
       $camcnx = reolink::getReolinkConnection($id);
       $cmdget = NULL;
 
-      $port_onvif = $camcmd->getConfiguration('port_onvif');
-      if ($port_onvif == "") { $port_onvif = "8000"; }
-      // Sending info to Daemon
-      $params['action'] = 'sethook';
-      $params['cam_ip'] = $camcmd->getConfiguration('adresseip');
-      $params['cam_onvif_port'] = $port_onvif;
-      $params['cam_user'] = $camcmd->getConfiguration('login');
-      $params['cam_pwd'] = $camcmd->getConfiguration('password');
-      reolink::sendToDaemon($params);
-
       // Prepare request with INFO needed
       foreach (reolinkCmd::byEqLogicId($id) as $cmd) {
           $payload = $cmd->getConfiguration('payload');
@@ -253,7 +243,7 @@ class reolink extends eqLogic {
       	      break;
 
           case reolinkAPI::CAM_GET_MDSTATE:
-              //$camcmd->checkAndUpdateCmd('MdState', $json_data['value']['state']);
+              // Updated by daemon
               break;
 
           case reolinkAPI::CAM_GET_HDDINFO:
@@ -352,7 +342,6 @@ class reolink extends eqLogic {
               break;
 
           case reolinkAPI::CAM_GET_PTZPRESET:
-              $camcnx->ptz_presets_settings = $json_data;
               break;
 
           case reolinkAPI::CAM_GET_ALARM:
@@ -443,11 +432,27 @@ class reolink extends eqLogic {
       }
      */
 
-    /*
-     * Fonction exécutée automatiquement toutes les 10 minutes par Jeedom
+
+     // Fonction exécutée automatiquement toutes les 10 minutes par Jeedom
       public static function cron10() {
+        // Refresh motion detection subscription
+        $eqLogics = ($_eqlogic_id !== null) ? array(eqLogic::byId($_eqlogic_id)) : eqLogic::byType('reolink', true);
+        foreach ($eqLogics as $camera) {
+
+          $port_onvif = $camera->getConfiguration('port_onvif');
+          if ($port_onvif == "") { $port_onvif = "8000"; }
+          // Sending info to Daemon
+          $params['action'] = 'sethook';
+          $params['cam_ip'] = $camera->getConfiguration('adresseip');
+          $params['cam_onvif_port'] = $port_onvif;
+          $params['cam_user'] = $camera->getConfiguration('login');
+          $params['cam_pwd'] = $camera->getConfiguration('password');
+
+          log::add('reolink', 'debug', 'CRON mise à jour souscription ONVIF events Cam='.$camera->getConfiguration('adresseip'));
+          reolink::sendToDaemon($params);
+        }
       }
-     */
+
 
     /*
      * Fonction exécutée automatiquement toutes les 15 minutes par Jeedom

@@ -17,13 +17,12 @@ try {
     }
 
     if (isset($result['message']) && $result['message'] == "motion") {
-        log::add('reolink', 'debug', 'Evènement : "détection de mouvement" reçu depuis le daemon. IP='.$result['ip'].' Etat='.$result['motionstate']);
         $plugin = plugin::byId('reolink');
         $eqLogics = eqLogic::byType($plugin->getId());
 
         foreach ($eqLogics as $eqLogic) {
           if ($eqLogic->getConfiguration('adresseip') == $result['ip']) {
-            log::add('reolink', 'debug', 'IP matché avec caméra, mise à jour des infos');
+            log::add('reolink', 'debug', 'Evènement MotionState reçu depuis le daemon. Cam IP='.$result['ip'].' état='.$result['motionstate']);
             $eqLogic->checkAndUpdateCmd('MdState', $result['motionstate']);
           }
   			}

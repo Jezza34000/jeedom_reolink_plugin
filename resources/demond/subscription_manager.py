@@ -40,7 +40,7 @@ class Manager:
         remote_time += timedelta(seconds=self._time_difference)
 
         diff = self._termination_time - remote_time
-        _LOGGER.debug("Host %s should renew in: %i seconds...",
+        _LOGGER.debug("SMAN : Host %s should renew in: %i seconds...",
             self._host, diff.seconds
         )
 
@@ -84,8 +84,8 @@ class Manager:
             async with aiohttp.ClientSession(timeout=self._timeout,
                                              connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
                 _LOGGER.debug(
-                    "Reolink host %s (Subscription) request data",
-                    self._host, data
+                    "SMAN : Reolink host %s (Subscription) request",
+                    self._host
                 )
 
                 async with session.post(
@@ -94,22 +94,22 @@ class Manager:
                     response_xml = await response.text()
 
                     _LOGGER.debug(
-                        "Reolink host %s (Subscription) got response status: %s. Payload: %s",
-                        self._host, response.status, response_xml
+                        "SMAN : Reolink host %s (Subscription) got response status: %s.",
+                        self._host, response.status
                     )
                     if response.status == 200:
                         return response_xml
                     else:
-                        _LOGGER.warning("Subscription process ended with wrong HTTP status: %s: %s", response.status, response.reason)
+                        _LOGGER.warning("SMAN : Subscription process ended with wrong HTTP status: %s", response.status)
 
                     return
 
         except aiohttp.ClientConnectorError as conn_err:
-            _LOGGER.debug('Host %s: Connection error %s', self._host, str(conn_err))
+            _LOGGER.debug('SMAN : Host %s: Connection error %s', self._host, str(conn_err))
         except asyncio.TimeoutError:
-            _LOGGER.debug('Host %s: connection timeout exception. Please check the connection to this camera.', self._host)
+            _LOGGER.debug('SMAN : Host %s: connection timeout exception. Please check the connection to this camera.', self._host)
         except: #pylint: disable=bare-except
-            _LOGGER.debug('Host %s: Unknown exception occurred.', self._host)
+            _LOGGER.debug('SMAN : Host %s: Unknown exception occurred.', self._host)
         return
 
     async def extract_value(self, data, element):
@@ -156,7 +156,7 @@ class Manager:
             or self._termination_time is None
         ):
             _LOGGER.error(
-                "Host: %s failed to subscribe. Required response parameters not available.",
+                "SMAN : Host: %s failed to subscribe. Required response parameters not available.",
                 self._host
             )
             return False
@@ -164,7 +164,7 @@ class Manager:
         self._time_difference = await self.calc_time_difference(local_time, remote_time)
 
         _LOGGER.debug(
-            "Local time: %s, camera time: %s (difference: %s), termination time: %s",
+            "SMAN : Local time: %s, camera time: %s (difference: %s), termination time: %s",
             local_time.strftime('%Y-%m-%d %H:%M'), remote_time.strftime('%Y-%m-%d %H:%M'),
             self._time_difference, self._termination_time.strftime('%Y-%m-%d %H:%M')
         )
@@ -204,7 +204,7 @@ class Manager:
 
         if remote_time is None:
             _LOGGER.error(
-                "Host: %s failed to renew subscription. Expected response not available.",
+                "SMAN : Host: %s failed to renew subscription. Expected response not available.",
                 self._host
             )
             await self.unsubscribe()
@@ -214,7 +214,7 @@ class Manager:
         self._termination_time += timedelta(minutes=TERMINATION_TIME)
 
         _LOGGER.debug(
-            "Local time: %s, camera time: %s (difference: %s), termination time: %s",
+            "SMAN : Local time: %s, camera time: %s (difference: %s), termination time: %s",
             local_time.strftime('%Y-%m-%d %H:%M'), remote_time.strftime('%Y-%m-%d %H:%M'),
             self._time_difference, self._termination_time.strftime('%Y-%m-%d %H:%M')
         )
