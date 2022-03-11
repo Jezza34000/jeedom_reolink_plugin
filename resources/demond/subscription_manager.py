@@ -84,7 +84,7 @@ class Manager:
             async with aiohttp.ClientSession(timeout=self._timeout,
                                              connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
                 _LOGGER.debug(
-                    "Reolink host %s (Subscription) request data: %s",
+                    "Reolink host %s (Subscription) request data",
                     self._host, data
                 )
 

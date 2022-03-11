@@ -203,10 +203,12 @@ class reolink extends eqLogic {
       $camcnx = reolink::getReolinkConnection($id);
       $cmdget = NULL;
 
+      $port_onvif = $camcmd->getConfiguration('port_onvif');
+      if ($port_onvif == "") { $port_onvif = "8000"; }
       // Sending info to Daemon
       $params['action'] = 'sethook';
       $params['cam_ip'] = $camcmd->getConfiguration('adresseip');
-      $params['cam_onvif_port'] = $camcmd->getConfiguration('port_onvif');
+      $params['cam_onvif_port'] = $port_onvif;
       $params['cam_user'] = $camcmd->getConfiguration('login');
       $params['cam_pwd'] = $camcmd->getConfiguration('password');
       reolink::sendToDaemon($params);
@@ -251,7 +253,7 @@ class reolink extends eqLogic {
       	      break;
 
           case reolinkAPI::CAM_GET_MDSTATE:
-              $camcmd->checkAndUpdateCmd('MdState', $json_data['value']['state']);
+              //$camcmd->checkAndUpdateCmd('MdState', $json_data['value']['state']);
               break;
 
           case reolinkAPI::CAM_GET_HDDINFO:
