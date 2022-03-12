@@ -415,8 +415,12 @@ class reolink extends eqLogic {
               $c = new Cron\CronExpression(checkAndFixCron($autorefresh), new Cron\FieldFactory);
               if ($c->isDue()) {
                 log::add('reolink', 'debug', '#### CRON refresh '.$camera->getHumanName());
-
                 $camera->refreshNFO($camera->getId());
+              }
+              #Reset detection info if daemon is down
+              $deamon_info = self::deamon_info();
+              if ($deamon_info['state'] != 'ok') {
+                  $camera->checkAndUpdateCmd('MdState', 0);
               }
             } catch (Exception $exc) {
               log::add('reolink', 'error', __('Expression cron non valide pour ', __FILE__) . $camera->getHumanName() . ' : ' . $autorefresh);
