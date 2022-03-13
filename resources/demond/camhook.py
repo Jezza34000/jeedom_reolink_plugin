@@ -19,26 +19,31 @@ except:
     logging.error(f"Unable to read credentials jeedom file")
     sys.exit(1)
 
+detect_state = 0
 app = FastAPI()
 
 
-@app.post("/inbound_events")
+@app.post("/inbound_events", status_code=200)
 async def get_body(request: Request):
+    global detect_state
     ip = request.client.host
     logging.debug(f"Incoming XML camera event on webhook from IP={ip}")
     xml_answer = await request.body()
 
-    detect_state = 0
+    new_detect_state = 0
     if re.search('IsMotion" Value="true"', xml_answer.decode('utf-8')):
-        detect_state = 1
+        new_detect_state = 1
 
-    send_frame = {
-        "message": "motion",
-        "ip": ip,
-        "motionstate": detect_state
-    }
-    # convert into JSON:
-    message = json.dumps(send_frame)
-    logging.debug(f"Sending to jeedom : {message}")
-    s = jeedom_com(_apikey, _callback)
-    s.send_change_immediate(json.loads(message))
+    if detect_state != new_detect_state:
+        detect_state = new_detect_state
+        send_frame = {
+            "message": "motion",
+            "ip": ip,
+            "motionstate": detect_state
+        }
+        # convert into JSON:
+        message = json.dumps(send_frame)
+        s = jeedom_com(_apikey, _callback)
+        s.send_change_immediate(json.loads(message))
+
+    return
