@@ -19,6 +19,7 @@ except:
     logging.error(f"Unable to read credentials jeedom file")
     sys.exit(1)
 
+jeedom_cnx = jeedom_com(_apikey, _callback)
 detect_state = 0
 app = FastAPI()
 
@@ -43,7 +44,5 @@ async def get_body(request: Request):
         }
         # convert into JSON:
         message = json.dumps(send_frame)
-        s = jeedom_com(_apikey, _callback)
-        s.send_change_immediate(json.loads(message))
-
+        jeedom_cnx.send_change_immediate(json.loads(message))
     return
