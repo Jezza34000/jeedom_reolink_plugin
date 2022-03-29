@@ -45,12 +45,14 @@ Non-supportés :
 - [ ] PTZ Guard
 - [ ] Schéma/Chemin PTZ
 - [ ] PTZ Serial
+- [X] Calibration de la camera
 
 #### Réseau
 - [ ] IP/DNS/MASQUE
 - [ ] DDNS
 - [ ] Wifi
-- [ ] UPNP
+- [X] UPNP
+- [X] P2P
 
 #### Image/Vidéo
 - [x] Luminosité, Contraste, Saturation, Teinte, Netteté
@@ -58,7 +60,7 @@ Non-supportés :
 - [ ] Avancée (Anti-scintillement, Exposition, Balance des blancs, Jour/nuit, Rétroeclairage, 3D-NR)
 - [x] Contrôle des Leds Infra Rouge
 - [x] Activation/désactivation des Leds blanches d'éclairage
-- [ ] Configuration des Leds blanches d'eclairage (intensité/planning/)
+- [X] Configuration des Leds blanches d'eclairage (activation/intensité)
 - [x] Activation/désactivation masque de vie privée
 - [ ] Configuration du masque de vie privée
 
