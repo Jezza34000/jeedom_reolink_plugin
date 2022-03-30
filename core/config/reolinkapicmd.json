@@ -931,6 +931,48 @@
 			"logicalId": "SetPtzCheckState"
 		},
 		{
+                        "abilityneed":"supportAudioAlarm",
+                        "name": "Déclencher la sirène",
+                        "type": "action",
+                        "subtype": "other",
+                        "configuration": {
+                                "actionapi": "AudioAlarmPlay",
+                                "payload": "{\"channel\":#CHANNEL#,\"alarm_mode\":\"times\",\"times\":1}"
+                        },
+                        "IsHistorized": 0,
+                        "isVisible": 1,
+                        "logicalId": "AudioAlarmPlayTimes"
+                },
+                {
+                        "abilityneed":"supportAudioAlarm",
+                        "name": "Volume sirène (état)",
+                        "type": "info",
+                        "subtype": "numeric",
+                        "configuration": {
+                                "payload": "{\"cmd\":\"GetAudioCfg\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+                        },
+                        "IsHistorized": 0,
+                        "isVisible": 0,
+                        "logicalId": "SetSirenVolumeState"
+                },
+                {
+                        "abilityneed":"supportAudioAlarm",
+                        "name": "Volume sirène",
+                        "type": "action",
+                        "subtype": "slider",
+                        "configuration": {
+                                "option": "slider",
+                                "minValue": "0",
+                                "maxValue" : "100",
+                                "valueFrom" : "SetSirenVolumeState",
+                                "actionapi": "SetAudioCfg",
+                                "payload": "{\"AudioCfg\":{\"channel\":#CHANNEL#,\"volume\":#OPTSLIDER#}}"
+                        },
+                        "IsHistorized": 0,
+                        "isVisible": 1,
+                        "logicalId": "SetSirenVolume"
+                },
+		{
 			"abilityneed":"ispMirror",
 			"name": "Retourner verticalement (état)",
 			"type": "info",
