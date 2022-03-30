@@ -131,6 +131,8 @@ class reolinkAPI {
     const CAM_GET_BUZZERALARMV20 ='GetBuzzerAlarmV20';
     const CAM_SET_BUZZERALARMV20 ='SetBuzzerAlarmV20';
     const CAM_AUDIOALARMPLAY ='AudioAlarmPlay';
+    const CAM_GET_AUDIOCFG ='GetAudioCfg';
+    const CAM_SET_AUDIOCFG ='SetAudioCfg';
     const CAM_GET_IRLIGHTS ='GetIrLights';
     const CAM_SET_IRLIGHTS ='SetIrLights';
     const CAM_GET_POWERLED ='GetPowerLed';
