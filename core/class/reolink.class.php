@@ -406,6 +406,13 @@ class reolink extends eqLogic {
               $camcmd->checkAndUpdateCmd('SetAudioAlarmStateV20', $json_data['value']['Audio']['enable']);
               break;
 
+	    case reolinkAPI::CAM_AUDIOALARMPLAY:
+              break;
+
+            case reolinkAPI::CAM_GET_AUDIOCFG:
+              $camcmd->checkAndUpdateCmd('SetSirenVolumeState', $json_data['value']['AudioCfg']['volume']);
+              break;
+
             case reolinkAPI::CAM_GET_POWERLED:
               $camcmd->checkAndUpdateCmd('SetPowerLedState', $json_data['value']['PowerLed']['state']);
               break;
