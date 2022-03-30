@@ -672,11 +672,11 @@ class reolink extends eqLogic {
  // Fonction exécutée automatiquement avant la mise à jour de l'équipement
     public function preUpdate() {
       if ($this->getConfiguration('adresseip') == NULL) {
-        throw new Exception(__('L\'adresse IP est obligatoire', __FILE__));
+        throw new Exception(__('L\'IP ou le nom d\'hôte est obligatoire', __FILE__));
       }
-      if (!filter_var($this->getConfiguration('adresseip'), FILTER_VALIDATE_IP)) {
+      /*if (!filter_var($this->getConfiguration('adresseip'), FILTER_VALIDATE_IP)) {
         throw new Exception("Adresse IP de la caméra invalide " . $this->ip);
-      }
+      }*/
       if ($this->getConfiguration('login') == NULL) {
         throw new Exception(__('Le champ login est obligatoire', __FILE__));
       }

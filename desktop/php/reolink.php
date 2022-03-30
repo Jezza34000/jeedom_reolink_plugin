@@ -127,8 +127,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							</div>
 							<legend><i class="fas fa-cogs"></i> {{Paramètres d'accès à la caméra}}</legend>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">{{Adresse IP}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez l'adresse IP de la caméra}}"></i></sup>
+								<label class="col-sm-3 control-label">{{IP / Nom d'hôte}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez l'adresse IP ou le nom d'hôte de la caméra}}"></i></sup>
 								</label>
 								<div class="col-sm-7">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="adresseip"/>
