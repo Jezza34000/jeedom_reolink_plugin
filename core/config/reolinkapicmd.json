@@ -32,14 +32,14 @@
 		},
 		{
 			"abilityneed":"performance",
-			"name": "Débit codec",
+			"name": "Débit codec (Kbps)",
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
 				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 0,
+			"isVisible": 1,
 			"logicalId": "SetCodecRateState"
 		},
 		{
@@ -47,23 +47,26 @@
 			"name": "Utilisation CPU",
 			"type": "info",
 			"subtype": "numeric",
+			"Unite": "%",
 			"configuration": {
+				"minValue": 0,
+				"maxValue": 100,
 				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 0,
+			"isVisible": 1,
 			"logicalId": "SetCpuUsedState"
 		},
 		{
 			"abilityneed":"performance",
-			"name": "Debit réseau",
+			"name": "Debit réseau (Kbps)",
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
 				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 0,
+			"isVisible": 1,
 			"logicalId": "SetNetThroughputState"
 		},
 		{
@@ -147,7 +150,7 @@
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "20|20;30|30;60|60;120|120",
+				"listValue": "20|20 Sec;30|30 Sec;60|1 Min;120|2 Min",
 				"valueFrom" : "SetPushCfgState",
 				"actionapi": "SetPushCfg",
 				"payload": "{\"PushCfg\":{\"pushInterval\":#OPTSELECTEDINT#}}"
@@ -237,7 +240,7 @@
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "0|Désactivé;1|Activé",
+				"listValue": "0|Désactiver;1|Activer",
 				"valueFrom" : "SetPreRecordState",
 				"actionapi": "SetRec",
 				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"preRec\":#OPTSELECTEDINT#}}"
@@ -267,7 +270,7 @@
                         "subtype": "select",
                         "configuration": {
                                 "option": "select",
-                                "listValue": "0|Désactivé;1|Activé",
+                                "listValue": "0|Désactiver;1|Activer",
                                 "valueFrom" : "SetPreRecordStateV20",
                                 "actionapi": "SetRecV20",
                                 "payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"preRec\":#OPTSELECTEDINT#}}"
@@ -297,7 +300,7 @@
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "0|Désactivé;1|Activé",
+				"listValue": "0|Désactiver;1|Activer",
 				"valueFrom" : "SetOverwriteState",
 				"actionapi": "SetRec",
 				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"overwrite\":#OPTSELECTEDINT#}}"
@@ -327,7 +330,7 @@
                         "subtype": "select",
                         "configuration": {
                                 "option": "select",
-                                "listValue": "0|Désactivé;1|Activé",
+                                "listValue": "0|Désactiver;1|Activer",
                                 "valueFrom" : "SetOverwriteStateV20",
                                 "actionapi": "SetRecV20",
                                 "payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"overwrite\":#OPTSELECTEDINT#}}"
@@ -521,6 +524,9 @@
 			"name": "Led infra rouge (état)",
 			"type": "info",
 			"subtype": "string",
+			"configuration": {
+                                "payload": "{\"cmd\":\"GetIrLights\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+                        },
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetIrLightsState"
@@ -532,10 +538,10 @@
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "Auto|Auto;Off|Désactivé",
+				"listValue": "Auto|Auto;Off|Désactiver",
 				"valueFrom" : "SetIrLightsState",
 				"actionapi": "SetIrLights",
-				"payload": "{\"IrLights\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDSTR#}}"
+				"payload": "{\"IrLights\":{\"state\":#OPTSELECTEDSTR#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -796,7 +802,7 @@
 			"logicalId": "SetPtzByPreset"
 		},
 		{
-			"abilityneed":"ptzDirection",
+			"abilityneed":"ptzCtrl",
 			"name": "Mouvement PTZ",
 			"type": "action",
 			"subtype": "select",
@@ -900,6 +906,31 @@
 			"logicalId": "SetPTZpatrol"
 		},
 		{
+			"abilityneed":"supportPtzCheck",
+			"name": "Démarrer la calibration",
+			"type": "action",
+			"subtype": "other",
+			"configuration": {
+				"actionapi": "PtzCheck",
+				"payload": "{\"channel\":#CHANNEL#}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "PtzCheck"
+		},
+		{
+			"abilityneed":"supportPtzCheck",
+			"name": "Calibration (état)",
+			"type": "info",
+			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetPtzCheckState\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetPtzCheckState"
+		},
+		{
 			"abilityneed":"ispMirror",
 			"name": "Retourner verticalement (état)",
 			"type": "info",
@@ -994,7 +1025,7 @@
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "Outdoor|Extérieur;50HZ|50Hz;60HZ|60Hz;Off|Désactivé",
+				"listValue": "Outdoor|Extérieur;50HZ|50Hz;60HZ|60Hz;Off|Désactiver",
 				"valueFrom" : "SetAntiFlickerState",
 				"actionapi": "SetIsp",
 				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"antiFlicker\":#OPTSELECTEDSTR#}}"
@@ -1030,6 +1061,62 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetNr3d"
+		},
+		{
+			"abilityneed":"upnp",
+			"name": "UPNP (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetUpnp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetUpnpState"
+		},
+		{
+			"abilityneed":"upnp",
+			"name": "UPNP",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetUpnpState",
+				"actionapi": "SetUpnp",
+				"payload": "{\"Upnp\":{\"enable\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetUpnpp"
+		},
+		{
+			"abilityneed":"p2p",
+			"name": "UID P2P (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetP2p\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetUidP2pState"
+		},
+		{
+			"abilityneed":"p2p",
+			"name": "UID P2P",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetUidP2pState",
+				"actionapi": "SetP2p",
+				"payload": "{\"P2p\":{\"enable\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetUidP2p"
 		},
 		{
 			"abilityneed":"mask",
