@@ -199,61 +199,67 @@ class reolink extends eqLogic {
     }
 
     public static function refreshNFO($id) {
-      $camcmd = reolink::byId($id, 'reolink');
-      $camcnx = reolink::getReolinkConnection($id);
-      $cmdget = NULL;
+        $camcmd = reolink::byId($id, 'reolink');
+        $camcnx = reolink::getReolinkConnection($id);
+        $cmdget = NULL;
 
-      // Prepare request with INFO needed
-      foreach (reolinkCmd::byEqLogicId($id) as $cmd) {
-	  $payload = $cmd->getConfiguration('payload');
+        $channel = $camcmd->getConfiguration('defined_channel');
+        if ($channel == NULL) {
+          $channel = 0;
+        }
 
-	  if ($cmd->getType() == "info" && $payload != NULL) {
-            $payload = str_replace('#CHANNEL#', 0, $payload);
-            $payload = str_replace('\\', '', $payload);
+        // Prepare request with INFO needed
+        foreach (reolinkCmd::byEqLogicId($id) as $cmd) {
+          $payload = $cmd->getConfiguration('payload');
+        	  if ($cmd->getType() == "info" && $payload != NULL) {
+                $payload = str_replace('#CHANNEL#', $channel, $payload);
+                $payload = str_replace('\\', '', $payload);
 
-            if (!in_array($payload, $cmdarr))
-            {
-                $cmdarr[] = $payload;
-            }
-	  }
-	  
-      }
-      //Nbr de commandes par bloc
-      $cmdsblock = 8;
+                if (!in_array($payload, $cmdarr))
+                {
+                    $cmdarr[] = $payload;
+                }
+        	  }
+        }
+        //Nbr de commandes par bloc
+        $cmdsblock = 8;
 
-      $cmdarrlength = count($cmdarr);
-      $cmdarrmod = $cmdarrlength % $cmdsblock;
-      $passnbr = ($cmdarrlength - ($cmdarrmod))/$cmdsblock;
-      if ($cmdarrmod != 0) {
-	$passnbr += 1;
-      }   
-      log::add('reolink', 'debug', 'Nbr commandes dans un bloc : '. $cmdsblock .' / Nbr commandes : ' . $cmdarrlength . ' / Commandes restantes : ' . $cmdarrmod . ' / Nbr des passes :' . $passnbr);
-      for ($pass = 1; $pass <= $passnbr; $pass++) {
-	
-	$cmdget = "";
-	$beginrange = ($pass-1)*$cmdsblock;
-	if ($pass != $passnbr) {
-		$endrange = ($cmdsblock*$pass)-1;
-	} else {
-		if ($cmdarrmod != 0) {
-			$endrange = ($cmdsblock*$pass)+($cmdarrmod-$cmdsblock)-1;
-		} else {
-			$endrange = ($cmdsblock*$pass)-1;
-		}
-	}
-	for ($cmdarrnbr = $beginrange; $cmdarrnbr <= $endrange; $cmdarrnbr++) {
-          $cmdget .= $cmdarr[$cmdarrnbr].",";
-	}
-	$cmdget = substr($cmdget, 0, -1);
-	log::add('reolink', 'debug', 'Payload multiple GetSetting (Pass '. $pass .') = ' . $cmdget);
+        $cmdarrlength = count($cmdarr);
+        $cmdarrmod = $cmdarrlength % $cmdsblock;
+        $passnbr = ($cmdarrlength - ($cmdarrmod))/$cmdsblock;
+
+        if ($cmdarrmod != 0) {
+           $passnbr += 1;
+        }
+
+        log::add('reolink', 'debug', 'Nbr commandes dans un bloc : '. $cmdsblock .' / Nbr commandes : ' . $cmdarrlength . ' / Commandes restantes : ' . $cmdarrmod . ' / Nbr des passes :' . $passnbr);
+        for ($pass = 1; $pass <= $passnbr; $pass++) {
+
+        $cmdget = "";
+        $beginrange = ($pass-1)*$cmdsblock;
+        if ($pass != $passnbr) {
+        	$endrange = ($cmdsblock*$pass)-1;
+        } else {
+        	if ($cmdarrmod != 0) {
+        		$endrange = ($cmdsblock*$pass)+($cmdarrmod-$cmdsblock)-1;
+        	} else {
+        		$endrange = ($cmdsblock*$pass)-1;
+        	}
+        }
+
+        for ($cmdarrnbr = $beginrange; $cmdarrnbr <= $endrange; $cmdarrnbr++) {
+                $cmdget .= $cmdarr[$cmdarrnbr].",";
+        }
+        $cmdget = substr($cmdget, 0, -1);
+
+        log::add('reolink', 'debug', 'Payload multiple GetSetting (Pass '. $pass .') = ' . $cmdget);
 
         $res = $camcnx->SendCMD("[$cmdget]");
 
         foreach ($res as &$json_data) {
         log::add('reolink', 'debug', 'Lecture info > ' . preg_replace('/\s+/', '', print_r($json_data, true)));
-	
-	  switch ($json_data['cmd']) {
 
+	  switch ($json_data['cmd']) {
             case reolinkAPI::CAM_GET_REC:
               $camcmd->checkAndUpdateCmd('SetRecordState', $json_data['value']['Rec']['schedule']['enable']);
               $camcmd->checkAndUpdateCmd('SetPreRecordState', $json_data['value']['Rec']['preRec']);
@@ -373,20 +379,20 @@ class reolink extends eqLogic {
             case reolinkAPI::CAM_PTZCHECK:
               break;
 
-	    case reolinkAPI::CAM_GET_PTZCHECKSTATE:
-	      switch ((int) $json_data['value']['PtzCheckState']) {
-                case 0:
-                  $camcmd->checkAndUpdateCmd('SetPtzCheckState','REQUISE');
+            case reolinkAPI::CAM_GET_PTZCHECKSTATE:
+              switch ((int) $json_data['value']['PtzCheckState']) {
+                  case 0:
+                    $camcmd->checkAndUpdateCmd('SetPtzCheckState','REQUISE');
+                    break;
+                  case 1:
+                    $camcmd->checkAndUpdateCmd('SetPtzCheckState','EN COURS');
+                    break;
+                  case 2:
+                    $camcmd->checkAndUpdateCmd('SetPtzCheckState','TERMINEE');
+                    break;
+                  }
+                  log::add('reolink', 'debug', 'Statut Calibration : '. $json_data['value']['PtzCheckState']);
                   break;
-                case 1:
-                  $camcmd->checkAndUpdateCmd('SetPtzCheckState','EN COURS');
-                  break;
-                case 2:
-                  $camcmd->checkAndUpdateCmd('SetPtzCheckState','TERMINEE');
-                  break;
-              }
-	      log::add('reolink', 'debug', 'Statut Calibration : '. $json_data['value']['PtzCheckState']);
-              break;
 
             case reolinkAPI::CAM_GET_ALARM:
               // Not supported for now
@@ -436,11 +442,11 @@ class reolink extends eqLogic {
               $camcmd->checkAndUpdateCmd('SetFocusState', $json_data['value']['ZoomFocus']['focus']['pos']);
               break;
 
-	    case reolinkAPI::CAM_PERFORMANCE:
+            case reolinkAPI::CAM_PERFORMANCE:
               $camcmd->checkAndUpdateCmd('SetCpuUsedState', $json_data['value']['Performance']['cpuUsed']);
               $camcmd->checkAndUpdateCmd('SetNetThroughputState', $json_data['value']['Performance']['netThroughput']);
               $camcmd->checkAndUpdateCmd('SetCodecRateState', $json_data['value']['Performance']['codecRate']);
-   	      break;
+              break;
 
             default:
               log::add('reolink', 'error', 'JSON map résultat à echouer avec le retour : '. print_r($json_data, true));
@@ -866,7 +872,7 @@ class reolinkCmd extends cmd {
       log::add('reolink', 'debug', 'Action demandé : '.$this->getLogicalId());
       $EqId = $this->getEqLogic_id();
 
-      $channel = $this->getConfiguration('channel');
+      $channel = $this->getConfiguration('defined_channel');
       if ($channel == NULL) {
         $channel = 0;
       }
@@ -896,12 +902,13 @@ class reolinkCmd extends cmd {
 
             $actionAPI = $this->getConfiguration('actionapi');
             $linkedvalue = $this->getConfiguration('valueFrom');
+
             if ($actionAPI != NULL) {
               $payload = str_replace('\\', '', $this->getConfiguration('payload'));
               $payload = str_replace('#OPTSELECTEDINT#', intval($_options['select']), $payload);
               $payload = str_replace('#OPTSELECTEDSTR#', '"'.$_options['select'].'"', $payload);
               $payload = str_replace('#OPTSLIDER#', intval($_options['slider']), $payload);
-              $payload = str_replace('#CHANNEL#', 0, $payload);
+              $payload = str_replace('#CHANNEL#', $channel, $payload);
               $payload = str_replace('#SPEED#', $speed, $payload);
               $payload = '[{"cmd":"'.$actionAPI.'","param":'.$payload.'}]';
 
