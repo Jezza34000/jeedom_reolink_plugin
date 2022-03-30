@@ -90,6 +90,7 @@ Non-supportés :
 - [x] Régler la position du nom de la caméras
 - [x] Régler la position de la date/heure
 
+
 (1): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportPtzCheck" 
 
 (2): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportAudioAlarm" 
