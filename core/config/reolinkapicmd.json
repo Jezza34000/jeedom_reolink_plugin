@@ -108,7 +108,7 @@
 			"subtype": "binary",
 			"configuration": {
 				"actionapi": "GetPushV20",
-				"payload": "{\"cmd\":\"GetPushV20\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPushV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -137,7 +137,7 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPushCfg\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPushCfg\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -166,7 +166,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetRec\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -196,7 +196,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetRecV20\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -226,7 +226,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetRec\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -249,36 +249,36 @@
 			"isVisible": 1,
 			"logicalId": "SetPreRecord"
 		},
-                {
-                        "abilityneed":"sdCard",
-                        "iastate":1,
-                        "name": "Enregistrement avant détection AI (état)",
-                        "type": "info",
-                        "subtype": "binary",
-                        "configuration": {
-                                "payload": "{\"cmd\":\"GetRecV20\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
-                        },
-                        "IsHistorized": 0,
-                        "isVisible": 0,
-                        "logicalId": "SetPreRecordStateV20"
-                },
-                {
-                        "abilityneed":"sdCard",
-                        "iastate":1,
-                        "name": "Enregistrement avant détection AI",
-                        "type": "action",
-                        "subtype": "select",
-                        "configuration": {
-                                "option": "select",
-                                "listValue": "0|Désactiver;1|Activer",
-                                "valueFrom" : "SetPreRecordStateV20",
-                                "actionapi": "SetRecV20",
-                                "payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"preRec\":#OPTSELECTEDINT#}}"
-                        },
-                        "IsHistorized": 0,
-                        "isVisible": 1,
-                        "logicalId": "SetPreRecordV20"
-                },
+    {
+      "abilityneed":"sdCard",
+      "iastate":1,
+      "name": "Enregistrement avant détection AI (état)",
+      "type": "info",
+      "subtype": "binary",
+      "configuration": {
+              "payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+      },
+      "IsHistorized": 0,
+      "isVisible": 0,
+      "logicalId": "SetPreRecordStateV20"
+    },
+    {
+      "abilityneed":"sdCard",
+      "iastate":1,
+      "name": "Enregistrement avant détection AI",
+      "type": "action",
+      "subtype": "select",
+      "configuration": {
+              "option": "select",
+              "listValue": "0|Désactiver;1|Activer",
+              "valueFrom" : "SetPreRecordStateV20",
+              "actionapi": "SetRecV20",
+              "payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"preRec\":#OPTSELECTEDINT#}}"
+      },
+      "IsHistorized": 0,
+      "isVisible": 1,
+      "logicalId": "SetPreRecordV20"
+    },
 		{
 			"abilityneed":"sdCard",
 			"iastate":0,
@@ -286,7 +286,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetRec\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -316,7 +316,7 @@
                         "type": "info",
                         "subtype": "binary",
                         "configuration": {
-                                "payload": "{\"cmd\":\"GetRecV20\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+                                "payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
                         },
                         "IsHistorized": 0,
                         "isVisible": 0,
@@ -346,7 +346,7 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetRec\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -376,7 +376,7 @@
                         "type": "info",
                         "subtype": "string",
                         "configuration": {
-                                "payload": "{\"cmd\":\"GetRecV20\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+                                "payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
                         },
                         "IsHistorized": 0,
                         "isVisible": 0,
@@ -436,7 +436,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEmailV20\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEmailV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -496,7 +496,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetFtpV20\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetFtpV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -525,7 +525,7 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-                                "payload": "{\"cmd\":\"GetIrLights\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+                                "payload": "{\"cmd\":\"GetIrLights\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
                         },
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -578,7 +578,7 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetWhiteLed\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetWhiteLed\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -638,7 +638,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAudioAlarmV20\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetAudioAlarmV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -695,7 +695,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -723,7 +723,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAutoFocus\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetAutoFocus\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -751,7 +751,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAutoMaint\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetAutoMaint\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -838,7 +838,7 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetZoomFocus\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetZoomFocus\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -867,7 +867,7 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetZoomFocus\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetZoomFocus\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -924,61 +924,61 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPtzCheckState\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPtzCheckState\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetPtzCheckState"
 		},
 		{
-                        "abilityneed":"supportAudioAlarm",
-                        "name": "Déclencher la sirène",
-                        "type": "action",
-                        "subtype": "other",
-                        "configuration": {
-                                "actionapi": "AudioAlarmPlay",
-                                "payload": "{\"channel\":#CHANNEL#,\"alarm_mode\":\"times\",\"times\":1}"
-                        },
-                        "IsHistorized": 0,
-                        "isVisible": 1,
-                        "logicalId": "AudioAlarmPlayTimes"
-                },
-                {
-                        "abilityneed":"supportAudioAlarm",
-                        "name": "Volume sirène (état)",
-                        "type": "info",
-                        "subtype": "numeric",
-                        "configuration": {
-                                "payload": "{\"cmd\":\"GetAudioCfg\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
-                        },
-                        "IsHistorized": 0,
-                        "isVisible": 0,
-                        "logicalId": "SetSirenVolumeState"
-                },
-                {
-                        "abilityneed":"supportAudioAlarm",
-                        "name": "Volume sirène",
-                        "type": "action",
-                        "subtype": "slider",
-                        "configuration": {
-                                "option": "slider",
-                                "minValue": "0",
-                                "maxValue" : "100",
-                                "valueFrom" : "SetSirenVolumeState",
-                                "actionapi": "SetAudioCfg",
-                                "payload": "{\"AudioCfg\":{\"channel\":#CHANNEL#,\"volume\":#OPTSLIDER#}}"
-                        },
-                        "IsHistorized": 0,
-                        "isVisible": 1,
-                        "logicalId": "SetSirenVolume"
-                },
+      "abilityneed":"supportAudioAlarm",
+      "name": "Déclencher la sirène",
+      "type": "action",
+      "subtype": "other",
+      "configuration": {
+              "actionapi": "AudioAlarmPlay",
+              "payload": "{\"channel\":#CHANNEL#,\"alarm_mode\":\"times\",\"times\":1}"
+      },
+      "IsHistorized": 0,
+      "isVisible": 1,
+      "logicalId": "AudioAlarmPlayTimes"
+		},
+    {
+      "abilityneed":"supportAudioAlarm",
+      "name": "Volume sirène (état)",
+      "type": "info",
+      "subtype": "numeric",
+      "configuration": {
+              "payload": "{\"cmd\":\"GetAudioCfg\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+      },
+      "IsHistorized": 0,
+      "isVisible": 0,
+      "logicalId": "SetSirenVolumeState"
+    },
+    {
+      "abilityneed":"supportAudioAlarm",
+      "name": "Volume sirène",
+      "type": "action",
+      "subtype": "slider",
+      "configuration": {
+              "option": "slider",
+              "minValue": "0",
+              "maxValue" : "100",
+              "valueFrom" : "SetSirenVolumeState",
+              "actionapi": "SetAudioCfg",
+              "payload": "{\"AudioCfg\":{\"channel\":#CHANNEL#,\"volume\":#OPTSLIDER#}}"
+      },
+      "IsHistorized": 0,
+      "isVisible": 1,
+      "logicalId": "SetSirenVolume"
+    },
 		{
 			"abilityneed":"ispMirror",
 			"name": "Retourner verticalement (état)",
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -990,7 +990,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1002,31 +1002,31 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetBacklightState"
 		},
-                {
-                        "abilityneed":"ispExposureMode",
-                        "name": "Exposition (état)",
-                        "type": "info",
-                        "subtype": "string",
-                        "configuration": {
-                                "payload": "{\"cmd\":\"GetIsp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
-                        },
-                        "IsHistorized": 0,
-                        "isVisible": 0,
-                        "logicalId": "SetExposureState"
-                },
+    {
+      "abilityneed":"ispExposureMode",
+      "name": "Exposition (état)",
+      "type": "info",
+      "subtype": "string",
+      "configuration": {
+              "payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+      },
+      "IsHistorized": 0,
+      "isVisible": 0,
+      "logicalId": "SetExposureState"
+    },
 		{
 			"abilityneed":"isp",
 			"name": "Jour Nuit (état)",
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1054,7 +1054,7 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1082,7 +1082,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1110,7 +1110,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetUpnp\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetUpnp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1138,7 +1138,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetP2p\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetP2p\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1166,7 +1166,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetMask\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetMask\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1194,7 +1194,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetImage\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1206,7 +1206,7 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetImage\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1235,7 +1235,7 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetImage\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1264,7 +1264,7 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetImage\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1293,7 +1293,7 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetImage\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1322,7 +1322,7 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetImage\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1351,7 +1351,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetOsd\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1379,7 +1379,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetOsd\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1407,7 +1407,7 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetOsd\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1435,7 +1435,7 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetOsd\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1463,7 +1463,7 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetOsd\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1491,7 +1491,7 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1503,7 +1503,7 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1515,7 +1515,7 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1527,7 +1527,7 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1539,7 +1539,7 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1551,7 +1551,7 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":1,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
