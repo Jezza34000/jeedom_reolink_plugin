@@ -45,24 +45,28 @@ Non-supportés :
 - [ ] PTZ Guard
 - [ ] Schéma/Chemin PTZ
 - [ ] PTZ Serial
-- [X] Calibration de la camera
+- [X] Calibration de la camera (Etat/Exécution) (1)
 
 #### Réseau
 - [ ] IP/DNS/MASQUE
 - [ ] DDNS
 - [ ] Wifi
-- [X] UPNP
-- [X] P2P
+- [X] Activation/Désactivation UPNP
+- [X] Activation/Désactivation P2P
 
 #### Image/Vidéo
 - [x] Luminosité, Contraste, Saturation, Teinte, Netteté
 - [x] Retourner Verticalement/Horizontalement
 - [ ] Avancée (Anti-scintillement, Exposition, Balance des blancs, Jour/nuit, Rétroeclairage, 3D-NR)
 - [x] Contrôle des Leds Infra Rouge
-- [x] Activation/désactivation des Leds blanches d'éclairage
-- [X] Configuration des Leds blanches d'eclairage (activation/intensité)
-- [x] Activation/désactivation masque de vie privée
+- [x] Activation/Désactivation des Leds blanches d'éclairage
+- [X] Configuration des Leds blanches d'eclairage (Intensité)
+- [x] Activation/Désactivation masque de vie privée
 - [ ] Configuration du masque de vie privée
+
+#### Audio
+- [x] Déclenchement manuel de la sirène(2)
+- [X] Volume de la sirène(2)
 
 #### Surveillance/Notification
 - [x] Activation/désactivation email
@@ -85,3 +89,8 @@ Non-supportés :
 - [x] Afficher/Masquer Date/heure
 - [x] Régler la position du nom de la caméras
 - [x] Régler la position de la date/heure
+
+
+(1): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportPtzCheck" 
+
+(2): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportAudioAlarm" 
