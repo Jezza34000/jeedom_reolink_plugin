@@ -180,12 +180,16 @@ logging.info('PID file : ' + str(_pidfile))
 logging.info('Apikey : ' + str(_apikey))
 logging.info('Device : ' + str(_device))
 
-logging.info('Write creds file for camhook')
-lines = [_callback, _apikey]
-with open('jeedomcreds', 'w') as f:
-    for line in lines:
-        f.write(line)
-        f.write('\n')
+try:
+    logging.info('Write creds file for camhook')
+    lines = [_callback, _apikey]
+    with open('jeedomcreds', 'w') as f:
+        for line in lines:
+            f.write(line)
+            f.write('\n')
+except Exception as e:
+    logging.debug('Unable to write creds file : ' + str(e))
+
 
 start_uvicorn()
 
