@@ -30,13 +30,11 @@ import uvicorn
 import subscription_manager
 import asyncio
 from multiprocessing import Process
-from jeedom.jeedom import *
-
-#try:
-#    from jeedom.jeedom import *
-#except ImportError:
-#    print("Error: importing module jeedom.jeedom")
-#    sys.exit(1)
+try:
+   from jeedom.jeedom import *
+except ImportError:
+   print("Error: importing module jeedom.jeedom")
+   sys.exit(1)
 
 
 def read_socket():
@@ -104,6 +102,7 @@ def stop_uvicorn():
         proc.join(0.25)
 
 # ----------------------------------------------------------------------------
+
 
 def handler(signum=None, frame=None):
     logging.debug("Signal %i caught, exiting..." % int(signum))
@@ -189,7 +188,6 @@ try:
             f.write('\n')
 except Exception as e:
     logging.debug('Unable to write creds file : ' + str(e))
-
 
 start_uvicorn()
 
