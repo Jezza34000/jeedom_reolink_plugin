@@ -37,8 +37,10 @@ class reolink extends eqLogic {
       {
         $cnxinfo = array("adresseIP" => $adresseIP, "port" => $port, "username" => $username, "password" => $password, "cnxtype" => $cnxtype);
         $camcnx = new reolinkAPI($cnxinfo);
+        return $camcnx;
       } else {
         log::add('reolink', 'warning', "Information de connexion manquantes : connexion à la caméra impossible");
+        return NULL;
       }
   	}
 
@@ -203,9 +205,9 @@ class reolink extends eqLogic {
         $camcnx = reolink::getReolinkConnection($id);
         $cmdget = NULL;
 
-        // if ($camcnx->$is_loggedin == false) {
-        //   exit();
-        // }
+        if ($camcnx->$is_loggedin == false) {
+          exit();
+        }
 
         log::add('reolink', 'debug', 'Rafraichissement des informations de la caméra...');
 
