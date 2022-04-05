@@ -203,9 +203,9 @@ class reolink extends eqLogic {
         $camcnx = reolink::getReolinkConnection($id);
         $cmdget = NULL;
 
-        if ($camcnx->$is_loggedin == false) {
-          exit();
-        }
+        // if ($camcnx->$is_loggedin == false) {
+        //   exit();
+        // }
 
         log::add('reolink', 'debug', 'Rafraichissement des informations de la caméra...');
 
