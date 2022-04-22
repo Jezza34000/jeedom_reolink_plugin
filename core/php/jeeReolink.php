@@ -21,7 +21,7 @@ try {
         $eqLogics = eqLogic::byType($plugin->getId());
 
         foreach ($eqLogics as $eqLogic) {
-            $camera_contact_point = $camera->getConfiguration('adresseip');
+            $camera_contact_point = $eqLogic->getConfiguration('adresseip');
             if (filter_var($camera_contact_point, FILTER_VALIDATE_IP)) {
               $camera_ip = $camera_contact_point;
             } else {
