@@ -150,6 +150,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port_onvif" placeholder="{{8000}}"/>
 								</div>
 							</div>
+							<!--- NOT USED
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Channel}}
 									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le numéro de channel (uniquement si la caméra est utilisé via un NVR)}}"></i></sup>
@@ -158,6 +159,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="defined_channel" placeholder="{{(facultatif)}}"/>
 								</div>
 							</div>
+							-->
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Login}}
 									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le login de la caméras, celui utiliser pour accéder à l'interface web}}"></i></sup>
