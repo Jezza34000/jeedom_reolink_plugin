@@ -319,7 +319,6 @@ class reolink extends eqLogic {
                     $camcmd->checkAndUpdateCmd('SetResolutionst2State', $json_data['value']['Enc']['subStream']['size']);
                     $camcmd->checkAndUpdateCmd('SetFPSst2State', $json_data['value']['Enc']['subStream']['size']);
                     $camcmd->checkAndUpdateCmd('SetBitratest2State', $json_data['value']['Enc']['subStream']['size']);
-                    $camcmd->checkAndUpdateCmd('SetAudio', $json_data['value']['Enc']['audio']);
                     break;
 
                   case reolinkAPI::CAM_GET_ISP:
