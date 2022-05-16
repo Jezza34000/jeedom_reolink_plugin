@@ -1595,6 +1595,64 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "driveType"
+		},
+		{
+			"abilityneed":"enc",
+			"name": "Audio (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetEnc\"}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAudioState"
+		},		
+		{
+			"abilityneed":"enc",
+			"name": "Audio",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetAudioState",
+				"actionapi": "SetEnc",
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"audio\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetAudio"
+		},		
+		{
+			"abilityneed":"aiTrack",
+			"name": "Suivi AI (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAiCfg\"}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetaiTrackState"
+		},
+		{
+			"abilityneed":"aiTrack",
+			"name": "Suivi AI",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetaiTrackState",
+				"actionapi": "SetAiCfg",
+				"payload": "{\"channel\":#CHANNEL#,\"aiTrack\":#OPTSELECTEDINT#}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetaiTrack"
 		}
+		
+	
 	]
 }

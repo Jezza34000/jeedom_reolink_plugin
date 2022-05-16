@@ -319,6 +319,7 @@ class reolink extends eqLogic {
                     $camcmd->checkAndUpdateCmd('SetResolutionst2State', $json_data['value']['Enc']['subStream']['size']);
                     $camcmd->checkAndUpdateCmd('SetFPSst2State', $json_data['value']['Enc']['subStream']['size']);
                     $camcmd->checkAndUpdateCmd('SetBitratest2State', $json_data['value']['Enc']['subStream']['size']);
+                    $camcmd->checkAndUpdateCmd('SetAudio', $json_data['value']['Enc']['audio']);
                     break;
 
                   case reolinkAPI::CAM_GET_ISP:
@@ -437,6 +438,10 @@ class reolink extends eqLogic {
                     $camcmd->checkAndUpdateCmd('SetCpuUsedState', $json_data['value']['Performance']['cpuUsed']);
                     $camcmd->checkAndUpdateCmd('SetNetThroughputState', $json_data['value']['Performance']['netThroughput']);
                     $camcmd->checkAndUpdateCmd('SetCodecRateState', $json_data['value']['Performance']['codecRate']);
+                    break;
+
+                  case reolinkAPI::CAM_GET_AICFG:
+                    $camcmd->checkAndUpdateCmd('SetaiTrack', $json_data['value']['aiTrack']);
                     break;
 
                   default:
