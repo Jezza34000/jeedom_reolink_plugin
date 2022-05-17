@@ -21,11 +21,17 @@ try {
         $eqLogics = eqLogic::byType($plugin->getId());
 
         foreach ($eqLogics as $eqLogic) {
-          if ($eqLogic->getConfiguration('adresseip') == $result['ip']) {
-            log::add('reolink', 'debug', 'Evènement MotionState reçu depuis le daemon. Cam IP='.$result['ip'].' état='.$result['motionstate']);
-            $eqLogic->checkAndUpdateCmd('MdState', $result['motionstate']);
-          }
-  			}
+            $camera_contact_point = $eqLogic->getConfiguration('adresseip');
+            if (filter_var($camera_contact_point, FILTER_VALIDATE_IP)) {
+              $camera_ip = $camera_contact_point;
+            } else {
+              $camera_ip = gethostbyname($camera_contact_point);
+            }
+            if ($camera_ip == $result['ip']) {
+                log::add('reolink', 'debug', 'Evènement MotionState reçu depuis le daemon. Cam IP='.$result['ip'].' état='.$result['motionstate']);
+                $eqLogic->checkAndUpdateCmd('MdState', $result['motionstate']);
+            }
+  		}
     } else {
         log::add('reolink', 'error', 'unknown message received from daemon');
     }
