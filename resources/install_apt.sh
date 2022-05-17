@@ -18,15 +18,14 @@ echo "*****************************"
 echo "Install modules using apt-get"
 echo "*****************************"
 apt-get install -y python3 python3-requests python3-pip
-echo 60 > ${PROGRESS_FILE}
+echo 65 > ${PROGRESS_FILE}
 
 echo "*************************************"
 echo "Install the required python libraries"
 echo "*************************************"
 python3 -m pip install "aiohttp" "asyncio" "fastapi" "uvicorn"
-echo 80 > ${PROGRESS_FILE}
-
 echo 100 > ${PROGRESS_FILE}
+
 echo $(date)
 echo "***************************"
 echo "*      Install ended      *"
