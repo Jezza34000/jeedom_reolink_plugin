@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
  */
-
 /* * ***************************Includes********************************* */
 require_once __DIR__  . '/../../../../core/php/core.inc.php';
 require_once dirname(__FILE__).'/../../3rdparty/reolinkapi.class.php';
@@ -712,7 +711,7 @@ class reolink extends eqLogic {
               }
 
             if (!$abilityfound && !$ability) {
-              log::add('reolink', 'error', 'Aucun match de capacité '.$command['abilityneed'].' pour la CMD : '.$command['name']);
+              log::add('reolink', 'info', 'Aucun match de capacité '.$command['abilityneed'].' pour la CMD : '.$command['name']);
             }
 
             if ($ability) {
