@@ -707,7 +707,7 @@ class reolink extends eqLogic {
               }
 
             if (!$abilityfound && !$ability) {
-              log::add('reolink', 'error', 'Aucun match de capacité '.$command['abilityneed'].' pour la CMD : '.$command['name']);
+              log::add('reolink', 'info', 'Aucun match de capacité '.$command['abilityneed'].' pour la CMD : '.$command['name']);
             }
 
             if ($ability) {
