@@ -185,31 +185,31 @@ class JeedomSocketHandler(StreamRequestHandler):
         logging.debug("Client disconnected from [%s:%d]" % self.client_address)
 
 
-class JeedomSocket:
-    
+class jeedom_socket():
+
     def __init__(self, address='localhost', port=55000):
         self.address = address
         self.port = port
         socketserver.TCPServer.allow_reuse_address = True
-    
+
     def open(self):
-        self.netAdapter = TCPServer((self.address, self.port), JeedomSocketHandler)
+        self.netAdapter = TCPServer((self.address, self.port), jeedom_socket_handler)
         if self.netAdapter:
             logging.debug("Socket interface started")
-            threading.Thread(target=self.loop_net_server, args=()).start()
+            threading.Thread(target=self.loopNetServer, args=()).start()
         else:
             logging.debug("Cannot start socket interface")
-    
-    def loop_net_server(self):
+
+    def loopNetServer(self):
         logging.debug("LoopNetServer Thread started")
         logging.debug("Listening on: [%s:%d]" % (self.address, self.port))
         self.netAdapter.serve_forever()
         logging.debug("LoopNetServer Thread stopped")
-    
+
     def close(self):
         self.netAdapter.shutdown()
-    
-    def get_message(self):
+
+    def getMessage(self):
         return self.message
 
 # ------------------------------------------------------------------------------

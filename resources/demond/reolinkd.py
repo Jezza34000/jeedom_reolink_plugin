@@ -69,7 +69,7 @@ async def subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd):
 
 
 def listen():
-    JeedomSocket.open()
+    jeedom_socket.open()
     try:
         while 1:
             time.sleep(0.5)
@@ -111,7 +111,7 @@ def shutdown():
     except:
         pass
     try:
-        JeedomSocket.close()
+        jeedom_socket.close()
     except:
         pass
     logging.debug("Exit 0")
@@ -187,7 +187,7 @@ signal.signal(signal.SIGTERM, handler)
 
 try:
     JeedomUtils.write_pid(str(_pidfile))
-    jeedom_socket = JeedomSocket(port=_socket_port, address=_socket_host)
+    jeedom_socket = jeedom_socket(port=_socket_port, address=_socket_host)
     listen()
 except Exception as e:
     logging.error('Fatal error : ' + str(e))
