@@ -12,23 +12,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
-
-import logging
-import string
+import socket
 import sys
-import os
-import time
-import datetime
 import traceback
-import re
-import signal
-from optparse import OptionParser
-from os.path import join
 import json
 import argparse
 import uvicorn
 import subscription_manager
 import asyncio
+import signal
+import time
 from multiprocessing import Process
 
 try:
@@ -76,7 +69,7 @@ async def subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd):
 
 
 def listen():
-    jeedom_socket.open()
+    JeedomSocket.open()
     try:
         while 1:
             time.sleep(0.5)
@@ -118,16 +111,12 @@ def shutdown():
     except:
         pass
     try:
-        jeedom_socket.close()
-    except:
-        pass
-    try:
-        jeedom_serial.close()
+        JeedomSocket.close()
     except:
         pass
     logging.debug("Exit 0")
     sys.stdout.flush()
-    os._exit(0)
+    sys.exit(0)
 
 
 # ----------------------------------------------------------------------------
@@ -170,7 +159,7 @@ if args.socketport:
 
 _socket_port = int(_socket_port)
 
-jeedom_utils.set_log_level(_log_level)
+JeedomUtils.set_log_level(_log_level)
 
 logging.info('Start demond')
 logging.info('Log level : ' + str(_log_level))
@@ -187,6 +176,7 @@ try:
         for line in lines:
             f.write(line)
             f.write('\n')
+    time.sleep(1)
 except Exception as e:
     logging.debug('Unable to write creds file : ' + str(e))
 
@@ -196,8 +186,8 @@ signal.signal(signal.SIGINT, handler)
 signal.signal(signal.SIGTERM, handler)
 
 try:
-    jeedom_utils.write_pid(str(_pidfile))
-    jeedom_socket = jeedom_socket(port=_socket_port, address=_socket_host)
+    JeedomUtils.write_pid(str(_pidfile))
+    jeedom_socket = JeedomSocket(port=_socket_port, address=_socket_host)
     listen()
 except Exception as e:
     logging.error('Fatal error : ' + str(e))

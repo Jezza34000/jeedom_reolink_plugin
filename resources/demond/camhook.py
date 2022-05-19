@@ -1,7 +1,6 @@
 from fastapi import Request, FastAPI
 import sys
 import json
-import os
 import re
 
 try:
@@ -19,7 +18,7 @@ except:
     logging.error(f"Unable to read credentials jeedom file")
     sys.exit(1)
 
-jeedom_cnx = jeedom_com(_apikey, _callback)
+jeedom_cnx = JeedomCom(_apikey, _callback)
 detect_state = 0
 app = FastAPI()
 

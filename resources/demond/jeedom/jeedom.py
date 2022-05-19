@@ -14,26 +14,21 @@
 # along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 #
 
-import time
+
 import logging
 import threading
 import requests
 import datetime
 import collections
 import os
-from os.path import join
-import socket
 from queue import Queue
 import socketserver
 from socketserver import (TCPServer, StreamRequestHandler)
-import signal
-import unicodedata
-
 
 
 # ------------------------------------------------------------------------------
 
-class jeedom_com():
+class JeedomCom:
     def __init__(self, apikey='', url='', cycle=0.5, retry=3):
         self.apikey = apikey
         self.url = url
@@ -43,7 +38,7 @@ class jeedom_com():
         if cycle > 0:
             self.send_changes_async()
         logging.debug('Init request module v%s' % (str(requests.__version__),))
-
+    
     def send_changes_async(self):
         try:
             if len(self.changes) == 0:
@@ -80,7 +75,7 @@ class jeedom_com():
             logging.error('Critical error on  send_changes_async %s' % (str(error),))
             resend_changes = threading.Timer(self.cycle, self.send_changes_async)
             resend_changes.start()
-
+    
     def add_changes(self, key, value):
         if key.find('::') != -1:
             tmp_changes = {}
@@ -100,10 +95,10 @@ class jeedom_com():
                 self.send_change_immediate({key: value})
             else:
                 self.changes[key] = value
-
+    
     def send_change_immediate(self, change):
         threading.Thread(target=self.thread_change, args=(change,)).start()
-
+    
     def thread_change(self, change):
         logging.debug('Send to jeedom :  %s' % (str(change),))
         i = 0
@@ -116,13 +111,13 @@ class jeedom_com():
                 logging.error(
                     'Error on send request to jeedom ' + str(error) + ' retry : ' + str(i) + '/' + str(self.retry))
             i = i + 1
-
+    
     def set_change(self, changes):
         self.changes = changes
-
+    
     def get_change(self):
         return self.changes
-
+    
     def merge_dict(self, d1, d2):
         for k, v2 in d2.items():
             v1 = d1.get(k)  # returns None if v1 has no value for this key
@@ -131,13 +126,13 @@ class jeedom_com():
                 self.merge_dict(v1, v2)
             else:
                 d1[k] = v2
-
+    
     def test(self):
         try:
             response = requests.get(self.url + '?apikey=' + self.apikey, verify=False)
             if response.status_code != requests.codes.ok:
-                logging.error('Callback error: %s %s. Please check your network configuration page' % (
-                response.status_code, response.reason,))
+                logging.error('Callback error: %s %s. Please check your network configuration page'
+                              % (response.status_code, response.reason,))
                 logging.error(response.text)
                 return False
         except Exception as e:
@@ -149,24 +144,24 @@ class jeedom_com():
 
 # ------------------------------------------------------------------------------
 
-class jeedom_utils():
-
+class JeedomUtils:
+    
     @staticmethod
     def convert_log_level(level='error'):
         log_lvl = {'debug': logging.DEBUG,
-                  'info': logging.INFO,
-                  'notice': logging.WARNING,
-                  'warning': logging.WARNING,
-                  'error': logging.ERROR,
-                  'critical': logging.CRITICAL,
-                  'none': logging.CRITICAL}
+                   'info': logging.INFO,
+                   'notice': logging.WARNING,
+                   'warning': logging.WARNING,
+                   'error': logging.ERROR,
+                   'critical': logging.CRITICAL,
+                   'none': logging.CRITICAL}
         return log_lvl.get(level, logging.CRITICAL)
-
+    
     @staticmethod
     def set_log_level(level='error'):
         log_format = '[%(asctime)-15s][%(levelname)s] : %(message)s'
-        logging.basicConfig(level=jeedom_utils.convert_log_level(level), format=log_format, datefmt="%Y-%m-%d %H:%M:%S")
-
+        logging.basicConfig(level=JeedomUtils.convert_log_level(level), format=log_format, datefmt="%Y-%m-%d %H:%M:%S")
+    
     @staticmethod
     def write_pid(path):
         pid = str(os.getpid())
@@ -179,7 +174,7 @@ class jeedom_utils():
 JEEDOM_SOCKET_MESSAGE = Queue()
 
 
-class jeedom_socket_handler(StreamRequestHandler):
+class JeedomSocketHandler(StreamRequestHandler):
     def handle(self):
         global JEEDOM_SOCKET_MESSAGE
         logging.debug("Client connected to [%s:%d]" % self.client_address)
@@ -190,31 +185,31 @@ class jeedom_socket_handler(StreamRequestHandler):
         logging.debug("Client disconnected from [%s:%d]" % self.client_address)
 
 
-class jeedom_socket():
-
+class JeedomSocket:
+    
     def __init__(self, address='localhost', port=55000):
         self.address = address
         self.port = port
         socketserver.TCPServer.allow_reuse_address = True
-
+    
     def open(self):
-        self.netAdapter = TCPServer((self.address, self.port), jeedom_socket_handler)
+        self.netAdapter = TCPServer((self.address, self.port), JeedomSocketHandler)
         if self.netAdapter:
             logging.debug("Socket interface started")
-            threading.Thread(target=self.loopNetServer, args=()).start()
+            threading.Thread(target=self.loop_net_server, args=()).start()
         else:
             logging.debug("Cannot start socket interface")
-
-    def loopNetServer(self):
+    
+    def loop_net_server(self):
         logging.debug("LoopNetServer Thread started")
         logging.debug("Listening on: [%s:%d]" % (self.address, self.port))
         self.netAdapter.serve_forever()
         logging.debug("LoopNetServer Thread stopped")
-
+    
     def close(self):
         self.netAdapter.shutdown()
-
-    def getMessage(self):
+    
+    def get_message(self):
         return self.message
 
 # ------------------------------------------------------------------------------
