@@ -193,7 +193,7 @@ class jeedom_socket():
         socketserver.TCPServer.allow_reuse_address = True
 
     def open(self):
-        self.netAdapter = TCPServer((self.address, self.port), jeedom_socket_handler)
+        self.netAdapter = TCPServer((self.address, self.port), JeedomSocketHandler)
         if self.netAdapter:
             logging.debug("Socket interface started")
             threading.Thread(target=self.loopNetServer, args=()).start()
