@@ -604,7 +604,7 @@ class reolink extends eqLogic {
           } else {
               if (exec(system::getCmdSudo() . system::get('cmd_check') . '-Ec "python3\-requests"') < 1) {
                   $return['state'] = 'nok';
-              } elseif (exec(system::getCmdSudo() . 'pip3 list | grep -Ewc "aiohttp|asyncio|uvicorn|fastapi"') < 4) {
+              } elseif (exec(system::getCmdSudo() . 'pip3 list | grep -Ewc "aiosignal|aiohttp|asyncio|uvicorn|fastapi|urllib3|requests|charset-normalizer"') < 8) {
                   $return['state'] = 'nok';
               } else {
                   $return['state'] = 'ok';
