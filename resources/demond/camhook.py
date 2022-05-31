@@ -16,8 +16,13 @@ try:
     _apikey = f.readline().rstrip("\n")
     f.close()
 except:
-    logging.error(f"Unable to read credentials jeedom file")
+    logging.error(f"Unable to read credentials jeedom file, retry...")
     sys.exit(1)
+
+try:
+    os.remove("jeedomcreds")
+except:
+    pass
 
 jeedom_cnx = jeedom_com(_apikey, _callback)
 detect_state = 0

@@ -59,7 +59,7 @@ def read_socket():
                 if asyncio.run(subscribe_onvif(_cam_ip, _cam_onvif_port, _cam_user, _cam_pwd)):
                     logging.debug("Subscribe OK")
                 else:
-                    logging.error("Error while trying to subscribe ONVIF event")
+                    logging.info("Unable to subscribe ONVIF event")
             else:
                 logging.debug("Message received is not supported")
         except Exception as e:
@@ -131,6 +131,10 @@ def shutdown():
 
 
 # ----------------------------------------------------------------------------
+
+if os.path.exists("jeedomcreds"):
+    logging.debug('Removing previous cred files')
+    os.remove("jeedomcreds")
 
 _log_level = "error"
 _socket_port = 44009
