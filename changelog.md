@@ -1,5 +1,13 @@
 # Change log
 
+31/05/2022
+- Ajout fonction AItrack
+- Modification log level sur le daemon
+- Correction détail dans info.json
+
+30/05/2022
+- Passage Jeedom stable
+
 11/03/2022
 - Ajout d'un daemon permettre la souscription aux évènements ONVIF (détection de mouvement en temps réel)
 
