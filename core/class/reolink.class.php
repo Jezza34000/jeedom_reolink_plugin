@@ -438,6 +438,10 @@ class reolink extends eqLogic {
                     $camcmd->checkAndUpdateCmd('SetCodecRateState', $json_data['value']['Performance']['codecRate']);
                     break;
 
+                  case reolinkAPI::CAM_GET_AICFG:
+                    $camcmd->checkAndUpdateCmd('SetaiTrack', $json_data['value']['aiTrack']);
+                    break;
+
                   default:
                     log::add('reolink', 'error', 'Switch command not found : '. print_r($json_data, true));
                     $res = false;

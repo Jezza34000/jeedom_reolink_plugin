@@ -1595,6 +1595,34 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "driveType"
-		}
+		},	
+		{
+			"abilityneed":"aiTrack",
+			"name": "Suivi AI (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAiCfg\"}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetaiTrackState"
+		},
+		{
+			"abilityneed":"aiTrack",
+			"name": "Suivi AI",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetaiTrackState",
+				"actionapi": "SetAiCfg",
+				"payload": "{\"channel\":#CHANNEL#,\"aiTrack\":#OPTSELECTEDINT#}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetaiTrack"
+		}	
 	]
 }
