@@ -1,7 +1,6 @@
 from fastapi import Request, FastAPI
 import sys
 import json
-import os
 import re
 
 try:

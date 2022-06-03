@@ -1,7 +1,15 @@
 # Change log
 
+01/06/2022
+- Ajout des options de configuration suivantes :
+    - Taille des block commandes
+    - IP de callback du webhook
+    - Port du webhook
+- Modification/Ajout d'information dans le README
+- Supression des import inutiles du daemon
+
 31/05/2022
-- Ajout fonction AItrack
+- Merge Pull request depuis @Micka41 (ajout de la commande TrackAI)
 - Modification log level sur le daemon
 - Correction détail dans info.json
 

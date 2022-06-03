@@ -1,23 +1,36 @@
 # Plugin Reolink pour Jeedom
 
 Ce plugin permet le controle des caméras de marque Réolink qui possède l'API.
+Il ne permet pas le visionnage des flux vidéo, pour ceci vous devrait utiliser le plugin Jeedom officiel "Caméra"
 
 ### Support des caméras
 
 Supportes :
 
-* La série des RLC-xxxx,
+* La série des RLC-xxxx
+* La série des RLN-xxxx-x
 * La série des DUO
 * La serie des C1 & C2.
 * La E1 Zoom
-* La série des RLN-xxxx-x
 
 Non-supportés :
 
 * La série ARGUS
 * La série GO
-* Les modèles commencant part Bxxx et Dxxx
-* Le modèle E1, Keen, Lumus
+* Les modèles commencant part Bxxx & Dxxx
+* Le modèle Keen, Lumus, E1 & E1 Pro
+
+### Page de configuration du plufin :
+
+> **Ces paramètres ne doivent être modifier que si vous rencontrer des problèmes.**
+
+- **Methode d'authentification GET** : Modification de la manière dont le plugin s'authentifie pour utiliser l'API.
+- **Taille des blocs commandes** : Modification du nombres de commandes envoyé dans un seul bloc d'appel API, plus les blocs sont gros plus l'exécution sera rapide, mais le risque de faire planter la caméra est plus grand, plus les blocs sont petit, plus l'execution sera lente mais economise la caméra en terme d'usage.
+- **IP de callback du webhook** : Pour obtenir les détections de mouvements la caméra envoi les évènements ONVIF à un webhook. Ce webhook est le daemon du plugin, il s'agit ici de l'IP qui est transmise à la caméra sur laquelle elle devra envoyer ses notifications. \
+Les options correspondent aux paramètres que vous avez dans : Réglages > Système > Configuration > Réseaux (sous votre Jeedom)
+- **IP personnalisée** : Si vous souhaiter personnaliser l'IP vers laquelle la caméra doit renvoyer ses notifications ONVIF.
+- **Port du webhook** : Port d'appel du webhook depuis la caméra.
+
 
 ### Listes des fonctions de l'API intégré dans le plugin :
 
@@ -75,6 +88,7 @@ Non-supportés :
 - [ ] Planning push
 - [x] Activation/désactivation FTP
 - [ ] Planning FTP
+- [x] Activation/désactivation AI track
 - [x] Activation/désactivation enregistrement SDCARD/HDD
 - [ ] Planning enregistrement SDCARD/HDD
 - [x] Activation/désactivation alarme audio

@@ -13,17 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-import string
 import sys
-import os
-import time
-import datetime
 import traceback
-import re
-import signal
-from optparse import OptionParser
-from os.path import join
 import json
 import argparse
 import uvicorn
@@ -68,10 +59,9 @@ def read_socket():
 
 async def subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd):
     logging.debug(f"Request subscription_manager to set webhook on camera = {cam_ip}:{cam_onvif_port}")
-    local_ip = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) + ["no IP found"])[0]
     sman = subscription_manager.Manager(cam_ip, cam_onvif_port, cam_user, cam_pwd)
-    res = await sman.subscribe(f"http://{local_ip}:5555/inbound_events")
-    logging.debug(f"Starting local hook on : http://{local_ip}:5555/inbound_events")
+    res = await sman.subscribe(f"http://{_webhook_ip}:{_webhook_port}/inbound_events")
+    logging.debug(f"Starting local hook on : http://{_webhook_ip}:{_webhook_port}/inbound_events")
     return res
 
 
@@ -86,9 +76,10 @@ def listen():
 # ----------------------------------------------------------------------------
 # UVICORN Handler
 
+
 def run_uvicorn():
     logging.info('Starting webhook...')
-    uvicorn.run(app="camhook:app", host="0.0.0.0", port=5555, log_level="info")
+    uvicorn.run(app="camhook:app", host="0.0.0.0", port=_webhook_port, log_level="info")
 
 
 def start_uvicorn():
@@ -121,16 +112,16 @@ def shutdown():
         jeedom_socket.close()
     except:
         pass
-    try:
-        jeedom_serial.close()
-    except:
-        pass
     logging.debug("Exit 0")
     sys.stdout.flush()
-    os._exit(0)
+    exit(0)
 
 
 # ----------------------------------------------------------------------------
+local_ip = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or
+             [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in
+               [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) + ["no IP found"])[0]
+
 
 if os.path.exists("jeedomcreds"):
     logging.debug('Removing previous cred files')
@@ -143,6 +134,8 @@ _device = 'auto'
 _pidfile = '/tmp/demond.pid'
 _apikey = ''
 _callback = ''
+_webhook_ip = local_ip
+_webhook_port = '44010'
 _cycle = 0.3
 
 parser = argparse.ArgumentParser(
@@ -154,6 +147,8 @@ parser.add_argument("--apikey", help="Apikey", type=str)
 parser.add_argument("--cycle", help="Cycle to send event", type=str)
 parser.add_argument("--pid", help="Pid file", type=str)
 parser.add_argument("--socketport", help="Port for server", type=str)
+parser.add_argument("--webhook_ip", help="IP for webhook", type=str)
+parser.add_argument("--webhook_port", help="Port for webhook", type=str)
 args = parser.parse_args()
 
 if args.device:
@@ -170,7 +165,10 @@ if args.cycle:
     _cycle = float(args.cycle)
 if args.socketport:
     _socketport = args.socketport
-
+if args.webhook_ip:
+    _webhook_ip = str(args.webhook_ip)
+if args.webhook_port:
+    _webhook_port = str(args.webhook_port)
 
 _socket_port = int(_socket_port)
 
@@ -183,6 +181,8 @@ logging.info('Socket host : ' + str(_socket_host))
 logging.info('PID file : ' + str(_pidfile))
 logging.info('Apikey : ' + str(_apikey))
 logging.info('Device : ' + str(_device))
+logging.info('Webhook IP : ' + str(_webhook_ip))
+logging.info('Webhook port : ' + str(_webhook_port))
 
 try:
     logging.info('Write creds file for camhook')
