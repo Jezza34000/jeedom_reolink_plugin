@@ -17,13 +17,13 @@ echo 20 > ${PROGRESS_FILE}
 echo "*****************************"
 echo "Install modules using apt-get"
 echo "*****************************"
-apt-get install -y python3 python3-pip
+apt-get install -y python3 python3-requests python3-pip
 echo 65 > ${PROGRESS_FILE}
 
 echo "*************************************"
 echo "Install the required python libraries"
 echo "*************************************"
-python3 -m pip install -r requirements.txt
+python3 -m pip install "h11" "setuptools" "charset-normalizer" "requests" "aiohttp" "aiosignal" "asyncio" "fastapi" "uvicorn" "urllib3"
 echo 100 > ${PROGRESS_FILE}
 
 echo $(date)
