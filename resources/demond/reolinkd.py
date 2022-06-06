@@ -12,8 +12,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
-
+import signal
+import socket
 import sys
+import time
 import traceback
 import json
 import argparse

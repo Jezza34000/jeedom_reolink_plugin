@@ -28,7 +28,7 @@ from socketserver import (TCPServer, StreamRequestHandler)
 
 # ------------------------------------------------------------------------------
 
-class JeedomCom:
+class jeedom_com:
     def __init__(self, apikey='', url='', cycle=0.5, retry=3):
         self.apikey = apikey
         self.url = url
@@ -144,7 +144,7 @@ class JeedomCom:
 
 # ------------------------------------------------------------------------------
 
-class JeedomUtils:
+class jeedom_utils:
     
     @staticmethod
     def convert_log_level(level='error'):
@@ -160,7 +160,7 @@ class JeedomUtils:
     @staticmethod
     def set_log_level(level='error'):
         log_format = '[%(asctime)-15s][%(levelname)s] : %(message)s'
-        logging.basicConfig(level=JeedomUtils.convert_log_level(level), format=log_format, datefmt="%Y-%m-%d %H:%M:%S")
+        logging.basicConfig(level=jeedom_utils.convert_log_level(level), format=log_format, datefmt="%Y-%m-%d %H:%M:%S")
     
     @staticmethod
     def write_pid(path):
