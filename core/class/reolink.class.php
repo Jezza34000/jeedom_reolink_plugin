@@ -836,12 +836,14 @@ class reolinkCmd extends cmd {
 
             $actionAPI = $this->getConfiguration('actionapi');
             $linkedvalue = $this->getConfiguration('valueFrom');
+            $revert_value = int($this->getConfiguration('revertvalue'));
 
             if ($actionAPI != NULL) {
               $payload = str_replace('\\', '', $this->getConfiguration('payload'));
               $payload = str_replace('#OPTSELECTEDINT#', intval($_options['select']), $payload);
               $payload = str_replace('#OPTSELECTEDSTR#', '"'.$_options['select'].'"', $payload);
               $payload = str_replace('#OPTSLIDER#', intval($_options['slider']), $payload);
+              $payload = str_replace('#OPTR_SLIDER#', abs($revert_value - intval($_options['slider'])), $payload);
               $payload = str_replace('#CHANNEL#', $channel, $payload);
               $payload = str_replace('#SPEED#', $speed, $payload);
               $payload = '[{"cmd":"'.$actionAPI.'","param":'.$payload.'}]';
