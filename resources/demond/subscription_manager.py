@@ -80,7 +80,7 @@ class Manager:
         """Send data to the camera."""
 
         try:
-            async with aiohttp.ClientSession(timeout=self._timeout,
+            async with aiohttp.ClientSession(timeout=self._timeout, trust_env=True,
                                              connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
                 _LOGGER.debug(
                     "SMAN : Reolink host %s (Subscription) request",
