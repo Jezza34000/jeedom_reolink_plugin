@@ -836,7 +836,7 @@ class reolinkCmd extends cmd {
 
             $actionAPI = $this->getConfiguration('actionapi');
             $linkedvalue = $this->getConfiguration('valueFrom');
-            $revert_value = int($this->getConfiguration('revertvalue'));
+            $revert_value = intval($this->getConfiguration('revertvalue'));
 
             if ($actionAPI != NULL) {
               $payload = str_replace('\\', '', $this->getConfiguration('payload'));
