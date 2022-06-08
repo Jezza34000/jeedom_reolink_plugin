@@ -1,5 +1,8 @@
 # Change log
 
+08/06/2022
+- Bug fix
+
 31/05/2022
 - Ajout fonction AItrack
 - Modification log level sur le daemon
