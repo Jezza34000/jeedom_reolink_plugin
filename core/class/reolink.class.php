@@ -862,7 +862,7 @@ class reolinkCmd extends cmd {
                     if (isset($_options['select'])) {
                       $updtval = $_options['select'];
                     } elseif (isset($_options['slider'])) {
-                      $updtval = $_options['select'];
+                      $updtval = $_options['slider'];
                     } else {
                       $updtval = 0;
                       log::add('reolink', 'error', 'Impossible de trouver la valeur à inserer');
