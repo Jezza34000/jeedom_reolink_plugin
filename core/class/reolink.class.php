@@ -836,12 +836,14 @@ class reolinkCmd extends cmd {
 
             $actionAPI = $this->getConfiguration('actionapi');
             $linkedvalue = $this->getConfiguration('valueFrom');
+            $revert_value = intval($this->getConfiguration('revertvalue'));
 
             if ($actionAPI != NULL) {
               $payload = str_replace('\\', '', $this->getConfiguration('payload'));
               $payload = str_replace('#OPTSELECTEDINT#', intval($_options['select']), $payload);
               $payload = str_replace('#OPTSELECTEDSTR#', '"'.$_options['select'].'"', $payload);
               $payload = str_replace('#OPTSLIDER#', intval($_options['slider']), $payload);
+              $payload = str_replace('#OPTR_SLIDER#', abs($revert_value - intval($_options['slider'])), $payload);
               $payload = str_replace('#CHANNEL#', $channel, $payload);
               $payload = str_replace('#SPEED#', $speed, $payload);
               $payload = '[{"cmd":"'.$actionAPI.'","param":'.$payload.'}]';
@@ -860,7 +862,7 @@ class reolinkCmd extends cmd {
                     if (isset($_options['select'])) {
                       $updtval = $_options['select'];
                     } elseif (isset($_options['slider'])) {
-                      $updtval = $_options['select'];
+                      $updtval = $_options['slider'];
                     } else {
                       $updtval = 0;
                       log::add('reolink', 'error', 'Impossible de trouver la valeur à inserer');
