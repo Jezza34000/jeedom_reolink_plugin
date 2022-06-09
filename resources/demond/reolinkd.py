@@ -49,6 +49,11 @@ def read_socket():
                 _cam_user = message['cam_user']
                 _cam_pwd = message['cam_pwd']
                 logging.debug(f"Requested to set the webhook inside CAM IP={_cam_ip}")
+                
+                if check_onvif(_cam_ip, _cam_onvif_port) is False:
+                    logging.error(f"CAM IP={_cam_ip} is not ONVIF capable. Please check the camera settings to open the ONVIF port.")
+                    return
+                
                 if asyncio.run(subscribe_onvif(_cam_ip, _cam_onvif_port, _cam_user, _cam_pwd)):
                     logging.debug("Subscribe OK")
                 else:
@@ -117,6 +122,15 @@ def shutdown():
     logging.debug("Exit 0")
     sys.stdout.flush()
     exit(0)
+    
+def check_onvif(cam_ip, cam_onvif_port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = sock.connect_ex((cam_ip, cam_onvif_port))
+    sock.close()
+    if result == 0:
+        return True
+    else:
+        return False
 
 
 # ----------------------------------------------------------------------------
