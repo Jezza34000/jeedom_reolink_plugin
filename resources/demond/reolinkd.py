@@ -52,11 +52,11 @@ def read_socket():
                 logging.debug(f"Requested to set the webhook inside CAM IP={_cam_ip}")
 
                 if chk_ping(_cam_ip) is False:
-                    logging.error(f"CAM IP={_cam_ip} is not reachable. (Please check the camera is ON)")
+                    logging.error(f"CAM IP={_cam_ip} is not reachable. (Please check that the camera is switched ON and correctly connected to the network)")
                     return
 
                 if check_onvif(_cam_ip, int(_cam_onvif_port)) is False:
-                    logging.error(f"CAM IP={_cam_ip} is not ONVIF capable. (Please check the camera settings to open the ONVIF port.)")
+                    logging.error(f"CAM IP={_cam_ip} is not ONVIF capable. (Please check the camera settings if the ONVIF protocol is enabled correctly)")
                     return
                 
                 if asyncio.run(subscribe_onvif(_cam_ip, _cam_onvif_port, _cam_user, _cam_pwd)):
