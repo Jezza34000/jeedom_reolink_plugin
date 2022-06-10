@@ -3,6 +3,7 @@
 10/06/2022
 - Sur la page équipement : ajout des informations des ports, et s'il sont activés ou pas (si la caméra remonte l'information)
 - Daemon : ajout de vérification supplémentaire pour contrôler si la caméra répond au ping, et si le port ONVIF est actif.
+- Divers bugs fix
 
 01/06/2022
 - Ajout des options de configuration suivantes :
@@ -11,6 +12,7 @@
     - Port du webhook
 - Modification/Ajout d'information dans le README
 - Suppression des imports inutiles du daemon
+
 
 31/05/2022
 - Merge Pull request depuis @Micka41 (ajout de la commande TrackAI)
