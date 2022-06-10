@@ -60,7 +60,7 @@ class reolink extends eqLogic {
 
       // Devices Info
       $reolinkConn = reolink::getReolinkConnection($id);
-      $deviceInfo = $reolinkConn->SendCMD('[{"cmd":"GetDevInfo"},{"cmd":"GetP2P"},{"cmd":"GetLocalLink"},{"cmd":"GetAiState"}]');
+      $deviceInfo = $reolinkConn->SendCMD('[{"cmd":"GetDevInfo"},{"cmd":"GetP2P"},{"cmd":"GetLocalLink"},{"cmd":"GetAiState"},{"cmd":"GetNetPort"}]');
 
       if (!$deviceInfo) {
         return false;
@@ -132,6 +132,19 @@ class reolink extends eqLogic {
         // Cam is not AI
         $camera->setConfiguration("supportai", "Non");
       }
+
+      // Save cam port
+      foreach ($deviceInfo[4]['value']['NetPort'] as $key => $value) {
+        log::add('reolink', 'debug', 'Enregistrement : K='.$key. ' V='.$value);
+
+        if (strpos($key, 'Enable') !== false) {
+            $value = str_replace("0", "(désactiver)", $value);
+            $value = str_replace("1", "(actif)", $value);
+        }
+
+        $camera->setConfiguration($key, $value);
+      }
+
 
       log::add('reolink', 'debug', 'GetDeviceInfo ajout de '.count($deviceInfo[0]['value']["DevInfo"]). ' items');
       if (count($deviceInfo[0]['value']["DevInfo"]) > 1) {
