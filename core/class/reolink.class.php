@@ -60,7 +60,7 @@ class reolink extends eqLogic {
 
       // Devices Info
       $reolinkConn = reolink::getReolinkConnection($id);
-      $deviceInfo = $reolinkConn->SendCMD('[{"cmd":"GetDevInfo"},{"cmd":"GetP2P"},{"cmd":"GetLocalLink"},{"cmd":"GetAiState"}]');
+      $deviceInfo = $reolinkConn->SendCMD('[{"cmd":"GetDevInfo"},{"cmd":"GetP2P"},{"cmd":"GetLocalLink"},{"cmd":"GetAiState"},{"cmd":"GetNetPort"}]');
 
       if (!$deviceInfo) {
         return false;
@@ -132,6 +132,19 @@ class reolink extends eqLogic {
         // Cam is not AI
         $camera->setConfiguration("supportai", "Non");
       }
+
+      // Save cam port
+      foreach ($deviceInfo[4]['value']['NetPort'] as $key => $value) {
+        log::add('reolink', 'debug', 'Enregistrement : K='.$key. ' V='.$value);
+
+        if (strpos($key, 'Enable') !== false) {
+            $value = str_replace("0", "(désactiver)", $value);
+            $value = str_replace("1", "(actif)", $value);
+        }
+
+        $camera->setConfiguration($key, $value);
+      }
+
 
       log::add('reolink', 'debug', 'GetDeviceInfo ajout de '.count($deviceInfo[0]['value']["DevInfo"]). ' items');
       if (count($deviceInfo[0]['value']["DevInfo"]) > 1) {
@@ -226,7 +239,7 @@ class reolink extends eqLogic {
                 {
                     $cmdarr[] = $payload;
                 }
-                $cmd_block = array_chunk($cmdarr, CMD_SEND_QTY);
+                $cmd_block = array_chunk($cmdarr, config::byKey('cmdblock', __CLASS__, CMD_SEND_QTY));
         	  }
         }
 
@@ -540,6 +553,20 @@ class reolink extends eqLogic {
             throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
         }
 
+
+        $webhook_ip = "";
+        $callbackip_cfg = config::byKey('ipwebhook', __CLASS__, '0');
+        if ($callbackip_cfg == 1) {
+          // Internal
+          $webhook_ip = network::getNetworkAccess('internal', 'ip');
+        } elseif ($callbackip_cfg == 2) {
+          // External
+          $webhook_ip = network::getNetworkAccess('external', 'ip');
+        } elseif ($callbackip_cfg == 3) {
+          // Personnalised
+          $webhook_ip = config::byKey('webhookdefinedip', __CLASS__, '');
+        }
+
         $path = realpath(dirname(__FILE__) . '/../../resources/demond');
         $cmd = 'python3 ' . $path . '/reolinkd.py';
         $cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel(__CLASS__));
@@ -547,6 +574,10 @@ class reolink extends eqLogic {
         $cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/reolink/core/php/jeeReolink.php';
         $cmd .= ' --apikey ' . jeedom::getApiKey(__CLASS__);
         $cmd .= ' --pid ' . jeedom::getTmpFolder(__CLASS__) . '/deamon.pid';
+        if ($webhook_ip != "") {
+          $cmd .= ' --webhook_ip ' . $webhook_ip;
+        }
+        $cmd .= ' --webhook_port ' . config::byKey('webhookport', __CLASS__, '44010');
         log::add(__CLASS__, 'info', 'Lancement démon');
         $result = exec($cmd . ' >> ' . log::getPathToLog('reolink_daemon') . ' 2>&1 &');
         $i = 0;
@@ -818,12 +849,14 @@ class reolinkCmd extends cmd {
 
             $actionAPI = $this->getConfiguration('actionapi');
             $linkedvalue = $this->getConfiguration('valueFrom');
+            $revert_value = intval($this->getConfiguration('revertvalue'));
 
             if ($actionAPI != NULL) {
               $payload = str_replace('\\', '', $this->getConfiguration('payload'));
               $payload = str_replace('#OPTSELECTEDINT#', intval($_options['select']), $payload);
               $payload = str_replace('#OPTSELECTEDSTR#', '"'.$_options['select'].'"', $payload);
               $payload = str_replace('#OPTSLIDER#', intval($_options['slider']), $payload);
+              $payload = str_replace('#OPTR_SLIDER#', abs($revert_value - intval($_options['slider'])), $payload);
               $payload = str_replace('#CHANNEL#', $channel, $payload);
               $payload = str_replace('#SPEED#', $speed, $payload);
               $payload = '[{"cmd":"'.$actionAPI.'","param":'.$payload.'}]';

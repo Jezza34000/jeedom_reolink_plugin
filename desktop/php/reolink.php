@@ -279,20 +279,44 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 
-							<!--<hr>
+							<hr>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">{{URL rtsp (flux 1)}}</label>
+								<label class="col-sm-3 control-label">{{HTTP Port}}</label>
 								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtspurl1"></span>
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpPort"></span>&nbsp;<span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpEnable"></span>
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">{{URL rtsp (flux 2)}}</label>
+								<label class="col-sm-3 control-label">{{HTTPS Port}}</label>
 								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtspurl2"></span>
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpsPort"></span>&nbsp;<span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpsEnable"></span>
 								</div>
-							</div>-->
-							<hr>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{Media Port}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="mediaPort"></span>&nbsp;<span class="eqLogicAttr" data-l1key="configuration" data-l2key="mediaEnable"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{ONVIF Port}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="onvifPort"></span>&nbsp;<span class="eqLogicAttr" data-l1key="configuration" data-l2key="onvifEnable"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{RTMP Port}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtmpPort"></span>&nbsp;<span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtmpEnable"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{RTSP Port}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtspPort"></span>&nbsp;<span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtspEnable"></span>
+								</div>
+						</div>
+						<hr>
 							<div class="container-fluid">
 									<div class="form-group">
 											<a class="btn btn-block btn-primary eqLogicAction" id="btGetCamNFO"><i class="fas fa-download"></i> {{Récupérer les informations}}</a>

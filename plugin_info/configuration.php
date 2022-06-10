@@ -35,5 +35,48 @@ if (!isConnect()) {
         </select>
       </div>
     </div>
+    <div class="form-group">
+      <label class="col-md-4 control-label">{{Taille des block commandes}}
+        <sup><i class="fas fa-question-circle tooltips" title="{{Taille des blocks de commandes envoyés en simultanée à la caméra (+ grand, + rapide, mais plus de risque de plantage, + petit, + lent, mais plus stable)}}"></i></sup>
+      </label>
+      <div class="col-md-4">
+        <select class="configKey form-control" data-l1key="cmdblock">
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="8">8</option>
+            <option value="16">16</option>
+            <option value="24">24</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-md-4 control-label">{{IP de callback du webhook}}
+        <sup><i class="fas fa-question-circle tooltips" title="{{IP vers laquelle les caméras vont renvoyer les évènement détections de mouvement. (IP permettant d'accéder au webhook du daemon du plugin)}}"></i></sup>
+      </label>
+      <div class="col-md-4">
+        <select class="configKey form-control" data-l1key="ipwebhook">
+            <option value="0">Auto-détection</option>
+            <option value="1">Interne</option>
+            <option value="2">Externe</option>
+            <option value="3">Personnalisée</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-md-4 control-label">{{IP personnalisée}}
+        <sup><i class="fas fa-question-circle tooltips" title="{{IP utilisée pour le rappel du daemon, lorsque vous sélectionner l'option : 'Personnalisée'}}"></i></sup>
+      </label>
+      <div class="col-md-4">
+        <input class="configKey form-control" data-l1key="webhookdefinedip" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-md-4 control-label">{{Port du webhook}}
+        <sup><i class="fas fa-question-circle tooltips" title="{{Port du webhook du daemon utilisé par les caméras lors de la détection des mouvements}}"></i></sup>
+      </label>
+      <div class="col-md-4">
+        <input class="configKey form-control" data-l1key="webhookport" value="44010" />
+      </div>
+    </div>
   </fieldset>
 </form>
