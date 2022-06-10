@@ -14,6 +14,7 @@
 # along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 import signal
 import socket
+import subprocess
 import sys
 import time
 import traceback
@@ -49,9 +50,13 @@ def read_socket():
                 _cam_user = message['cam_user']
                 _cam_pwd = message['cam_pwd']
                 logging.debug(f"Requested to set the webhook inside CAM IP={_cam_ip}")
-                
-                if check_onvif(_cam_ip, _cam_onvif_port) is False:
-                    logging.error(f"CAM IP={_cam_ip} is not ONVIF capable. Please check the camera settings to open the ONVIF port.")
+
+                if chk_ping(_cam_ip) is False:
+                    logging.error(f"CAM IP={_cam_ip} is not reachable. (Please check the camera is ON)")
+                    return
+
+                if check_onvif(_cam_ip, int(_cam_onvif_port)) is False:
+                    logging.error(f"CAM IP={_cam_ip} is not ONVIF capable. (Please check the camera settings to open the ONVIF port.)")
                     return
                 
                 if asyncio.run(subscribe_onvif(_cam_ip, _cam_onvif_port, _cam_user, _cam_pwd)):
@@ -62,6 +67,7 @@ def read_socket():
                 logging.debug("Message received is not supported")
         except Exception as e:
             logging.error('Send command to demon error : ' + str(e))
+
 
 
 async def subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd):
@@ -122,7 +128,8 @@ def shutdown():
     logging.debug("Exit 0")
     sys.stdout.flush()
     exit(0)
-    
+
+
 def check_onvif(cam_ip, cam_onvif_port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     result = sock.connect_ex((cam_ip, cam_onvif_port))
@@ -132,6 +139,15 @@ def check_onvif(cam_ip, cam_onvif_port):
     else:
         return False
 
+
+def chk_ping(host):
+    command = ['ping', '-c', '1', host]
+    response = subprocess.call(command, stdout=subprocess.DEVNULL)
+
+    if response == 0:
+        return True
+    else:
+        return False
 
 # ----------------------------------------------------------------------------
 local_ip = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or
