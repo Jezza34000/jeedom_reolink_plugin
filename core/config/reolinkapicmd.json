@@ -574,6 +574,31 @@
 		},
 		{
 			"abilityneed":"supportFLswitch",
+			"name": "Led blanche (mode)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetWhiteLedModeState"
+		},
+		{
+			"abilityneed":"supportFLswitch",
+			"name": "Mode led blanche",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Auto;0|Manuel",
+				"valueFrom" : "SetWhiteLedModeState",
+				"actionapi": "SetWhiteLed",
+				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"mode\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetWhiteLedMode"
+		},		
+		{
+			"abilityneed":"supportFLswitch",
 			"name": "Luminosite Led Blanche (valeur)",
 			"type": "info",
 			"subtype": "numeric",

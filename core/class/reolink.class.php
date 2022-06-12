@@ -362,6 +362,7 @@ class reolink extends eqLogic {
 
                   case reolinkAPI::CAM_GET_WHITELED:
                     $camcmd->checkAndUpdateCmd('SetWhitLedState', $json_data['value']['WhiteLed']['state']);
+                    $camcmd->checkAndUpdateCmd('SetWhiteLedMode', $json_data['value']['WhiteLed']['mode']);
                     $camcmd->checkAndUpdateCmd('SetWhitLedLuxState', $json_data['value']['WhiteLed']['bright']);
                     break;
 
