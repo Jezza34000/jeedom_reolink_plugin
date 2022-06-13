@@ -44,6 +44,7 @@ def read_socket():
         try:
             # ============================================
             # Receive message for handle
+ 
             if message['action'] == "sethook":
                 _cam_ip = message['cam_ip']
                 _cam_onvif_port = message['cam_onvif_port']
@@ -51,23 +52,36 @@ def read_socket():
                 _cam_pwd = message['cam_pwd']
                 logging.debug(f"Requested to set the webhook inside CAM IP={_cam_ip}")
 
+                result_resp = {
+                    "message": "subscription",
+                    "ip": _cam_ip
+                }
+
                 if chk_ping(_cam_ip) is False:
                     logging.error(f"CAM IP={_cam_ip} is not reachable. (Please check that the camera is switched ON and correctly connected to the network)")
-                    return
-
-                if check_onvif(_cam_ip, int(_cam_onvif_port)) is False:
-                    logging.error(f"CAM IP={_cam_ip} is not ONVIF capable. (Please check the camera settings if the ONVIF protocol is enabled correctly)")
-                    return
-                
-                if asyncio.run(subscribe_onvif(_cam_ip, _cam_onvif_port, _cam_user, _cam_pwd)):
-                    logging.debug("Subscribe OK")
+                    result_resp['state'] = 0
+                    result_resp['details'] = "Camera is not reachable"
                 else:
-                    logging.info("Unable to subscribe ONVIF event")
+                    if check_onvif(_cam_ip, int(_cam_onvif_port)) is False:
+                        logging.error(f"CAM IP={_cam_ip} is not ONVIF capable. (Please check the camera settings if the ONVIF protocol is enabled correctly)")
+                        result_resp['state'] = 0
+                        result_resp['details'] = "Camera is not ONVIF capable"
+                    else:
+                        if asyncio.run(subscribe_onvif(_cam_ip, _cam_onvif_port, _cam_user, _cam_pwd)):
+                            logging.debug("Subscribe OK")
+                            result_resp['state'] = 1
+                        else:
+                            logging.info("Unable to subscribe ONVIF event")
+                            result_resp['state'] = 0
+                            result_resp['details'] = "Unable to subscribe ONVIF event"
+                # ============================================
+                # Send result to jeedom
+                message = json.dumps(result_resp)
+                jeedom_cnx.send_change_immediate(json.loads(message))
             else:
                 logging.debug("Message received is not supported")
         except Exception as e:
             logging.error('Send command to demon error : ' + str(e))
-
 
 
 async def subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd):
@@ -205,6 +219,7 @@ if args.webhook_port:
 _socket_port = int(_socket_port)
 
 jeedom_utils.set_log_level(_log_level)
+jeedom_cnx = jeedom_com(_apikey, _callback)
 
 logging.info('Start demond')
 logging.info('Log level : ' + str(_log_level))
