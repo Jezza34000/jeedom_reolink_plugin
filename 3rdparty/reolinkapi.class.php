@@ -26,7 +26,7 @@ class reolinkAPI {
     const CAM_UPGRADE ='Upgrade';
     const CAM_RESTORE ='Restore';
     const CAM_REBOOT ='Reboot';
-    const CAM_PERFORMANCE ='GetPerformance';
+    const CAM_GET_PERFORMANCE ='GetPerformance';
     const CAM_UPGRADEPREPARE ='UpgradePrepare';
     const CAM_GET_AUTOUPGRADE ='GetAutoUpgrade';
     const CAM_SET_AUTOUPGRADE ='SetAutoUpgrade';
@@ -145,6 +145,8 @@ class reolinkAPI {
     const CAM_GET_AICFG ='GetAiCfg';
     const CAM_SET_AICFG ='SetAiCfg';
     const CAM_GET_AISTATE ='GetAiState';
+    const CAM_GET_SYSCFG ='GetSysCfg';
+    const CAM_SET_SYSCFG ='SetSysCfg';
 
 
     public function __construct(array $cnxinfo) {
