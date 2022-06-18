@@ -159,7 +159,9 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [ ] Push (cameras AI **ET** non-AI)
   - [x] Activation/désactivation Push
   - [ ] Planning Push
-
+ 
+ - [x] Activation/désactivation Enregistrement audio
+ 
 #### Detection de mouvement
 - [x] Remontée des détections de mouvements en temps-réel (ONVIF)
 - [x] Activation/désactivation AI Track
