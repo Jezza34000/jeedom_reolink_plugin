@@ -27,7 +27,7 @@ Non-supportés :
 
 * Ajouter une caméra :<br>
   * Donner un nom à l'équipement
-  * Renseigner les champs ci-dessous et
+  * Renseigner les champs ci-dessous :
     * IP / Nom d'hôte
     * Login 
     * Mot de passe
