@@ -129,7 +129,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
   - [ ] Balance des blancs
 - [x] Leds Infra rouge
   - [x] Contrôle des Leds Infra rouge
-- [ ] Leds blanches d'éclairage (Projecteur Led)
+- [x] Leds blanches d'éclairage (Projecteur Led)
   - [x] Gestion du mode des leds blanches : Off/Auto
   - [x] Activation/Désactivation manuelle des leds blanches
   - [X] Gestion de l'intensité des leds blanches
