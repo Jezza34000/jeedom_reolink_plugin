@@ -73,7 +73,9 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [x] Reboot
 - [x] Obtention des informations de la caméra
 - [x] Obtention des capacités hardware/software de la caméra
-- [x] Auto Reboot
+- [ ] Auto Reboot
+  - [x] Activation/Désactivation Auto Reboot
+  - [ ] Planning Auto Reboot 
 - [ ] Gestion des utilisateurs (ajout/supression/modification)
 - [ ] Gestion de l'heure
 - [ ] Restaurer la config par défaut
