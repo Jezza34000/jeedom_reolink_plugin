@@ -88,19 +88,25 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [x] Monitoring de la caméra : Utilisation CPU, Débit codec et Débit réseau
 
 #### PTZ
-- [x] Zoom
-- [x] Focus
-- [X] Activation/Désactivation Auto-Focus
+- [x] Zoom/Focus
+  - [x] Zoom
+  - [x] Focus
+  - [X] Activation/Désactivation Auto-Focus
 - [x] Mouvement (Haut/Bas/Gauche/Droite)
-- [x] Récupération des presets PTZ
-- [x] Utilisation des presets PTZ
-- [x] Activation/Désactivation du PTZ Patrol
+- [x] Presets PTZ
+  - [x] Récupération des presets PTZ
+  - [x] Utilisation des presets PTZ
+- [ ] PTZ Patrol
+  - [x] Activation/Désactivation du PTZ Patrol
+  - [ ] Gestion PTZ Patrol
 - [ ] PTZ Guard
-- [ ] Schéma/Chemin PTZ
+  - [ ] Création du point de garde
+  - [ ] Activation/Désactivation du point de garde
+  - [ ] Gestion du point de garde
 - [ ] PTZ Serial
 - [X] Calibration de la camera (1)
   - [x] Etat de la calibration
-  - [ ] Exécution de la calibration
+  - [x] Exécution de la calibration
 
 #### Réseau
 - [ ] IP/DNS/MASQUE
