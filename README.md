@@ -167,7 +167,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
   - [ ] Dimension d'objet Personne **(cameras AI)**
   - [ ] Dimension d'objet Véhicule **(cameras AI)**
 
-**NB :** Le detection des animaux n'est pas pris en charge par le plugin (Detection en béta)
+**NB :** Le detection des animaux n'est pas pris en charge par le plugin (Detection en béta actuellement)
 
 #### OSD
 - [x] Afficher/Masquer Watermark
