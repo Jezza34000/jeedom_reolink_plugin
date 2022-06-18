@@ -46,6 +46,7 @@ ENFIN
 * Générer les commandes de la caméra : bouton ![image](https://user-images.githubusercontent.com/54839700/174434177-5f433dc2-91b5-4cdb-9bcc-8a42d6a48f0d.png)
 * Sauvegarder l'équipement en cliquant sur **"Sauvergarder"** ![image](https://user-images.githubusercontent.com/54839700/174434052-44ac9904-3bfa-4afa-a20f-4cd669d4c636.png)
 
+<BR>
 **!! NB TRES IMPORTANT !!** : <BR>
   Lors de mise(s) à jour du plugin Reolink, de nouvelles commandes peuvent être ajouter (cf Changelog du plugin) pour faciliter une meilleure gestion de la caméra.
   **Pour bénéficier les nouvelles commandes, relancer le processus de création de commandes pour chacun de la(les) caméra(s)**
