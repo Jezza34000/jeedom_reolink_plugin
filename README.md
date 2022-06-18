@@ -20,7 +20,7 @@ Non-supportés :
 * Les modèles commencant part Bxxx & Dxxx
 * Le modèle Keen, Lumus, E1 & E1 Pro
 
-### Page de configuration d"une caméra :
+### Page de configuration d'une caméra :
 
 * Ajouter une camera :<br>
 ![image](https://user-images.githubusercontent.com/54839700/174433235-2f7462fa-f868-4391-8916-b88e20cd2643.png)
