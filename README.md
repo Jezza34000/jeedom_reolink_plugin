@@ -139,7 +139,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
   - [x] Enregistrement avant détection (pré-enregistrement)
   - [x] Durée enregistrement après détection
   - [ ] Planning enregistrement SDCARD/HDD
-- [] Email (cameras AI **ET** non-AI)
+- [ ] Email (cameras AI **ET** non-AI)
   - [x] Activation/désactivation Email
   - [ ] Planning email
 - [ ] FTP (cameras AI **ET** non-AI)
