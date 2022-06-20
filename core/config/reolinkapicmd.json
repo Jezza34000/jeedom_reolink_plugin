@@ -1780,6 +1780,83 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetAlarmDelayVehicle"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"iastate":1,
+			"name": "Retourner au point de garde",
+			"type": "action",
+			"subtype": "other",
+			"configuration": {
+				"actionapi": "SetPtzGuard",
+				"payload": "{\"PtzGuard\":{\"channel\":#CHANNEL#,\"cmdStr\":\"toPos\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "ToPosPtzGuardPoint"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"iastate":1,
+			"name": "Retour automatique au point de garde (état)",
+			"type": "info",
+			"subtype": "binary",
+			"Unite": "s",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetPtzGuard\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAutoReturnPtzGuardPointState"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"iastate":1,
+			"name": "Retour automatique au point de garde",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetAutoReturnPtzGuardPointState",
+				"actionapi": "SetPtzGuard",
+				"payload": "{\"PtzGuard\":{\"benable\":#OPTSELECTEDINT#,\"channel\":#CHANNEL#,\"cmdStr\":\"setPos\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetAutoReturnPtzGuardPoint"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"iastate":1,
+			"name": "Délai Retour auto. au point de garde (état)",
+			"type": "info",
+			"subtype": "numeric",
+			"Unite": "s",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetPtzGuard\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetIntervalAutoReturnPtzGuardPointState"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"iastate":1,
+			"name": "Délai Retour auto. au point de garde",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": "10",
+				"maxValue" : "300",
+				"valueFrom" : "SetIntervalAutoReturnPtzGuardPointState",
+				"actionapi": "SetPtzGuard",
+				"payload": "{\"PtzGuard\":{\"benable\":1,\"channel\":#CHANNEL#,\"timeout\":#OPTSLIDER#,\"cmdStr\":\"setPos\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetIntervalAutoReturnPtzGuardPoint"
 		}	
 	]
 }
