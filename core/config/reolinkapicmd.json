@@ -580,18 +580,21 @@
 			"name": "Led blanche (mode)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetWhiteLed\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetWhiteLedModeState"
 		},
 		{
 			"abilityneed":"supportFLswitch",
-			"name": "Mode led blanche",
+			"name": "Mode nuit led blanche",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "1|Auto;0|Manuel",
+				"listValue": "1|Auto;0|Désactiver",
 				"valueFrom" : "SetWhiteLedModeState",
 				"actionapi": "SetWhiteLed",
 				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"mode\":#OPTSELECTEDINT#}}"
