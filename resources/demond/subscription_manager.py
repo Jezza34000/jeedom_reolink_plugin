@@ -15,7 +15,6 @@ TERMINATION_TIME = 15
 DEFAULT_TIMEOUT = 30
 
 
-
 class Manager:
     """Initialize the Reolink event class."""
     def __init__(self, host, port, username, password, timeout=DEFAULT_TIMEOUT):
@@ -136,7 +135,6 @@ class Manager:
 
         response = await self.send(headers, xml)
 
-        print(response)
         if response is None:
             return False
 

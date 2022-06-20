@@ -12,6 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
+import logging
 import signal
 import socket
 import subprocess
@@ -104,9 +105,22 @@ def listen():
 # UVICORN Handler
 
 
+def get_logger_text():
+    if logging.root.level == logging.DEBUG:
+        return "debug"
+    elif logging.root.level == logging.INFO:
+        return "info"
+    elif logging.root.level == logging.WARNING:
+        return "warning"
+    elif logging.root.level == logging.ERROR:
+        return "error"
+    elif logging.root.level == logging.CRITICAL:
+        return "critical"
+
+
 def run_uvicorn():
     logging.info('Starting webhook...')
-    uvicorn.run(app="camhook:app", host="0.0.0.0", port=_webhook_port, log_level="info")
+    uvicorn.run(app="camhook:app", host="0.0.0.0", port=_webhook_port, log_level=get_logger_text())
 
 
 def start_uvicorn():
