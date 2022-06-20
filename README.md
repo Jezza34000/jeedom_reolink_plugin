@@ -25,7 +25,6 @@ Non-supportés :
 * Ajouter une camera :<br>
 ![image](https://user-images.githubusercontent.com/54839700/174433235-2f7462fa-f868-4391-8916-b88e20cd2643.png)
 
-* Ajouter une caméra :<br>
   * Donner un nom à l'équipement
   * Renseigner les champs ci-dessous :
     * IP / Nom d'hôte
@@ -46,8 +45,8 @@ Non-supportés :
 * Générer les commandes de la caméra : bouton ![image](https://user-images.githubusercontent.com/54839700/174434177-5f433dc2-91b5-4cdb-9bcc-8a42d6a48f0d.png)
 * Sauvegarder l'équipement en cliquant sur **"Sauvergarder"** ![image](https://user-images.githubusercontent.com/54839700/174434052-44ac9904-3bfa-4afa-a20f-4cd669d4c636.png)
 
-<BR>
-!! NB TRES IMPORTANT !! :
+
+**!! NB TRES IMPORTANT !! :**
  <BR>
   Lors de mise(s) à jour du plugin Reolink, de nouvelles commandes peuvent être ajouter (cf Changelog du plugin) pour faciliter une meilleure gestion de la caméra.
   **Pour bénéficier les nouvelles commandes, relancer le processus de création de commandes pour chacun de la(les) caméra(s)**
@@ -101,10 +100,11 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [ ] PTZ Patrol
   - [x] Activation/Désactivation du PTZ Patrol
   - [ ] Gestion PTZ Patrol
-- [ ] PTZ Guard
-  - [ ] Création du point de garde
-  - [ ] Activation/Désactivation du point de garde
-  - [ ] Gestion du point de garde
+- [X] PTZ Guard (3)
+  - [X] Etat du point de garde
+  - [X] Création/actualisation du point de garde
+  - [X] Activation/Désactivation du retour automatique au point de garde
+  - [X] Réglade du délai de retour automatique au point de garde
 - [ ] PTZ Serial
 - [X] Calibration de la camera (1)
   - [x] Etat de la calibration
@@ -139,8 +139,8 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 
 #### Audio
 - [x] Sirène
-  - [x] Déclenchement manuel de la sirène(2)
-  - [x] Volume de la sirène(2)
+  - [x] Déclenchement manuel de la sirène (2)
+  - [x] Volume de la sirène (2)
 
 #### Surveillance/Notification
 - [ ] Enregistrement SDCARD/HDD (cameras AI **ET** non-AI)
@@ -190,5 +190,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 
 
 (1): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportPtzCheck" : E1Outdoor, RLC-523WA et RLC-823A UNIQUEMENT
-
+ 
 (2): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportAudioAlarm" 
+ 
+(3): Ne fonctionne qu'avec les **cameras AI** ayant les commandes Get(Set)PtzGuard intégrées dans leurs firmwares : E1Outdoor, RLC-523WA et RLC-823A UNIQUEMENT
