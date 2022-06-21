@@ -33,6 +33,7 @@ Non-supportés :
     * Port ONVIF (par défaut 8000, à modifier uniquement si vous avez personnaliser le port d'accès au protocole ONVIF )
     * Mot de passe
     * Type de connexion (http/https)
+    * Auto-actualisation (cron) (par défaut réglé à 1h, ce CRON sert à actualiser les paramètres globaux de la caméra, il n'influence en rien la remontée de détection de mouvement)
 
   * Sauvegardez l'équipement en cliquant sur **"Sauvegarder"** ![image](https://user-images.githubusercontent.com/54839700/174434052-44ac9904-3bfa-4afa-a20f-4cd669d4c636.png)
 
