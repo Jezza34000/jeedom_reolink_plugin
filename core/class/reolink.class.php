@@ -370,14 +370,7 @@ class reolink extends eqLogic {
                     break;
 
                   case reolinkAPI::CAM_GET_PTZGUARD:
-                    switch ((int) $json_data['value']['PtzGuard']['bexistPos']) {
-                        case 0:
-                          $camcmd->checkAndUpdateCmd('CheckIsExistsPtzGuardPoint','AUCUN');
-                          break;
-                        case 1:
-                          $camcmd->checkAndUpdateCmd('CheckIsExistsPtzGuardPoint','DEFINI');
-                          break;
-                        }
+                    $camcmd->checkAndUpdateCmd('CheckIsExistsPtzGuardPoint', $json_data['value']['PtzGuard']['bexistPos']);
                     $camcmd->checkAndUpdateCmd('SetAutoReturnPtzGuardPointState', $json_data['value']['PtzGuard']['benable']);
                     $camcmd->checkAndUpdateCmd('SetIntervalAutoReturnPtzGuardPointState', $json_data['value']['PtzGuard']['timeout']);
                     break;

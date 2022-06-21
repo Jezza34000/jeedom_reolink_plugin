@@ -28,27 +28,23 @@ Non-supportés :
   * Donner un nom à l'équipement
   * Renseigner les champs ci-dessous :
     * IP / Nom d'hôte
-    * Login 
+    * Port HTTP/HTTPS (ce champ est facultatif, à renseigner uniquement si vous avez personnaliser le port d'accès à l'interface web)
+    * Login
+    * Port ONVIF (par défaut 8000, à modifier uniquement si vous avez personnaliser le port d'accès au protocole ONVIF )
     * Mot de passe
     * Type de connexion (http/https)
-  * Cliquer sur **"Tester la connexion"** : ![image](https://user-images.githubusercontent.com/54839700/174433973-af0f7a4a-4947-4dec-9a98-2836cae5e534.png)
 
-  * Sauvegarder l'équipement en cliquant sur **"Sauvergarder"** ![image](https://user-images.githubusercontent.com/54839700/174434052-44ac9904-3bfa-4afa-a20f-4cd669d4c636.png)
+  * Sauvegardez l'équipement en cliquant sur **"Sauvegarder"** ![image](https://user-images.githubusercontent.com/54839700/174434052-44ac9904-3bfa-4afa-a20f-4cd669d4c636.png)
 
-**PUIS**
+Vous pouvez tester si les paramètres sont correctes et si le plugin arrive à accéder à votre caméra via le bouton :  **"Tester la connexion"** : ![image](https://user-images.githubusercontent.com/54839700/174433973-af0f7a4a-4947-4dec-9a98-2836cae5e534.png)
 
-* Récupérer les informations de la caméra : bouton ![image](https://user-images.githubusercontent.com/54839700/174434125-261308a3-c8a7-4689-9095-0a5d56177449.png)
-* Sauvegarder l'équipement en cliquant sur **"Sauvergarder"** ![image](https://user-images.githubusercontent.com/54839700/174434052-44ac9904-3bfa-4afa-a20f-4cd669d4c636.png)
-
-**ENFIN**
-
-* Générer les commandes de la caméra : bouton ![image](https://user-images.githubusercontent.com/54839700/174434177-5f433dc2-91b5-4cdb-9bcc-8a42d6a48f0d.png)
-* Sauvegarder l'équipement en cliquant sur **"Sauvergarder"** ![image](https://user-images.githubusercontent.com/54839700/174434052-44ac9904-3bfa-4afa-a20f-4cd669d4c636.png)
+* Récupérez les informations de la caméra : bouton ![image](https://user-images.githubusercontent.com/54839700/174434125-261308a3-c8a7-4689-9095-0a5d56177449.png)
+* Générez les commandes de la caméra : bouton ![image](https://user-images.githubusercontent.com/54839700/174434177-5f433dc2-91b5-4cdb-9bcc-8a42d6a48f0d.png)
 
 
 **!! NB TRES IMPORTANT !! :**
  <BR>
-  Lors de mise(s) à jour du plugin Reolink, de nouvelles commandes peuvent être ajouter (cf Changelog du plugin) pour faciliter une meilleure gestion de la caméra.
+  Lors de mise(s) à jour du plugin Reolink, de nouvelles commandes peuvent être ajouter (cf. Changelog du plugin) pour faciliter une meilleure gestion de la caméra.
   **Pour bénéficier les nouvelles commandes, relancer le processus de création de commandes pour chacun de la(les) caméra(s)**
 
 <BR><P>
@@ -76,7 +72,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [x] Obtention des capacités hardware/software de la caméra
 - [ ] Auto Reboot
   - [x] Activation/Désactivation Auto Reboot
-  - [ ] Planning Auto Reboot 
+  - [ ] Planning Auto Reboot
 - [ ] Gestion des utilisateurs (ajout/supression/modification)
 - [ ] Gestion de l'heure
 - [ ] Restaurer la config par défaut
@@ -161,9 +157,9 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [ ] Push (cameras AI **ET** non-AI)
   - [x] Activation/désactivation Push
   - [ ] Planning Push
- 
+
  - [x] Activation/désactivation Enregistrement audio
- 
+
 #### Detection de mouvement
 - [x] Remontée des détections de mouvements en temps-réel (ONVIF)
 - [x] Activation/désactivation AI Track
@@ -191,6 +187,6 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 
 (1): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportPtzCheck" : E1Outdoor, RLC-523WA et RLC-823A UNIQUEMENT
 
-(2): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportAudioAlarm" 
- 
+(2): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportAudioAlarm"
+
 (3): Ne fonctionne qu'avec les **Cameras AI** ayant la fonctionnalité (Ability) "ptzPreset" ET les commandes Get(Set)PtzGuard intégrées aux firmwares : E1Outdoor, RLC-523WA et RLC-823A UNIQUEMENT

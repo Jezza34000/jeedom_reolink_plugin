@@ -602,7 +602,7 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetWhiteLedMode"
-		},		
+		},
 		{
 			"abilityneed":"supportFLBrightness",
 			"name": "Intensité Led Blanche (valeur)",
@@ -1626,7 +1626,7 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "driveType"
-		},	
+		},
 		{
 			"abilityneed":"aiTrack",
 			"name": "Suivi AI (état)",
@@ -1784,9 +1784,9 @@
 		{
 			"abilityneed":"ptzPreset",
 			"iastate":1,
-			"name": "Statut Point de garde (état)",
+			"name": "Point de garde défini (état)",
 			"type": "info",
-			"subtype": "string",
+			"subtype": "binary",
 			"configuration": {
 				"payload": "{\"cmd\":\"GetPtzGuard\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
@@ -1884,6 +1884,6 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetIntervalAutoReturnPtzGuardPoint"
-		}	
+		}
 	]
 }
