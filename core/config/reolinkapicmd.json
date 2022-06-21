@@ -39,12 +39,12 @@
 				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetCodecRateState"
 		},
 		{
 			"abilityneed":"performance",
-			"name": "Utilisation CPU",
+			"name": "Charge CPU",
 			"type": "info",
 			"subtype": "numeric",
 			"Unite": "%",
@@ -54,19 +54,19 @@
 				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetCpuUsedState"
 		},
 		{
 			"abilityneed":"performance",
-			"name": "Debit réseau (Kbps)",
+			"name": "Débit réseau (Kbps)",
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
 				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetNetThroughputState"
 		},
 		{
@@ -918,7 +918,7 @@
 				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"FocusPos\"}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetFocus"
 		},
 		{
@@ -1137,7 +1137,7 @@
 		},
 		{
 			"abilityneed":"upnp",
-			"name": "UPNP (état)",
+			"name": "UPnP (état)",
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
@@ -1149,7 +1149,7 @@
 		},
 		{
 			"abilityneed":"upnp",
-			"name": "UPNP",
+			"name": "UPnP",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
