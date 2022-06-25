@@ -11,7 +11,7 @@ Supportes :
 * La série des RLN-xxxx-x
 * La série des DUO
 * La serie des C1 & C2.
-* La E1 Zoom
+* La E1 Zoom et E1 Outdoor
 
 Non-supportés :
 
@@ -46,7 +46,7 @@ Vous pouvez tester si les paramètres sont correctes et si le plugin arrive à a
 **!! NB TRES IMPORTANT !! :**
  <BR>
   Lors de mise(s) à jour du plugin Reolink, de nouvelles commandes peuvent être ajouter (cf. Changelog du plugin) pour faciliter une meilleure gestion de la caméra.
-  **Pour bénéficier les nouvelles commandes, relancer le processus de création de commandes pour chacun de la(les) caméra(s)**
+  **Pour bénéficier des nouvelles commandes, relancer le processus de création de commandes pour chacun de la (des) caméra(s)**
 
 <BR><P>
 
@@ -96,7 +96,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
   - [x] Utilisation des presets PTZ
 - [ ] PTZ Patrol
   - [x] Activation/Désactivation du PTZ Patrol
-  - [ ] Gestion PTZ Patro
+  - [ ] Gestion PTZ Patrol
 - [X] PTZ Guard (3)
   - [X] Etat du point de garde
   - [X] Création/Actualisation du point de garde
