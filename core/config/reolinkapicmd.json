@@ -1656,6 +1656,37 @@
 			"logicalId": "SetaiTrack"
 		},
 		{
+			"abilityneed":"alarmMd",
+			"name": "Sensibilité par défaut Detection Mouvement (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"revertvalue" : "51",
+				"payload": "{\"cmd\":\"GetMdAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetMdDefaultSensitivityState"
+		},
+		{
+			"abilityneed":"alarmMd",
+			"name": "Sensibilité par défaut Detection Mouvement",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": "1",
+				"maxValue" : "50",
+				"revertvalue" : "51",
+				"valueFrom" : "SetMdDefaultSensitivityState",
+				"actionapi": "SetMdAlarm",
+				"payload": "{\"MdAlarm\":{\"channel\":#CHANNEL#,\"newSens\":{\"sensDef\":#OPTR_SLIDER#},\"useNewSens\":1}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetMdDefaultSensitivity"
+		},
+		{
 			"abilityneed":"supportAiSensitivity",
 			"iastate":1,
 			"name": "Sensibilité Detection Personne (valeur)",
@@ -1784,7 +1815,7 @@
 		{
 			"abilityneed":"ptzPreset",
 			"iastate":1,
-			"name": "Point de garde défini (état)",
+			"name": "Point de garde (état)",
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
@@ -1856,7 +1887,7 @@
 		{
 			"abilityneed":"ptzPreset",
 			"iastate":1,
-			"name": "Délai Retour auto. au point de garde (état)",
+			"name": "Délai Retour auto. au point de garde (valeur)",
 			"type": "info",
 			"subtype": "numeric",
 			"Unite": "s",
