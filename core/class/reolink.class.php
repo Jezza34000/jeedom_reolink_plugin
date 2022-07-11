@@ -212,6 +212,21 @@ class reolink extends eqLogic {
       }
     }
 
+    public static function getRevertValue($id,$EqLId) {
+        foreach (reolinkCmd::byEqLogicId($id) as $cmd) {
+            $cmdLId = $cmd->getLogicalId();
+            if ($cmd->getType() == "info" && $cmdLId == $EqLId) {
+              $RVval = $cmd->getConfiguration('revertvalue');
+              log::add('reolink', 'debug', 'cmdLId : ' . $cmdLId . ' -> revertvalue : ' . $RVval);
+            }
+        }
+        if ($RVval != NULL) {
+          return $RVval;
+        } else {
+          return false;
+        }
+    }
+
     public static function refreshNFO($id) {
         $camcmd = reolink::byId($id, 'reolink');
         $camcnx = reolink::getReolinkConnection($id);
@@ -460,6 +475,12 @@ class reolink extends eqLogic {
 
                   case reolinkAPI::CAM_GET_AICFG:
                     $camcmd->checkAndUpdateCmd('SetaiTrackState', $json_data['value']['aiTrack']);
+                    break;
+
+                  case reolinkAPI::CAM_GET_MDALARM:
+                    $revert_value = reolink::getRevertValue($id,'SetMdDefaultSensitivityState');
+                    $mdsensdef = ($revert_value - ((int) $json_data['value']['MdAlarm']['newSens']['sensDef']));
+                    $camcmd->checkAndUpdateCmd('SetMdDefaultSensitivityState', $mdsensdef);
                     break;
 
                   case reolinkAPI::CAM_GET_AIALARM:
