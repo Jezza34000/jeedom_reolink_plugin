@@ -212,21 +212,6 @@ class reolink extends eqLogic {
       }
     }
 
-    public static function getRevertValue($id,$EqLId) {
-        foreach (reolinkCmd::byEqLogicId($id) as $cmd) {
-            $cmdLId = $cmd->getLogicalId();
-            if ($cmd->getType() == "info" && $cmdLId == $EqLId) {
-              $RVval = $cmd->getConfiguration('revertvalue');
-              log::add('reolink', 'debug', 'cmdLId : ' . $cmdLId . ' -> revertvalue : ' . $RVval);
-            }
-        }
-        if ($RVval != NULL) {
-          return $RVval;
-        } else {
-          return false;
-        }
-    }
-
     public static function refreshNFO($id) {
         $camcmd = reolink::byId($id, 'reolink');
         $camcnx = reolink::getReolinkConnection($id);
@@ -238,10 +223,7 @@ class reolink extends eqLogic {
 
         log::add('reolink', 'debug', 'Rafraichissement des informations de la caméra...');
 
-        $channel = $camcmd->getConfiguration('defined_channel');
-        if ($channel == NULL) {
-          $channel = 0;
-        }
+        $channel = $camcmd->getConfiguration('defined_channel', 0);
 
         // Prepare request with INFO needed
         foreach (reolinkCmd::byEqLogicId($id) as $cmd) {
@@ -250,8 +232,7 @@ class reolink extends eqLogic {
                 $payload = str_replace('#CHANNEL#', $channel, $payload);
                 $payload = str_replace('\\', '', $payload);
 
-                if (!in_array($payload, $cmdarr))
-                {
+                if (!in_array($payload, $cmdarr)){
                     $cmdarr[] = $payload;
                 }
                 $cmd_block = array_chunk($cmdarr, config::byKey('cmdblock', __CLASS__, CMD_SEND_QTY));
@@ -478,8 +459,8 @@ class reolink extends eqLogic {
                     break;
 
                   case reolinkAPI::CAM_GET_MDALARM:
-                    $revert_value = reolink::getRevertValue($id,'SetMdDefaultSensitivityState');
-                    $mdsensdef = ($revert_value - ((int) $json_data['value']['MdAlarm']['newSens']['sensDef']));
+                    $revert_value = reolinkCmd::byEqLogicIdAndLogicalId($id,'SetMdDefaultSensitivityState')->getConfiguration('revertvalue', 0);
+                    $mdsensdef = $revert_value - $json_data['value']['MdAlarm']['newSens']['sensDef'];
                     $camcmd->checkAndUpdateCmd('SetMdDefaultSensitivityState', $mdsensdef);
                     break;
 
