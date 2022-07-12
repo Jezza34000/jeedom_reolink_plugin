@@ -622,8 +622,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "0",
-				"maxValue" : "100",
+				"minValue": 0,
+				"maxValue" : 100,
 				"valueFrom" : "SetWhitLedLuxState",
 				"actionapi": "SetWhiteLed",
 				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"bright\":#OPTSLIDER#}}"
@@ -854,10 +854,10 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "1",
-				"maxValue" : "64",
-				"setValue": "32",
-				"speedvalue":"32"
+				"minValue": 1,
+				"maxValue" : 64,
+				"setValue": 32,
+				"speedvalue":32
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -882,8 +882,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "0",
-				"maxValue" : "249",
+				"minValue": 0,
+				"maxValue" : 249,
 				"valueFrom" : "SetZoomState",
 				"actionapi": "StartZoomFocus",
 				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"ZoomPos\"}}"
@@ -993,8 +993,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "0",
-				"maxValue" : "100",
+				"minValue": 0,
+				"maxValue" : 100,
 				"valueFrom" : "SetSirenVolumeState",
 				"actionapi": "SetAudioCfg",
 				"payload": "{\"AudioCfg\":{\"channel\":#CHANNEL#,\"volume\":#OPTSLIDER#}}"
@@ -1250,8 +1250,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "1",
-				"maxValue" : "255",
+				"minValue": 1,
+				"maxValue" : 255,
 				"valueFrom" : "SetBrightState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"bright\":#OPTSLIDER#}}"
@@ -1279,8 +1279,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "1",
-				"maxValue" : "255",
+				"minValue": 1,
+				"maxValue" : 255,
 				"valueFrom" : "SetContrastState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"contrast\":#OPTSLIDER#}}"
@@ -1308,8 +1308,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "1",
-				"maxValue" : "255",
+				"minValue": 1,
+				"maxValue" : 255,,
 				"valueFrom" : "SetSaturationState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"saturation\":#OPTSLIDER#}}"
@@ -1337,8 +1337,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "1",
-				"maxValue" : "255",
+				"minValue": 1,
+				"maxValue" : 255,
 				"valueFrom" : "SetHueState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"hue\":#OPTSLIDER#}}"
@@ -1366,8 +1366,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "1",
-				"maxValue" : "255",
+				"minValue": 1,
+				"maxValue" : 255,
 				"valueFrom" : "SetSharpenState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"sharpen\":#OPTSLIDER#}}"
@@ -1661,7 +1661,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"revertvalue" : "51",
+				"revertvalue" : 51,
+				"minValue": 1,
+				"maxValue" : 50,
 				"payload": "{\"cmd\":\"GetMdAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
@@ -1675,15 +1677,15 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "1",
-				"maxValue" : "50",
-				"revertvalue" : "51",
+				"minValue": 1,
+				"maxValue" : 50,
+				"revertvalue" : 51,
 				"valueFrom" : "SetMdDefaultSensitivityState",
 				"actionapi": "SetMdAlarm",
 				"payload": "{\"MdAlarm\":{\"channel\":#CHANNEL#,\"newSens\":{\"sensDef\":#OPTR_SLIDER#},\"useNewSens\":1}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetMdDefaultSensitivity"
 		},
 		{
@@ -1707,8 +1709,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "0",
-				"maxValue" : "100",
+				"minValue": 0,
+				"maxValue" : 100,
 				"valueFrom" : "SetSdSensitivityPeopleState",
 				"actionapi": "SetAiAlarm",
 				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"people\"}}"
@@ -1738,8 +1740,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "0",
-				"maxValue" : "100",
+				"minValue": 0,
+				"maxValue" : 100,
 				"valueFrom" : "SetSdSensitivityVehicleState",
 				"actionapi": "SetAiAlarm",
 				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"vehicle\"}}"
@@ -1770,8 +1772,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "0",
-				"maxValue" : "8",
+				"minValue": 0,
+				"maxValue" : 8,
 				"valueFrom" : "SetAlarmDelayPeopleState",
 				"actionapi": "SetAiAlarm",
 				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"people\"}}"
@@ -1802,8 +1804,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "0",
-				"maxValue" : "8",
+				"minValue": 0,
+				"maxValue" : 8,
 				"valueFrom" : "SetAlarmDelayVehicleState",
 				"actionapi": "SetAiAlarm",
 				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"vehicle\"}}"
@@ -1906,8 +1908,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "10",
-				"maxValue" : "300",
+				"minValue": 10,
+				"maxValue" : 300,
 				"valueFrom" : "SetIntervalAutoReturnPtzGuardPointState",
 				"actionapi": "SetPtzGuard",
 				"payload": "{\"PtzGuard\":{\"benable\":1,\"channel\":#CHANNEL#,\"timeout\":#OPTSLIDER#,\"cmdStr\":\"setPos\"}}"
