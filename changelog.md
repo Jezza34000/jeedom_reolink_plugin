@@ -1,5 +1,8 @@
 # Change log
 
+12/06/2022
+- Merge Pull request depuis @Micka41 (Ajout de la commande Mode led blanche)
+
 10/06/2022
 - Sur la page équipement : ajout des informations des ports, et s'il sont activés ou pas (si la caméra remonte l'information)
 - Daemon : ajout de vérification supplémentaire pour contrôler si la caméra répond au ping, et si le port ONVIF est actif.
