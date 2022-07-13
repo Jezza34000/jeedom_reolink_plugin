@@ -167,7 +167,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 
 - [ ] Configuration de la Détection de mouvement
   - [ ] Configuration de la zone de detection de mouvement (cameras AI **ET** non-AI)
-  - [ ] Sensibilité par défaut (cameras AI **ET** non-AI)
+  - [x] Sensibilité par défaut (cameras AI **ET** non-AI)
   - [ ] Planning Sensibilité (cameras AI **ET** non-AI)
   - [x] Sensibilité Detection intelligente Personne **(cameras AI)**
   - [x] Sensibilité Detection intelligente Véhicule **(cameras AI)**
