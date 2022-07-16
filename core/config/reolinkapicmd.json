@@ -1309,7 +1309,7 @@
 			"configuration": {
 				"option": "slider",
 				"minValue": 1,
-				"maxValue" : 255,,
+				"maxValue" : 255,
 				"valueFrom" : "SetSaturationState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"saturation\":#OPTSLIDER#}}"
