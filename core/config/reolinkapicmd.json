@@ -39,12 +39,12 @@
 				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetCodecRateState"
 		},
 		{
 			"abilityneed":"performance",
-			"name": "Utilisation CPU",
+			"name": "Charge CPU",
 			"type": "info",
 			"subtype": "numeric",
 			"Unite": "%",
@@ -54,19 +54,19 @@
 				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetCpuUsedState"
 		},
 		{
 			"abilityneed":"performance",
-			"name": "Debit réseau (Kbps)",
+			"name": "Débit réseau (Kbps)",
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
 				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetNetThroughputState"
 		},
 		{
@@ -249,36 +249,36 @@
 			"isVisible": 1,
 			"logicalId": "SetPreRecord"
 		},
-    {
-      "abilityneed":"sdCard",
-      "iastate":1,
-      "name": "Enregistrement avant détection AI (état)",
-      "type": "info",
-      "subtype": "binary",
-      "configuration": {
-              "payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
-      },
-      "IsHistorized": 0,
-      "isVisible": 0,
-      "logicalId": "SetPreRecordStateV20"
-    },
-    {
-      "abilityneed":"sdCard",
-      "iastate":1,
-      "name": "Enregistrement avant détection AI",
-      "type": "action",
-      "subtype": "select",
-      "configuration": {
-              "option": "select",
-              "listValue": "0|Désactiver;1|Activer",
-              "valueFrom" : "SetPreRecordStateV20",
-              "actionapi": "SetRecV20",
-              "payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"preRec\":#OPTSELECTEDINT#}}"
-      },
-      "IsHistorized": 0,
-      "isVisible": 1,
-      "logicalId": "SetPreRecordV20"
-    },
+ 		{
+			"abilityneed":"sdCard",
+			"iastate":1,
+			"name": "Enregistrement avant détection AI (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetPreRecordStateV20"
+		},
+		{
+			"abilityneed":"sdCard",
+			"iastate":1,
+			"name": "Enregistrement avant détection AI",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|Désactiver;1|Activer",
+				"valueFrom" : "SetPreRecordStateV20",
+				"actionapi": "SetRecV20",
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"preRec\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetPreRecordV20"
+		},
 		{
 			"abilityneed":"sdCard",
 			"iastate":0,
@@ -309,36 +309,36 @@
 			"isVisible": 1,
 			"logicalId": "SetOverwrite"
 		},
-                {
-                        "abilityneed":"sdCard",
-                        "iastate":1,
-                        "name": "Ecraser les enregistrements AI (état)",
-                        "type": "info",
-                        "subtype": "binary",
-                        "configuration": {
-                                "payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
-                        },
-                        "IsHistorized": 0,
-                        "isVisible": 0,
-                        "logicalId": "SetOverwriteStateV20"
-                },
-                {
-                        "abilityneed":"sdCard",
-                        "iastate":1,
-                        "name": "Ecraser les enregistrements AI",
-                        "type": "action",
-                        "subtype": "select",
-                        "configuration": {
-                                "option": "select",
-                                "listValue": "0|Désactiver;1|Activer",
-                                "valueFrom" : "SetOverwriteStateV20",
-                                "actionapi": "SetRecV20",
-                                "payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"overwrite\":#OPTSELECTEDINT#}}"
-                        },
-                        "IsHistorized": 0,
-                        "isVisible": 1,
-                        "logicalId": "SetOverwriteV20"
-                },
+		{
+			"abilityneed":"sdCard",
+			"iastate":1,
+			"name": "Ecraser les enregistrements AI (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetOverwriteStateV20"
+		},
+		{
+			"abilityneed":"sdCard",
+			"iastate":1,
+			"name": "Ecraser les enregistrements AI",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|Désactiver;1|Activer",
+				"valueFrom" : "SetOverwriteStateV20",
+				"actionapi": "SetRecV20",
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"overwrite\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetOverwriteV20"
+		},
 		{
 			"abilityneed":"sdCard",
 			"iastate":0,
@@ -369,36 +369,36 @@
 			"isVisible": 1,
 			"logicalId": "SetPostRecord"
 		},
-                {
-                        "abilityneed":"sdCard",
-                        "iastate":1,
-                        "name": "Durée enregistrement après détection AI (état)",
-                        "type": "info",
-                        "subtype": "string",
-                        "configuration": {
-                                "payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
-                        },
-                        "IsHistorized": 0,
-                        "isVisible": 0,
-                        "logicalId": "SetPostRecordStateV20"
-                },
-                {
-                        "abilityneed":"sdCard",
-                        "iastate":1,
-                        "name": "Durée enregistrement après détection AI",
-                        "type": "action",
-                        "subtype": "select",
-                        "configuration": {
-                                "option": "select",
-                                "listValue": "15 Seconds|15 Sec;30 Seconds|30 Sec;1 Minute|1 Min;10 Minutes|10 Min",
-                                "valueFrom" : "SetPostRecordStateV20",
-                                "actionapi": "SetRecV20",
-                                "payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"postRec\":#OPTSELECTEDSTR#}}"
-                        },
-                        "IsHistorized": 0,
-                        "isVisible": 1,
-                        "logicalId": "SetPostRecordV20"
-                },
+		{
+			"abilityneed":"sdCard",
+			"iastate":1,
+			"name": "Durée enregistrement après détection AI (état)",
+			"type": "info",
+			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetPostRecordStateV20"
+		},
+		{
+			"abilityneed":"sdCard",
+			"iastate":1,
+			"name": "Durée enregistrement après détection AI",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "15 Seconds|15 Sec;30 Seconds|30 Sec;1 Minute|1 Min;10 Minutes|10 Min",
+				"valueFrom" : "SetPostRecordStateV20",
+				"actionapi": "SetRecV20",
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"postRec\":#OPTSELECTEDSTR#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetPostRecordV20"
+		},
 		{
 			"abilityneed":"email",
 			"iastate":0,
@@ -525,8 +525,8 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-                                "payload": "{\"cmd\":\"GetIrLights\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
-                        },
+				"payload": "{\"cmd\":\"GetIrLights\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetIrLightsState"
@@ -552,6 +552,9 @@
 			"name": "Led blanche (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetWhiteLed\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetWhitLedState"
@@ -577,18 +580,21 @@
 			"name": "Led blanche (mode)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetWhiteLed\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetWhiteLedModeState"
 		},
 		{
 			"abilityneed":"supportFLswitch",
-			"name": "Mode led blanche",
+			"name": "Mode nuit led blanche",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "1|Auto;0|Manuel",
+				"listValue": "1|Auto;0|Désactiver",
 				"valueFrom" : "SetWhiteLedModeState",
 				"actionapi": "SetWhiteLed",
 				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"mode\":#OPTSELECTEDINT#}}"
@@ -596,10 +602,10 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetWhiteLedMode"
-		},		
+		},
 		{
-			"abilityneed":"supportFLswitch",
-			"name": "Luminosite Led Blanche (valeur)",
+			"abilityneed":"supportFLBrightness",
+			"name": "Intensité Led Blanche (valeur)",
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
@@ -610,14 +616,14 @@
 			"logicalId": "SetWhitLedLuxState"
 		},
 		{
-			"abilityneed":"supportFLswitch",
-			"name": "Luminosite Led Blanche",
+			"abilityneed":"supportFLBrightness",
+			"name": "Intensité Led Blanche",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "0",
-				"maxValue" : "100",
+				"minValue": 0,
+				"maxValue" : 100,
 				"valueFrom" : "SetWhitLedLuxState",
 				"actionapi": "SetWhiteLed",
 				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"bright\":#OPTSLIDER#}}"
@@ -848,10 +854,10 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "1",
-				"maxValue" : "64",
-				"setValue": "32",
-				"speedvalue":"32"
+				"minValue": 1,
+				"maxValue" : 64,
+				"setValue": 32,
+				"speedvalue":32
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -876,8 +882,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "0",
-				"maxValue" : "249",
+				"minValue": 0,
+				"maxValue" : 249,
 				"valueFrom" : "SetZoomState",
 				"actionapi": "StartZoomFocus",
 				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"ZoomPos\"}}"
@@ -912,7 +918,7 @@
 				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"FocusPos\"}}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetFocus"
 		},
 		{
@@ -956,47 +962,47 @@
 			"logicalId": "SetPtzCheckState"
 		},
 		{
-      "abilityneed":"supportAudioAlarm",
-      "name": "Déclencher la sirène",
-      "type": "action",
-      "subtype": "other",
-      "configuration": {
-              "actionapi": "AudioAlarmPlay",
-              "payload": "{\"channel\":#CHANNEL#,\"alarm_mode\":\"times\",\"times\":1}"
-      },
-      "IsHistorized": 0,
-      "isVisible": 1,
-      "logicalId": "AudioAlarmPlayTimes"
+			"abilityneed":"supportAudioAlarm",
+			"name": "Déclencher la sirène",
+			"type": "action",
+			"subtype": "other",
+			"configuration": {
+				"actionapi": "AudioAlarmPlay",
+				"payload": "{\"channel\":#CHANNEL#,\"alarm_mode\":\"times\",\"times\":1}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "AudioAlarmPlayTimes"
 		},
-    {
-      "abilityneed":"supportAudioAlarm",
-      "name": "Volume sirène (état)",
-      "type": "info",
-      "subtype": "numeric",
-      "configuration": {
-              "payload": "{\"cmd\":\"GetAudioCfg\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
-      },
-      "IsHistorized": 0,
-      "isVisible": 0,
-      "logicalId": "SetSirenVolumeState"
-    },
-    {
-      "abilityneed":"supportAudioAlarm",
-      "name": "Volume sirène",
-      "type": "action",
-      "subtype": "slider",
-      "configuration": {
-              "option": "slider",
-              "minValue": "0",
-              "maxValue" : "100",
-              "valueFrom" : "SetSirenVolumeState",
-              "actionapi": "SetAudioCfg",
-              "payload": "{\"AudioCfg\":{\"channel\":#CHANNEL#,\"volume\":#OPTSLIDER#}}"
-      },
-      "IsHistorized": 0,
-      "isVisible": 1,
-      "logicalId": "SetSirenVolume"
-    },
+		{
+			"abilityneed":"supportAudioAlarm",
+			"name": "Volume sirène (état)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAudioCfg\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetSirenVolumeState"
+		},
+		{
+			"abilityneed":"supportAudioAlarm",
+			"name": "Volume sirène",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 0,
+				"maxValue" : 100,
+				"valueFrom" : "SetSirenVolumeState",
+				"actionapi": "SetAudioCfg",
+				"payload": "{\"AudioCfg\":{\"channel\":#CHANNEL#,\"volume\":#OPTSLIDER#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetSirenVolume"
+		},
 		{
 			"abilityneed":"ispMirror",
 			"name": "Retourner verticalement (état)",
@@ -1033,18 +1039,18 @@
 			"isVisible": 0,
 			"logicalId": "SetBacklightState"
 		},
-    {
-      "abilityneed":"ispExposureMode",
-      "name": "Exposition (état)",
-      "type": "info",
-      "subtype": "string",
-      "configuration": {
-              "payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
-      },
-      "IsHistorized": 0,
-      "isVisible": 0,
-      "logicalId": "SetExposureState"
-    },
+		{
+			"abilityneed":"ispExposureMode",
+			"name": "Exposition (état)",
+			"type": "info",
+			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetExposureState"
+		},
 		{
 			"abilityneed":"isp",
 			"name": "Jour Nuit (état)",
@@ -1131,7 +1137,7 @@
 		},
 		{
 			"abilityneed":"upnp",
-			"name": "UPNP (état)",
+			"name": "UPnP (état)",
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
@@ -1143,7 +1149,7 @@
 		},
 		{
 			"abilityneed":"upnp",
-			"name": "UPNP",
+			"name": "UPnP",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
@@ -1244,8 +1250,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "1",
-				"maxValue" : "255",
+				"minValue": 1,
+				"maxValue" : 255,
 				"valueFrom" : "SetBrightState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"bright\":#OPTSLIDER#}}"
@@ -1273,8 +1279,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "1",
-				"maxValue" : "255",
+				"minValue": 1,
+				"maxValue" : 255,
 				"valueFrom" : "SetContrastState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"contrast\":#OPTSLIDER#}}"
@@ -1302,8 +1308,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "1",
-				"maxValue" : "255",
+				"minValue": 1,
+				"maxValue" : 255,,
 				"valueFrom" : "SetSaturationState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"saturation\":#OPTSLIDER#}}"
@@ -1331,8 +1337,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "1",
-				"maxValue" : "255",
+				"minValue": 1,
+				"maxValue" : 255,
 				"valueFrom" : "SetHueState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"hue\":#OPTSLIDER#}}"
@@ -1360,8 +1366,8 @@
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
-				"minValue": "1",
-				"maxValue" : "255",
+				"minValue": 1,
+				"maxValue" : 255,
 				"valueFrom" : "SetSharpenState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"sharpen\":#OPTSLIDER#}}"
@@ -1620,7 +1626,7 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "driveType"
-		},	
+		},
 		{
 			"abilityneed":"aiTrack",
 			"name": "Suivi AI (état)",
@@ -1648,6 +1654,269 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetaiTrack"
-		}	
+		},
+		{
+			"abilityneed":"alarmMd",
+			"name": "Sensibilité par défaut Detection Mouvement (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"revertvalue" : 51,
+				"minValue": 1,
+				"maxValue" : 50,
+				"payload": "{\"cmd\":\"GetMdAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetMdDefaultSensitivityState"
+		},
+		{
+			"abilityneed":"alarmMd",
+			"name": "Sensibilité par défaut Detection Mouvement",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 1,
+				"maxValue" : 50,
+				"revertvalue" : 51,
+				"valueFrom" : "SetMdDefaultSensitivityState",
+				"actionapi": "SetMdAlarm",
+				"payload": "{\"MdAlarm\":{\"channel\":#CHANNEL#,\"newSens\":{\"sensDef\":#OPTR_SLIDER#},\"useNewSens\":1}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetMdDefaultSensitivity"
+		},
+		{
+			"abilityneed":"supportAiSensitivity",
+			"iastate":1,
+			"name": "Sensibilité Detection Personne (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"people\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetSdSensitivityPeopleState"
+		},
+		{
+			"abilityneed":"supportAiSensitivity",
+			"iastate":1,
+			"name": "Sensibilité Detection Personne",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 0,
+				"maxValue" : 100,
+				"valueFrom" : "SetSdSensitivityPeopleState",
+				"actionapi": "SetAiAlarm",
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"people\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetSdSensitivityPeople"
+		},
+		{
+			"abilityneed":"supportAiSensitivity",
+			"iastate":1,
+			"name": "Sensibilité Detection Véhicule (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"vehicle\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetSdSensitivityVehicleState"
+		},
+		{
+			"abilityneed":"supportAiSensitivity",
+			"iastate":1,
+			"name": "Sensibilité Detection Véhicule",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 0,
+				"maxValue" : 100,
+				"valueFrom" : "SetSdSensitivityVehicleState",
+				"actionapi": "SetAiAlarm",
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"vehicle\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetSdSensitivityVehicle"
+		},
+		{
+			"abilityneed":"supportAiStayTime",
+			"iastate":1,
+			"name": "Délai Alarme Personne (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"Unite": "s",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"people\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAlarmDelayPeopleState"
+		},
+		{
+			"abilityneed":"supportAiStayTime",
+			"iastate":1,
+			"name": "Délai Alarme Personne",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 0,
+				"maxValue" : 8,
+				"valueFrom" : "SetAlarmDelayPeopleState",
+				"actionapi": "SetAiAlarm",
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"people\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetAlarmDelayPeople"
+		},
+		{
+			"abilityneed":"supportAiStayTime",
+			"iastate":1,
+			"name": "Délai Alarme Véhicule (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"Unite": "s",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"vehicle\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAlarmDelayVehicleState"
+		},
+		{
+			"abilityneed":"supportAiStayTime",
+			"iastate":1,
+			"name": "Délai Alarme Véhicule",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 0,
+				"maxValue" : 8,
+				"valueFrom" : "SetAlarmDelayVehicleState",
+				"actionapi": "SetAiAlarm",
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"vehicle\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetAlarmDelayVehicle"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"iastate":1,
+			"name": "Point de garde (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetPtzGuard\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "CheckIsExistsPtzGuardPoint"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"iastate":1,
+			"name": "Définir/Actualiser le point de garde",
+			"type": "action",
+			"subtype": "other",
+			"configuration": {
+				"actionapi": "SetPtzGuard",
+				"payload": "{\"PtzGuard\":{\"channel\":#CHANNEL#,\"bSaveCurrentPos\":1,\"cmdStr\":\"setPos\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetPtzGuardPoint"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"iastate":1,
+			"name": "Retourner au point de garde",
+			"type": "action",
+			"subtype": "other",
+			"configuration": {
+				"actionapi": "SetPtzGuard",
+				"payload": "{\"PtzGuard\":{\"channel\":#CHANNEL#,\"cmdStr\":\"toPos\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "ToPosPtzGuardPoint"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"iastate":1,
+			"name": "Retour automatique au point de garde (état)",
+			"type": "info",
+			"subtype": "binary",
+			"Unite": "s",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetPtzGuard\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAutoReturnPtzGuardPointState"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"iastate":1,
+			"name": "Retour automatique au point de garde",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetAutoReturnPtzGuardPointState",
+				"actionapi": "SetPtzGuard",
+				"payload": "{\"PtzGuard\":{\"benable\":#OPTSELECTEDINT#,\"channel\":#CHANNEL#,\"cmdStr\":\"setPos\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetAutoReturnPtzGuardPoint"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"iastate":1,
+			"name": "Délai Retour auto. au point de garde (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"Unite": "s",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetPtzGuard\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetIntervalAutoReturnPtzGuardPointState"
+		},
+		{
+			"abilityneed":"ptzPreset",
+			"iastate":1,
+			"name": "Délai Retour auto. au point de garde",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 10,
+				"maxValue" : 300,
+				"valueFrom" : "SetIntervalAutoReturnPtzGuardPointState",
+				"actionapi": "SetPtzGuard",
+				"payload": "{\"PtzGuard\":{\"benable\":1,\"channel\":#CHANNEL#,\"timeout\":#OPTSLIDER#,\"cmdStr\":\"setPos\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetIntervalAutoReturnPtzGuardPoint"
+		}
 	]
 }

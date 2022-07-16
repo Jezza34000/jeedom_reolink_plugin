@@ -223,24 +223,20 @@ class reolink extends eqLogic {
 
         log::add('reolink', 'debug', 'Rafraichissement des informations de la caméra...');
 
-        $channel = $camcmd->getConfiguration('defined_channel');
-        if ($channel == NULL) {
-          $channel = 0;
-        }
+        $channel = $camcmd->getConfiguration('defined_channel', 0);
 
         // Prepare request with INFO needed
         foreach (reolinkCmd::byEqLogicId($id) as $cmd) {
           $payload = $cmd->getConfiguration('payload');
-        	  if ($cmd->getType() == "info" && $payload != NULL) {
+              if ($cmd->getType() == "info" && $payload != NULL) {
                 $payload = str_replace('#CHANNEL#', $channel, $payload);
                 $payload = str_replace('\\', '', $payload);
 
-                if (!in_array($payload, $cmdarr))
-                {
+                if (!in_array($payload, $cmdarr)){
                     $cmdarr[] = $payload;
                 }
                 $cmd_block = array_chunk($cmdarr, config::byKey('cmdblock', __CLASS__, CMD_SEND_QTY));
-        	  }
+              }
         }
 
         foreach($cmd_block as $key => &$value) {
@@ -255,7 +251,7 @@ class reolink extends eqLogic {
             foreach ($res as &$json_data) {
               log::add('reolink', 'debug', 'Lecture info > ' . preg_replace('/\s+/', '', print_r($json_data, true)));
 
-          	  switch ($json_data['cmd']) {
+              switch ($json_data['cmd']) {
                   case reolinkAPI::CAM_GET_REC:
                     $camcmd->checkAndUpdateCmd('SetRecordState', $json_data['value']['Rec']['schedule']['enable']);
                     $camcmd->checkAndUpdateCmd('SetPreRecordState', $json_data['value']['Rec']['preRec']);
@@ -265,10 +261,10 @@ class reolink extends eqLogic {
 
                   case reolinkAPI::CAM_GET_RECV20:
                     $camcmd->checkAndUpdateCmd('SetRecordStateV20', $json_data['value']['Rec']['enable']);
-            	      $camcmd->checkAndUpdateCmd('SetPreRecordStateV20', $json_data['value']['Rec']['preRec']);
-            	      $camcmd->checkAndUpdateCmd('SetOverwriteStateV20', $json_data['value']['Rec']['overwrite']);
-            	      $camcmd->checkAndUpdateCmd('SetPostRecordStateV20', $json_data['value']['Rec']['postRec']);
-            	      break;
+                    $camcmd->checkAndUpdateCmd('SetPreRecordStateV20', $json_data['value']['Rec']['preRec']);
+                    $camcmd->checkAndUpdateCmd('SetOverwriteStateV20', $json_data['value']['Rec']['overwrite']);
+                    $camcmd->checkAndUpdateCmd('SetPostRecordStateV20', $json_data['value']['Rec']['postRec']);
+                    break;
 
                   case reolinkAPI::CAM_GET_HDDINFO:
                     if ($json_data['value']['HddInfo'][0]['format'] == 1 && $json_data['value']['HddInfo'][0]['mount'] == 1) {
@@ -362,11 +358,17 @@ class reolink extends eqLogic {
 
                   case reolinkAPI::CAM_GET_WHITELED:
                     $camcmd->checkAndUpdateCmd('SetWhitLedState', $json_data['value']['WhiteLed']['state']);
-                    $camcmd->checkAndUpdateCmd('SetWhiteLedMode', $json_data['value']['WhiteLed']['mode']);
+                    $camcmd->checkAndUpdateCmd('SetWhiteLedModeState', $json_data['value']['WhiteLed']['mode']);
                     $camcmd->checkAndUpdateCmd('SetWhitLedLuxState', $json_data['value']['WhiteLed']['bright']);
                     break;
 
                   case reolinkAPI::CAM_GET_PTZPRESET:
+                    break;
+
+                  case reolinkAPI::CAM_GET_PTZGUARD:
+                    $camcmd->checkAndUpdateCmd('CheckIsExistsPtzGuardPoint', $json_data['value']['PtzGuard']['bexistPos']);
+                    $camcmd->checkAndUpdateCmd('SetAutoReturnPtzGuardPointState', $json_data['value']['PtzGuard']['benable']);
+                    $camcmd->checkAndUpdateCmd('SetIntervalAutoReturnPtzGuardPointState', $json_data['value']['PtzGuard']['timeout']);
                     break;
 
                   case reolinkAPI::CAM_PTZCHECK:
@@ -403,7 +405,7 @@ class reolink extends eqLogic {
                     $camcmd->checkAndUpdateCmd('SetAudioAlarmStateV20', $json_data['value']['Audio']['enable']);
                     break;
 
-            	    case reolinkAPI::CAM_AUDIOALARMPLAY:
+                  case reolinkAPI::CAM_AUDIOALARMPLAY:
                     break;
 
                   case reolinkAPI::CAM_GET_AUDIOCFG:
@@ -446,14 +448,34 @@ class reolink extends eqLogic {
                     $camcmd->checkAndUpdateCmd('SetFocusState', $json_data['value']['ZoomFocus']['focus']['pos']);
                     break;
 
-                  case reolinkAPI::CAM_PERFORMANCE:
+                  case reolinkAPI::CAM_GET_PERFORMANCE:
                     $camcmd->checkAndUpdateCmd('SetCpuUsedState', $json_data['value']['Performance']['cpuUsed']);
                     $camcmd->checkAndUpdateCmd('SetNetThroughputState', $json_data['value']['Performance']['netThroughput']);
                     $camcmd->checkAndUpdateCmd('SetCodecRateState', $json_data['value']['Performance']['codecRate']);
                     break;
 
                   case reolinkAPI::CAM_GET_AICFG:
-                    $camcmd->checkAndUpdateCmd('SetaiTrack', $json_data['value']['aiTrack']);
+                    $camcmd->checkAndUpdateCmd('SetaiTrackState', $json_data['value']['aiTrack']);
+                    break;
+
+                  case reolinkAPI::CAM_GET_MDALARM:
+                    $revert_value = reolinkCmd::byEqLogicIdAndLogicalId($id,'SetMdDefaultSensitivityState')->getConfiguration('revertvalue', 0);
+                    $mdsensdef = $revert_value - $json_data['value']['MdAlarm']['newSens']['sensDef'];
+                    $camcmd->checkAndUpdateCmd('SetMdDefaultSensitivityState', $mdsensdef);
+                    break;
+
+                  case reolinkAPI::CAM_GET_AIALARM:
+                    switch ($json_data['value']['AiAlarm']['ai_type']) {
+                        case "people":
+                          $camcmd->checkAndUpdateCmd('SetSdSensitivityPeopleState', $json_data['value']['AiAlarm']['sensitivity']);
+                          $camcmd->checkAndUpdateCmd('SetAlarmDelayPeopleState', $json_data['value']['AiAlarm']['stay_time']);
+                          break;
+                        case "vehicle":
+                          $camcmd->checkAndUpdateCmd('SetSdSensitivityVehicleState', $json_data['value']['AiAlarm']['sensitivity']);
+                          $camcmd->checkAndUpdateCmd('SetAlarmDelayVehicleState', $json_data['value']['AiAlarm']['stay_time']);
+                          break;
+                        }
+                    log::add('reolink', 'debug', 'ai_type check : '. $json_data['value']['AiAlarm']['ai_type']);
                     break;
 
                   default:

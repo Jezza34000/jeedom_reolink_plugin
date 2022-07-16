@@ -14,8 +14,6 @@ import templates
 TERMINATION_TIME = 15
 DEFAULT_TIMEOUT = 30
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class Manager:
     """Initialize the Reolink event class."""
@@ -39,7 +37,7 @@ class Manager:
         remote_time += timedelta(seconds=self._time_difference)
 
         diff = self._termination_time - remote_time
-        _LOGGER.debug("SMAN : Host %s should renew in: %i seconds...",
+        logging.debug("SMAN : Host %s should renew in: %i seconds...",
             self._host, diff.seconds
         )
 
@@ -82,7 +80,7 @@ class Manager:
         try:
             async with aiohttp.ClientSession(timeout=self._timeout, trust_env=True,
                                              connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
-                _LOGGER.debug(
+                logging.debug(
                     "SMAN : Reolink host %s (Subscription) request",
                     self._host
                 )
@@ -92,23 +90,23 @@ class Manager:
                 ) as response:
                     response_xml = await response.text()
 
-                    _LOGGER.debug(
+                    logging.debug(
                         "SMAN : Reolink host %s (Subscription) got response status: %s.",
                         self._host, response.status
                     )
                     if response.status == 200:
                         return response_xml
                     else:
-                        _LOGGER.warning("SMAN : Subscription process ended with wrong HTTP status: %s", response.status)
+                        logging.warning("SMAN : Subscription process ended with wrong HTTP status: %s", response.status)
 
                     return
 
         except aiohttp.ClientConnectorError as conn_err:
-            _LOGGER.debug('SMAN : Host %s: Connection error %s', self._host, str(conn_err))
+            logging.debug('SMAN : Host %s: Connection error %s', self._host, str(conn_err))
         except asyncio.TimeoutError:
-            _LOGGER.debug('SMAN : Host %s: connection timeout exception. Please check the connection to this camera.', self._host)
+            logging.debug('SMAN : Host %s: connection timeout exception. Please check the connection to this camera.', self._host)
         except: #pylint: disable=bare-except
-            _LOGGER.debug('SMAN : Host %s: Unknown exception occurred.', self._host)
+            logging.debug('SMAN : Host %s: Unknown exception occurred.', self._host)
         return
 
     async def extract_value(self, data, element):
@@ -137,7 +135,6 @@ class Manager:
 
         response = await self.send(headers, xml)
 
-        print(response)
         if response is None:
             return False
 
@@ -154,7 +151,7 @@ class Manager:
             or remote_time is None
             or self._termination_time is None
         ):
-            _LOGGER.error(
+            logging.error(
                 "SMAN : Host: %s failed to subscribe. Required response parameters not available.",
                 self._host
             )
@@ -162,7 +159,7 @@ class Manager:
 
         self._time_difference = await self.calc_time_difference(local_time, remote_time)
 
-        _LOGGER.debug(
+        logging.debug(
             "SMAN : Local time: %s, camera time: %s (difference: %s), termination time: %s",
             local_time.strftime('%Y-%m-%d %H:%M'), remote_time.strftime('%Y-%m-%d %H:%M'),
             self._time_difference, self._termination_time.strftime('%Y-%m-%d %H:%M')
@@ -202,7 +199,7 @@ class Manager:
         remote_time = await self.convert_time(current_time)
 
         if remote_time is None:
-            _LOGGER.error(
+            logging.error(
                 "SMAN : Host: %s failed to renew subscription. Expected response not available.",
                 self._host
             )
@@ -212,7 +209,7 @@ class Manager:
         self._time_difference = await self.calc_time_difference(local_time, remote_time)
         self._termination_time += timedelta(minutes=TERMINATION_TIME)
 
-        _LOGGER.debug(
+        logging.debug(
             "SMAN : Local time: %s, camera time: %s (difference: %s), termination time: %s",
             local_time.strftime('%Y-%m-%d %H:%M'), remote_time.strftime('%Y-%m-%d %H:%M'),
             self._time_difference, self._termination_time.strftime('%Y-%m-%d %H:%M')

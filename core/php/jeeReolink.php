@@ -31,7 +31,13 @@ try {
                 log::add('reolink', 'debug', 'Evènement MotionState reçu depuis le daemon. Cam IP='.$result['ip'].' état='.$result['motionstate']);
                 $eqLogic->checkAndUpdateCmd('MdState', $result['motionstate']);
             }
-  		}
+          }
+    } elseif (isset($result['message']) && $result['message'] == "subscription") {
+        if ($result['state'] == 0) {
+          $title = 'Plugin Reolink';
+          $message = 'Notification de détection de mouvement indisponible sur la caméra : ' . $result['ip'] . ' ( Détails : ' . $result['details'] . ')';
+          message::add($title, $message);
+        }
     } else {
         log::add('reolink', 'error', 'unknown message received from daemon');
     }

@@ -11,7 +11,7 @@ Supportes :
 * La série des RLN-xxxx-x
 * La série des DUO
 * La serie des C1 & C2.
-* La E1 Zoom
+* La E1 Zoom et E1 Outdoor
 
 Non-supportés :
 
@@ -20,7 +20,37 @@ Non-supportés :
 * Les modèles commencant part Bxxx & Dxxx
 * Le modèle Keen, Lumus, E1 & E1 Pro
 
-### Page de configuration du plufin :
+### Page de configuration d'une caméra :
+
+* Ajouter une camera :<br>
+![image](https://user-images.githubusercontent.com/54839700/174433235-2f7462fa-f868-4391-8916-b88e20cd2643.png)
+
+  * Donner un nom à l'équipement
+  * Renseigner les champs ci-dessous :
+    * IP / Nom d'hôte
+    * Port HTTP/HTTPS (ce champ est facultatif, à renseigner uniquement si vous avez personnaliser le port d'accès à l'interface web)
+    * Login
+    * Port ONVIF (par défaut 8000, à modifier uniquement si vous avez personnaliser le port d'accès au protocole ONVIF )
+    * Mot de passe
+    * Type de connexion (http/https)
+    * Auto-actualisation (cron) (par défaut réglé à 1h, ce CRON sert à actualiser les paramètres globaux de la caméra, il n'influence en rien la remontée de détection de mouvement)
+
+  * Sauvegardez l'équipement en cliquant sur **"Sauvegarder"** ![image](https://user-images.githubusercontent.com/54839700/174434052-44ac9904-3bfa-4afa-a20f-4cd669d4c636.png)
+
+Vous pouvez tester si les paramètres sont correctes et si le plugin arrive à accéder à votre caméra via le bouton :  **"Tester la connexion"** : ![image](https://user-images.githubusercontent.com/54839700/174433973-af0f7a4a-4947-4dec-9a98-2836cae5e534.png)
+
+* Récupérez les informations de la caméra : bouton ![image](https://user-images.githubusercontent.com/54839700/174434125-261308a3-c8a7-4689-9095-0a5d56177449.png)
+* Générez les commandes de la caméra : bouton ![image](https://user-images.githubusercontent.com/54839700/174434177-5f433dc2-91b5-4cdb-9bcc-8a42d6a48f0d.png)
+
+
+**!! NB TRES IMPORTANT !! :**
+ <BR>
+  Lors de mise(s) à jour du plugin Reolink, de nouvelles commandes peuvent être ajouter (cf. Changelog du plugin) pour faciliter une meilleure gestion de la caméra.
+  **Pour bénéficier des nouvelles commandes, relancer le processus de création de commandes pour chacun de la (des) caméra(s)**
+
+<BR><P>
+
+### Page de configuration du plugin :
 
 > **Ces paramètres ne doivent être modifier que si vous rencontrer des problèmes.**
 
@@ -35,30 +65,47 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 ### Listes des fonctions de l'API intégré dans le plugin :
 
 #### Système
-- [x] Login
-- [x] Logout
+- [x] Authentification
+  - [x] Login
+  - [x] Logout
 - [x] Reboot
 - [x] Obtention des informations de la caméra
 - [x] Obtention des capacités hardware/software de la caméra
-- [x] Auto Reboot
+- [ ] Auto Reboot
+  - [x] Activation/Désactivation Auto Reboot
+  - [ ] Planning Auto Reboot
 - [ ] Gestion des utilisateurs (ajout/supression/modification)
 - [ ] Gestion de l'heure
 - [ ] Restaurer la config par défaut
-- [ ] Formattage de l'espace de stockage
+- [ ] Stockage
+  - [x] Etat du stockage
+  - [x] Espace utilisé
+  - [ ] Formattage de l'espace de stockage
 - [x] Contrôle de la Led d'état
 - [ ] Controle des mise à jour logiciel
+- [x] Monitoring de la caméra : Utilisation CPU, Débit codec et Débit réseau
 
 #### PTZ
-- [x] Zoom
-- [x] Focus
+- [x] Zoom/Focus
+  - [x] Zoom
+  - [x] Focus
+  - [X] Activation/Désactivation Auto-Focus
 - [x] Mouvement (Haut/Bas/Gauche/Droite)
-- [x] Récupération des presets PTZ
-- [x] Utilisation des presets PTZ
-- [x] Activation/Désactivation du PTZ Patrol
-- [ ] PTZ Guard
-- [ ] Schéma/Chemin PTZ
+- [x] Presets PTZ
+  - [x] Récupération des presets PTZ
+  - [x] Utilisation des presets PTZ
+- [ ] PTZ Patrol
+  - [x] Activation/Désactivation du PTZ Patrol
+  - [ ] Gestion PTZ Patrol
+- [X] PTZ Guard (3)
+  - [X] Etat du point de garde
+  - [X] Création/Actualisation du point de garde
+  - [X] Activation/Désactivation du retour auto. au point de garde
+  - [X] Réglage du délai de retour auto. au point de garde
 - [ ] PTZ Serial
-- [X] Calibration de la camera (Etat/Exécution) (1)
+- [X] Calibration de la camera (1)
+  - [x] Etat de la calibration
+  - [x] Exécution de la calibration
 
 #### Réseau
 - [ ] IP/DNS/MASQUE
@@ -69,33 +116,67 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 
 #### Image/Vidéo
 - [x] Luminosité, Contraste, Saturation, Teinte, Netteté
-- [x] Retourner Verticalement/Horizontalement
+- [x] Retourner l'image : Verticalement/Horizontalement
 - [ ] Avancée (Anti-scintillement, Exposition, Balance des blancs, Jour/nuit, Rétroeclairage, 3D-NR)
-- [x] Contrôle des Leds Infra Rouge
-- [x] Activation/Désactivation des Leds blanches d'éclairage
-- [X] Configuration des Leds blanches d'eclairage (Intensité)
-- [x] Activation/Désactivation masque de vie privée
-- [ ] Configuration du masque de vie privée
+  - [x] Anti-scintillement
+  - [x] Jour/nuit
+  - [x] 3D-NR
+  - [ ] Exposition
+  - [ ] Rétroeclairage
+  - [ ] Balance des blancs
+- [x] Leds Infra rouge
+  - [x] Contrôle des Leds Infra rouge
+- [x] Leds blanches d'éclairage (Projecteur Led)
+  - [x] Gestion du mode des leds blanches : Off/Auto
+  - [x] Activation/Désactivation manuelle des leds blanches
+  - [X] Gestion de l'intensité des leds blanches
+- [ ] Masque de vie privée
+  - [x] Activation/Désactivation masque de vie privée
+  - [ ] Configuration du masque de vie privée
 
 #### Audio
-- [x] Déclenchement manuel de la sirène(2)
-- [X] Volume de la sirène(2)
+- [x] Sirène
+  - [x] Déclenchement manuel de la sirène(2)
+  - [x] Volume de la sirène(2)
 
 #### Surveillance/Notification
-- [x] Activation/désactivation email
-- [ ] Planning email
-- [x] Activation/désactivation push
-- [ ] Planning push
-- [x] Activation/désactivation FTP
-- [ ] Planning FTP
-- [x] Activation/désactivation AI track
-- [x] Activation/désactivation enregistrement SDCARD/HDD
-- [ ] Planning enregistrement SDCARD/HDD
-- [x] Activation/désactivation alarme audio
-- [ ] Planning alarme audio
-- [ ] Configuration de la détection de mouvement
-- [ ] Configuration des fonctions AI
-- [x] Remontée des détections de mouvements en temps-réel
+- [ ] Enregistrement SDCARD/HDD (cameras AI **ET** non-AI)
+  - [x] Activation/désactivation Enregistrement SDCARD/HDD
+  - [x] Ecraser les enregistrements
+  - [x] Enregistrement avant détection (pré-enregistrement)
+  - [x] Durée enregistrement après détection
+  - [ ] Planning enregistrement SDCARD/HDD
+- [ ] Email (cameras AI **ET** non-AI)
+  - [x] Activation/désactivation Email
+  - [ ] Planning email
+- [ ] FTP (cameras AI **ET** non-AI)
+  - [x] Activation/désactivation FTP
+  - [ ] Planning FTP
+- [ ] Alarme audio (cameras AI **ET** non-AI)
+  - [x] Activation/désactivation Alarme audio
+  - [ ] Planning Alarme audio
+- [ ] Push (cameras AI **ET** non-AI)
+  - [x] Activation/désactivation Push
+  - [ ] Planning Push
+
+ - [x] Activation/désactivation Enregistrement audio
+
+#### Detection de mouvement
+- [x] Remontée des détections de mouvements en temps-réel (ONVIF)
+- [x] Activation/désactivation AI Track
+
+- [ ] Configuration de la Détection de mouvement
+  - [ ] Configuration de la zone de detection de mouvement (cameras AI **ET** non-AI)
+  - [x] Sensibilité par défaut (cameras AI **ET** non-AI)
+  - [ ] Planning Sensibilité (cameras AI **ET** non-AI)
+  - [x] Sensibilité Detection intelligente Personne **(cameras AI)**
+  - [x] Sensibilité Detection intelligente Véhicule **(cameras AI)**
+  - [x] Delai d'alarme Personne **(cameras AI)**
+  - [x] Delai d'alarme Véhicule **(cameras AI)**
+  - [ ] Dimension d'objet Personne **(cameras AI)**
+  - [ ] Dimension d'objet Véhicule **(cameras AI)**
+
+**NB :** Le detection des animaux n'est pas pris en charge par le plugin (Detection en béta actuellement)
 
 #### OSD
 - [x] Afficher/Masquer Watermark
@@ -105,6 +186,8 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [x] Régler la position de la date/heure
 
 
-(1): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportPtzCheck" 
+(1): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportPtzCheck" : E1Outdoor, RLC-523WA et RLC-823A UNIQUEMENT
 
-(2): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportAudioAlarm" 
+(2): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportAudioAlarm"
+
+(3): Ne fonctionne qu'avec les **Cameras AI** ayant la fonctionnalité (Ability) "ptzPreset" ET les commandes Get(Set)PtzGuard intégrées aux firmwares : E1Outdoor, RLC-523WA et RLC-823A UNIQUEMENT
