@@ -1,5 +1,21 @@
 # Change log
 
+27/07/2022
+- Bug fix for Atlas Jeedom (py wheel)
+
+16/07/2022
+- Bug fix sur le fichier reolinkapicmd.json (Merge Pull request depuis @mnpg)
+
+15/07/2022
+- Mise à jour du README.md (Merge Pull request depuis @mnpg)
+- Code improvement
+
+09/07/2022
+- Ajout de la commande MD Sensibilité (Merge Pull request depuis @mnpg)
+
+21/06/2022
+- Ajout de la commande PTZGuard (Merge Pull request depuis @mnpg)
+
 12/06/2022
 - Merge Pull request depuis @Micka41 (Ajout de la commande Mode led blanche)
 
