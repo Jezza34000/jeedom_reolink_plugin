@@ -160,11 +160,16 @@ class reolinkAPI {
           $this->cnxtype = strtolower($cnxinfo['cnxtype']);
         }
 
-        if ($this->cnxtype == "http") {
-          ($cnxinfo['port'] == "" || !is_numeric($cnxinfo['port'])) ? $this->port = 80 : $this->port = trim($cnxinfo['port']);
+        if ($cnxinfo['port'] == "" || !is_numeric($cnxinfo['port'])) {
+          if ($this->cnxtype == "http") {
+            $this->port = 80;
+          } else {
+            $this->port = 443;
+          }
         } else {
-          ($cnxinfo['port'] == "" || !is_numeric($cnxinfo['port'])) ? $this->port = 443 : $this->port = trim($cnxinfo['port']);
+          $this->port = trim($cnxinfo['port']);
         }
+
 
         $this->user = trim($cnxinfo['username']);
         $this->password = trim($cnxinfo['password']);

@@ -25,7 +25,11 @@ require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 
 // Fonction exécutée automatiquement après la mise à jour du plugin
   function reolink_update() {
+    $plugin = plugin::byId('reolink');
+    $eqLogics = eqLogic::byType($plugin->getId());
+    foreach ($eqLogics as $eqLogic) {
 
+    }
   }
 
 // Fonction exécutée automatiquement après la suppression du plugin
