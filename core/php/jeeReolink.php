@@ -22,14 +22,28 @@ try {
 
         foreach ($eqLogics as $eqLogic) {
             $camera_contact_point = $eqLogic->getConfiguration('adresseip');
+            $camera_AI = $eqLogic->getConfiguration('supportai');
+
             if (filter_var($camera_contact_point, FILTER_VALIDATE_IP)) {
               $camera_ip = $camera_contact_point;
             } else {
               $camera_ip = gethostbyname($camera_contact_point);
             }
+
             if ($camera_ip == $result['ip']) {
-                log::add('reolink', 'debug', 'Evènement MotionState reçu depuis le daemon. Cam IP='.$result['ip'].' état='.$result['motionstate']);
-                $eqLogic->checkAndUpdateCmd('MdState', $result['motionstate']);
+              log::add('reolink', 'debug', 'Evènement MotionState reçu depuis le daemon. Cam IP='.$result['ip'].' état='.$result['motionstate']);
+              $eqLogic->checkAndUpdateCmd('MdState', $result['motionstate']);
+              #log::add('reolink', 'debug', 'IP : ' . $camera_contact_point . ' / IsCamAI : ' . $camera_AI . ' / EqId : ' . $EqId . ' / Channel : ' . $channel);
+              if ($camera_AI == "Oui") {
+                  $camcnx = reolink::getReolinkConnection($eqLogic->getId());
+                  $channel = $eqLogic->getConfiguration('channelNum') - 1;
+                  $res = $camcnx->SendCMD('[{"cmd":"GetAiState","action":0,"param":{"channel":'.$channel.'}}]');
+                  if (isset($res[0]['value'])) {
+                    $eqLogic->checkAndUpdateCmd('MdPersonState', $res[0]['value']['people']['alarm_state']);
+                    $eqLogic->checkAndUpdateCmd('MdVehicleState', $res[0]['value']['vehicle']['alarm_state']);
+                  }
+                  log::add('reolink', 'debug', 'Cam AI : Evènements Motion | Personne : ' . $res[0]['value']['people']['alarm_state'] . ' / Vehicule : ' . $res[0]['value']['vehicle']['alarm_state']);
+              }
             }
           }
     } elseif (isset($result['message']) && $result['message'] == "subscription") {
