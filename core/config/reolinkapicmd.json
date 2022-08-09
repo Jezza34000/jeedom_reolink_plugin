@@ -1816,7 +1816,6 @@
 		},
 		{
 			"abilityneed":"ptzPreset",
-			"iastate":1,
 			"name": "Point de garde (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -1829,7 +1828,6 @@
 		},
 		{
 			"abilityneed":"ptzPreset",
-			"iastate":1,
 			"name": "Définir/Actualiser le point de garde",
 			"type": "action",
 			"subtype": "other",
@@ -1843,7 +1841,6 @@
 		},
 		{
 			"abilityneed":"ptzPreset",
-			"iastate":1,
 			"name": "Retourner au point de garde",
 			"type": "action",
 			"subtype": "other",
@@ -1857,7 +1854,6 @@
 		},
 		{
 			"abilityneed":"ptzPreset",
-			"iastate":1,
 			"name": "Retour automatique au point de garde (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -1871,7 +1867,6 @@
 		},
 		{
 			"abilityneed":"ptzPreset",
-			"iastate":1,
 			"name": "Retour automatique au point de garde",
 			"type": "action",
 			"subtype": "select",
@@ -1888,7 +1883,6 @@
 		},
 		{
 			"abilityneed":"ptzPreset",
-			"iastate":1,
 			"name": "Délai Retour auto. au point de garde (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1902,7 +1896,6 @@
 		},
 		{
 			"abilityneed":"ptzPreset",
-			"iastate":1,
 			"name": "Délai Retour auto. au point de garde",
 			"type": "action",
 			"subtype": "slider",
