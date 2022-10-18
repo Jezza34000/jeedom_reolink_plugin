@@ -78,13 +78,5 @@ if (!isConnect()) {
         <input class="configKey form-control" data-l1key="webhookport" value="44010" />
       </div>
     </div>
-    <div class="form-group">
-      <label class="col-md-4 control-label">{{Désactiver les notifications du daemon dans le centre de messages}}
-        <sup><i class="fas fa-question-circle tooltips" title="{{Supprime les notifications lorsque la caméra n'est pas connecté au réseau et/ou la détection n'est pas fonctionnelle.}}"></i></sup>
-      </label>
-      <div class="col-md-4">
-        <input type="checkbox" class="configKey" data-l1key="stopnotif" />
-      </div>
-    </div>
   </fieldset>
 </form>

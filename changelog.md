@@ -1,6 +1,4 @@
 # Change log
-09/08/2022
-- Bug fix empéchant au Point de garde de fonctionner sur le caméra NON IA
 
 27/07/2022
 - Bug fix for Atlas Jeedom (py wheel)
