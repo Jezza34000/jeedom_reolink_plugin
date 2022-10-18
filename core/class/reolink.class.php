@@ -467,14 +467,16 @@ class reolink extends eqLogic {
                   case reolinkAPI::CAM_GET_AIALARM:
                     switch ($json_data['value']['AiAlarm']['ai_type']) {
                         case "people":
-                          $camcmd->checkAndUpdateCmd('SetSdSensitivityPeopleState', $json_data['value']['AiAlarm']['sensitivity']);
-                          $camcmd->checkAndUpdateCmd('SetAlarmDelayPeopleState', $json_data['value']['AiAlarm']['stay_time']);
+                          $s1 = 'SetSdSensitivityPeopleState';
+                          $s2 = 'SetAlarmDelayPeopleState';
                           break;
                         case "vehicle":
-                          $camcmd->checkAndUpdateCmd('SetSdSensitivityVehicleState', $json_data['value']['AiAlarm']['sensitivity']);
-                          $camcmd->checkAndUpdateCmd('SetAlarmDelayVehicleState', $json_data['value']['AiAlarm']['stay_time']);
+                          $s1 = 'SetSdSensitivityVehicleState';
+                          $s2 = 'SetAlarmDelayVehicleState';
                           break;
                         }
+                      $camcmd->checkAndUpdateCmd($s1, $json_data['value']['AiAlarm']['sensitivity']);
+                      $camcmd->checkAndUpdateCmd($s2, $json_data['value']['AiAlarm']['stay_time']);
                     log::add('reolink', 'debug', 'ai_type check : '. $json_data['value']['AiAlarm']['ai_type']);
                     break;
 
