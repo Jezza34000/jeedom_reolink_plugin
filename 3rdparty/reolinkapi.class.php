@@ -151,7 +151,7 @@ class reolinkAPI {
 
     public function __construct(array $cnxinfo) {
         log::add('reolink', 'debug', str_repeat("~", 60));
-        $this->$is_loggedin = false;
+        $this->is_loggedin = false;
         $this->ip = trim($cnxinfo['adresseIP']);
 
         if (strtolower($cnxinfo['cnxtype'] == "")) {
@@ -187,7 +187,7 @@ class reolinkAPI {
             // TOKEN NOK (get new one)
             $this->login();
         } else {
-            $this->$is_loggedin = true;
+            $this->is_loggedin = true;
         }
     }
 
@@ -249,7 +249,7 @@ class reolinkAPI {
       if ($tsnow > ($this->tokenexp) -15)
       {
         log::add('reolink', 'debug', 'API Token expiré > renouvellement requis.');
-        $this->$is_loggedin = false;
+        $this->is_loggedin = false;
         unset($this->$token);
         unset($this->$tokenexp);
         try {
@@ -268,7 +268,7 @@ class reolinkAPI {
 
     private function login() {
         log::add('reolink', 'debug', 'Camera login...');
-        $this->$is_loggedin = false;
+        $this->is_loggedin = false;
         unset($this->$token);
         unset($this->$tokenexp);
         $loginParameters = '[{"cmd":"Login","param":{"User":{"userName":"'.$this->user.'","password":"'.$this->password.'"}}}]';
@@ -283,7 +283,7 @@ class reolinkAPI {
         if (!empty($this->token) && !empty($this->tokenexp))
         {
           // Login OK
-            $this->$is_loggedin = true;
+            $this->is_loggedin = true;
             log::add('reolink', 'debug', 'Token : '.$this->token.' Validité : '.$this->tokenexp);
             try {
                 config::save("token".$this->tagtoken, $this->token, 'reolink');
@@ -295,7 +295,7 @@ class reolinkAPI {
             }
         } else {
             // Login FAILED
-            $this->$is_loggedin = false;
+            $this->is_loggedin = false;
             log::add('reolink', 'error', 'Echec > Impossible de se logguer sur la caméra');
             return false;
         }
@@ -304,7 +304,7 @@ class reolinkAPI {
 
     public function SendCMD($POSTparameters, $URLrequest = NULL) {
 
-        if (!$this->$is_loggedin && !strpos($POSTparameters, 'cmd":"Login')) {
+        if (!$this->is_loggedin && !strpos($POSTparameters, 'cmd":"Login')) {
           log::add('reolink', 'error', 'Envoi de la commande impossible non loggué sur la caméra');
           return false;
         }
