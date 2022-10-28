@@ -45,7 +45,7 @@ class reolink extends eqLogic {
 
     public static function TryConnect($id) {
       $reolinkConn = reolink::getReolinkConnection($id);
-      if ($reolinkConn->$is_loggedin == true) {
+      if ($reolinkConn->is_loggedin == true) {
         log::add('reolink', 'info', 'Connection à la caméra réussie');
         return true;
       } else {
@@ -217,7 +217,7 @@ class reolink extends eqLogic {
         $camcnx = reolink::getReolinkConnection($id);
         $cmdget = NULL;
 
-        if ($camcnx->$is_loggedin == false) {
+        if ($camcnx->is_loggedin == false) {
           exit();
         }
 

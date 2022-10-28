@@ -1,5 +1,11 @@
 # Change log
 
+28/10/2022
+- Bug fix RefreshInfo
+
+18/10/2022
+- Bug fix API (is_loggedin)
+
 27/07/2022
 - Bug fix for Atlas Jeedom (py wheel)
 
