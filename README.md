@@ -47,6 +47,8 @@ Vous pouvez tester si les paramètres sont correctes et si le plugin arrive à a
  <BR>
   Lors de mise(s) à jour du plugin Reolink, de nouvelles commandes peuvent être ajouter (cf. Changelog du plugin) pour faciliter une meilleure gestion de la caméra.
   **Pour bénéficier des nouvelles commandes, relancer le processus de création de commandes pour chacun de la (des) caméra(s)**
+  
+ > Warning : La remontée de détection de mouvement depuis la caméra vers le plugin n'est pas fiable, et ne dois aucunement être utilisé en tant que système de sécurité.
 
 <BR><P>
 
