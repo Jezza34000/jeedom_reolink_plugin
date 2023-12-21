@@ -1,5 +1,8 @@
 # Change log
 
+21/12/2023
+- Update vunerable package in requirements.txt 
+
 28/10/2022
 - Bug fix RefreshInfo
 
