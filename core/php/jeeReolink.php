@@ -16,7 +16,10 @@ try {
         die();
     }
 
-    if (isset($result['message']) && $result['message'] == "motion") {
+# BEGIN  modified by t0urista to handle ONVIF events
+    if (isset($result['message']) && (($result['message']=="motion") || (strpos($result['message'], 'Ev') !== false) )) {
+# END  modified by t0urista to handle ONVIF events
+
         $plugin = plugin::byId('reolink');
         $eqLogics = eqLogic::byType($plugin->getId());
 
@@ -31,8 +34,26 @@ try {
             }
 
             if ($camera_ip == $result['ip']) {
-              log::add('reolink', 'debug', 'Evènement MotionState reçu depuis le daemon. Cam IP='.$result['ip'].' état='.$result['motionstate']);
-              $eqLogic->checkAndUpdateCmd('MdState', $result['motionstate']);
+              if ($result['message'] == "motion") {
+                log::add('reolink', 'debug',  'Cam IP='.$result['ip']. ' Onvif event reçu depuis le daemon. name= MDstate, état='.$result['motionstate']);
+                $eqLogic->checkAndUpdateCmd('MdState', $result['motionstate']);
+              } 
+              
+# BEGIN  added by t0urista to handle ONVIF events
+
+# catch any ONVIF events in the 3 genreic ONVIF commands, can cover unknown ONVIF events
+              $eqLogic->checkAndUpdateCmd('EvLastOnvifName', $result['message']); 
+              $eqLogic->checkAndUpdateCmd('EvLastOnvifState', $result['motionstate']); 
+              $eqLogic->checkAndUpdateCmd('EvLastOnvifFull', $result['message'] . '-' . $result['motionstate']); 
+
+# catch all pre-defined ONVIF  events with their dedicated commands, does only cover knwon ONVIF events
+
+              if (strpos($result['message'], 'Ev') !== false) {
+                 log::add('reolink', 'debug', 'Cam IP='.$result['ip']. ' Onvif event reçu depuis le daemon. name= ' . $result['message'] . ', etat='.$result['motionstate']);
+                 $eqLogic->checkAndUpdateCmd($result['message'], $result['motionstate']); 
+              }
+# END  added by t0urista to handle ONVIF events
+
               #log::add('reolink', 'debug', 'IP : ' . $camera_contact_point . ' / IsCamAI : ' . $camera_AI . ' / EqId : ' . $EqId . ' / Channel : ' . $channel);
               if ($camera_AI == "Oui") {
                   $camcnx = reolink::getReolinkConnection($eqLogic->getId());
