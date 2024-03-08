@@ -70,7 +70,6 @@ async def get_body(request: Request):
 		event=re.findall(r'tns1:.*/(.*)', event_status[0])
 		event="Ev" + event[0]
 #		logging.debug(event[0])
-#       logging.debug(tuple[0]) 
 		status=0
 		if(event_status[1]!="false"):
 			status=1
