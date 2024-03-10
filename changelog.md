@@ -1,5 +1,10 @@
 # Change log
 
+10/03/2021
+- Ajout de nouvelles détection depuis la souscrption ONVIF
+- Amélioration communication entre daemon et plugin
+Merci @t0urista 
+
 21/12/2023
 - Update vulnerable package in requirements.txt 
 
