@@ -60,8 +60,8 @@ try {
                   $channel = $eqLogic->getConfiguration('channelNum') - 1;
                   $res = $camcnx->SendCMD('[{"cmd":"GetAiState","action":0,"param":{"channel":'.$channel.'}}]');
                   if (isset($res[0]['value'])) {
-                    $eqLogic->checkAndUpdateCmd('MdPersonState', $res[0]['value']['people']['alarm_state']);
-                    $eqLogic->checkAndUpdateCmd('MdVehicleState', $res[0]['value']['vehicle']['alarm_state']);
+                    $eqLogic->checkAndUpdateCmd('EvPeopleDetect', $res[0]['value']['people']['alarm_state']);
+                    $eqLogic->checkAndUpdateCmd('EvVehicleDetect', $res[0]['value']['vehicle']['alarm_state']);
                   }
                   log::add('reolink', 'debug', 'Cam AI : Evènements Motion | Personne : ' . $res[0]['value']['people']['alarm_state'] . ' / Vehicule : ' . $res[0]['value']['vehicle']['alarm_state']);
               }
