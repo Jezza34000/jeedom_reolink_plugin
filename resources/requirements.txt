@@ -21,5 +21,5 @@ starlette>=0.25.0
 typing-extensions~=4.2.0
 urllib3~=1.26.9
 uvicorn~=0.17.6
-wheel~=0.37.1
+wheel~=0.43.0
 yarl~=1.9.4
