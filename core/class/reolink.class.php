@@ -23,6 +23,8 @@ const CMD_SEND_QTY = 8;
 
 class reolink extends eqLogic {
 
+  const PYTHON_PATH = __DIR__ . '/../../resources/venv/bin/python3';
+
   /************* Static methods ************/
   public static function getReolinkConnection($id) {
     $camera = reolink::byId($id, 'reolink');
@@ -595,7 +597,7 @@ class reolink extends eqLogic {
     }
 
     $path = realpath(dirname(__FILE__) . '/../../resources/demond');
-    $cmd = 'python3 ' . $path . '/reolinkd.py';
+    $cmd = self::PYTHON_PATH . $path . '/reolinkd.py';
     $cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel(__CLASS__));
     $cmd .= ' --socketport ' . config::byKey('socketport', __CLASS__, '44009');
     $cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/reolink/core/php/jeeReolink.php';
@@ -650,23 +652,20 @@ class reolink extends eqLogic {
 
   public static function dependancy_install() {
     log::remove(__CLASS__ . '_update');
-    return array('script' => dirname(__FILE__) . '/../../resources/install_#stype#.sh ' . jeedom::getTmpFolder(__CLASS__) . '/dependency', 'log' => log::getPathToLog(__CLASS__ . '_update'));
+    return array('script' => __DIR__ . '/../../resources/install_#stype#.sh', 'log' => log::getPathToLog(__CLASS__ . '_update'));
   }
 
   public static function dependancy_info() {
     $return = array();
     $return['log'] = log::getPathToLog(__CLASS__ . '_update');
-    $return['progress_file'] = jeedom::getTmpFolder(__CLASS__) . '/dependency';
-    if (file_exists(jeedom::getTmpFolder(__CLASS__) . '/dependency')) {
+    $return['progress_file'] = jeedom::getTmpFolder(__CLASS__) . '/dependance';
+    $return['state'] = 'ok';
+    if (file_exists(jeedom::getTmpFolder(__CLASS__) . '/dependance')) {
       $return['state'] = 'in_progress';
-    } else {
-      if (exec(system::getCmdSudo() . system::get('cmd_check') . '-Ec "python3\-requests"') < 1) {
-        $return['state'] = 'nok';
-      } elseif (exec(system::getCmdSudo() . 'pip3 list | grep -Ewc "aiosignal|aiohttp|asyncio|uvicorn|fastapi|urllib3|requests|charset-normalizer"') < 8) {
-        $return['state'] = 'nok';
-      } else {
-        $return['state'] = 'ok';
-      }
+    } elseif (!file_exists(self::PYTHON_PATH)) {
+      $return['state'] = 'nok';
+    } elseif (exec(self::PYTHON_PATH . ' -m pip list | grep -Ewc "aiosignal|aiohttp|uvicorn|fastapi|urllib3|requests|charset-normalizer"') < 7) {
+      $return['state'] = 'nok';
     }
     return $return;
   }
