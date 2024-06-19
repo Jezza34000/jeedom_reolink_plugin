@@ -251,8 +251,8 @@ class reolinkAPI {
     if ($tsnow > ($this->tokenexp) - 15) {
       log::add('reolink', 'debug', 'API Token expiré > renouvellement requis.');
       $this->is_loggedin = false;
-      unset($this->$token);
-      unset($this->$tokenexp);
+      unset($this->token);
+      unset($this->tokenexp);
       try {
         log::add('reolink', 'debug', 'Effacement du TOKEN id=' . $this->tagtoken);
         config::save("token" . $this->tagtoken, 0, 'reolink');
@@ -270,8 +270,8 @@ class reolinkAPI {
   private function login() {
     log::add('reolink', 'debug', 'Camera login...');
     $this->is_loggedin = false;
-    unset($this->$token);
-    unset($this->$tokenexp);
+    unset($this->token);
+    unset($this->tokenexp);
     $loginParameters = '[{"cmd":"Login","param":{"User":{"userName":"' . $this->user . '","password":"' . $this->password . '"}}}]';
     // query camera with parameters and return true if successful else false
     $response = $this->SendCMD($loginParameters, "Login");

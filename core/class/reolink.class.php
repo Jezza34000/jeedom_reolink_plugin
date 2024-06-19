@@ -44,7 +44,7 @@ class reolink extends eqLogic {
 
   public static function TryConnect($id) {
     $reolinkConn = reolink::getReolinkConnection($id);
-    if ($reolinkConn->$is_loggedin == true) {
+    if ($reolinkConn->is_loggedin == true) {
       log::add('reolink', 'info', 'Connection à la caméra réussie');
       return true;
     } else {
@@ -98,7 +98,7 @@ class reolink extends eqLogic {
 
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        $header = substr($response, 0, $header_size);
+        $header = substr($rawdata, 0, $header_size);
 
         if ($httpcode == 200) {
           log::add('reolink', 'debug', 'HTTP code 200 OK');
@@ -215,7 +215,7 @@ class reolink extends eqLogic {
     $camcnx = reolink::getReolinkConnection($id);
     $cmdget = NULL;
 
-    if ($camcnx->$is_loggedin == false) {
+    if ($camcnx->is_loggedin == false) {
       exit();
     }
 
@@ -224,6 +224,7 @@ class reolink extends eqLogic {
     $channel = $camcmd->getConfiguration('defined_channel', 0);
 
     // Prepare request with INFO needed
+    $cmdarr = [];
     foreach (reolinkCmd::byEqLogicId($id) as $cmd) {
       $payload = $cmd->getConfiguration('payload');
       if ($cmd->getType() == "info" && $payload != NULL) {
@@ -418,7 +419,7 @@ class reolink extends eqLogic {
             $ab1 = $json_data['value']['Ability'];
             unset($ab1['abilityChn']);
             $ab2 = $json_data['value']['Ability']['abilityChn']['0'];
-            $camcnx->ability_settings = array_merge($ab1, $ab2);
+            // $camcnx->ability_settings = array_merge($ab1, $ab2); FIXME: ability_settings does not exist and is not used anywhere
             break;
 
           case reolinkAPI::CAM_GET_AUTOFOCUS:
@@ -496,7 +497,8 @@ class reolink extends eqLogic {
   /*     * ***********************Methode static*************************** */
 
   public static function cron() {
-    $eqLogics = ($_eqlogic_id !== null) ? array(eqLogic::byId($_eqlogic_id)) : eqLogic::byType('reolink', true);
+    $eqLogics = eqLogic::byType('reolink', true);
+    /** @var reolink */
     foreach ($eqLogics as $camera) {
       $autorefresh = $camera->getConfiguration('autorefresh', '*/15 * * * *');
       if ($autorefresh != '') {
@@ -522,7 +524,7 @@ class reolink extends eqLogic {
   // Fonction exécutée automatiquement toutes les 10 minutes par Jeedom
   public static function cron10() {
     // Refresh motion detection subscription
-    $eqLogics = ($_eqlogic_id !== null) ? array(eqLogic::byId($_eqlogic_id)) : eqLogic::byType('reolink', true);
+    $eqLogics = eqLogic::byType('reolink', true);
     foreach ($eqLogics as $camera) {
 
       $camera_contact_point = $camera->getConfiguration('adresseip');
