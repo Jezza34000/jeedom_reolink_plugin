@@ -45,7 +45,7 @@ def read_socket():
         try:
             # ============================================
             # Receive message for handle
- 
+
             if message['action'] == "sethook":
                 _cam_ip = message['cam_ip']
                 _cam_onvif_port = message['cam_onvif_port']
@@ -228,7 +228,7 @@ if args.socketport:
 if args.webhook_ip:
     _webhook_ip = str(args.webhook_ip)
 if args.webhook_port:
-    _webhook_port = str(args.webhook_port)
+    _webhook_port = int(args.webhook_port)
 
 _socket_port = int(_socket_port)
 
@@ -236,14 +236,14 @@ jeedom_utils.set_log_level(_log_level)
 jeedom_cnx = jeedom_com(_apikey, _callback)
 
 logging.info('Start demond')
-logging.info('Log level : ' + str(_log_level))
-logging.info('Socket port : ' + str(_socket_port))
-logging.info('Socket host : ' + str(_socket_host))
-logging.info('PID file : ' + str(_pidfile))
-logging.info('Apikey : ' + str(_apikey))
-logging.info('Device : ' + str(_device))
-logging.info('Webhook IP : ' + str(_webhook_ip))
-logging.info('Webhook port : ' + str(_webhook_port))
+logging.info('Log level : %s', _log_level)
+logging.info('Socket port : %s', _socket_port)
+logging.info('Socket host : %s', _socket_host)
+logging.info('PID file : %s', _pidfile)
+logging.info('Apikey : %s', _apikey)
+logging.info('Device : %s', _device)
+logging.info('Webhook IP : %s', _webhook_ip)
+logging.info('Webhook port : %s', _webhook_port)
 
 try:
     logging.info('Write creds file for camhook')
@@ -253,7 +253,7 @@ try:
             f.write(line)
             f.write('\n')
 except Exception as e:
-    logging.debug('Unable to write creds file : ' + str(e))
+    logging.debug('Unable to write creds file: %s', e)
 
 start_uvicorn()
 
@@ -265,6 +265,6 @@ try:
     jeedom_socket = jeedom_socket(port=_socket_port, address=_socket_host)
     listen()
 except Exception as e:
-    logging.error('Fatal error : ' + str(e))
+    logging.error('Fatal error : %s', e)
     logging.info(traceback.format_exc())
     shutdown()

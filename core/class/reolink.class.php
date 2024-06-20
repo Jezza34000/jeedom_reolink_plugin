@@ -597,7 +597,7 @@ class reolink extends eqLogic {
     }
 
     $path = realpath(dirname(__FILE__) . '/../../resources/demond');
-    $cmd = self::PYTHON_PATH . $path . '/reolinkd.py';
+    $cmd = self::PYTHON_PATH . " {$path}/reolinkd.py";
     $cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel(__CLASS__));
     $cmd .= ' --socketport ' . config::byKey('socketport', __CLASS__, '44009');
     $cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/reolink/core/php/jeeReolink.php';
