@@ -5,6 +5,7 @@
 - Plusieurs corrections de bugs
 - Mise à jours des dépendances et du démon pour compatibilité Debian12
 - Version minimale Jeedom: 4.2
+  
 Merci @Mips2648
 - Fix des problèmes de sécurité
 
