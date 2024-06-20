@@ -9,4 +9,6 @@ wget https://raw.githubusercontent.com/Mips2648/dependance.lib/master/pyenv.lib 
 . ${BASE_DIR}/pyenv.lib
 ##################################################################
 
+TARGET_PYTHON_VERSION="3.9"
+
 launchInstall
