@@ -43,10 +43,9 @@ Vous pouvez tester si les paramètres sont correctes et si le plugin arrive à a
 * Générez les commandes de la caméra : bouton ![image](https://user-images.githubusercontent.com/54839700/174434177-5f433dc2-91b5-4cdb-9bcc-8a42d6a48f0d.png)
 
 
-**!! NB TRES IMPORTANT !! :**
- <BR>
-  Lors de mise(s) à jour du plugin Reolink, de nouvelles commandes peuvent être ajouter (cf. Changelog du plugin) pour faciliter une meilleure gestion de la caméra.
-  **Pour bénéficier des nouvelles commandes, relancer le processus de création de commandes pour chacun de la (des) caméra(s)**
+> IMPORTANT : Lors de mise(s) à jour du plugin Reolink, de nouvelles commandes peuvent être ajouter (cf. Changelog du plugin) pour faciliter une meilleure gestion de la caméra. **Pour bénéficier des nouvelles commandes, relancer le processus de création de commandes pour chacun de la (des) caméra(s)**
+  
+ > ATTENTION : La remontée de détection de mouvement depuis la caméra vers le plugin n'est pas fiable, et ne dois aucunement être utilisé en tant que système de sécurité.
 
 <BR><P>
 

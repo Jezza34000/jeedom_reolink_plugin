@@ -30,6 +30,102 @@
 			"isVisible": 1,
 			"logicalId": "MdState"
 		},
+
+
+        {
+			"abilityneed":"alarmMd",
+			"name": "event Motion (etat)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "EvMotion"
+		},     
+        {
+			"abilityneed":"alarmMd",
+			"name": "event FaceDetect (etat)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "EvFaceDetect"
+		},  
+        {
+			"abilityneed":"alarmMd",
+			"name": "event PeopleDetect (etat)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "EvPeopleDetect"
+		},    
+        {
+			"abilityneed":"alarmMd",
+			"name": "event VehicleDetect (etat)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "EvVehicleDetect"
+		},  
+        {
+			"abilityneed":"alarmMd",
+			"name": "event DogCatDetect (etat)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "EvDogCatDetect"
+		},
+        {
+			"abilityneed":"alarmMd",
+			"name": "event MotionAlarm (etat)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "EvMotionAlarm"
+		},
+         {
+			"abilityneed":"alarmMd",
+			"name": "event Visitor (etat)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "EvVisitor"
+		},       
+      
+         {
+			"abilityneed":"alarmMd",
+			"name": "last Onvif Event (full) ",
+			"type": "info",
+			"subtype": "string",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "EvLastOnvifFull"
+		}, 
+      
+        {
+			"abilityneed":"alarmMd",
+			"name": "last Onvif Event (name) ",
+			"type": "info",
+			"subtype": "string",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "EvLastOnvifName"
+		}, 
+      
+       {
+			"abilityneed":"alarmMd",
+			"name": "last Onvif Event (etat)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "EvLastOnvifState"
+		},    
+      
 		{
 			"abilityneed":"performance",
 			"name": "Débit codec (Kbps)",

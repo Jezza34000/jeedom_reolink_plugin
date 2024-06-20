@@ -1,5 +1,19 @@
 # Change log
 
+10/03/2021
+- Ajout de nouvelles détection depuis la souscrption ONVIF
+- Amélioration communication entre daemon et plugin
+Merci @t0urista 
+
+21/12/2023
+- Update vulnerable package in requirements.txt 
+
+28/10/2022
+- Bug fix RefreshInfo
+
+18/10/2022
+- Bug fix API (is_loggedin)
+
 27/07/2022
 - Bug fix for Atlas Jeedom (py wheel)
 
