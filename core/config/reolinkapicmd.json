@@ -1847,6 +1847,37 @@
 			"logicalId": "SetSdSensitivityVehicle"
 		},
 		{
+			"abilityneed":"supportAiSensitivity",
+			"iastate":1,
+			"name": "Sensibilité Detection DogCat (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"dog_cat\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetSdSensitivityDogCatState"
+		},
+		{
+			"abilityneed":"supportAiSensitivity",
+			"iastate":1,
+			"name": "Sensibilité Detection DogCat",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 0,
+				"maxValue" : 100,
+				"valueFrom" : "SetSdSensitivityDogCatState",
+				"actionapi": "SetAiAlarm",
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"dog_cat\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetSdSensitivityDogCat"
+		},
+		{
 			"abilityneed":"supportAiStayTime",
 			"iastate":1,
 			"name": "Délai Alarme Personne (valeur)",
@@ -1909,6 +1940,38 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetAlarmDelayVehicle"
+		},
+		{
+			"abilityneed":"supportAiStayTime",
+			"iastate":1,
+			"name": "Délai Alarme DogCat (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"Unite": "s",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"dog_cat\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAlarmDelayDogCatState"
+		},
+		{
+			"abilityneed":"supportAiStayTime",
+			"iastate":1,
+			"name": "Délai Alarme DogCat",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 0,
+				"maxValue" : 8,
+				"valueFrom" : "SetAlarmDelayDogCatState",
+				"actionapi": "SetAiAlarm",
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"dog_cat\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetAlarmDelayDogCat"
 		},
 		{
 			"abilityneed":"ptzPreset",
