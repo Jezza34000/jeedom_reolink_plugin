@@ -1,5 +1,9 @@
 # Change log
 
+21/06/2024
+
+- Fix pour fonctionnement sur version inférieur à Debian 12. Merci à @Mips2648
+
 20/06/2024
 
 - Plusieurs corrections de bugs
