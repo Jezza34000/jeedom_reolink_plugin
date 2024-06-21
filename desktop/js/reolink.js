@@ -70,6 +70,9 @@ function addCmdToTable(_cmd) {
    tr += '<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isHistorized" checked/>{{Historiser}}</label>';
    tr += '<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="display" data-l2key="invertBinary"/>{{Inverser}}</label>';
    tr += '</td>';
+   tr += '<td>';
+   tr += '<span class="cmdAttr" data-l1key="htmlstate"></span>';
+   tr += '</td>';
    tr += '<td style="min-width:80px;width:200px;">';
    if (is_numeric(_cmd.id)) {
      tr += '<a class="btn btn-default btn-xs cmdAction" data-action="configure"><i class="fas fa-cogs"></i></a> ';
