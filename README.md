@@ -9,9 +9,11 @@ Supportes :
 
 * La série des RLC-xxxx
 * La série des RLN-xxxx-x
-* La série des DUO
-* La serie des C1 & C2.
+* Les séries des DUO, DUO2 et DUO3
+* La série des C1 & C2.
 * La E1 Zoom et E1 Outdoor
+* La série TrackMix
+* La série CX
 
 Non-supportés :
 
