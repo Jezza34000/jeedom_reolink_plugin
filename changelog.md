@@ -1,5 +1,10 @@
 # Change log
 
+22/06/2024
+
+- Ajout detection IA Chien/Cat Merci @jmvedrine
+- Mise à jour des modèles supportés dans la description
+
 21/06/2024
 
 - Fix pour fonctionnement sur version inférieur à Debian 12. Merci à @Mips2648
