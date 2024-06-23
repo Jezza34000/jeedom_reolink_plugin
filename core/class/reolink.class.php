@@ -475,6 +475,10 @@ class reolink extends eqLogic {
                 $s1 = 'SetSdSensitivityVehicleState';
                 $s2 = 'SetAlarmDelayVehicleState';
                 break;
+              case "dog_cat":
+                $s1 = 'SetSdSensitivityDogCatState';
+                $s2 = 'SetAlarmDelayDogCatState';
+                break;
             }
             $camcmd->checkAndUpdateCmd($s1, $json_data['value']['AiAlarm']['sensitivity']);
             $camcmd->checkAndUpdateCmd($s2, $json_data['value']['AiAlarm']['stay_time']);

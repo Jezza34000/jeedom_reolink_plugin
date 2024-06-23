@@ -170,12 +170,14 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
   - [ ] Planning Sensibilité (cameras AI **ET** non-AI)
   - [x] Sensibilité Detection intelligente Personne **(cameras AI)**
   - [x] Sensibilité Detection intelligente Véhicule **(cameras AI)**
+  - [x] Sensibilité Detection intelligente Chien/Chat **(cameras AI)**
   - [x] Delai d'alarme Personne **(cameras AI)**
   - [x] Delai d'alarme Véhicule **(cameras AI)**
+  - [x] Delai d'alarme Chien/Chat **(cameras AI)**
   - [ ] Dimension d'objet Personne **(cameras AI)**
   - [ ] Dimension d'objet Véhicule **(cameras AI)**
+  - [ ] Dimension d'objet Chien/Chat **(cameras AI)**
 
-**NB :** Le detection des animaux n'est pas pris en charge par le plugin (Detection en béta actuellement)
 
 #### OSD
 - [x] Afficher/Masquer Watermark
