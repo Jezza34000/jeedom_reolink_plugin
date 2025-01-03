@@ -24,17 +24,12 @@ import argparse
 import uvicorn
 import subscription_manager
 import asyncio
+import os
 from multiprocessing import Process
-
-try:
-    from jeedom.jeedom import *
-except ImportError:
-    print("Error: importing module jeedom.jeedom")
-    sys.exit(1)
+from jeedom.jeedom import jeedom_socket, jeedom_utils, jeedom_com, JEEDOM_SOCKET_MESSAGE
 
 
 def read_socket():
-    global JEEDOM_SOCKET_MESSAGE
     if not JEEDOM_SOCKET_MESSAGE.empty():
         logging.debug("Message received in socket JEEDOM_SOCKET_MESSAGE")
         message = JEEDOM_SOCKET_MESSAGE.get().decode('utf-8')
@@ -176,6 +171,7 @@ def chk_ping(host):
         return True
     else:
         return False
+
 
 # ----------------------------------------------------------------------------
 local_ip = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or
