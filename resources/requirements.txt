@@ -1,4 +1,4 @@
-h11~=0.14.0
+h11~=0.16.0
 requests~=2.32.3
 charset-normalizer~=3.3.2
 aiohttp>=3.9.1
