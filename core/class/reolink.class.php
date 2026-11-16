@@ -44,6 +44,10 @@ class reolink extends eqLogic {
     }
   }
 
+  public function getChannel() {
+    return intval($this->getConfiguration('defined_channel', 0));
+  }
+
   public static function TryConnect($id) {
     $reolinkConn = reolink::getReolinkConnection($id);
     if ($reolinkConn->is_loggedin == true) {
@@ -160,34 +164,46 @@ class reolink extends eqLogic {
     log::add('reolink', 'debug', 'Interrogation de la caméra sur ses capacités hardware/software...');
     $reolinkConn = reolink::getReolinkConnection($id);
     $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera) || !is_object($reolinkConn)) {
+      return false;
+    }
 
     $username = $camera->getConfiguration('login');
     if (empty($username)) {
       $username = "admin";
     }
+    $channel = $camera->getChannel();
 
-    // Devices Ability
-    if (is_object($reolinkConn)) {
-      $deviceAbility = $reolinkConn->SendCMD('[{"cmd":"GetAbility","param":{"User":{"userName":"' . $username . '"}}}]');
-
-      log::add('reolink', 'debug', print_r($deviceAbility, true));
-
-      $ab1 = $deviceAbility[0]["value"]["Ability"];
-      unset($ab1["abilityChn"]);
-      $ab2 = $deviceAbility[0]["value"]["Ability"]["abilityChn"][0];
-      $deviceAbility = array_merge($ab1, $ab2);
-
-
-      log::add('reolink', 'debug', 'GetAbility à récupérer : ' . count($deviceAbility) . ' items');
-
-      if (count($deviceAbility) > 1) {
-        return $deviceAbility;
-      } else {
-        return false;
-      }
-    } else {
+    $deviceAbility = $reolinkConn->SendCMD('[{"cmd":"GetAbility","param":{"User":{"userName":"' . $username . '"}}}]');
+    if (!is_array($deviceAbility) || !isset($deviceAbility[0]['value']['Ability'])) {
+      log::add('reolink', 'error', 'GetAbility : réponse invalide');
       return false;
     }
+
+    log::add('reolink', 'debug', print_r($deviceAbility, true));
+
+    $ab1 = $deviceAbility[0]['value']['Ability'];
+    $abilityChn = $ab1['abilityChn'] ?? array();
+    unset($ab1['abilityChn']);
+    $ab2 = $abilityChn[$channel] ?? ($abilityChn[0] ?? array());
+    if (!is_array($ab2)) {
+      $ab2 = array();
+    }
+    $deviceAbility = array_merge($ab1, $ab2);
+
+    // NVR E1 Outdoor: GetAbility may report ptzPatrol.permit=0 while Get/SetPtzPatrol work
+    $ptzPatrolPermit = intval($deviceAbility['ptzPatrol']['permit'] ?? 0);
+    $ptzPresetPermit = intval($deviceAbility['ptzPreset']['permit'] ?? 0);
+    if ($ptzPatrolPermit == 0 && $ptzPresetPermit != 0) {
+      $patrol = $reolinkConn->SendCMD('[{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
+      if (is_array($patrol) && isset($patrol[0]['value']['PtzPatrol']) && is_array($patrol[0]['value']['PtzPatrol'])) {
+        $deviceAbility['ptzPatrol'] = array('permit' => 1, 'ver' => intval($deviceAbility['ptzPatrol']['ver'] ?? 1));
+        log::add('reolink', 'info', 'ptzPatrol activé via GetPtzPatrol (canal ' . $channel . ')');
+      }
+    }
+
+    log::add('reolink', 'debug', 'GetAbility à récupérer : ' . count($deviceAbility) . ' items (canal ' . $channel . ')');
+    return count($deviceAbility) > 1 ? $deviceAbility : false;
   }
 
   public static function updatePTZpreset($id, $data) {
@@ -223,7 +239,7 @@ class reolink extends eqLogic {
 
     log::add('reolink', 'debug', 'Rafraichissement des informations de la caméra...');
 
-    $channel = $camcmd->getConfiguration('defined_channel', 0);
+    $channel = $camcmd->getChannel();
 
     // Prepare request with INFO needed
     $cmdarr = [];
@@ -848,11 +864,8 @@ class reolinkCmd extends cmd {
   public function execute($_options = array()) {
     log::add('reolink', 'debug', 'Action demandé : ' . $this->getLogicalId());
     $EqId = $this->getEqLogic_id();
-
-    $channel = $this->getConfiguration('defined_channel');
-    if ($channel == NULL) {
-      $channel = 0;
-    }
+    $eqLogic = $this->getEqLogic();
+    $channel = is_object($eqLogic) ? $eqLogic->getChannel() : 0;
 
     switch ($this->getLogicalId()) {
       case 'refresh':
@@ -861,10 +874,13 @@ class reolinkCmd extends cmd {
       case 'GetPtzPreset':
         $camcnx = reolink::getReolinkConnection($EqId);
         $data = $camcnx->SendCMD('[{"cmd":"GetPtzPreset","action":1,"param":{"channel":' . $channel . '}}]');
-        reolink::updatePTZpreset($EqId, $data[0]);
+        if (is_array($data) && isset($data[0])) {
+          reolink::updatePTZpreset($EqId, $data[0]);
+        }
         break;
       case 'SetSpeed':
         $this->setConfiguration('speedvalue', $_options['slider']);
+        $this->save();
         break;
       default:
         $camcnx = reolink::getReolinkConnection($EqId);
