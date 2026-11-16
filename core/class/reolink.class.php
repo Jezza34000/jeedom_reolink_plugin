@@ -530,6 +530,7 @@ class reolink extends eqLogic {
   // Fonction exécutée automatiquement toutes les 10 minutes par Jeedom
   public static function cron10() {
     // Refresh motion detection subscription
+    $seen = array();
     $eqLogics = eqLogic::byType('reolink', true);
     foreach ($eqLogics as $camera) {
 
@@ -545,6 +546,11 @@ class reolink extends eqLogic {
       if ($port_onvif == "") {
         $port_onvif = "8000";
       }
+      $hook_key = $camera_ip . ':' . $port_onvif;
+      if (isset($seen[$hook_key])) {
+        continue;
+      }
+      $seen[$hook_key] = true;
       // Sending info to Daemon
       $params['action'] = 'sethook';
       $params['cam_ip'] = $camera_ip;
