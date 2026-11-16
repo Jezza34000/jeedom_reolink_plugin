@@ -70,6 +70,21 @@ try {
       ajax::success();
     }
 
+    if (init('action') == 'GetPatrolData') {
+      ajax::success(reolink::getPatrolData(init('id')));
+    }
+
+    if (init('action') == 'SavePatrol') {
+      $steps = json_decode(init('steps', '[]'), true);
+      reolink::savePatrol(init('id'), init('patrolId'), init('enable'), is_array($steps) ? $steps : array());
+      ajax::success();
+    }
+
+    if (init('action') == 'RunPatrol') {
+      reolink::runPatrol(init('id'), init('op'), init('patrolId', null));
+      ajax::success();
+    }
+
     throw new Exception(__('Aucune méthode correspondante à : ', __FILE__) . init('action'));
     /*     * *********Catch exeption*************** */
 } catch (Exception $e) {

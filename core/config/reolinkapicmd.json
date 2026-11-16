@@ -1019,18 +1019,56 @@
 		},
 		{
 			"abilityneed":"ptzPatrol",
-			"name": "PTZ Patrol",
+			"name": "Récupérer les rondes PTZ",
+			"type": "action",
+			"subtype": "other",
+			"configuration": {
+				"actionapi": "GetPtzPatrol",
+				"payload": "{\"channel\":#CHANNEL#}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "GetPtzPatrol"
+		},
+		{
+			"abilityneed":"ptzPatrol",
+			"name": "PTZ Patrol (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetPtzPatrol\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "PtzPatrolState"
+		},
+		{
+			"abilityneed":"ptzPatrol",
+			"name": "Démarrer PTZ Patrol",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "StartPatrol|Démarrer;StopPatrol|Arrêter",
-				"actionapi": "SetPtzPatrol",
-				"payload": "{\"channel\":#CHANNEL#,\"op\":#OPTSELECTEDSTR#,\"speed\":#SPEED#}"
+				"listValue": "0|Ronde 0",
+				"actionapi": "PtzCtrl",
+				"payload": "{\"channel\":#CHANNEL#,\"op\":\"StartPatrol\",\"id\":#OPTSELECTEDINT#}"
 			},
 			"IsHistorized": 0,
-			"isVisible": 0,
-			"logicalId": "SetPTZpatrol"
+			"isVisible": 1,
+			"logicalId": "StartPtzPatrol"
+		},
+		{
+			"abilityneed":"ptzPatrol",
+			"name": "Arrêter PTZ Patrol",
+			"type": "action",
+			"subtype": "other",
+			"configuration": {
+				"actionapi": "PtzCtrl",
+				"payload": "{\"channel\":#CHANNEL#,\"op\":\"StopPatrol\",\"id\":0}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "StopPtzPatrol"
 		},
 		{
 			"abilityneed":"supportPtzCheck",
