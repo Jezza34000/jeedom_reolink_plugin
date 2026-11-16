@@ -248,8 +248,14 @@ class reolink extends eqLogic {
       $cmdget = substr($cmdget, 0, -1);
       log::add('reolink', 'debug', 'Envoi ' . ($key + 1) . '/' . count($cmd_block) . ' payload multiple GetSetting = ' . $cmdget);
       $res = $camcnx->SendCMD("[$cmdget]");
+      if (!is_array($res)) {
+        continue;
+      }
 
       foreach ($res as &$json_data) {
+        if (!isset($json_data['value'])) {
+          continue;
+        }
         log::add('reolink', 'debug', 'Lecture info > ' . preg_replace('/\s+/', '', print_r($json_data, true)));
 
         switch ($json_data['cmd']) {
@@ -262,7 +268,9 @@ class reolink extends eqLogic {
 
           case reolinkAPI::CAM_GET_RECV20:
             $camcmd->checkAndUpdateCmd('SetRecordStateV20', $json_data['value']['Rec']['enable']);
-            $camcmd->checkAndUpdateCmd('SetPreRecordStateV20', $json_data['value']['Rec']['preRec']);
+            if (isset($json_data['value']['Rec']['preRec'])) {
+              $camcmd->checkAndUpdateCmd('SetPreRecordStateV20', $json_data['value']['Rec']['preRec']);
+            }
             $camcmd->checkAndUpdateCmd('SetOverwriteStateV20', $json_data['value']['Rec']['overwrite']);
             $camcmd->checkAndUpdateCmd('SetPostRecordStateV20', $json_data['value']['Rec']['postRec']);
             break;
@@ -321,7 +329,10 @@ class reolink extends eqLogic {
             break;
 
           case reolinkAPI::CAM_GET_ENC:
-            $camcmd->checkAndUpdateCmd('SetMicrophoneState', $json_data['value']['audio']);
+            $audio = $json_data['value']['Enc']['audio'] ?? ($json_data['value']['audio'] ?? null);
+            if ($audio !== null) {
+              $camcmd->checkAndUpdateCmd('SetMicrophoneState', $audio);
+            }
             $camcmd->checkAndUpdateCmd('SetResolutionst1State', $json_data['value']['Enc']['mainStream']['size']);
             $camcmd->checkAndUpdateCmd('SetFPSst1State', $json_data['value']['Enc']['mainStream']['size']);
             $camcmd->checkAndUpdateCmd('SetBitratest1State', $json_data['value']['Enc']['mainStream']['bitRate']);
