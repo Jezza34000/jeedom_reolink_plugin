@@ -156,6 +156,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</label>
 								<div class="col-sm-7">
 									<input type="number" min="0" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="defined_channel" placeholder="{{0}}"/>
+									<div id="div_nvrParentHint" class="alert alert-info" style="display:none;margin-top:8px;">
+										{{Équipement NVR parent détecté (pas de canal) : pas de commandes caméra ni de refresh automatique. Utilisez les équipements enfants avec un canal renseigné.}}
+									</div>
 								</div>
 							</div>
 							<div class="form-group">
@@ -636,6 +639,16 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
 <script>
 
+
+function updateNvrParentHint() {
+	var ch = $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').value();
+	var channelNum = parseInt(($('.eqLogicAttr[data-l1key=configuration][data-l2key=channelNum]').text() || '1').toString().trim(), 10) || 1;
+	var emptyCh = (ch === '' || ch === null || typeof ch === 'undefined');
+	var isParent = emptyCh && channelNum > 1;
+	$('#div_nvrParentHint').toggle(!!isParent);
+}
+$('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').on('change keyup', updateNvrParentHint);
+setTimeout(updateNvrParentHint, 500);
 
 $('#btManagePatrol').on('click', function () {
 		var id = $('.eqLogicAttr[data-l1key=id]').value();

@@ -10,6 +10,7 @@ class reolinkAPI {
   private $password;
   private $cnxtype;
   private $authmethod;
+  private $skipRetry = false;
 
   public $is_loggedin;
 
@@ -321,6 +322,7 @@ class reolinkAPI {
       $URLrequest = "cmd=" . $URLrequest . "&";
     }
 
+    $this->skipRetry = false;
     $maxRetry = 0;
     do {
       // Rebuild auth each attempt (token may be renewed after rspCode -6)
@@ -332,12 +334,14 @@ class reolinkAPI {
       $response = $this->request($URLrequest . $authURL, $POSTparameters);
       $checkedresponse = $this->checkResponse($response, $URLrequest);
 
-      if (!$checkedresponse) {
-        $maxRetry++;
-        log::add('reolink', 'debug', 'Echec de la requête nouvelle tentative...');
-      } else {
+      if ($checkedresponse !== false) {
         break;
       }
+      if (!empty($this->skipRetry)) {
+        break;
+      }
+      $maxRetry++;
+      log::add('reolink', 'debug', 'Echec de la requête nouvelle tentative...');
     } while ($maxRetry < 3);
 
     return $checkedresponse;
@@ -348,6 +352,7 @@ class reolinkAPI {
     */
   private function checkResponse($response, $command) {
     $data = json_decode($response, true);
+    $this->skipRetry = false;
 
     // General Case
     if (!$data || !isset($data[0])) {
@@ -356,27 +361,51 @@ class reolinkAPI {
     }
 
     $hasOk = false;
+    $allNoRetry = true;
     foreach ($data as $item) {
       if (!isset($item['error']['rspCode'])) {
         $hasOk = true;
+        $allNoRetry = false;
         continue;
       }
-      if ($item['error']['rspCode'] == -6) {
+      $rsp = intval($item['error']['rspCode']);
+      if ($rsp == -6) {
         // Login failed, re-authentification need
         $this->login();
+        $this->skipRetry = false;
         return false;
       }
-      $errorNFO = $this->GetErrorNFO($item['error']['rspCode']);
+      if ($rsp != -99 && $rsp != -9) {
+        $allNoRetry = false;
+      }
+      $label = $this->formatApiError($item);
       $cmdName = isset($item['cmd']) ? $item['cmd'] : $command;
-      log::add('reolink', 'debug', $cmdName . ' ignoré : ' . ucfirst($errorNFO[0]));
+      log::add('reolink', 'debug', $cmdName . ' ignoré : ' . $label);
     }
     if (!$hasOk) {
-      $errorNFO = $this->GetErrorNFO($data[0]['error']['rspCode']);
-      log::add('reolink', 'error', 'Requête vers la caméra en erreur. Réponse de la caméra : ' . ucfirst($errorNFO[0]) . '/' . ucfirst($errorNFO[1]));
+      $rsp = intval($data[0]['error']['rspCode'] ?? 0);
+      $label = $this->formatApiError($data[0]);
+      $level = ($rsp == -99) ? 'warning' : 'error';
+      log::add('reolink', $level, 'Requête vers la caméra en erreur. Réponse de la caméra : ' . $label);
+      // Do not hammer offline / unsupported commands
+      $this->skipRetry = $allNoRetry;
       return false;
     }
 
     return $data;
+  }
+
+  private function formatApiError($item) {
+    $rsp = intval($item['error']['rspCode'] ?? 0);
+    $detail = trim(strval($item['error']['detail'] ?? ''));
+    $errorNFO = $this->GetErrorNFO($rsp);
+    if (!is_array($errorNFO)) {
+      $errorNFO = array('unknown', 'Unknown error');
+    }
+    if ($detail !== '') {
+      return $detail . ' (' . $errorNFO[1] . ')';
+    }
+    return $errorNFO[0] . '/' . $errorNFO[1];
   }
 
   private function GetErrorNFO($errorCode) {
@@ -474,7 +503,7 @@ class reolinkAPI {
       case -49:
         return array('Channel invalid', 'Channel is invalid');
       case -99:
-        return array('unknow', 'unknow');
+        return array('device offline', 'Device offline');
       case -100:
         return array('test failed', 'Test Email/Ftp/Wifi failed');
       case -101:
