@@ -1,5 +1,15 @@
 # Change log
 
+19/11/2026
+
+- Support NVR : canal équipement (`defined_channel`), souscriptions ONVIF sans doublon, lecture MD/AI par canal
+- API : conservation des réponses valides d'un lot quand une commande n'est pas supportée ; auth token corrigée (PHP 8)
+- Logs : appareil hors ligne (`device offline`) en warning sans retries agressifs ; équipement parent NVR ignoré par les boucles caméra
+- Nouvelle commande `ChannelOnline` (canal joignable ou non)
+- PTZ Patrol : commandes Start/Stop/Get, états `PtzPatrolState` / `PtzPatrolId`, modale de gestion des rondes (presets, vitesse, dwell)
+- Démon : transmission des credentials Jeedom via variables d'environnement (corrige le Permission denied sur `jeedomcreds` / webhook)
+- Dépendances Python : `urllib3` 2.8 et `requests` 2.34 (alertes Dependabot)
+
 22/06/2024
 
 - Ajout detection IA Chien/Cat Merci @jmvedrine
