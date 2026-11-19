@@ -206,6 +206,3 @@ class jeedom_socket:
 
     def close(self):
         self.netAdapter.shutdown()
-
-    def getMessage(self):
-        return self.message
