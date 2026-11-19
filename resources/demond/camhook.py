@@ -10,11 +10,10 @@ except ImportError:
 	print("Error: importing module jeedom.jeedom")
 	sys.exit(1)
 
-# Credentials come from reolinkd via env (Process inherits environ).
 _callback = os.environ.get('REOLINK_JEEDOM_CALLBACK', '')
 _apikey = os.environ.get('REOLINK_JEEDOM_APIKEY', '')
 if not _callback or not _apikey:
-	logging.error("Missing Jeedom credentials in environment (REOLINK_JEEDOM_*)")
+	logging.error("Missing REOLINK_JEEDOM_CALLBACK / REOLINK_JEEDOM_APIKEY")
 	sys.exit(1)
 
 jeedom_cnx = jeedom_com(_apikey, _callback)

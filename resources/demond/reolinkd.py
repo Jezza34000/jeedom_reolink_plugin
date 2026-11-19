@@ -27,7 +27,6 @@ import subscription_manager
 import asyncio
 from multiprocessing import Process
 
-# Passed to the uvicorn/camhook child (avoids cwd-relative jeedomcreds file).
 _ENV_CALLBACK = 'REOLINK_JEEDOM_CALLBACK'
 _ENV_APIKEY = 'REOLINK_JEEDOM_APIKEY'
 
@@ -246,9 +245,6 @@ logging.info('Device : %s', _device)
 logging.info('Webhook IP : %s', _webhook_ip)
 logging.info('Webhook port : %s', _webhook_port)
 
-# Hand callback/apikey to camhook via env (Process inherits environ).
-# Avoids the old relative "jeedomcreds" file, which failed when cwd was
-# not writable by www-data (e.g. /home/<user>).
 os.environ[_ENV_CALLBACK] = _callback or ''
 os.environ[_ENV_APIKEY] = _apikey or ''
 
