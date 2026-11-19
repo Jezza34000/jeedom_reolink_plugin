@@ -26,6 +26,8 @@ class reolink extends eqLogic {
   const PYTHON_PATH = __DIR__ . '/../../resources/venv/bin/python3';
 
   /************* Static methods ************/
+  private static $cnxByIp = array();
+
   public static function getReolinkConnection($id) {
     $camera = reolink::byId($id, 'reolink');
     $adresseIP = $camera->getConfiguration('adresseip');
@@ -35,8 +37,13 @@ class reolink extends eqLogic {
     $cnxtype = $camera->getConfiguration('cnxtype');
 
     if (!empty($adresseIP) && !empty($username) && !empty($password)) {
+      $cacheKey = $adresseIP . '|' . strval($port);
+      if (isset(self::$cnxByIp[$cacheKey]) && is_object(self::$cnxByIp[$cacheKey])) {
+        return self::$cnxByIp[$cacheKey];
+      }
       $cnxinfo = array("adresseIP" => $adresseIP, "port" => $port, "username" => $username, "password" => $password, "cnxtype" => $cnxtype);
       $camcnx = new reolinkAPI($cnxinfo);
+      self::$cnxByIp[$cacheKey] = $camcnx;
       return $camcnx;
     } else {
       log::add('reolink', 'warning', "Information de connexion manquantes : connexion à la caméra impossible");

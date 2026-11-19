@@ -13,6 +13,7 @@
 - Démon : `--socketport` honoré, cycle idle désactivé, arrêt propre du webhook, timeout ONVIF
 - Webhook : état motion/AI isolé par IP caméra
 - ONVIF : headers non mutés, UTC moderne, `renewtimer` corrigé
+- API : session éphémère (login → commandes → logout), cache connexion par IP, verrou anti-stampede, plus de token orphelin
 
 03/01/2025
 

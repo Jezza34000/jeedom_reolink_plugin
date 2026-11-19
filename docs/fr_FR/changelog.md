@@ -14,6 +14,7 @@
 - Dépendances Python sécurisées (`urllib3` 2.8, `requests` 2.34)
 - Démon : fix fuite mémoire, Python 3.13, Session HTTP, threads daemon, arrêt webhook propre
 - Webhook : état motion/AI isolé par IP ; ONVIF headers/UTC/`renewtimer` corrigés
+- API : session éphémère login/logout, cache par IP, anti max-session
 
 # 03/01/2025
 
