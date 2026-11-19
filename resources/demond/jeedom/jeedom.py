@@ -19,10 +19,13 @@ import os
 import time
 from collections.abc import Mapping
 from queue import Queue
-from threading import Thread
+from threading import Lock, Thread
 import socketserver
 from socketserver import TCPServer, StreamRequestHandler
 import requests
+from urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 class jeedom_com:
@@ -32,6 +35,9 @@ class jeedom_com:
         self.cycle = cycle
         self.retry = retry
         self.changes = {}
+        self._lock = Lock()
+        self._session = requests.Session()
+        self._session.verify = False
         if self.cycle > 0:
             Thread(target=self.__thread_changes_async, daemon=True).start()
         logging.debug('Init request module v%s', requests.__version__)
@@ -41,10 +47,11 @@ class jeedom_com:
         while True:
             try:
                 time.sleep(self.cycle)
-                if len(self.changes) == 0:
-                    continue
-                changes = self.changes
-                self.changes = {}
+                with self._lock:
+                    if len(self.changes) == 0:
+                        continue
+                    changes = self.changes
+                    self.changes = {}
                 self.__post_change(changes)
             except Exception as error:
                 logging.error('Critical error on send_changes_async %s', error)
@@ -62,25 +69,26 @@ class jeedom_com:
             if self.cycle <= 0:
                 self.send_change_immediate(changes)
             else:
-                self.merge_dict(self.changes, changes)
+                with self._lock:
+                    self.merge_dict(self.changes, changes)
         else:
             if self.cycle <= 0:
                 self.send_change_immediate({key: value})
             else:
-                self.changes[key] = value
+                with self._lock:
+                    self.changes[key] = value
 
     def send_change_immediate(self, change):
-        Thread(target=self.__post_change, args=(change,)).start()
+        Thread(target=self.__post_change, args=(change,), daemon=True).start()
 
     def __post_change(self, change):
         logging.debug('Send to jeedom: %s', change)
         for i in range(self.retry):
             try:
-                r = requests.post(
+                r = self._session.post(
                     self.url + '?apikey=' + self.apikey,
                     json=change,
                     timeout=(0.5, 120),
-                    verify=False,
                 )
                 if r.status_code == requests.codes.ok:
                     return True
@@ -96,10 +104,12 @@ class jeedom_com:
         return False
 
     def set_change(self, changes):
-        self.changes = changes
+        with self._lock:
+            self.changes = changes
 
     def get_change(self):
-        return self.changes
+        with self._lock:
+            return self.changes
 
     def merge_dict(self, d1, d2):
         for k, v2 in d2.items():
@@ -111,7 +121,7 @@ class jeedom_com:
 
     def test(self):
         try:
-            response = requests.get(self.url + '?apikey=' + self.apikey, verify=False)
+            response = self._session.get(self.url + '?apikey=' + self.apikey)
             if response.status_code != requests.codes.ok:
                 logging.error(
                     'Callback error: %s %s. Please check your network configuration page',
@@ -184,7 +194,7 @@ class jeedom_socket:
         self.netAdapter = TCPServer((self.address, self.port), JeedomSocketHandler)
         if self.netAdapter:
             logging.debug("Socket interface started")
-            Thread(target=self.loopNetServer).start()
+            Thread(target=self.loopNetServer, daemon=True).start()
         else:
             logging.debug("Cannot start socket interface")
 
