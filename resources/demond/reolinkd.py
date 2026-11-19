@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 import logging
+import os
 import signal
 import socket
 import subprocess
@@ -25,6 +26,10 @@ import uvicorn
 import subscription_manager
 import asyncio
 from multiprocessing import Process
+
+# Passed to the uvicorn/camhook child (avoids cwd-relative jeedomcreds file).
+_ENV_CALLBACK = 'REOLINK_JEEDOM_CALLBACK'
+_ENV_APIKEY = 'REOLINK_JEEDOM_APIKEY'
 
 try:
     from jeedom.jeedom import *
@@ -183,10 +188,6 @@ local_ip = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if n
                [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) + ["no IP found"])[0]
 
 
-if os.path.exists("jeedomcreds"):
-    logging.debug('Removing previous cred files')
-    os.remove("jeedomcreds")
-
 _log_level = "error"
 _socket_port = 44009
 _socket_host = 'localhost'
@@ -245,15 +246,22 @@ logging.info('Device : %s', _device)
 logging.info('Webhook IP : %s', _webhook_ip)
 logging.info('Webhook port : %s', _webhook_port)
 
-try:
-    logging.info('Write creds file for camhook')
-    lines = [_callback, _apikey]
-    with open('jeedomcreds', 'w') as f:
-        for line in lines:
-            f.write(line)
-            f.write('\n')
-except Exception as e:
-    logging.debug('Unable to write creds file: %s', e)
+# Hand callback/apikey to camhook via env (Process inherits environ).
+# The old relative "jeedomcreds" file failed whenever cwd was not writable
+# (e.g. /home/<user> when Jeedom starts the daemon as www-data).
+os.environ[_ENV_CALLBACK] = _callback or ''
+os.environ[_ENV_APIKEY] = _apikey or ''
+# Best-effort cleanup of legacy file next to the PID (and relative cwd).
+for legacy in (
+    'jeedomcreds',
+    os.path.join(os.path.dirname(os.path.abspath(_pidfile)), 'jeedomcreds'),
+):
+    try:
+        if os.path.exists(legacy):
+            os.remove(legacy)
+            logging.debug('Removed legacy creds file %s', legacy)
+    except OSError as e:
+        logging.debug('Unable to remove legacy creds file %s: %s', legacy, e)
 
 start_uvicorn()
 
