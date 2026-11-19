@@ -12,6 +12,13 @@
 - PTZ Patrol : commandes, états, modale de gestion des rondes
 - Démon : credentials Jeedom via environnement (fix webhook / permissions)
 - Dépendances Python sécurisées (`urllib3` 2.8, `requests` 2.34)
+- Démon : fix fuite mémoire, Python 3.13, Session HTTP, threads daemon, arrêt webhook propre
+- Webhook : état motion/AI isolé par IP ; ONVIF headers/UTC/`renewtimer` corrigés
+
+# 03/01/2025
+
+- Fix une fuite mémoire sur le démon
+- Plusieurs corrections de bugs mineurs
 
 # 22/06/2024
 
