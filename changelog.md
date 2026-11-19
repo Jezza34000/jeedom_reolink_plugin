@@ -9,6 +9,15 @@
 - PTZ Patrol : commandes Start/Stop/Get, états `PtzPatrolState` / `PtzPatrolId`, modale de gestion des rondes (presets, vitesse, dwell)
 - Démon : transmission des credentials Jeedom via variables d'environnement (corrige le Permission denied sur `jeedomcreds` / webhook)
 - Dépendances Python : `urllib3` 2.8 et `requests` 2.34 (alertes Dependabot)
+- Démon : fix fuite mémoire (Timer récursif), compatibilité Python 3.13, Session HTTP réutilisée, threads daemon
+- Démon : `--socketport` honoré, cycle idle désactivé, arrêt propre du webhook, timeout ONVIF
+- Webhook : état motion/AI isolé par IP caméra
+- ONVIF : headers non mutés, UTC moderne, `renewtimer` corrigé
+
+03/01/2025
+
+- Fix une fuite mémoire sur le démon. Merci @Mips2648
+- Plusieurs corrections de bugs mineurs
 
 22/06/2024
 

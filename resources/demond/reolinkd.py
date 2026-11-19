@@ -12,6 +12,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
+import argparse
+import asyncio
+import json
 import logging
 import os
 import signal
@@ -20,111 +23,117 @@ import subprocess
 import sys
 import time
 import traceback
-import json
-import argparse
-import uvicorn
-import subscription_manager
-import asyncio
 from multiprocessing import Process
+
+import subscription_manager
+import uvicorn
+from jeedom.jeedom import JEEDOM_SOCKET_MESSAGE, jeedom_com, jeedom_socket, jeedom_utils
 
 _ENV_CALLBACK = 'REOLINK_JEEDOM_CALLBACK'
 _ENV_APIKEY = 'REOLINK_JEEDOM_APIKEY'
 
-try:
-    from jeedom.jeedom import *
-except ImportError:
-    print("Error: importing module jeedom.jeedom")
-    sys.exit(1)
+proc = None
 
 
 def read_socket():
-    global JEEDOM_SOCKET_MESSAGE
-    if not JEEDOM_SOCKET_MESSAGE.empty():
-        logging.debug("Message received in socket JEEDOM_SOCKET_MESSAGE")
-        message = JEEDOM_SOCKET_MESSAGE.get().decode('utf-8')
-        message = json.loads(message)
-        if message['apikey'] != _apikey:
-            logging.error("Invalid apikey from socket : " + str(message))
+    if JEEDOM_SOCKET_MESSAGE.empty():
+        return
+    logging.debug("Message received in socket JEEDOM_SOCKET_MESSAGE")
+    message = json.loads(JEEDOM_SOCKET_MESSAGE.get().decode('utf-8'))
+    if message['apikey'] != _apikey:
+        logging.error("Invalid apikey from socket: %s", message)
+        return
+    try:
+        if message['action'] != "sethook":
+            logging.debug("Message received is not supported")
             return
-        try:
-            # ============================================
-            # Receive message for handle
 
-            if message['action'] == "sethook":
-                _cam_ip = message['cam_ip']
-                _cam_onvif_port = message['cam_onvif_port']
-                _cam_user = message['cam_user']
-                _cam_pwd = message['cam_pwd']
-                logging.debug(f"Requested to set the webhook inside CAM IP={_cam_ip}")
+        cam_ip = message['cam_ip']
+        cam_onvif_port = message['cam_onvif_port']
+        cam_user = message['cam_user']
+        cam_pwd = message['cam_pwd']
+        logging.debug("Requested to set the webhook inside CAM IP=%s", cam_ip)
 
-                result_resp = {
-                    "message": "subscription",
-                    "ip": _cam_ip
-                }
+        result_resp = {
+            "message": "subscription",
+            "ip": cam_ip,
+        }
 
-                if chk_ping(_cam_ip) is False:
-                    logging.error(f"CAM IP={_cam_ip} is not reachable. (Please check that the camera is switched ON and correctly connected to the network)")
-                    result_resp['state'] = 0
-                    result_resp['details'] = "Camera is not reachable"
-                else:
-                    if check_onvif(_cam_ip, int(_cam_onvif_port)) is False:
-                        logging.error(f"CAM IP={_cam_ip} is not ONVIF capable. (Please check the camera settings if the ONVIF protocol is enabled correctly)")
-                        result_resp['state'] = 0
-                        result_resp['details'] = "Camera is not ONVIF capable"
-                    else:
-                        if asyncio.run(subscribe_onvif(_cam_ip, _cam_onvif_port, _cam_user, _cam_pwd)):
-                            logging.debug("Subscribe OK")
-                            result_resp['state'] = 1
-                        else:
-                            logging.info("Unable to subscribe ONVIF event")
-                            result_resp['state'] = 0
-                            result_resp['details'] = "Unable to subscribe ONVIF event"
-                # ============================================
-                # Send result to jeedom
-                message = json.dumps(result_resp)
-                jeedom_cnx.send_change_immediate(json.loads(message))
-            else:
-                logging.debug("Message received is not supported")
-        except Exception as e:
-            logging.error('Send command to demon error : ' + str(e))
+        if chk_ping(cam_ip) is False:
+            logging.error(
+                "CAM IP=%s is not reachable. (Please check that the camera is switched ON and correctly connected to the network)",
+                cam_ip,
+            )
+            result_resp['state'] = 0
+            result_resp['details'] = "Camera is not reachable"
+        elif check_onvif(cam_ip, int(cam_onvif_port)) is False:
+            logging.error(
+                "CAM IP=%s is not ONVIF capable. (Please check the camera settings if the ONVIF protocol is enabled correctly)",
+                cam_ip,
+            )
+            result_resp['state'] = 0
+            result_resp['details'] = "Camera is not ONVIF capable"
+        elif asyncio.run(subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd)):
+            logging.debug("Subscribe OK")
+            result_resp['state'] = 1
+        else:
+            logging.info("Unable to subscribe ONVIF event")
+            result_resp['state'] = 0
+            result_resp['details'] = "Unable to subscribe ONVIF event"
+
+        jeedom_cnx.send_change_immediate(result_resp)
+    except Exception as e:
+        logging.error('Send command to demon error: %s', e)
 
 
 async def subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd):
-    logging.debug(f"Request subscription_manager to set webhook on camera = {cam_ip}:{cam_onvif_port}")
+    logging.debug(
+        "Request subscription_manager to set webhook on camera = %s:%s",
+        cam_ip,
+        cam_onvif_port,
+    )
     sman = subscription_manager.Manager(cam_ip, cam_onvif_port, cam_user, cam_pwd)
     res = await sman.subscribe(f"http://{_webhook_ip}:{_webhook_port}/inbound_events")
-    logging.debug(f"Starting local hook on : http://{_webhook_ip}:{_webhook_port}/inbound_events")
+    logging.debug(
+        "Starting local hook on: http://%s:%s/inbound_events",
+        _webhook_ip,
+        _webhook_port,
+    )
     return res
 
 
 def listen():
-    jeedom_socket.open()
+    socket_server.open()
     try:
-        while 1:
+        while True:
             time.sleep(0.5)
             read_socket()
     except KeyboardInterrupt:
         shutdown()
-# ----------------------------------------------------------------------------
-# UVICORN Handler
 
 
 def get_logger_text():
     if logging.root.level == logging.DEBUG:
         return "debug"
-    elif logging.root.level == logging.INFO:
+    if logging.root.level == logging.INFO:
         return "info"
-    elif logging.root.level == logging.WARNING:
+    if logging.root.level == logging.WARNING:
         return "warning"
-    elif logging.root.level == logging.ERROR:
+    if logging.root.level == logging.ERROR:
         return "error"
-    elif logging.root.level == logging.CRITICAL:
+    if logging.root.level == logging.CRITICAL:
         return "critical"
+    return "error"
 
 
 def run_uvicorn():
     logging.info('Starting webhook...')
-    uvicorn.run(app="camhook:app", host="0.0.0.0", port=_webhook_port, log_level=get_logger_text())
+    uvicorn.run(
+        app="camhook:app",
+        host="0.0.0.0",
+        port=_webhook_port,
+        log_level=get_logger_text(),
+    )
 
 
 def start_uvicorn():
@@ -135,57 +144,55 @@ def start_uvicorn():
 
 def stop_uvicorn():
     global proc
-    if proc:
-        proc.join(0.25)
-
-# ----------------------------------------------------------------------------
+    if not proc:
+        return
+    if proc.is_alive():
+        proc.terminate()
+    proc.join(1.0)
+    proc = None
 
 
 def handler(signum=None, frame=None):
-    logging.debug("Signal %i caught, exiting..." % int(signum))
+    logging.debug("Signal %i caught, exiting...", int(signum))
     shutdown()
 
 
 def shutdown():
     logging.debug("Shutdown")
-    logging.debug("Removing PID file " + str(_pidfile))
+    logging.debug("Removing PID file %s", _pidfile)
     try:
         os.remove(_pidfile)
-    except:
+    except OSError:
         pass
     try:
-        jeedom_socket.close()
-    except:
+        socket_server.close()
+    except Exception:
         pass
+    stop_uvicorn()
     logging.debug("Exit 0")
     sys.stdout.flush()
-    exit(0)
+    sys.exit(0)
 
 
 def check_onvif(cam_ip, cam_onvif_port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    result = sock.connect_ex((cam_ip, cam_onvif_port))
-    sock.close()
-    if result == 0:
-        return True
-    else:
-        return False
+    sock.settimeout(3)
+    try:
+        result = sock.connect_ex((cam_ip, cam_onvif_port))
+    finally:
+        sock.close()
+    return result == 0
 
 
 def chk_ping(host):
     command = ['ping', '-c', '1', host]
     response = subprocess.call(command, stdout=subprocess.DEVNULL)
+    return response == 0
 
-    if response == 0:
-        return True
-    else:
-        return False
 
-# ----------------------------------------------------------------------------
 local_ip = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or
              [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in
                [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) + ["no IP found"])[0]
-
 
 _log_level = "error"
 _socket_port = 44009
@@ -195,11 +202,10 @@ _pidfile = '/tmp/demond.pid'
 _apikey = ''
 _callback = ''
 _webhook_ip = local_ip
-_webhook_port = '44010'
-_cycle = 0.3
+_webhook_port = 44010
+_cycle = 0
 
-parser = argparse.ArgumentParser(
-    description='Desmond Daemon for Jeedom plugin')
+parser = argparse.ArgumentParser(description='Desmond Daemon for Jeedom plugin')
 parser.add_argument("--device", help="Device", type=str)
 parser.add_argument("--loglevel", help="Log Level for the daemon", type=str)
 parser.add_argument("--callback", help="Callback", type=str)
@@ -224,26 +230,24 @@ if args.pid:
 if args.cycle:
     _cycle = float(args.cycle)
 if args.socketport:
-    _socketport = args.socketport
+    _socket_port = int(args.socketport)
 if args.webhook_ip:
     _webhook_ip = str(args.webhook_ip)
 if args.webhook_port:
     _webhook_port = int(args.webhook_port)
 
-_socket_port = int(_socket_port)
-
 jeedom_utils.set_log_level(_log_level)
-jeedom_cnx = jeedom_com(_apikey, _callback)
+jeedom_cnx = jeedom_com(_apikey, _callback, _cycle)
 
 logging.info('Start demond')
-logging.info('Log level : %s', _log_level)
-logging.info('Socket port : %s', _socket_port)
-logging.info('Socket host : %s', _socket_host)
-logging.info('PID file : %s', _pidfile)
-logging.info('Apikey : %s', _apikey)
-logging.info('Device : %s', _device)
-logging.info('Webhook IP : %s', _webhook_ip)
-logging.info('Webhook port : %s', _webhook_port)
+logging.info('Log level: %s', _log_level)
+logging.info('Socket port: %s', _socket_port)
+logging.info('Socket host: %s', _socket_host)
+logging.info('PID file: %s', _pidfile)
+logging.info('Apikey: %s', _apikey)
+logging.info('Device: %s', _device)
+logging.info('Webhook IP: %s', _webhook_ip)
+logging.info('Webhook port: %s', _webhook_port)
 
 os.environ[_ENV_CALLBACK] = _callback or ''
 os.environ[_ENV_APIKEY] = _apikey or ''
@@ -255,9 +259,9 @@ signal.signal(signal.SIGTERM, handler)
 
 try:
     jeedom_utils.write_pid(str(_pidfile))
-    jeedom_socket = jeedom_socket(port=_socket_port, address=_socket_host)
+    socket_server = jeedom_socket(port=_socket_port, address=_socket_host)
     listen()
 except Exception as e:
-    logging.error('Fatal error : %s', e)
+    logging.error('Fatal error: %s', e)
     logging.info(traceback.format_exc())
     shutdown()
