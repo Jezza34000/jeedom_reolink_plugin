@@ -29,6 +29,9 @@ if (!is_object($camera)) {
 }
 ?>
 <div id="div_patrolAlert"></div>
+<div id="div_patrolSharedHint" class="alert alert-warning" style="display:none;">
+  {{Ce firmware partage souvent la même ronde entre les emplacements (type E1/NVR). Préférez éditer la ronde 0. Désactiver / vider les presets peut ne pas purger certains slots.}}
+</div>
 <div class="input-group" style="width:100%;margin-bottom:10px;">
   <span class="input-group-addon" style="width:140px;">{{Ronde}}</span>
   <select class="form-control" id="sel_patrolId">
@@ -81,6 +84,29 @@ if (!is_object($camera)) {
     $('#table_patrolSteps tbody tr').each(function (i) {
       $(this).find('td:first').text(i + 1);
     });
+    updateStartButton();
+  }
+
+  function updateStartButton() {
+    var steps = collectSteps();
+    var hasPresets = presets.length > 0;
+    $('#bt_patrolStart').toggleClass('disabled', !(steps.length && hasPresets));
+  }
+
+  function detectSharedSlots() {
+    var sigs = [];
+    patrols.forEach(function (p) {
+      if (!p || !Array.isArray(p.preset) || !p.preset.length) { return; }
+      var head = p.preset.slice(0, Math.min(2, p.preset.length)).map(function (s) {
+        return [s.id, s.speed, s.dwellTime].join(':');
+      }).join('|');
+      sigs.push(head);
+    });
+    var shared = false;
+    if (sigs.length >= 2) {
+      shared = sigs.every(function (s) { return s === sigs[0]; });
+    }
+    $('#div_patrolSharedHint').toggle(shared);
   }
 
   function addStep(step) {
@@ -107,6 +133,7 @@ if (!is_object($camera)) {
     if (p && Array.isArray(p.preset)) {
       p.preset.forEach(function (s) { addStep(s); });
     }
+    updateStartButton();
   }
 
   function collectSteps() {
@@ -140,6 +167,7 @@ if (!is_object($camera)) {
         if (data.result && data.result.presets) {
           presets = data.result.presets || [];
           patrols = data.result.patrols || [];
+          detectSharedSlots();
           loadPatrol($('#sel_patrolId').val());
         }
       }
@@ -149,6 +177,7 @@ if (!is_object($camera)) {
   $('#sel_patrolId').on('change', function () { loadPatrol($(this).val()); });
   $('#bt_patrolAddStep').on('click', function () { addStep(); });
   $('#table_patrolSteps').on('click', '.patrol-del', function () { $(this).closest('tr').remove(); renumber(); });
+  $('#table_patrolSteps').on('change', '.patrol-preset', updateStartButton);
   $('#table_patrolSteps').on('click', '.patrol-up', function () {
     var tr = $(this).closest('tr');
     tr.prev().before(tr);
@@ -169,7 +198,12 @@ if (!is_object($camera)) {
       ajaxPatrol({action: 'GetPatrolData'});
     });
   });
-  $('#bt_patrolStart').on('click', function () {
+  $('#bt_patrolStart').on('click', function (e) {
+    if ($(this).hasClass('disabled')) {
+      e.preventDefault();
+      alertMsg('{{Ajoutez au moins une étape et des presets avant de démarrer}}', 'warning');
+      return;
+    }
     ajaxPatrol({action: 'RunPatrol', op: 'StartPatrol', patrolId: $('#sel_patrolId').val()}, '{{Ronde démarrée}}');
   });
   $('#bt_patrolStop').on('click', function () {

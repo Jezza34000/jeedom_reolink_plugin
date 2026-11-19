@@ -1056,6 +1056,18 @@
 		},
 		{
 			"abilityneed":"ptzPatrol",
+			"name": "PTZ Patrol (ronde)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetPtzPatrol\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "PtzPatrolId"
+		},
+		{
+			"abilityneed":"ptzPatrol",
 			"name": "Démarrer PTZ Patrol",
 			"type": "action",
 			"subtype": "select",
