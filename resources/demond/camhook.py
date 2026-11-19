@@ -1,4 +1,5 @@
 from fastapi import Request, FastAPI
+import os
 import sys
 import json
 import re
@@ -9,19 +10,25 @@ except ImportError:
 	print("Error: importing module jeedom.jeedom")
 	sys.exit(1)
 
-try:
-	f = open('jeedomcreds', 'r')
-	_callback = f.readline().rstrip("\n")
-	_apikey = f.readline().rstrip("\n")
-	f.close()
-except:
-	logging.error(f"Unable to read credentials jeedom file, retry...")
-	sys.exit(1)
+# Prefer env from reolinkd (reliable regardless of process cwd).
+# Fall back to legacy relative file for older daemons still writing it.
+_callback = os.environ.get('REOLINK_JEEDOM_CALLBACK', '')
+_apikey = os.environ.get('REOLINK_JEEDOM_APIKEY', '')
+if not _callback or not _apikey:
+	try:
+		with open('jeedomcreds', 'r') as f:
+			_callback = f.readline().rstrip("\n")
+			_apikey = f.readline().rstrip("\n")
+		try:
+			os.remove("jeedomcreds")
+		except OSError:
+			pass
+	except OSError:
+		pass
 
-try:
-	os.remove("jeedomcreds")
-except:
-	pass
+if not _callback or not _apikey:
+	logging.error("Unable to read Jeedom credentials (env or jeedomcreds file)")
+	sys.exit(1)
 
 jeedom_cnx = jeedom_com(_apikey, _callback)
 detect_state = 0
