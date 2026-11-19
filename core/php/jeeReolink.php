@@ -54,19 +54,28 @@ try {
                 $payload = '[{"cmd":"GetMdState","action":0,"param":{"channel":'.$channel.'}}'
                   . ($camera_AI == "Oui" ? ',{"cmd":"GetAiState","action":0,"param":{"channel":'.$channel.'}}' : '') . ']';
                 $res = is_object($camcnx) ? $camcnx->SendCMD($payload) : false;
+                $mdOk = false;
+                $aiOk = false;
                 if (is_array($res)) {
                   foreach ($res as $item) {
                     if (($item['cmd'] ?? '') === 'GetMdState' && isset($item['value']['state'])) {
+                      $mdOk = true;
                       $md = intval($item['value']['state']);
                       $eqLogic->checkAndUpdateCmd('MdState', $md);
                       $eqLogic->checkAndUpdateCmd('EvMotion', $md);
                     } elseif (($item['cmd'] ?? '') === 'GetAiState' && isset($item['value']['people'])) {
+                      $aiOk = true;
                       $eqLogic->checkAndUpdateCmd('EvPeopleDetect', $item['value']['people']['alarm_state']);
                       $eqLogic->checkAndUpdateCmd('EvVehicleDetect', $item['value']['vehicle']['alarm_state']);
                       $eqLogic->checkAndUpdateCmd('EvDogCatDetect', $item['value']['dog_cat']['alarm_state']);
                       log::add('reolink', 'debug', 'Cam AI : Evènements Motion | Personne : ' . $item['value']['people']['alarm_state'] . ' / Vehicule : ' . $item['value']['vehicle']['alarm_state'] . ' / Chien/Chat : ' . $item['value']['dog_cat']['alarm_state']);
                     }
                   }
+                }
+                // MD offline but AI ok: keep last MdState, mark channel offline
+                $eqLogic->checkAndUpdateCmd('ChannelOnline', $mdOk ? 1 : 0);
+                if (!$mdOk && !$aiOk) {
+                  log::add('reolink', 'debug', 'Canal ' . $channel . ' offline (GetMdState/GetAiState)');
                 }
               } else {
                 if ($result['message'] == "motion") {

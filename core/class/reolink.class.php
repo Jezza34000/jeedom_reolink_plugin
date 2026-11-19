@@ -48,6 +48,15 @@ class reolink extends eqLogic {
     return intval($this->getConfiguration('defined_channel', 0));
   }
 
+  public function isNvrParent() {
+    $defCh = $this->getConfiguration('defined_channel', '');
+    if ($defCh !== '' && $defCh !== null) {
+      return false;
+    }
+    return ($this->getConfiguration('exactType') === 'NVR'
+      || intval($this->getConfiguration('channelNum', 1)) > 1);
+  }
+
   public static function TryConnect($id) {
     $reolinkConn = reolink::getReolinkConnection($id);
     if ($reolinkConn->is_loggedin == true) {
@@ -162,9 +171,16 @@ class reolink extends eqLogic {
 
   public static function GetCamAbility($id) {
     log::add('reolink', 'debug', 'Interrogation de la caméra sur ses capacités hardware/software...');
-    $reolinkConn = reolink::getReolinkConnection($id);
     $camera = reolink::byId($id, 'reolink');
-    if (!is_object($camera) || !is_object($reolinkConn)) {
+    if (!is_object($camera)) {
+      return false;
+    }
+    if ($camera->isNvrParent()) {
+      log::add('reolink', 'info', 'GetCamAbility ignoré : équipement NVR parent');
+      return false;
+    }
+    $reolinkConn = reolink::getReolinkConnection($id);
+    if (!is_object($reolinkConn)) {
       return false;
     }
 
@@ -281,6 +297,7 @@ class reolink extends eqLogic {
       $cmd->save();
     }
     $camera->checkAndUpdateCmd('PtzPatrolState', $running);
+    $camera->checkAndUpdateCmd('PtzPatrolId', $running ? intval($activeId ?? -1) : -1);
     $camera->refreshWidget();
   }
 
@@ -399,7 +416,13 @@ class reolink extends eqLogic {
       $startCmd->save();
     }
     // NVR often keeps running=0; reflect last action immediately
-    $camera->checkAndUpdateCmd('PtzPatrolState', $op === 'StartPatrol' ? 1 : 0);
+    if ($op === 'StartPatrol') {
+      $camera->checkAndUpdateCmd('PtzPatrolState', 1);
+      $camera->checkAndUpdateCmd('PtzPatrolId', $patrolId);
+    } else {
+      $camera->checkAndUpdateCmd('PtzPatrolState', 0);
+      $camera->checkAndUpdateCmd('PtzPatrolId', -1);
+    }
     $refresh = $cnx->SendCMD('[{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
     if (is_array($refresh) && isset($refresh[0]['value']['PtzPatrol'])) {
       $anyRunning = 0;
@@ -409,8 +432,10 @@ class reolink extends eqLogic {
           break;
         }
       }
-      if ($anyRunning || $op === 'StopPatrol') {
-        reolink::applyPtzPatrolState($camera, $refresh[0]);
+      reolink::applyPtzPatrolState($camera, $refresh[0]);
+      if (!$anyRunning && $op === 'StartPatrol') {
+        $camera->checkAndUpdateCmd('PtzPatrolState', 1);
+        $camera->checkAndUpdateCmd('PtzPatrolId', $patrolId);
       }
     }
     return true;
@@ -418,10 +443,14 @@ class reolink extends eqLogic {
 
   public static function refreshNFO($id) {
     $camcmd = reolink::byId($id, 'reolink');
+    if (!is_object($camcmd) || $camcmd->isNvrParent()) {
+      log::add('reolink', 'debug', 'refreshNFO ignoré : équipement NVR parent ou introuvable');
+      return;
+    }
     $camcnx = reolink::getReolinkConnection($id);
     $cmdget = NULL;
 
-    if ($camcnx->is_loggedin == false) {
+    if (!is_object($camcnx) || $camcnx->is_loggedin == false) {
       exit();
     }
 
@@ -456,7 +485,15 @@ class reolink extends eqLogic {
         continue;
       }
 
+      $mdSeen = false;
+      $mdOk = false;
       foreach ($res as &$json_data) {
+        if (($json_data['cmd'] ?? '') === reolinkAPI::CAM_GET_MDSTATE) {
+          $mdSeen = true;
+          if (isset($json_data['value']['state'])) {
+            $mdOk = true;
+          }
+        }
         if (!isset($json_data['value'])) {
           continue;
         }
@@ -595,7 +632,8 @@ class reolink extends eqLogic {
             break;
 
           case reolinkAPI::CAM_GET_MDSTATE:
-            // Updated by daemon
+            $camcmd->checkAndUpdateCmd('MdState', intval($json_data['value']['state']));
+            $camcmd->checkAndUpdateCmd('ChannelOnline', 1);
             break;
 
           case reolinkAPI::CAM_GET_PTZCHECKSTATE:
@@ -709,6 +747,9 @@ class reolink extends eqLogic {
             $res = false;
         }
       }
+      if ($mdSeen) {
+        $camcmd->checkAndUpdateCmd('ChannelOnline', $mdOk ? 1 : 0);
+      }
     } #END foreach
   } #End refreshNFO
 
@@ -725,6 +766,9 @@ class reolink extends eqLogic {
     $eqLogics = eqLogic::byType('reolink', true);
     /** @var reolink */
     foreach ($eqLogics as $camera) {
+      if ($camera->isNvrParent()) {
+        continue;
+      }
       $autorefresh = $camera->getConfiguration('autorefresh', '*/15 * * * *');
       if ($autorefresh != '') {
         try {
@@ -748,9 +792,13 @@ class reolink extends eqLogic {
 
   // Fonction exécutée automatiquement toutes les 10 minutes par Jeedom
   public static function cron10() {
-    // Refresh motion detection subscription
+    // Refresh motion detection subscription (1 souscription par couple IP:port ONVIF)
     $seen = array();
     $eqLogics = eqLogic::byType('reolink', true);
+    // Prefer channel cameras over NVR parent for credentials/intent
+    usort($eqLogics, function ($a, $b) {
+      return intval($a->isNvrParent()) - intval($b->isNvrParent());
+    });
     foreach ($eqLogics as $camera) {
 
       $camera_contact_point = $camera->getConfiguration('adresseip');
@@ -915,8 +963,12 @@ class reolink extends eqLogic {
 
 
   public function loadCmdFromConf($id) {
-    $devAbilityReturn = reolink::GetCamAbility($id);
     $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera) || $camera->isNvrParent()) {
+      log::add('reolink', 'info', 'CreateCMD ignoré : équipement NVR parent');
+      return false;
+    }
+    $devAbilityReturn = reolink::GetCamAbility($id);
     if ($camera->GetConfiguration("supportai") == "Non") {
       $camisIA = 0;
     } else {

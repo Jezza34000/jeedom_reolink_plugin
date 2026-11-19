@@ -26,9 +26,21 @@
 			"name": "Mouvement détecté (état)",
 			"type": "info",
 			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetMdState\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "MdState"
+		},
+		{
+			"abilityneed":"none",
+			"name": "Canal en ligne",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "ChannelOnline"
 		},
 
 
