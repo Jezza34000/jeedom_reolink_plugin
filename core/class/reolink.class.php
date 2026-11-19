@@ -1190,7 +1190,6 @@ class reolink extends eqLogic {
           'ok' => $ok,
           'rsp' => $rsp,
           'value' => $ok ? ($item['value'] ?? null) : null,
-          'cmd' => is_array($item) ? ($item['cmd'] ?? null) : null,
         );
       }
     }
@@ -1280,13 +1279,9 @@ class reolink extends eqLogic {
       ),
     );
 
-    $probeList = array();
-    foreach ($dualFamilies as $fam) {
-      $probeList[] = str_replace('#CHANNEL#', $channel, $fam['probeV20']);
-      $probeList[] = str_replace('#CHANNEL#', $channel, $fam['probeV1']);
-    }
     // Collect unique Get* payloads from JSON candidates with ability OK
-    $payloadByLogical = array();
+    // (covers dual-family V1/V20 probes when ability permits)
+    $probeList = array();
     foreach ($device['commands'] as $command) {
       if (($command['type'] ?? '') !== 'info') {
         continue;
@@ -1301,7 +1296,6 @@ class reolink extends eqLogic {
       $payload = str_replace('#CHANNEL#', $channel, $payloadTpl);
       $payload = str_replace('\\', '', $payload);
       $probeList[] = $payload;
-      $payloadByLogical[$command['logicalId']] = $payload;
     }
     $probeList = array_values(array_unique($probeList));
     $probeResults = reolink::probePayloads($cnx, $probeList);
@@ -1360,7 +1354,6 @@ class reolink extends eqLogic {
 
     $unsupportedPayloads = array();
     $cmd_order = 0;
-    $createdLogical = array();
 
     foreach ($device['commands'] as $command) {
       $logicalId = $command['logicalId'] ?? null;
@@ -1419,7 +1412,6 @@ class reolink extends eqLogic {
           $cmd->setConfiguration('payload', $payloadTpl);
           $cmd->save();
         }
-        $createdLogical[$logicalId] = true;
         log::add('reolink', 'debug', 'Commande déjà présente : ' . $command['name']);
         continue;
       }
@@ -1440,7 +1432,6 @@ class reolink extends eqLogic {
           log::add('reolink', 'warning', 'X--> Liaison impossible objet introuvable : ' . $valueFrom);
         }
       }
-      $createdLogical[$logicalId] = true;
       $cmd_order++;
     }
 
