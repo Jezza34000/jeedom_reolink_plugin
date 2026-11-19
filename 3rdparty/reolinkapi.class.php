@@ -355,13 +355,22 @@ class reolinkAPI {
       return false;
     }
 
-    if (isset($data[0]['error']['rspCode'])) {
-      if ($data[0]['error']['rspCode'] == -6) {
+    $hasOk = false;
+    foreach ($data as $item) {
+      if (!isset($item['error']['rspCode'])) {
+        $hasOk = true;
+        continue;
+      }
+      if ($item['error']['rspCode'] == -6) {
         // Login failed, re-authentification need
         $this->login();
         return false;
       }
-
+      $errorNFO = $this->GetErrorNFO($item['error']['rspCode']);
+      $cmdName = isset($item['cmd']) ? $item['cmd'] : $command;
+      log::add('reolink', 'debug', $cmdName . ' ignoré : ' . ucfirst($errorNFO[0]));
+    }
+    if (!$hasOk) {
       $errorNFO = $this->GetErrorNFO($data[0]['error']['rspCode']);
       log::add('reolink', 'error', 'Requête vers la caméra en erreur. Réponse de la caméra : ' . ucfirst($errorNFO[0]) . '/' . ucfirst($errorNFO[1]));
       return false;
