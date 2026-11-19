@@ -1,8 +1,8 @@
 h11~=0.16.0
-requests~=2.32.3
+requests~=2.34.0
 charset-normalizer~=3.4.3
 aiohttp>=3.9.1
 aiosignal~=1.4.0
 fastapi~=0.119.0
 uvicorn~=0.37.0
-urllib3~=2.5.0
+urllib3~=2.8.0
