@@ -11,6 +11,7 @@ class reolinkAPI {
   private $cnxtype;
   private $authmethod;
   private $skipRetry = false;
+  private $loginInProgress = false;
 
   public $is_loggedin;
 
@@ -171,28 +172,28 @@ class reolinkAPI {
       $this->port = trim($cnxinfo['port']);
     }
 
-
     $this->user = trim($cnxinfo['username']);
     $this->password = trim($cnxinfo['password']);
     $this->tagtoken = str_replace(".", "", $this->ip);
-
-
-    // Try to get Token from Config
-    $this->token = config::byKey("token" . $this->tagtoken, 'reolink', 0);
-    $this->tokenexp = config::byKey("tokenEXP" . $this->tagtoken, 'reolink', 0);
-
     $this->authmethod = intval(config::byKey("authmethod", 'reolink', 0));
 
-    if ($this->authmethod == 0 && $this->reolinkTokenValidity() == false) {
-      // TOKEN NOK (get new one)
+    // Drop legacy persisted tokens (orphaned sessions caused max-session errors).
+    try {
+      config::remove("token" . $this->tagtoken, 'reolink');
+      config::remove("tokenEXP" . $this->tagtoken, 'reolink');
+    } catch (Exception $e) {
+      // ignore
+    }
+
+    if ($this->authmethod == 0) {
       $this->login();
     } else {
       $this->is_loggedin = true;
     }
   }
 
-
   public function __destruct() {
+    $this->logout();
     log::add('reolink', 'debug', str_repeat("=", 60));
   }
 
@@ -238,74 +239,77 @@ class reolinkAPI {
     return $response;
   }
 
-  private function reolinkTokenValidity() {
-    $date_utc = new DateTime("now", new DateTimeZone("UTC"));
-    $tsnow = $date_utc->getTimestamp();
-
-    log::add('reolink', 'debug', 'Vérification à ' . $tsnow . ' du TOKEN : ' . $this->token . ' Valable jusqu\'à : ' . ($this->tokenexp - 15));
-
-    if (empty($this->token)) {
-      log::add('reolink', 'debug', 'Aucun API Token > récupération nécéssaire');
-      return false;
-    }
-
-    if ($tsnow > ($this->tokenexp) - 15) {
-      log::add('reolink', 'debug', 'API Token expiré > renouvellement requis.');
-      $this->is_loggedin = false;
-      unset($this->token);
-      unset($this->tokenexp);
-      try {
-        log::add('reolink', 'debug', 'Effacement du TOKEN id=' . $this->tagtoken);
-        config::save("token" . $this->tagtoken, 0, 'reolink');
-        config::save("tokenEXP" . $this->tagtoken, 0, 'reolink');
-      } catch (Exception $e) {
-        log::add('reolink', 'error', 'Erreur lors de l\'effacement du TOKEN');
-      }
-      return false;
-    } else {
-      log::add('reolink', 'debug', 'API Token OK');
-      return true;
-    }
+  private function loginLockPath() {
+    return jeedom::getTmpFolder('reolink') . '/login_' . $this->tagtoken . '.lock';
   }
 
   private function login() {
-    log::add('reolink', 'debug', 'Camera login...');
-    $this->is_loggedin = false;
-    unset($this->token);
-    unset($this->tokenexp);
-    $loginParameters = '[{"cmd":"Login","param":{"User":{"userName":"' . $this->user . '","password":"' . $this->password . '"}}}]';
-    // query camera with parameters and return true if successful else false
-    $response = $this->SendCMD($loginParameters, "Login");
-
-    $this->token = $response[0]['value']['Token']['name'];
-    $date_utc = new DateTime("now", new DateTimeZone("UTC"));
-    $this->tokenexp = intval($response[0]['value']['Token']['leaseTime']) + ($date_utc->getTimestamp());
-
-
-    if (!empty($this->token) && !empty($this->tokenexp)) {
-      // Login OK
+    if ($this->authmethod != 0) {
       $this->is_loggedin = true;
-      log::add('reolink', 'debug', 'Token : ' . $this->token . ' Validité : ' . $this->tokenexp);
-      try {
-        config::save("token" . $this->tagtoken, $this->token, 'reolink');
-        config::save("tokenEXP" . $this->tagtoken, $this->tokenexp, 'reolink');
-        log::add('reolink', 'debug', 'TOKEN récupéré, enregistrement OK');
-        return true;
-      } catch (Exception $e) {
-        log::add('reolink', 'error', 'Erreur lors de l\'enregistrement du TOKEN');
-      }
-    } else {
-      // Login FAILED
-      $this->is_loggedin = false;
-      log::add('reolink', 'error', 'Echec > Impossible de se logguer sur la caméra');
+      return true;
+    }
+    if ($this->loginInProgress) {
       return false;
+    }
+
+    $lockPath = $this->loginLockPath();
+    $lockFp = @fopen($lockPath, 'c+');
+    if ($lockFp) {
+      flock($lockFp, LOCK_EX);
+    }
+
+    $this->loginInProgress = true;
+    try {
+      log::add('reolink', 'debug', 'Camera login...');
+      $this->is_loggedin = false;
+      unset($this->token);
+      unset($this->tokenexp);
+
+      $loginParameters = '[{"cmd":"Login","param":{"User":{"userName":"' . $this->user . '","password":"' . $this->password . '"}}}]';
+      $response = $this->SendCMD($loginParameters, "Login");
+
+      if (!is_array($response) || empty($response[0]['value']['Token']['name'])) {
+        $this->is_loggedin = false;
+        log::add('reolink', 'error', 'Echec > Impossible de se logguer sur la caméra');
+        return false;
+      }
+
+      $this->token = $response[0]['value']['Token']['name'];
+      $date_utc = new DateTime("now", new DateTimeZone("UTC"));
+      $this->tokenexp = intval($response[0]['value']['Token']['leaseTime']) + $date_utc->getTimestamp();
+      $this->is_loggedin = true;
+      log::add('reolink', 'debug', 'Token session OK (leaseUntil=' . $this->tokenexp . ')');
+      return true;
+    } finally {
+      $this->loginInProgress = false;
+      if ($lockFp) {
+        flock($lockFp, LOCK_UN);
+        fclose($lockFp);
+      }
     }
   }
 
+  public function logout() {
+    if ($this->authmethod != 0 || empty($this->token)) {
+      $this->is_loggedin = false;
+      unset($this->token);
+      unset($this->tokenexp);
+      return true;
+    }
+
+    log::add('reolink', 'debug', 'Camera logout...');
+    $payload = '[{"cmd":"Logout","param":{}}]';
+    $this->request('cmd=Logout&token=' . $this->token, $payload);
+    $this->is_loggedin = false;
+    unset($this->token);
+    unset($this->tokenexp);
+    return true;
+  }
 
   public function SendCMD($POSTparameters, $URLrequest = NULL) {
-
-    if (!$this->is_loggedin && !strpos($POSTparameters, 'cmd":"Login')) {
+    $isAuthCmd = (strpos($POSTparameters, 'cmd":"Login') !== false
+      || strpos($POSTparameters, 'cmd":"Logout') !== false);
+    if (!$this->is_loggedin && !$isAuthCmd) {
       log::add('reolink', 'error', 'Envoi de la commande impossible non loggué sur la caméra');
       return false;
     }
@@ -370,12 +374,18 @@ class reolinkAPI {
       }
       $rsp = intval($item['error']['rspCode']);
       if ($rsp == -6) {
-        // Login failed, re-authentification need
+        $this->is_loggedin = false;
+        unset($this->token);
+        unset($this->tokenexp);
         $this->login();
         $this->skipRetry = false;
         return false;
       }
-      if ($rsp != -99 && $rsp != -9) {
+      if ($rsp == -5) {
+        // Max session: do not hammer Login retries
+        $this->skipRetry = true;
+        $allNoRetry = true;
+      } elseif ($rsp != -99 && $rsp != -9) {
         $allNoRetry = false;
       }
       $label = $this->formatApiError($item);
@@ -385,10 +395,9 @@ class reolinkAPI {
     if (!$hasOk) {
       $rsp = intval($data[0]['error']['rspCode'] ?? 0);
       $label = $this->formatApiError($data[0]);
-      $level = ($rsp == -99) ? 'warning' : 'error';
+      $level = ($rsp == -99 || $rsp == -5) ? 'warning' : 'error';
       log::add('reolink', $level, 'Requête vers la caméra en erreur. Réponse de la caméra : ' . $label);
-      // Do not hammer offline / unsupported commands
-      $this->skipRetry = $allNoRetry;
+      $this->skipRetry = $allNoRetry || ($rsp == -5);
       return false;
     }
 
