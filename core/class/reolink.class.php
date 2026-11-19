@@ -78,12 +78,19 @@ class reolink extends eqLogic {
   public static function GetCamNFO($id) {
     log::add('reolink', 'debug', 'Obtention des informations de la caméra');
     $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera)) {
+      return false;
+    }
+    $channel = $camera->getChannel();
 
     // Devices Info
     $reolinkConn = reolink::getReolinkConnection($id);
-    $deviceInfo = $reolinkConn->SendCMD('[{"cmd":"GetDevInfo"},{"cmd":"GetP2P"},{"cmd":"GetLocalLink"},{"cmd":"GetAiState"},{"cmd":"GetNetPort"}]');
+    if (!is_object($reolinkConn)) {
+      return false;
+    }
+    $deviceInfo = $reolinkConn->SendCMD('[{"cmd":"GetDevInfo"},{"cmd":"GetP2P"},{"cmd":"GetLocalLink"},{"cmd":"GetAiState","action":0,"param":{"channel":' . $channel . '}},{"cmd":"GetNetPort"}]');
 
-    if (!$deviceInfo) {
+    if (!$deviceInfo || !isset($deviceInfo[0]['value']['DevInfo'])) {
       return false;
     }
 
@@ -93,7 +100,7 @@ class reolink extends eqLogic {
       $camera->setConfiguration($key, $value);
 
       if ($key == "model") {
-        // Download CAM img ICON
+        // Download CAM img ICON (cosmetic; never abort GetCamNFO on CDN failure)
         $modelURL = urlencode($value);
         $iconurl = "https://cdn.reolink.com/wp-content/assets/app/model-images/$modelURL/light_off.png";
         $camera->setConfiguration("camicon", $iconurl);
@@ -114,56 +121,58 @@ class reolink extends eqLogic {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         $rawdata = curl_exec($ch);
 
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        $header = substr($rawdata, 0, $header_size);
-
-        if ($httpcode == 200) {
+        if ($httpcode == 200 && $rawdata !== false) {
           log::add('reolink', 'debug', 'HTTP code 200 OK');
+          $fp = fopen($fileToWrite, 'w');
+          fwrite($fp, $rawdata);
+          fclose($fp);
+          log::add('reolink', 'debug', 'Ecriture OK');
         } else {
-          log::add('reolink', 'error', 'HTTP code ' . $httpcode . ' NOK ' . curl_error($ch) . ' Entête : ' . $header);
-          return false;
+          log::add('reolink', 'warning', 'Icône caméra CDN HTTP ' . $httpcode . ' (ignoré) ' . curl_error($ch));
         }
         curl_close($ch);
-        $fp = fopen($fileToWrite, 'w');
-        fwrite($fp, $rawdata);
-        fclose($fp);
-        log::add('reolink', 'debug', 'Ecriture OK');
       }
     }
 
     // Alone value
-    $value = $deviceInfo[1]['value']["P2p"]['uid'];
-    log::add('reolink', 'debug', 'Enregistrement : K=uid V=' . $value);
-    $camera->setConfiguration("uid", $value);
+    if (isset($deviceInfo[1]['value']['P2p']['uid'])) {
+      $value = $deviceInfo[1]['value']["P2p"]['uid'];
+      log::add('reolink', 'debug', 'Enregistrement : K=uid V=' . $value);
+      $camera->setConfiguration("uid", $value);
+    }
 
-    $value = $deviceInfo[2]['value']["LocalLink"]['activeLink'];
-    log::add('reolink', 'debug', 'Enregistrement : K=linkconnection V=' . $value);
-    $camera->setConfiguration("linkconnection", $value);
+    if (isset($deviceInfo[2]['value']['LocalLink']['activeLink'])) {
+      $value = $deviceInfo[2]['value']["LocalLink"]['activeLink'];
+      log::add('reolink', 'debug', 'Enregistrement : K=linkconnection V=' . $value);
+      $camera->setConfiguration("linkconnection", $value);
+    }
 
-    // Check if cam is AI
+    // Check if cam is AI (channel-aware)
     if (isset($deviceInfo[3]['value'])) {
-      // Cam is AI
       $camera->setConfiguration("supportai", "Oui");
     } else {
-      // Cam is not AI
       $camera->setConfiguration("supportai", "Non");
     }
 
     // Save cam port
-    foreach ($deviceInfo[4]['value']['NetPort'] as $key => $value) {
-      log::add('reolink', 'debug', 'Enregistrement : K=' . $key . ' V=' . $value);
+    if (isset($deviceInfo[4]['value']['NetPort']) && is_array($deviceInfo[4]['value']['NetPort'])) {
+      foreach ($deviceInfo[4]['value']['NetPort'] as $key => $value) {
+        log::add('reolink', 'debug', 'Enregistrement : K=' . $key . ' V=' . $value);
 
-      if (strpos($key, 'Enable') !== false) {
-        $value = str_replace("0", "(désactiver)", $value);
-        $value = str_replace("1", "(actif)", $value);
+        if (strpos($key, 'Enable') !== false) {
+          $value = str_replace("0", "(désactiver)", $value);
+          $value = str_replace("1", "(actif)", $value);
+        }
+
+        $camera->setConfiguration($key, $value);
       }
-
-      $camera->setConfiguration($key, $value);
     }
 
 
@@ -223,6 +232,14 @@ class reolink extends eqLogic {
         $deviceAbility['ptzPatrol'] = array('permit' => 1, 'ver' => intval($deviceAbility['ptzPatrol']['ver'] ?? 1));
         log::add('reolink', 'info', 'ptzPatrol activé via GetPtzPatrol (canal ' . $channel . ')');
       }
+    }
+
+    // Legacy firmwares: zoom/focus under short keys
+    if (!isset($deviceAbility['supportZoom']) && isset($deviceAbility['zoom'])) {
+      $deviceAbility['supportZoom'] = $deviceAbility['zoom'];
+    }
+    if (!isset($deviceAbility['supportFocus']) && isset($deviceAbility['focus'])) {
+      $deviceAbility['supportFocus'] = $deviceAbility['focus'];
     }
 
     log::add('reolink', 'debug', 'GetAbility à récupérer : ' . count($deviceAbility) . ' items (canal ' . $channel . ')');
@@ -458,12 +475,32 @@ class reolink extends eqLogic {
     $cmdget = NULL;
 
     if (!is_object($camcnx) || $camcnx->is_loggedin == false) {
-      exit();
+      return false;
+    }
+
+    if (intval($camcmd->getConfiguration('needs_cmd_resync', 0)) === 1) {
+      log::add('reolink', 'info', 'Resync commandes différé pour ' . $camcmd->getHumanName());
+      $camcmd->loadCmdFromConf($id, true);
+      // Reload camera after possible prune
+      $camcmd = reolink::byId($id, 'reolink');
+      if (!is_object($camcmd)) {
+        return false;
+      }
     }
 
     log::add('reolink', 'debug', 'Rafraichissement des informations de la caméra...');
 
     $channel = $camcmd->getChannel();
+    $unsupported = $camcmd->getConfiguration('unsupported_payloads', array());
+    if (!is_array($unsupported)) {
+      $unsupported = array();
+    }
+    $failCounts = $camcmd->getConfiguration('unsupported_fail_counts', array());
+    if (!is_array($failCounts)) {
+      $failCounts = array();
+    }
+    $unsupportedMap = array_fill_keys($unsupported, true);
+    $dirtyUnsupported = false;
 
     // Prepare request with INFO needed
     $cmdarr = [];
@@ -472,13 +509,18 @@ class reolink extends eqLogic {
       if ($cmd->getType() == "info" && $payload != NULL) {
         $payload = str_replace('#CHANNEL#', $channel, $payload);
         $payload = str_replace('\\', '', $payload);
-
+        if (isset($unsupportedMap[$payload])) {
+          continue;
+        }
         if (!in_array($payload, $cmdarr)) {
           $cmdarr[] = $payload;
         }
-        $cmd_block = array_chunk($cmdarr, config::byKey('cmdblock', __CLASS__, CMD_SEND_QTY));
       }
     }
+    if (empty($cmdarr)) {
+      return;
+    }
+    $cmd_block = array_chunk($cmdarr, config::byKey('cmdblock', __CLASS__, CMD_SEND_QTY));
 
     foreach ($cmd_block as $key => &$value) {
       $cmdget = "";
@@ -488,13 +530,68 @@ class reolink extends eqLogic {
       $cmdget = substr($cmdget, 0, -1);
       log::add('reolink', 'debug', 'Envoi ' . ($key + 1) . '/' . count($cmd_block) . ' payload multiple GetSetting = ' . $cmdget);
       $res = $camcnx->SendCMD("[$cmdget]");
-      if (!is_array($res)) {
+      $data = is_array($res) ? $res : $camcnx->lastResponseData;
+      if (!is_array($data)) {
         continue;
       }
 
       $mdSeen = false;
       $mdOk = false;
-      foreach ($res as &$json_data) {
+      $channelAlive = false;
+      foreach ($data as $json_data) {
+        if (($json_data['cmd'] ?? '') === reolinkAPI::CAM_GET_MDSTATE && isset($json_data['value']['state'])) {
+          $channelAlive = true;
+        }
+        if (!isset($json_data['error']['rspCode']) && isset($json_data['value'])) {
+          $channelAlive = true;
+        }
+      }
+
+      // Runtime learning of unsupported payloads
+      $transient = array(-5, -6, -7, -8, -21, -99, -105);
+      $immediate = array(-1, -4, -9, -24, -26);
+      $soft = array(-12, -17);
+      foreach ($value as $idx => $sentPayload) {
+        $item = $data[$idx] ?? null;
+        if (!is_array($item)) {
+          continue;
+        }
+        $sentCmd = json_decode($sentPayload, true);
+        $sentCmdName = is_array($sentCmd) ? ($sentCmd['cmd'] ?? '') : '';
+        if ($sentCmdName === reolinkAPI::CAM_GET_MDSTATE) {
+          continue;
+        }
+        if (!isset($item['error']['rspCode'])) {
+          if (isset($failCounts[$sentPayload])) {
+            unset($failCounts[$sentPayload]);
+            $dirtyUnsupported = true;
+          }
+          continue;
+        }
+        $rsp = intval($item['error']['rspCode']);
+        if (in_array($rsp, $transient, true) || !$channelAlive) {
+          continue;
+        }
+        if (in_array($rsp, $immediate, true)) {
+          if (!isset($unsupportedMap[$sentPayload])) {
+            $unsupportedMap[$sentPayload] = true;
+            $dirtyUnsupported = true;
+            log::add('reolink', 'info', 'Payload non supporté (runtime) : ' . $sentCmdName . ' rsp=' . $rsp);
+          }
+          continue;
+        }
+        if (in_array($rsp, $soft, true)) {
+          $failCounts[$sentPayload] = intval($failCounts[$sentPayload] ?? 0) + 1;
+          $dirtyUnsupported = true;
+          if ($failCounts[$sentPayload] >= 3 && !isset($unsupportedMap[$sentPayload])) {
+            $unsupportedMap[$sentPayload] = true;
+            unset($failCounts[$sentPayload]);
+            log::add('reolink', 'info', 'Payload non supporté après 3 échecs : ' . $sentCmdName . ' rsp=' . $rsp);
+          }
+        }
+      }
+
+      foreach ($data as &$json_data) {
         if (($json_data['cmd'] ?? '') === reolinkAPI::CAM_GET_MDSTATE) {
           $mdSeen = true;
           if (isset($json_data['value']['state'])) {
@@ -750,7 +847,7 @@ class reolink extends eqLogic {
             break;
 
           default:
-            log::add('reolink', 'error', 'Switch command not found : ' . print_r($json_data, true));
+            log::add('reolink', 'debug', 'Switch command not found : ' . print_r($json_data, true));
             $res = false;
         }
       }
@@ -758,6 +855,12 @@ class reolink extends eqLogic {
         $camcmd->checkAndUpdateCmd('ChannelOnline', $mdOk ? 1 : 0);
       }
     } #END foreach
+
+    if ($dirtyUnsupported) {
+      $camcmd->setConfiguration('unsupported_payloads', array_keys($unsupportedMap));
+      $camcmd->setConfiguration('unsupported_fail_counts', $failCounts);
+      $camcmd->save();
+    }
   } #End refreshNFO
 
 
@@ -969,28 +1072,169 @@ class reolink extends eqLogic {
   }
 
 
-  public function loadCmdFromConf($id) {
+  public function migrateLegacyPayloads() {
+    $fixes = array(
+      'SetaiTrackState' => '{"cmd":"GetAiCfg","action":0,"param":{"channel":#CHANNEL#}}',
+      'SetPowerLedState' => '{"cmd":"GetPowerLed","action":0,"param":{"channel":#CHANNEL#}}',
+    );
+    foreach ($fixes as $logicalId => $newPayload) {
+      $cmd = $this->getCmd(null, $logicalId);
+      if (!is_object($cmd)) {
+        continue;
+      }
+      $cur = strval($cmd->getConfiguration('payload'));
+      if ($cur === '' || strpos($cur, '#CHANNEL#') !== false || strpos($cur, 'channel') !== false) {
+        continue;
+      }
+      $cmd->setConfiguration('payload', $newPayload);
+      $cmd->save();
+      log::add('reolink', 'info', 'Payload legacy mis à jour : ' . $logicalId);
+    }
+  }
+
+  public static function isAbilityOk($abilities, $abilityNeed, $subAbility = null) {
+    if ($abilityNeed === 'none' || $abilityNeed === '' || $abilityNeed === null) {
+      return true;
+    }
+    if (!isset($abilities[$abilityNeed]) || !is_array($abilities[$abilityNeed])) {
+      return false;
+    }
+    $ab = $abilities[$abilityNeed];
+    if (intval($ab['permit'] ?? 0) == 0) {
+      return false;
+    }
+    if (array_key_exists('ver', $ab) && intval($ab['ver']) <= 0) {
+      return false;
+    }
+    if ($subAbility !== null && $subAbility !== '') {
+      if (!isset($abilities[$subAbility]) || !is_array($abilities[$subAbility])) {
+        return false;
+      }
+      $sub = $abilities[$subAbility];
+      if (intval($sub['permit'] ?? 0) == 0) {
+        return false;
+      }
+      if (array_key_exists('ver', $sub) && intval($sub['ver']) <= 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public static function isCmdUsedExternally($cmd) {
+    if (!is_object($cmd) || !method_exists($cmd, 'getUsedBy')) {
+      return false;
+    }
+    $eqId = intval($cmd->getEqLogic_id());
+    $used = $cmd->getUsedBy();
+    foreach (array('scenario', 'object', 'interactDef', 'view', 'plan', 'plan3d') as $key) {
+      if (!empty($used[$key])) {
+        return true;
+      }
+    }
+    if (!empty($used['eqLogic'])) {
+      foreach ($used['eqLogic'] as $eq) {
+        if (is_object($eq) && intval($eq->getId()) !== $eqId) {
+          return true;
+        }
+      }
+    }
+    // plugin::customUsedBy often returns empty arrays (ignore empty)
+    if (!empty($used['plugin']) && is_array($used['plugin'])) {
+      foreach ($used['plugin'] as $items) {
+        if (!empty($items)) {
+          return true;
+        }
+      }
+    }
+    if (!empty($used['cmd'])) {
+      foreach ($used['cmd'] as $other) {
+        if (!is_object($other)) {
+          continue;
+        }
+        if (intval($other->getEqLogic_id()) !== $eqId) {
+          return true;
+        }
+        // Ignore internal valueFrom link on same equipment
+        if ($other->getConfiguration('valueFrom') == $cmd->getLogicalId() || $cmd->getConfiguration('valueFrom') == $other->getLogicalId()) {
+          continue;
+        }
+        if (intval($other->getValue()) === intval($cmd->getId()) || intval($cmd->getValue()) === intval($other->getId())) {
+          continue;
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Probe Get* payloads in batches. Returns map payloadJson => ['ok'=>bool,'rsp'=>int,'value'=>array|null]
+   */
+  public static function probePayloads($cnx, $payloads) {
+    $results = array();
+    if (!is_object($cnx) || empty($payloads)) {
+      return $results;
+    }
+    $cnx->probeMode = true;
+    $chunks = array_chunk(array_values($payloads), config::byKey('cmdblock', __CLASS__, CMD_SEND_QTY));
+    foreach ($chunks as $chunk) {
+      $body = '[' . implode(',', $chunk) . ']';
+      $res = $cnx->SendCMD($body);
+      $data = is_array($res) ? $res : $cnx->lastResponseData;
+      foreach ($chunk as $idx => $payload) {
+        $item = (is_array($data) && isset($data[$idx])) ? $data[$idx] : null;
+        $ok = is_array($item) && !isset($item['error']['rspCode']) && isset($item['value']);
+        $rsp = is_array($item) ? intval($item['error']['rspCode'] ?? 0) : -999;
+        $results[$payload] = array(
+          'ok' => $ok,
+          'rsp' => $rsp,
+          'value' => $ok ? ($item['value'] ?? null) : null,
+        );
+      }
+    }
+    $cnx->probeMode = false;
+    return $results;
+  }
+
+  public static function isPermanentUnsupportedRsp($rsp) {
+    return in_array(intval($rsp), array(-1, -4, -9, -12, -17, -24, -26), true);
+  }
+
+  public function loadCmdFromConf($id, $pruneUnsupported = true) {
     $camera = reolink::byId($id, 'reolink');
     if (!is_object($camera) || $camera->isNvrParent()) {
       log::add('reolink', 'info', 'CreateCMD ignoré : équipement NVR parent');
       return false;
     }
+
+    $camera->migrateLegacyPayloads();
+    $camera->setConfiguration('needs_cmd_resync', 1);
+    $camera->save();
+
     $devAbilityReturn = reolink::GetCamAbility($id);
-    if ($camera->GetConfiguration("supportai") == "Non") {
-      $camisIA = 0;
-    } else {
-      $camisIA = 1;
+    if (!$devAbilityReturn) {
+      log::add('reolink', 'debug', 'Erreur lors de l\'obtention des capacités hardware/software de la caméra (resync différé)');
+      return false;
     }
 
-    if (!$devAbilityReturn) {
-      log::add('reolink', 'debug', 'Erreur lors de l\'obtention des capacités hardware/software de la caméra');
+    $cnx = reolink::getReolinkConnection($id);
+    if (!is_object($cnx) || $cnx->is_loggedin == false) {
+      log::add('reolink', 'debug', 'Caméra hors ligne pour loadCmdFromConf (resync différé)');
+      return false;
+    }
+
+    $channel = $camera->getChannel();
+    $mdProbe = $cnx->SendCMD('[{"cmd":"GetMdState","action":0,"param":{"channel":' . $channel . '}}]');
+    $channelOnline = is_array($mdProbe) && isset($mdProbe[0]['value']['state']);
+    if (!$channelOnline) {
+      $mdRsp = intval(($cnx->lastResponseData[0]['error']['rspCode'] ?? 0));
+      log::add('reolink', 'info', 'Canal ' . $channel . ' hors ligne (rsp=' . $mdRsp . '), nettoyage reporté');
       return false;
     }
 
     log::add('reolink', 'debug', 'Chargement des commandes depuis le fichiers de config : ' . dirname(__FILE__) . '/../config/reolinkapicmd.json');
     $content = file_get_contents(dirname(__FILE__) . '/../config/reolinkapicmd.json');
-
-
     if (!is_json($content)) {
       log::add('reolink', 'error', 'Format du fichier de configuration n\'est pas du JSON valide !');
       return false;
@@ -1000,96 +1244,259 @@ class reolink extends eqLogic {
       log::add('reolink', 'error', 'Pas de configuration valide trouvé dans le fichier');
       return false;
     }
-    log::add('reolink', 'info', 'Nombre de commandes dans le fichier de configuration : ' . count($device['commands']));
+
+    // Dual API families: prefer V20 when Get*V20 works
+    $dualFamilies = array(
+      'push' => array(
+        'v20' => array('SetPushStateV20', 'SetPushV20'),
+        'v1' => array('SetPushState', 'SetPush'),
+        'probeV20' => '{"cmd":"GetPushV20","action":0,"param":{"channel":#CHANNEL#}}',
+        'probeV1' => '{"cmd":"GetPush"}',
+      ),
+      'sdCard' => array(
+        'v20' => array('SetRecordStateV20', 'SetRecordV20', 'SetPreRecordStateV20', 'SetPreRecordV20', 'SetOverwriteStateV20', 'SetOverwriteV20', 'SetPostRecordStateV20', 'SetPostRecordV20'),
+        'v1' => array('SetRecordState', 'SetRecord', 'SetPreRecordState', 'SetPreRecord', 'SetOverwriteState', 'SetOverwrite', 'SetPostRecordState', 'SetPostRecord'),
+        'probeV20' => '{"cmd":"GetRecV20","action":0,"param":{"channel":#CHANNEL#}}',
+        'probeV1' => '{"cmd":"GetRec","action":0,"param":{"channel":#CHANNEL#}}',
+      ),
+      'email' => array(
+        'v20' => array('SetEmailStateV20', 'SetEmailV20'),
+        'v1' => array('SetEmailState', 'SetEmail'),
+        'probeV20' => '{"cmd":"GetEmailV20","action":0,"param":{"channel":#CHANNEL#}}',
+        'probeV1' => '{"cmd":"GetEmail","action":1}',
+      ),
+      'ftp' => array(
+        'v20' => array('SetFTPStateV20', 'SetFTPV20'),
+        'v1' => array('SetFTPState', 'SetFTP'),
+        'probeV20' => '{"cmd":"GetFtpV20","action":0,"param":{"channel":#CHANNEL#}}',
+        'probeV1' => '{"cmd":"GetFtp","action":1}',
+      ),
+      'alarmAudio' => array(
+        'v20' => array('SetAudioAlarmStateV20', 'SetAudioAlarmV20'),
+        'v1' => array('SetAudioAlarmState', 'SetAudioAlarm'),
+        'probeV20' => '{"cmd":"GetAudioAlarmV20","action":0,"param":{"channel":#CHANNEL#}}',
+        'probeV1' => '{"cmd":"GetAudioAlarm"}',
+      ),
+    );
+
+    // Collect unique Get* payloads from JSON candidates with ability OK
+    // (covers dual-family V1/V20 probes when ability permits)
+    $probeList = array();
+    foreach ($device['commands'] as $command) {
+      if (($command['type'] ?? '') !== 'info') {
+        continue;
+      }
+      $payloadTpl = $command['configuration']['payload'] ?? null;
+      if ($payloadTpl === null || $payloadTpl === '') {
+        continue;
+      }
+      if (!reolink::isAbilityOk($devAbilityReturn, $command['abilityneed'] ?? 'none', $command['subability'] ?? null)) {
+        continue;
+      }
+      $payload = str_replace('#CHANNEL#', $channel, $payloadTpl);
+      $payload = str_replace('\\', '', $payload);
+      $probeList[] = $payload;
+    }
+    $probeList = array_values(array_unique($probeList));
+    $probeResults = reolink::probePayloads($cnx, $probeList);
+
+    // Resolve dual families
+    $allowedLogical = array();
+    $deniedLogical = array();
+    foreach ($dualFamilies as $abilityKey => $fam) {
+      if (!reolink::isAbilityOk($devAbilityReturn, $abilityKey)) {
+        foreach (array_merge($fam['v20'], $fam['v1']) as $lid) {
+          $deniedLogical[$lid] = true;
+        }
+        continue;
+      }
+      $p20 = str_replace('#CHANNEL#', $channel, $fam['probeV20']);
+      $p1 = str_replace('#CHANNEL#', $channel, $fam['probeV1']);
+      $ok20 = !empty($probeResults[$p20]['ok']);
+      $ok1 = !empty($probeResults[$p1]['ok']);
+      if ($ok20) {
+        foreach ($fam['v20'] as $lid) {
+          $allowedLogical[$lid] = true;
+        }
+        foreach ($fam['v1'] as $lid) {
+          $deniedLogical[$lid] = true;
+        }
+        // preRec only if present in GetRecV20 value
+        if ($abilityKey === 'sdCard') {
+          $hasPreRec = isset($probeResults[$p20]['value']['Rec']['preRec']);
+          if (!$hasPreRec) {
+            $deniedLogical['SetPreRecordStateV20'] = true;
+            $deniedLogical['SetPreRecordV20'] = true;
+            unset($allowedLogical['SetPreRecordStateV20'], $allowedLogical['SetPreRecordV20']);
+          }
+        }
+      } elseif ($ok1) {
+        foreach ($fam['v1'] as $lid) {
+          $allowedLogical[$lid] = true;
+        }
+        foreach ($fam['v20'] as $lid) {
+          $deniedLogical[$lid] = true;
+        }
+        if ($abilityKey === 'sdCard') {
+          $hasPreRec = isset($probeResults[$p1]['value']['Rec']['preRec']);
+          if (!$hasPreRec) {
+            $deniedLogical['SetPreRecordState'] = true;
+            $deniedLogical['SetPreRecord'] = true;
+            unset($allowedLogical['SetPreRecordState'], $allowedLogical['SetPreRecord']);
+          }
+        }
+      } else {
+        foreach (array_merge($fam['v20'], $fam['v1']) as $lid) {
+          $deniedLogical[$lid] = true;
+        }
+      }
+    }
+
+    $unsupportedPayloads = array();
     $cmd_order = 0;
 
     foreach ($device['commands'] as $command) {
-      // Check cam ability
-      $cmd = null;
-      foreach ($this->getCmd() as $liste_cmd) {
-        if ((isset($command['logicalId']) && $liste_cmd->getLogicalId() == $command['logicalId'])
-          || (isset($command['name']) && $liste_cmd->getName() == $command['name'])
-        ) {
-          $cmd = $liste_cmd;
+      $logicalId = $command['logicalId'] ?? null;
+      if ($logicalId === null) {
+        continue;
+      }
+      if (isset($deniedLogical[$logicalId])) {
+        continue;
+      }
+      if (!reolink::isAbilityOk($devAbilityReturn, $command['abilityneed'] ?? 'none', $command['subability'] ?? null)) {
+        continue;
+      }
+      // Dual family override: if family resolved, require allowed
+      $inDual = false;
+      foreach ($dualFamilies as $fam) {
+        if (in_array($logicalId, $fam['v20'], true) || in_array($logicalId, $fam['v1'], true)) {
+          $inDual = true;
           break;
         }
       }
+      if ($inDual && !isset($allowedLogical[$logicalId])) {
+        continue;
+      }
 
-      if ($cmd == null || !is_object($cmd)) {
-        // Check cam ability
-        $ability = false;
-        $abilityfound = false;
-        // Global Ability
-        foreach ($devAbilityReturn as $abilityName => $abilityParam) {
-
-          if ($command['abilityneed'] == "none") {
-            $ability = true;
-            break;
+      // Probe Get* payload when present
+      $payloadTpl = $command['configuration']['payload'] ?? null;
+      if (($command['type'] ?? '') === 'info' && $payloadTpl) {
+        $payload = str_replace('#CHANNEL#', $channel, str_replace('\\', '', $payloadTpl));
+        if (isset($probeResults[$payload]) && !$probeResults[$payload]['ok']) {
+          if (reolink::isPermanentUnsupportedRsp($probeResults[$payload]['rsp'])) {
+            $unsupportedPayloads[$payload] = true;
+            $deniedLogical[$logicalId] = true;
+            continue;
           }
+        }
+      }
+      // Actions linked to denied info
+      $valueFrom = $command['configuration']['valueFrom'] ?? '';
+      if ($valueFrom !== '' && isset($deniedLogical[$valueFrom])) {
+        continue;
+      }
 
-          if ($command['abilityneed'] == $abilityName) {
-            $abilityfound = true;
-            if ($abilityParam['permit'] != 0) {
-              if (isset($command['iastate'])) {
-                if ($command['iastate'] == $camisIA) {
-                  // Function available for this model ADD
-                  log::add('reolink', 'info', '=> (IA) Capacité hardware/software OK pour : ' . $command['name']);
-                  $ability = true;
-                } else {
-                  // Function IA NOT available for this model DO NOT ADD
-                  log::add('reolink', 'debug', '=> (IA) Ignorer, capacité hardware/software NOK pour : ' . $command['name']);
-                  break;
-                }
-              } else {
-                // Function available for this model ADD
-                log::add('reolink', 'info', '=> Capacité hardware/software OK pour : ' . $command['name']);
-                $ability = true;
-              }
-              break;
-            } else {
-              // Function NOT available for this model DO NOT ADD
-              log::add('reolink', 'debug', '=> Ignorer, capacité hardware/software NOK pour : ' . $command['name']);
-              break;
-            }
+      $cmd = $camera->getCmd(null, $logicalId);
+      if (!is_object($cmd)) {
+        foreach ($camera->getCmd() as $liste_cmd) {
+          if ($liste_cmd->getName() == ($command['name'] ?? '')) {
+            $cmd = $liste_cmd;
             break;
           }
         }
+      }
 
-        if (!$abilityfound && !$ability) {
-          log::add('reolink', 'info', 'Aucun match de capacité ' . $command['abilityneed'] . ' pour la CMD : ' . $command['name']);
-        }
-
-        if ($ability) {
-          log::add('reolink', 'info', '-> Ajout de : ' . $command['name']);
-          $cmd = new reolinkCmd();
-          $cmd->setOrder($cmd_order);
-          $cmd->setEqLogic_id($this->getId());
-          utils::a2o($cmd, $command);
+      if (is_object($cmd)) {
+        // Refresh payload from JSON if present
+        if ($payloadTpl) {
+          $cmd->setConfiguration('payload', $payloadTpl);
           $cmd->save();
-          if ($cmd->getConfiguration('valueFrom') != "") {
-            $valueLink = $cmd->getConfiguration('valueFrom');
-            $camera = reolink::byId($id, 'reolink');
-            $cmdlogic = reolinkCmd::byEqLogicIdAndLogicalId($camera->getId(), $valueLink);
-            if (is_object($cmdlogic)) {
-              $cmd->setValue($cmdlogic->getId());
-              $cmd->save();
-              log::add('reolink', 'debug', '--> Valeur lier depuis : ' . $valueLink . " (" . $cmdlogic->getId() . ")");
-            } else {
-              log::add('reolink', 'warning', 'X--> Liaison impossible objet introuvable : ' . $valueLink);
-            }
-          }
-          $cmd_order++;
         }
-      } else {
         log::add('reolink', 'debug', 'Commande déjà présente : ' . $command['name']);
+        continue;
+      }
+
+      log::add('reolink', 'info', '-> Ajout de : ' . $command['name']);
+      $cmd = new reolinkCmd();
+      $cmd->setOrder($cmd_order);
+      $cmd->setEqLogic_id($camera->getId());
+      utils::a2o($cmd, $command);
+      $cmd->save();
+      if ($valueFrom != "") {
+        $cmdlogic = reolinkCmd::byEqLogicIdAndLogicalId($camera->getId(), $valueFrom);
+        if (is_object($cmdlogic)) {
+          $cmd->setValue($cmdlogic->getId());
+          $cmd->save();
+          log::add('reolink', 'debug', '--> Valeur lier depuis : ' . $valueFrom . " (" . $cmdlogic->getId() . ")");
+        } else {
+          log::add('reolink', 'warning', 'X--> Liaison impossible objet introuvable : ' . $valueFrom);
+        }
+      }
+      $cmd_order++;
+    }
+
+    // Prune unsupported existing commands
+    $keptUnsupported = array();
+    if ($pruneUnsupported) {
+      foreach ($camera->getCmd() as $existing) {
+        $lid = $existing->getLogicalId();
+        if ($lid === '' || $lid === null) {
+          continue;
+        }
+        // Never prune refresh / ChannelOnline / ONVIF event infos without payload
+        if (in_array($lid, array('refresh', 'ChannelOnline', 'EvMotion', 'EvFaceDetect', 'EvPeopleDetect', 'EvVehicleDetect', 'EvDogCatDetect', 'EvMotionAlarm', 'EvVisitor', 'EvLastOnvifFull', 'EvLastOnvifName', 'EvLastOnvifState', 'MdState'), true)) {
+          continue;
+        }
+        $payloadTpl = $existing->getConfiguration('payload');
+        $payload = $payloadTpl ? str_replace('#CHANNEL#', $channel, str_replace('\\', '', $payloadTpl)) : null;
+        $probeFailed = ($payload !== null && isset($probeResults[$payload]) && !$probeResults[$payload]['ok']
+          && reolink::isPermanentUnsupportedRsp($probeResults[$payload]['rsp']));
+
+        $shouldRemove = isset($deniedLogical[$lid]) || $probeFailed;
+        // Also remove if ability/subability from JSON would deny (match by logicalId in conf)
+        if (!$shouldRemove) {
+          foreach ($device['commands'] as $command) {
+            if (($command['logicalId'] ?? '') !== $lid) {
+              continue;
+            }
+            if (!reolink::isAbilityOk($devAbilityReturn, $command['abilityneed'] ?? 'none', $command['subability'] ?? null)) {
+              $shouldRemove = true;
+            }
+            break;
+          }
+        }
+        if (!$shouldRemove) {
+          continue;
+        }
+        // Mute Get* only when the API call itself fails (not when a sibling field like preRec is denied)
+        if ($probeFailed && $existing->getType() === 'info' && $payload !== null) {
+          $unsupportedPayloads[$payload] = true;
+        }
+        if (reolink::isCmdUsedExternally($existing)) {
+          if ($probeFailed && $existing->getType() === 'info' && $payload !== null) {
+            $keptUnsupported[$payload] = true;
+          }
+          log::add('reolink', 'warning', 'Commande non supportée conservée (utilisée) : ' . $existing->getName() . ' (' . $lid . ')');
+          continue;
+        }
+        log::add('reolink', 'info', 'Commande non supportée supprimée : ' . $existing->getName() . ' (' . $lid . ')');
+        $existing->remove();
       }
     }
+
     // Remplace l'ancienne commande cachée SetPTZpatrol si les nouvelles existent
-    $legacy = $this->getCmd(null, 'SetPTZpatrol');
-    if (is_object($legacy) && is_object($this->getCmd(null, 'StartPtzPatrol'))) {
-      $legacy->remove();
-      log::add('reolink', 'info', 'Commande legacy SetPTZpatrol supprimée');
+    $legacy = $camera->getCmd(null, 'SetPTZpatrol');
+    if (is_object($legacy) && is_object($camera->getCmd(null, 'StartPtzPatrol'))) {
+      if (!reolink::isCmdUsedExternally($legacy)) {
+        $legacy->remove();
+        log::add('reolink', 'info', 'Commande legacy SetPTZpatrol supprimée');
+      }
     }
+
+    $camera->setConfiguration('unsupported_payloads', array_keys(array_merge($unsupportedPayloads, $keptUnsupported)));
+    $camera->setConfiguration('unsupported_fail_counts', array());
+    $camera->setConfiguration('needs_cmd_resync', 0);
+    $camera->save();
     return $cmd_order;
   }
 
