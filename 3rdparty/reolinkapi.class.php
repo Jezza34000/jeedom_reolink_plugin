@@ -180,7 +180,7 @@ class reolinkAPI {
     $this->token = config::byKey("token" . $this->tagtoken, 'reolink', 0);
     $this->tokenexp = config::byKey("tokenEXP" . $this->tagtoken, 'reolink', 0);
 
-    $this->authmethod = config::byKey("authmethod", 'reolink');
+    $this->authmethod = intval(config::byKey("authmethod", 'reolink', 0));
 
     if ($this->authmethod == 0 && $this->reolinkTokenValidity() == false) {
       // TOKEN NOK (get new one)
@@ -309,11 +309,6 @@ class reolinkAPI {
       return false;
     }
 
-    if ($this->authmethod == 0) {
-      $authURL = 'token=' . $this->token;
-    } else {
-      $authURL = 'user=' . $this->user . '&password=' . $this->password;
-    }
     // Send Request
 
     if (!is_json($POSTparameters)) {
@@ -328,7 +323,12 @@ class reolinkAPI {
 
     $maxRetry = 0;
     do {
-
+      // Rebuild auth each attempt (token may be renewed after rspCode -6)
+      if ($this->authmethod == 0) {
+        $authURL = 'token=' . ($this->token ?? '');
+      } else {
+        $authURL = 'user=' . $this->user . '&password=' . $this->password;
+      }
       $response = $this->request($URLrequest . $authURL, $POSTparameters);
       $checkedresponse = $this->checkResponse($response, $URLrequest);
 
