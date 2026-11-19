@@ -247,21 +247,10 @@ logging.info('Webhook IP : %s', _webhook_ip)
 logging.info('Webhook port : %s', _webhook_port)
 
 # Hand callback/apikey to camhook via env (Process inherits environ).
-# The old relative "jeedomcreds" file failed whenever cwd was not writable
-# (e.g. /home/<user> when Jeedom starts the daemon as www-data).
+# Avoids the old relative "jeedomcreds" file, which failed when cwd was
+# not writable by www-data (e.g. /home/<user>).
 os.environ[_ENV_CALLBACK] = _callback or ''
 os.environ[_ENV_APIKEY] = _apikey or ''
-# Best-effort cleanup of legacy file next to the PID (and relative cwd).
-for legacy in (
-    'jeedomcreds',
-    os.path.join(os.path.dirname(os.path.abspath(_pidfile)), 'jeedomcreds'),
-):
-    try:
-        if os.path.exists(legacy):
-            os.remove(legacy)
-            logging.debug('Removed legacy creds file %s', legacy)
-    except OSError as e:
-        logging.debug('Unable to remove legacy creds file %s: %s', legacy, e)
 
 start_uvicorn()
 
