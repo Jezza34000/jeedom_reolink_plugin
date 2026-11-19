@@ -4,6 +4,12 @@
 >
 >Pour rappel s'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 20/11/2026
+
+- Sondage / nettoyage automatique des commandes non supportées (V1 vs V20, Zoom/Focus, AI, preRec)
+- Payloads `GetAiCfg` / `GetPowerLed` avec canal ; filet runtime `unsupported_payloads`
+- Timeouts cURL ; plus d'`exit()` dans `refreshNFO` ; resync différé si caméra hors ligne à la MAJ
+
 # 19/11/2026
 
 - Support NVR : canal équipement, souscriptions ONVIF sans doublon, lecture MD/AI par canal

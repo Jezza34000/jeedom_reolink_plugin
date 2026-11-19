@@ -1,5 +1,12 @@
 # Change log
 
+20/11/2026
+
+- Commandes non supportées : sondage réel des `Get*` à la création/mise à jour, choix automatique V1 vs V20, nettoyage sûr (conserve les commandes utilisées dans scénarios)
+- Payloads corrigés : `GetAiCfg` / `GetPowerLed` avec canal ; Zoom/Focus via `supportZoom`/`supportFocus` ; subability AI / preRec
+- Runtime : filet `unsupported_payloads` (codes francs immédiats, `-12`/`-17` après 3 échecs canal en ligne)
+- Fiabilité : timeouts cURL 5/15 s ; `refreshNFO` ne fait plus `exit()` si une caméra est hors ligne ; resync différé (`needs_cmd_resync`)
+
 19/11/2026
 
 - Support NVR : canal équipement (`defined_channel`), souscriptions ONVIF sans doublon, lecture MD/AI par canal

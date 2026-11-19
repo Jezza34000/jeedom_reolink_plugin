@@ -28,7 +28,24 @@ require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
     $plugin = plugin::byId('reolink');
     $eqLogics = eqLogic::byType($plugin->getId());
     foreach ($eqLogics as $eqLogic) {
-
+      if (!is_object($eqLogic) || $eqLogic->isNvrParent()) {
+        continue;
+      }
+      try {
+        $eqLogic->migrateLegacyPayloads();
+        $eqLogic->setConfiguration('needs_cmd_resync', 1);
+        $eqLogic->save();
+        if (intval($eqLogic->getIsEnable()) !== 1) {
+          continue;
+        }
+        $id = $eqLogic->getId();
+        reolink::GetCamNFO($id);
+        $eqLogic->loadCmdFromConf($id, true);
+      } catch (Exception $e) {
+        log::add('reolink', 'warning', 'reolink_update : ' . $eqLogic->getHumanName() . ' — ' . $e->getMessage());
+      } catch (Throwable $e) {
+        log::add('reolink', 'warning', 'reolink_update : ' . $eqLogic->getHumanName() . ' — ' . $e->getMessage());
+      }
     }
   }
 

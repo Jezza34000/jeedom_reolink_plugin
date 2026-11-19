@@ -14,6 +14,8 @@ class reolinkAPI {
   private $loginInProgress = false;
 
   public $is_loggedin;
+  public $lastResponseData = null;
+  public $probeMode = false;
 
   const CAM_GET_ABILITY = 'GetAbility';
   const CAM_GET_DEVINFO = 'GetDevInfo';
@@ -210,6 +212,8 @@ class reolinkAPI {
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
     curl_setopt(
@@ -223,15 +227,16 @@ class reolinkAPI {
     $response = curl_exec($ch);
     $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-    $header = substr($response, 0, $header_size);
+    $header = substr($response ?: '', 0, $header_size);
+    $curlErr = curl_error($ch);
+    curl_close($ch);
 
     if ($httpcode == 200) {
       log::add('reolink', 'debug', 'HTTP code 200 OK');
     } else {
-      log::add('reolink', 'error', 'HTTP code ' . $httpcode . ' NOK ' . curl_error($ch) . ' Entête : ' . $header);
+      log::add('reolink', 'error', 'HTTP code ' . $httpcode . ' NOK ' . $curlErr . ' Entête : ' . $header);
       return false;
     }
-    curl_close($ch);
 
     //log::add('reolink', 'debug', 'Payload => '.print_r($payload, true));
     $debugResp = preg_replace('/\s+/', '', print_r($response, true));
@@ -327,6 +332,11 @@ class reolinkAPI {
     }
 
     $this->skipRetry = false;
+    $this->lastResponseData = null;
+    $sentItems = json_decode($POSTparameters, true);
+    if (!is_array($sentItems)) {
+      $sentItems = null;
+    }
     $maxRetry = 0;
     do {
       // Rebuild auth each attempt (token may be renewed after rspCode -6)
@@ -336,12 +346,12 @@ class reolinkAPI {
         $authURL = 'user=' . $this->user . '&password=' . $this->password;
       }
       $response = $this->request($URLrequest . $authURL, $POSTparameters);
-      $checkedresponse = $this->checkResponse($response, $URLrequest);
+      $checkedresponse = $this->checkResponse($response, $URLrequest, $sentItems);
 
       if ($checkedresponse !== false) {
         break;
       }
-      if (!empty($this->skipRetry)) {
+      if (!empty($this->skipRetry) || $this->probeMode) {
         break;
       }
       $maxRetry++;
@@ -354,19 +364,23 @@ class reolinkAPI {
   /*
     Check Response validity
     */
-  private function checkResponse($response, $command) {
+  private function checkResponse($response, $command, $sentItems = null) {
     $data = json_decode($response, true);
     $this->skipRetry = false;
+    $this->lastResponseData = (is_array($data) && isset($data[0])) ? $data : null;
+    $noRetryCodes = array(-1, -4, -5, -9, -24, -26, -99);
 
     // General Case
     if (!$data || !isset($data[0])) {
-      log::add('reolink', 'error', 'Requête vers la caméra en erreur. Réponse vide');
+      if (!$this->probeMode) {
+        log::add('reolink', 'error', 'Requête vers la caméra en erreur. Réponse vide');
+      }
       return false;
     }
 
     $hasOk = false;
     $allNoRetry = true;
-    foreach ($data as $item) {
+    foreach ($data as $idx => $item) {
       if (!isset($item['error']['rspCode'])) {
         $hasOk = true;
         $allNoRetry = false;
@@ -381,23 +395,26 @@ class reolinkAPI {
         $this->skipRetry = false;
         return false;
       }
-      if ($rsp == -5) {
-        // Max session: do not hammer Login retries
-        $this->skipRetry = true;
-        $allNoRetry = true;
-      } elseif ($rsp != -99 && $rsp != -9) {
+      if (!in_array($rsp, $noRetryCodes, true)) {
         $allNoRetry = false;
       }
       $label = $this->formatApiError($item);
-      $cmdName = isset($item['cmd']) ? $item['cmd'] : $command;
+      $cmdName = $item['cmd'] ?? '';
+      if ($cmdName === '' || $cmdName === 'Unknown') {
+        $cmdName = (is_array($sentItems) && isset($sentItems[$idx]['cmd'])) ? $sentItems[$idx]['cmd'] : $command;
+      }
       log::add('reolink', 'debug', $cmdName . ' ignoré : ' . $label);
     }
     if (!$hasOk) {
       $rsp = intval($data[0]['error']['rspCode'] ?? 0);
       $label = $this->formatApiError($data[0]);
-      $level = ($rsp == -99 || $rsp == -5) ? 'warning' : 'error';
-      log::add('reolink', $level, 'Requête vers la caméra en erreur. Réponse de la caméra : ' . $label);
-      $this->skipRetry = $allNoRetry || ($rsp == -5);
+      if ($this->probeMode) {
+        log::add('reolink', 'debug', 'Probe lot refusé : ' . $label);
+      } else {
+        $level = in_array($rsp, $noRetryCodes, true) ? 'warning' : 'error';
+        log::add('reolink', $level, 'Requête vers la caméra en erreur. Réponse de la caméra : ' . $label);
+      }
+      $this->skipRetry = $allNoRetry || $this->probeMode;
       return false;
     }
 
