@@ -1,13 +1,27 @@
-# Changelog plugin template
+# Changelog plugin Reolink
 
 >**IMPORTANT**
 >
 >Pour rappel s'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 19/11/2026
+
+- Support NVR : canal équipement, souscriptions ONVIF sans doublon, lecture MD/AI par canal
+- Correctifs API lot / auth token (PHP 8) ; logs offline apaisés ; parent NVR exclu des boucles caméra
+- Commande `ChannelOnline`
+- PTZ Patrol : commandes, états, modale de gestion des rondes
+- Démon : credentials Jeedom via environnement (fix webhook / permissions)
+- Dépendances Python sécurisées (`urllib3` 2.8, `requests` 2.34)
+
+# 22/06/2024
+
+- Ajout detection IA Chien/Cat
+- Mise à jour des modèles supportés dans la description
+
 # 20/06/2024
 
 - Plusieurs corrections de bugs
-- Mise à jours des dépendances et du démon pour compatibilité Debian12 (à tester)
+- Mise à jours des dépendances et du démon pour compatibilité Debian12
 - version minimale Jeedom: 4.2
 
 # 20/11/2020
