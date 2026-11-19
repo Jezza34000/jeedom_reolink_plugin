@@ -228,6 +228,194 @@ class reolink extends eqLogic {
     }
   }
 
+  public static function updatePTZpatrol($id, $data) {
+    $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera) || !is_array($data) || !isset($data['value']['PtzPatrol'])) {
+      return false;
+    }
+    reolink::applyPtzPatrolState($camera, $data);
+    return true;
+  }
+
+  public static function applyPtzPatrolState($camera, $data) {
+    if (!is_object($camera) || !is_array($data) || !isset($data['value']['PtzPatrol'])) {
+      return;
+    }
+    $list = '';
+    $running = 0;
+    $activeId = null;
+    foreach ($data['value']['PtzPatrol'] as $patrol) {
+      if (!is_array($patrol)) {
+        continue;
+      }
+      $id = intval($patrol['id'] ?? -1);
+      if ($id < 0) {
+        continue;
+      }
+      if (!empty($patrol['running'])) {
+        $running = 1;
+        $activeId = $id;
+      }
+      if (empty($patrol['enable']) && empty($patrol['preset'])) {
+        continue;
+      }
+      $name = trim(strval($patrol['name'] ?? ''));
+      if ($name === '') {
+        $name = 'Ronde ' . $id;
+      }
+      $list .= $id . '|' . $name . ';';
+    }
+    $list = rtrim($list, ';');
+    if ($list === '') {
+      $list = '0|Ronde 0';
+    }
+    $cmd = $camera->getCmd(null, 'StartPtzPatrol');
+    if (!is_object($cmd)) {
+      $cmd = $camera->getCmd(null, 'SetPTZpatrol');
+    }
+    if (is_object($cmd)) {
+      $cmd->setConfiguration('listValue', $list);
+      if ($activeId !== null) {
+        $cmd->setConfiguration('lastPatrolId', $activeId);
+      }
+      $cmd->save();
+    }
+    $camera->checkAndUpdateCmd('PtzPatrolState', $running);
+    $camera->refreshWidget();
+  }
+
+  public static function getPatrolData($id) {
+    $camera = reolink::byId($id, 'reolink');
+    $cnx = reolink::getReolinkConnection($id);
+    if (!is_object($camera) || !is_object($cnx)) {
+      throw new Exception(__('Caméra introuvable', __FILE__));
+    }
+    $channel = $camera->getChannel();
+    $res = $cnx->SendCMD('[{"cmd":"GetPtzPreset","action":1,"param":{"channel":' . $channel . '}},{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
+    if (!is_array($res)) {
+      throw new Exception(__('Impossible de lire les presets/rondes PTZ', __FILE__));
+    }
+    $presets = array();
+    $patrols = array();
+    foreach ($res as $item) {
+      if (($item['cmd'] ?? '') === 'GetPtzPreset' && isset($item['value']['PtzPreset'])) {
+        foreach ($item['value']['PtzPreset'] as $preset) {
+          if (!empty($preset['enable'])) {
+            $presets[] = array(
+              'id' => intval($preset['id']),
+              'name' => strval($preset['name'] ?? ('Preset ' . $preset['id'])),
+            );
+          }
+        }
+      }
+      if (($item['cmd'] ?? '') === 'GetPtzPatrol' && isset($item['value']['PtzPatrol'])) {
+        $patrols = $item['value']['PtzPatrol'];
+        reolink::applyPtzPatrolState($camera, $item);
+      }
+    }
+    return array(
+      'channel' => $channel,
+      'presets' => $presets,
+      'patrols' => $patrols,
+    );
+  }
+
+  public static function savePatrol($id, $patrolId, $enable, $steps) {
+    $camera = reolink::byId($id, 'reolink');
+    $cnx = reolink::getReolinkConnection($id);
+    if (!is_object($camera) || !is_object($cnx)) {
+      throw new Exception(__('Caméra introuvable', __FILE__));
+    }
+    $channel = $camera->getChannel();
+    $patrolId = intval($patrolId);
+    if ($patrolId < 0 || $patrolId > 5) {
+      throw new Exception(__('Identifiant de ronde invalide (0 à 5)', __FILE__));
+    }
+    if (!is_array($steps)) {
+      $steps = array();
+    }
+    $preset = array();
+    foreach ($steps as $step) {
+      if (!is_array($step)) {
+        continue;
+      }
+      $preset[] = array(
+        'id' => intval($step['id']),
+        'speed' => max(1, min(64, intval($step['speed'] ?? 32))),
+        'dwellTime' => max(1, min(300, intval($step['dwellTime'] ?? 30))),
+      );
+    }
+    if (intval($enable) && count($preset) < 1) {
+      throw new Exception(__('Une ronde active nécessite au moins un preset', __FILE__));
+    }
+    $payload = array(array(
+      'cmd' => 'SetPtzPatrol',
+      'action' => 0,
+      'param' => array(
+        'channel' => $channel,
+        'PtzPatrol' => array(
+          'channel' => $channel,
+          'id' => $patrolId,
+          'enable' => intval($enable) ? 1 : 0,
+          'preset' => $preset,
+        ),
+      ),
+    ));
+    $res = $cnx->SendCMD(json_encode($payload));
+    if (!is_array($res) || !isset($res[0]) || (intval($res[0]['code'] ?? 1) != 0 && intval($res[0]['value']['rspCode'] ?? 0) != 200)) {
+      throw new Exception(__('Échec SetPtzPatrol', __FILE__));
+    }
+    $refresh = $cnx->SendCMD('[{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
+    if (is_array($refresh) && isset($refresh[0])) {
+      reolink::applyPtzPatrolState($camera, $refresh[0]);
+    }
+    return true;
+  }
+
+  public static function runPatrol($id, $op, $patrolId = null) {
+    $camera = reolink::byId($id, 'reolink');
+    $cnx = reolink::getReolinkConnection($id);
+    if (!is_object($camera) || !is_object($cnx)) {
+      throw new Exception(__('Caméra introuvable', __FILE__));
+    }
+    $channel = $camera->getChannel();
+    $op = ($op === 'StopPatrol') ? 'StopPatrol' : 'StartPatrol';
+    if ($patrolId === null || $patrolId === '') {
+      $cmd = $camera->getCmd(null, 'StartPtzPatrol');
+      if (!is_object($cmd)) {
+        $cmd = $camera->getCmd(null, 'SetPTZpatrol');
+      }
+      $patrolId = is_object($cmd) ? intval($cmd->getConfiguration('lastPatrolId', 0)) : 0;
+    }
+    $patrolId = intval($patrolId);
+    $payload = '[{"cmd":"PtzCtrl","action":0,"param":{"channel":' . $channel . ',"op":"' . $op . '","id":' . $patrolId . '}}]';
+    $res = $cnx->SendCMD($payload);
+    if (!is_array($res) || !isset($res[0]) || (intval($res[0]['code'] ?? 1) != 0 && intval($res[0]['value']['rspCode'] ?? 0) != 200)) {
+      throw new Exception(__('Échec PtzCtrl ' . $op, __FILE__));
+    }
+    $startCmd = $camera->getCmd(null, 'StartPtzPatrol');
+    if (is_object($startCmd)) {
+      $startCmd->setConfiguration('lastPatrolId', $patrolId);
+      $startCmd->save();
+    }
+    // NVR often keeps running=0; reflect last action immediately
+    $camera->checkAndUpdateCmd('PtzPatrolState', $op === 'StartPatrol' ? 1 : 0);
+    $refresh = $cnx->SendCMD('[{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
+    if (is_array($refresh) && isset($refresh[0]['value']['PtzPatrol'])) {
+      $anyRunning = 0;
+      foreach ($refresh[0]['value']['PtzPatrol'] as $patrol) {
+        if (!empty($patrol['running'])) {
+          $anyRunning = 1;
+          break;
+        }
+      }
+      if ($anyRunning || $op === 'StopPatrol') {
+        reolink::applyPtzPatrolState($camera, $refresh[0]);
+      }
+    }
+    return true;
+  }
+
   public static function refreshNFO($id) {
     $camcmd = reolink::byId($id, 'reolink');
     $camcnx = reolink::getReolinkConnection($id);
@@ -391,6 +579,10 @@ class reolink extends eqLogic {
             break;
 
           case reolinkAPI::CAM_GET_PTZPRESET:
+            break;
+
+          case reolinkAPI::CAM_GET_PTZPATROL:
+            reolink::applyPtzPatrolState($camcmd, $json_data);
             break;
 
           case reolinkAPI::CAM_GET_PTZGUARD:
@@ -833,6 +1025,12 @@ class reolink extends eqLogic {
         log::add('reolink', 'debug', 'Commande déjà présente : ' . $command['name']);
       }
     }
+    // Remplace l'ancienne commande cachée SetPTZpatrol si les nouvelles existent
+    $legacy = $this->getCmd(null, 'SetPTZpatrol');
+    if (is_object($legacy) && is_object($this->getCmd(null, 'StartPtzPatrol'))) {
+      $legacy->remove();
+      log::add('reolink', 'info', 'Commande legacy SetPTZpatrol supprimée');
+    }
     return $cmd_order;
   }
 
@@ -894,6 +1092,24 @@ class reolinkCmd extends cmd {
         if (is_array($data) && isset($data[0])) {
           reolink::updatePTZpreset($EqId, $data[0]);
         }
+        break;
+      case 'GetPtzPatrol':
+        $camcnx = reolink::getReolinkConnection($EqId);
+        $data = $camcnx->SendCMD('[{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
+        if (is_array($data) && isset($data[0])) {
+          reolink::updatePTZpatrol($EqId, $data[0]);
+        }
+        break;
+      case 'StartPtzPatrol':
+        reolink::runPatrol($EqId, 'StartPatrol', $_options['select'] ?? null);
+        break;
+      case 'StopPtzPatrol':
+        reolink::runPatrol($EqId, 'StopPatrol');
+        break;
+      case 'SetPTZpatrol':
+        // Legacy command: StartPatrol/StopPatrol without patrol id
+        $op = $_options['select'] ?? '';
+        reolink::runPatrol($EqId, $op === 'StopPatrol' ? 'StopPatrol' : 'StartPatrol', 0);
         break;
       case 'SetSpeed':
         $this->setConfiguration('speedvalue', $_options['slider']);

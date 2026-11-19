@@ -95,9 +95,9 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [x] Presets PTZ
   - [x] Récupération des presets PTZ
   - [x] Utilisation des presets PTZ
-- [ ] PTZ Patrol
+- [x] PTZ Patrol
   - [x] Activation/Désactivation du PTZ Patrol
-  - [ ] Gestion PTZ Patrol
+  - [x] Gestion PTZ Patrol
 - [X] PTZ Guard (3)
   - [X] Etat du point de garde
   - [X] Création/Actualisation du point de garde
