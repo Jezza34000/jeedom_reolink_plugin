@@ -986,6 +986,14 @@ class reolink extends eqLogic {
       return intval($a->isNvrParent()) - intval($b->isNvrParent());
     });
     foreach ($eqLogics as $camera) {
+      $defCh = $camera->getConfiguration('defined_channel', '');
+      $isNvr = ($camera->getConfiguration('exactType') === 'NVR' || intval($camera->getConfiguration('channelNum', 1)) > 1);
+      if (!$isNvr && $defCh === '') {
+        $privCmd = $camera->getCmd(null, 'SetPrivacyModeState');
+        if (is_object($privCmd) && intval($privCmd->execCmd()) === 1) {
+          continue;
+        }
+      }
 
       $camera_contact_point = $camera->getConfiguration('adresseip');
       if (filter_var($camera_contact_point, FILTER_VALIDATE_IP)) {
@@ -993,7 +1001,6 @@ class reolink extends eqLogic {
       } else {
         $camera_ip = gethostbyname($camera_contact_point);
       }
-
 
       $port_onvif = $camera->getConfiguration('port_onvif', $camera->getConfiguration('onvifPort', '8000'));
       if ($port_onvif == '') {

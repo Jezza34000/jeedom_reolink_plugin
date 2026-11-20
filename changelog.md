@@ -8,6 +8,7 @@
 - `cron10` : port `onvifPort` (fallback `port_onvif` / 8000) ; `cron` ne force plus `MdState=0` si démon down
 - `refreshNFO` : V20 `scheduleEnable` (Push/Rec/Ftp/Email), FPS/`bitRate` GetEnc, HddInfo vide, `bSmartTrack`, Md/AiAlarm PHP 8
 - Actions `Set*` : payloads V20/`channel` corrigés, Reboot, Read-Modify-Write (Enc/Isp/Osd/RecV20/AiCfg), `action:0` + garde PHP 8
+- Privacy : `cron10` ignore ONVIF si `SetPrivacyModeState=1` (autonome) ; Baichuan `subItem` + message `sigVer=v3`
 - Mode confidentialité (Privacy Mode) via Baichuan TCP 9000 : commandes `SetPrivacyMode` / `SetPrivacyModeState` (E1 Zoom…), garde anti faux-positif (remoteAbility + cmd 574), skip HTTP si privacy ON
 - Fix création/sauvegarde d'équipement : `Unknown column 'cnxByIp'` (cache connexion renommé `$_cnxByIp`, convention Jeedom)
 - Commandes non supportées : sondage réel des `Get*` à la création/mise à jour, choix automatique V1 vs V20, nettoyage sûr (conserve les commandes utilisées dans scénarios)

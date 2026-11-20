@@ -21,8 +21,8 @@ class reolinkBaichuan {
   private $recvBuf = '';
   private $connectTimeout;
   private $readTimeout;
-  /** @var string|null sleep flag from DeviceInfo on login (standalone privacy hint) */
   public $loginSleep = null;
+  private $accountDevice = false;
 
   public function __construct($host, $username, $password, $port = self::DEFAULT_PORT, $connectTimeout = 3, $readTimeout = 5) {
     $this->host = $host;
@@ -97,6 +97,7 @@ class reolinkBaichuan {
     $this->loggedIn = false;
     $this->nonce = null;
     $this->aesKey = null;
+    $this->accountDevice = false;
   }
 
   private function nextMessId($chId) {
@@ -112,7 +113,6 @@ class reolinkBaichuan {
     if ($messageClass === '1465') {
       return $magic . $cmd . $len . $mid . hex2bin('12dc1465');
     }
-    // 1464 modern 24-byte header
     return $magic . $cmd . $len . $mid . hex2bin('00001464') . pack('V', $payloadOffset);
   }
 
@@ -197,7 +197,6 @@ class reolinkBaichuan {
       return null;
     }
     if (bin2hex(substr($buf, 0, 4)) !== self::HEADER_MAGIC) {
-      // resync: drop until magic found
       $pos = strpos($buf, hex2bin(self::HEADER_MAGIC));
       if ($pos === false) {
         $this->recvBuf = substr($buf, -3);
@@ -230,12 +229,10 @@ class reolinkBaichuan {
         $recPayloadOffset = $recLenBody;
       }
     } elseif ($messClass === '1465') {
-      // legacy/nonce class — body may still be present; treat as 20-byte header
       $lenHeader = 20;
     } elseif ($messClass === '1466') {
       $lenHeader = 20;
     } else {
-      // unknown: drop header magic and resync
       $this->recvBuf = substr($buf, 4);
       return null;
     }
@@ -276,7 +273,6 @@ class reolinkBaichuan {
     } elseif ($recEncType === '00dd') {
       $recBody = $encBody;
     } else {
-      // try AES then BC
       try {
         if ($this->aesKey !== null) {
           $recBody = $this->aesCrypt($encBody, false);
@@ -294,7 +290,6 @@ class reolinkBaichuan {
       if (strpos($alt, '<?xml') === 0) {
         return $alt;
       }
-      // may still be useful plaintext without declaration
     }
     return $recBody;
   }
@@ -312,10 +307,15 @@ class reolinkBaichuan {
     }
     $this->connect();
 
-    // Nonce request: header-only cmd 1 / class 1465
     $nonceXml = $this->sendRaw(1, null, '', '', 'bc', '1465');
+    if ($this->xmlValue($nonceXml, 'sigVer') === 'v3') {
+      $this->accountDevice = true;
+    }
     $nonce = $this->xmlValue($nonceXml, 'nonce');
     if ($nonce === null || $nonce === '') {
+      if ($this->accountDevice) {
+        throw new Exception('Baichuan Account Device (sigVer=v3): login local bloqué');
+      }
       throw new Exception('Baichuan nonce missing');
     }
     $this->nonce = $nonce;
@@ -337,7 +337,14 @@ class reolinkBaichuan {
       . '</LoginNet>' . "\n"
       . '</body>';
 
-    $mess = $this->sendRaw(1, null, $loginXml, '', 'bc', '1464');
+    try {
+      $mess = $this->sendRaw(1, null, $loginXml, '', 'bc', '1464');
+    } catch (Exception $e) {
+      if ($this->accountDevice || strpos($e->getMessage(), 'status 406') !== false) {
+        throw new Exception('Baichuan Account Device (sigVer=v3): login local bloqué (406)');
+      }
+      throw $e;
+    }
     $this->loggedIn = true;
     $sleep = $this->xmlValue($mess, 'sleep');
     $this->loginSleep = ($sleep === null || $sleep === '') ? null : $sleep;
@@ -355,7 +362,6 @@ class reolinkBaichuan {
         try {
           $this->sendRaw(2, null, $xml, '', 'aes', '1464');
         } catch (Exception $e) {
-          // ignore logout errors
         }
       }
     } finally {
@@ -391,14 +397,25 @@ class reolinkBaichuan {
       if ($sx === false) {
         return 0;
       }
-      // Prefer channel item
+      $ch = intval($channel);
       foreach ($sx->xpath('.//item') as $item) {
         $chn = isset($item->chnID) ? intval($item->chnID) : null;
-        if ($chn === intval($channel) && isset($item->remoteAbility)) {
+        if ($chn === $ch && isset($item->remoteAbility)) {
           return intval($item->remoteAbility);
         }
+        foreach ($item->xpath('./subItem') as $sub) {
+          $subCh = isset($sub->chnID) ? intval($sub->chnID) : null;
+          if ($subCh === $ch && isset($sub->remoteAbility)) {
+            return intval($sub->remoteAbility);
+          }
+        }
       }
-      // Host-level remoteAbility
+      foreach ($sx->xpath('.//subItem') as $sub) {
+        $subCh = isset($sub->chnID) ? intval($sub->chnID) : null;
+        if ($subCh === $ch && isset($sub->remoteAbility)) {
+          return intval($sub->remoteAbility);
+        }
+      }
       $host = $sx->xpath('.//remoteAbility');
       if ($host && isset($host[0])) {
         return intval($host[0]);
@@ -417,10 +434,6 @@ class reolinkBaichuan {
     return intval($sleep) === 1;
   }
 
-  /**
-   * Triple-guard probe (reolink_aio a71f7008 / a5efa7a0).
-   * @return bool|null null = unsupported, bool = current privacy state
-   */
   public function probePrivacySupport($channel, $isNvr) {
     try {
       $this->ensureLogin();
@@ -441,7 +454,6 @@ class reolinkBaichuan {
     }
   }
 
-  /** @return bool|null */
   public function getPrivacyMode($channel) {
     try {
       $this->ensureLogin();
