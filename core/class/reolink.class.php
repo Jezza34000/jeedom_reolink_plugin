@@ -117,7 +117,7 @@ class reolink extends eqLogic {
     if (!is_object($reolinkConn)) {
       return false;
     }
-    $deviceInfo = $reolinkConn->SendCMD('[{"cmd":"GetDevInfo"},{"cmd":"GetP2P"},{"cmd":"GetLocalLink"},{"cmd":"GetAiState","action":0,"param":{"channel":' . $channel . '}},{"cmd":"GetNetPort"}]');
+    $deviceInfo = $reolinkConn->SendCMD('[{"cmd":"GetDevInfo"},{"cmd":"GetP2P"},{"cmd":"GetLocalLink"},{"cmd":"GetAiState","action":0,"param":{"channel":' . $channel . '}},{"cmd":"GetNetPort"},{"cmd":"GetRtspUrl","action":0,"param":{"channel":' . $channel . '}}]');
 
     if (!$deviceInfo || !isset($deviceInfo[0]['value']['DevInfo'])) {
       return false;
@@ -204,6 +204,33 @@ class reolink extends eqLogic {
       }
     }
 
+    $rtspPort = intval(preg_replace('/\D/', '', strval($camera->getConfiguration('rtspPort', '554'))));
+    if ($rtspPort <= 0) {
+      $rtspPort = 554;
+    }
+    $userEnc = rawurlencode(strval($camera->getConfiguration('login')));
+    $passEnc = rawurlencode(strval($camera->getConfiguration('password')));
+    $ip = strval($camera->getConfiguration('adresseip'));
+    $chStr = str_pad(strval($channel + 1), 2, '0', STR_PAD_LEFT);
+    $mainUrl = null;
+    $subUrl = null;
+    if (isset($deviceInfo[5]['value']['rtspUrl']) && is_array($deviceInfo[5]['value']['rtspUrl'])) {
+      $rtsp = $deviceInfo[5]['value']['rtspUrl'];
+      if (!empty($rtsp['mainStream'])) {
+        $mainUrl = preg_replace('#^rtsp://([^/@]+@)?#', 'rtsp://' . $userEnc . ':' . $passEnc . '@', $rtsp['mainStream'], 1);
+      }
+      if (!empty($rtsp['subStream'])) {
+        $subUrl = preg_replace('#^rtsp://([^/@]+@)?#', 'rtsp://' . $userEnc . ':' . $passEnc . '@', $rtsp['subStream'], 1);
+      }
+    }
+    if ($mainUrl === null) {
+      $mainUrl = 'rtsp://' . $userEnc . ':' . $passEnc . '@' . $ip . ':' . $rtspPort . '/Preview_' . $chStr . '_main';
+    }
+    if ($subUrl === null) {
+      $subUrl = 'rtsp://' . $userEnc . ':' . $passEnc . '@' . $ip . ':' . $rtspPort . '/h264Preview_' . $chStr . '_sub';
+    }
+    $camera->setConfiguration('rtspMainUrl', $mainUrl);
+    $camera->setConfiguration('rtspSubUrl', $subUrl);
 
     log::add('reolink', 'debug', 'GetDeviceInfo ajout de ' . count($deviceInfo[0]['value']["DevInfo"]) . ' items');
     if (count($deviceInfo[0]['value']["DevInfo"]) > 1) {
@@ -212,6 +239,118 @@ class reolink extends eqLogic {
     } else {
       return false;
     }
+  }
+
+  public static function getSnapshot($_cameraEqLogic) {
+    if (!is_object($_cameraEqLogic)) {
+      return '';
+    }
+    $reolinkId = intval($_cameraEqLogic->getConfiguration('reolink_eqLogic_id', 0));
+    $reolinkEq = ($reolinkId > 0) ? reolink::byId($reolinkId, 'reolink') : null;
+    if (!is_object($reolinkEq)) {
+      $ip = strval($_cameraEqLogic->getConfiguration('ip'));
+      $ch = $_cameraEqLogic->getConfiguration('reolink_channel', '');
+      foreach (eqLogic::byType('reolink', true) as $eq) {
+        if (strval($eq->getConfiguration('adresseip')) !== $ip) {
+          continue;
+        }
+        if ($ch !== '' && strval($eq->getConfiguration('defined_channel', '')) !== strval($ch)) {
+          continue;
+        }
+        if ($ch === '' && $eq->isNvrParent()) {
+          continue;
+        }
+        $reolinkEq = $eq;
+        break;
+      }
+    }
+    if (!is_object($reolinkEq) || $reolinkEq->isNvrParent()) {
+      return '';
+    }
+    $priv = $reolinkEq->getCmd(null, 'SetPrivacyModeState');
+    if (is_object($priv) && intval($priv->execCmd()) === 1) {
+      return '';
+    }
+    $cnx = reolink::getReolinkConnection($reolinkEq->getId());
+    if (!is_object($cnx)) {
+      return '';
+    }
+    $jpeg = $cnx->SendSnap($reolinkEq->getChannel(), 'sub');
+    return ($jpeg === false) ? '' : $jpeg;
+  }
+
+  public static function syncCameraPlugin($id = null) {
+    try {
+      $camPlugin = plugin::byId('camera');
+    } catch (Exception $e) {
+      throw new Exception(__('Plugin Caméra absent ou inactif', __FILE__));
+    }
+    if (!is_object($camPlugin) || !$camPlugin->isActive()) {
+      throw new Exception(__('Plugin Caméra absent ou inactif', __FILE__));
+    }
+    if (!class_exists('camera')) {
+      include_file('core', 'camera', 'class', 'camera');
+    }
+    $targets = array();
+    if ($id !== null) {
+      $eq = reolink::byId($id, 'reolink');
+      if (!is_object($eq) || $eq->isNvrParent()) {
+        throw new Exception(__('Équipement Reolink invalide', __FILE__));
+      }
+      $targets[] = $eq;
+    } else {
+      foreach (eqLogic::byType('reolink', true) as $eq) {
+        if (!$eq->isNvrParent()) {
+          $targets[] = $eq;
+        }
+      }
+    }
+    $synced = 0;
+    foreach ($targets as $reolinkEq) {
+      if ($reolinkEq->getConfiguration('rtspSubUrl') == '') {
+        reolink::GetCamNFO($reolinkEq->getId());
+        $reolinkEq = reolink::byId($reolinkEq->getId(), 'reolink');
+      }
+      $ip = strval($reolinkEq->getConfiguration('adresseip'));
+      $channel = intval($reolinkEq->getChannel());
+      $camEq = null;
+      foreach (eqLogic::byType('camera') as $c) {
+        if (intval($c->getConfiguration('reolink_eqLogic_id', 0)) === intval($reolinkEq->getId())) {
+          $camEq = $c;
+          break;
+        }
+      }
+      if (!is_object($camEq)) {
+        foreach (eqLogic::byType('camera') as $c) {
+          if (strval($c->getConfiguration('ip')) === $ip
+            && strval($c->getConfiguration('reolink_channel', '')) === strval($channel)) {
+            $camEq = $c;
+            break;
+          }
+        }
+      }
+      if (!is_object($camEq)) {
+        $camEq = new camera();
+        $camEq->setEqType_name('camera');
+        $camEq->setName('Caméra ' . $reolinkEq->getName());
+        $camEq->setIsEnable(1);
+        $camEq->setIsVisible(1);
+        $camEq->setObject_id($reolinkEq->getObject_id());
+      }
+      $camEq->setConfiguration('ip', $ip);
+      $camEq->setConfiguration('port', preg_replace('/\D/', '', strval($reolinkEq->getConfiguration('rtspPort', '554'))) ?: '554');
+      $camEq->setConfiguration('username', $reolinkEq->getConfiguration('login'));
+      $camEq->setConfiguration('password', $reolinkEq->getConfiguration('password'));
+      $camEq->setConfiguration('protocole', 'rtsp');
+      $camEq->setConfiguration('urlStream', 'reolink::getSnapshot');
+      $camEq->setConfiguration('cameraStreamAccessUrl', $reolinkEq->getConfiguration('rtspSubUrl'));
+      $camEq->setConfiguration('rtsp_option', '-rtsp_transport tcp');
+      $camEq->setConfiguration('reolink_channel', strval($channel));
+      $camEq->setConfiguration('reolink_eqLogic_id', intval($reolinkEq->getId()));
+      $camEq->save();
+      $synced++;
+    }
+    return $synced;
   }
 
   public static function GetCamAbility($id) {

@@ -311,6 +311,38 @@ class reolinkAPI {
     return true;
   }
 
+  public function SendSnap($channel = 0, $snapType = 'sub') {
+    if ($this->authmethod == 0 && !$this->is_loggedin) {
+      if (!$this->login()) {
+        return false;
+      }
+    }
+    if ($this->authmethod == 0) {
+      $auth = 'token=' . urlencode($this->token);
+    } else {
+      $auth = 'user=' . urlencode($this->user) . '&password=' . urlencode($this->password);
+    }
+    $snapType = ($snapType === 'main') ? 'main' : 'sub';
+    $url = $this->cnxtype . '://' . $this->ip . ':' . $this->port
+      . '/cgi-bin/api.cgi?cmd=Snap&channel=' . intval($channel)
+      . '&snapType=' . $snapType . '&' . $auth;
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+    $data = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $ctype = strval(curl_getinfo($ch, CURLINFO_CONTENT_TYPE));
+    curl_close($ch);
+    if ($code !== 200 || $data === false || $data === '' || stripos($ctype, 'image/') === false) {
+      log::add('reolink', 'debug', 'SendSnap failed HTTP=' . $code . ' ctype=' . $ctype . ' len=' . strlen(strval($data)));
+      return false;
+    }
+    return $data;
+  }
+
   public function SendCMD($POSTparameters, $URLrequest = NULL) {
     $isAuthCmd = (strpos($POSTparameters, 'cmd":"Login') !== false
       || strpos($POSTparameters, 'cmd":"Logout') !== false);
