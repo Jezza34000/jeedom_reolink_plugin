@@ -53,6 +53,7 @@
 		},
 		{
 			"abilityneed": "alarmMd",
+			"subability": "supportAiFace",
 			"name": "event FaceDetect (etat)",
 			"type": "info",
 			"subtype": "binary",
@@ -62,6 +63,7 @@
 		},
 		{
 			"abilityneed": "alarmMd",
+			"subability": "supportAiPeople",
 			"name": "event PeopleDetect (etat)",
 			"type": "info",
 			"subtype": "binary",
@@ -71,6 +73,7 @@
 		},
 		{
 			"abilityneed": "alarmMd",
+			"subability": "supportAiVehicle",
 			"name": "event VehicleDetect (etat)",
 			"type": "info",
 			"subtype": "binary",
@@ -80,6 +83,7 @@
 		},
 		{
 			"abilityneed": "alarmMd",
+			"subability": "supportAiDogCat",
 			"name": "event DogCatDetect (etat)",
 			"type": "info",
 			"subtype": "binary",
@@ -89,6 +93,7 @@
 		},
 		{
 			"abilityneed": "alarmMd",
+			"subability": "supportAiPackage",
 			"name": "event PackageDetect (etat)",
 			"type": "info",
 			"subtype": "binary",
@@ -2300,6 +2305,7 @@
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
+			"subability": "supportAiFace",
 			"name": "Sensibilité Detection Visage (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -2312,6 +2318,7 @@
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
+			"subability": "supportAiFace",
 			"name": "Sensibilité Detection Visage",
 			"type": "action",
 			"subtype": "slider",
@@ -2329,6 +2336,7 @@
 		},
 		{
 			"abilityneed": "supportAiStayTime",
+			"subability": "supportAiFace",
 			"name": "Délai Alarme Visage (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -2342,6 +2350,7 @@
 		},
 		{
 			"abilityneed": "supportAiStayTime",
+			"subability": "supportAiFace",
 			"name": "Délai Alarme Visage",
 			"type": "action",
 			"subtype": "slider",
@@ -2359,6 +2368,7 @@
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
+			"subability": "supportAiPackage",
 			"name": "Sensibilité Detection Colis (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -2371,6 +2381,7 @@
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
+			"subability": "supportAiPackage",
 			"name": "Sensibilité Detection Colis",
 			"type": "action",
 			"subtype": "slider",
@@ -2388,6 +2399,7 @@
 		},
 		{
 			"abilityneed": "supportAiStayTime",
+			"subability": "supportAiPackage",
 			"name": "Délai Alarme Colis (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -2401,6 +2413,7 @@
 		},
 		{
 			"abilityneed": "supportAiStayTime",
+			"subability": "supportAiPackage",
 			"name": "Délai Alarme Colis",
 			"type": "action",
 			"subtype": "slider",
@@ -2417,7 +2430,7 @@
 			"logicalId": "SetAlarmDelayPackage"
 		},
 		{
-			"abilityneed": "none",
+			"abilityneed": "upgrade",
 			"name": "Nouveau firmware (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -2429,7 +2442,7 @@
 			"logicalId": "NewFirmwareState"
 		},
 		{
-			"abilityneed": "none",
+			"abilityneed": "upgrade",
 			"name": "Vérifier firmware",
 			"type": "action",
 			"subtype": "other",
@@ -2437,7 +2450,7 @@
 			"logicalId": "CheckFirmware"
 		},
 		{
-			"abilityneed": "none",
+			"abilityneed": "upgrade",
 			"name": "Mise à jour firmware",
 			"type": "action",
 			"subtype": "other",
@@ -2445,7 +2458,7 @@
 			"logicalId": "UpgradeFirmware"
 		},
 		{
-			"abilityneed": "none",
+			"abilityneed": "ntp",
 			"name": "NTP (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -2457,7 +2470,7 @@
 			"logicalId": "SetNtpEnableState"
 		},
 		{
-			"abilityneed": "none",
+			"abilityneed": "ntp",
 			"name": "NTP",
 			"type": "action",
 			"subtype": "select",
@@ -2473,7 +2486,7 @@
 			"logicalId": "SetNtpEnable"
 		},
 		{
-			"abilityneed": "none",
+			"abilityneed": "ntp",
 			"name": "Synchroniser l'heure",
 			"type": "action",
 			"subtype": "other",

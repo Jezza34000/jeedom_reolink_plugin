@@ -2,6 +2,9 @@
 
 20/11/2026
 
+- Stabilité : validation des options `select`/`slider` (plus d'erreur « valeur à inserer »), listes `SetEnc` auto-peuplées, refus des `size` vides
+- IA : filtre `supportAiFace`/`supportAiPackage` (+ `GetAiState`) ; RMW `SetBuzzerAlarmV20` / `SetAiAlarm` ; `CheckFirmware` throttlé 12 h/IP
+- API : `-12`/`-17` sans retry/`ERROR` ; `deamon_start` détecte vraiment l'échec ; `sendToDaemon` avec timeout ; gardes `is_object`
 - Pont plugin Caméra : `reolink::getSnapshot` (Snap CGI authentifié par token), `syncCameraPlugin`, URLs RTSP `GetRtspUrl`
 - Live vidéo : `go2rtc` (Low `sub` H.264 / High `main` H.265), proxy `stream.php`, modale Live
 - Surveillance HTTP : Buzzer canal/NVR, enregistrement manuel, IA Visage/Colis, GetAlarm V1, CheckFirmware/UpgradeOnline, NTP/SyncTime

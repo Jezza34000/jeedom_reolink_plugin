@@ -6,6 +6,8 @@
 
 # 20/11/2026
 
+- Stabilité : options select/slider, listes SetEnc auto, filtre IA Face/Colis, RMW Buzzer/AiAlarm, CheckFirmware 12h/IP
+- API : codes -12/-17 sans retry ERROR ; démon et sendToDaemon plus robustes
 - Pont plugin Caméra : Snap par token + sync auto des équipements
 - Live `go2rtc` Low/High (proxy fMP4 authentifié)
 - Buzzer NVR/canal, enregistrement manuel, IA Visage/Colis, firmware/NTP/SyncTime

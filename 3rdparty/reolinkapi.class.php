@@ -404,7 +404,7 @@ class reolinkAPI {
     $data = json_decode($response, true);
     $this->skipRetry = false;
     $this->lastResponseData = (is_array($data) && isset($data[0])) ? $data : null;
-    $noRetryCodes = array(-1, -4, -5, -9, -24, -26, -99);
+    $noRetryCodes = array(-1, -4, -5, -9, -12, -17, -24, -26, -99);
 
     // General Case
     if (!$data || !isset($data[0])) {

@@ -32,6 +32,10 @@ class reolink extends eqLogic {
 
   public static function getReolinkConnection($id) {
     $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera)) {
+      log::add('reolink', 'warning', 'getReolinkConnection : équipement introuvable (' . $id . ')');
+      return NULL;
+    }
     $adresseIP = $camera->getConfiguration('adresseip');
     $port = $camera->getConfiguration('port');
     $username = $camera->getConfiguration('login');
@@ -96,7 +100,7 @@ class reolink extends eqLogic {
 
   public static function TryConnect($id) {
     $reolinkConn = reolink::getReolinkConnection($id);
-    if ($reolinkConn->is_loggedin == true) {
+    if (is_object($reolinkConn) && $reolinkConn->is_loggedin == true) {
       log::add('reolink', 'info', 'Connection à la caméra réussie');
       return true;
     } else {
@@ -457,17 +461,47 @@ class reolink extends eqLogic {
       }
     }
 
+    // Cross-check AI type support with GetAiState (more accurate than GetAbility alone)
+    $aiMap = array(
+      'people' => 'supportAiPeople',
+      'vehicle' => 'supportAiVehicle',
+      'dog_cat' => 'supportAiDogCat',
+      'face' => 'supportAiFace',
+      'package' => 'supportAiPackage',
+    );
+    $aiState = $reolinkConn->SendCMD('[{"cmd":"GetAiState","action":0,"param":{"channel":' . intval($channel) . '}}]');
+    if (is_array($aiState) && isset($aiState[0]['value']) && is_array($aiState[0]['value'])) {
+      foreach ($aiMap as $aiKey => $abilityKey) {
+        if (!array_key_exists($aiKey, $aiState[0]['value'])) {
+          continue;
+        }
+        $entry = $aiState[0]['value'][$aiKey];
+        $supported = is_array($entry) ? (intval($entry['support'] ?? 0) === 1) : false;
+        $deviceAbility[$abilityKey] = array('permit' => $supported ? 6 : 0, 'ver' => $supported ? 1 : 0);
+      }
+    }
+
+    // Firmware check ability: prefer upgrade, fallback supportRemoteUpgrade
+    if ((!isset($deviceAbility['upgrade']) || intval($deviceAbility['upgrade']['permit'] ?? 0) === 0)
+      && isset($deviceAbility['supportRemoteUpgrade'])
+      && intval($deviceAbility['supportRemoteUpgrade']['permit'] ?? 0) > 0) {
+      $deviceAbility['upgrade'] = $deviceAbility['supportRemoteUpgrade'];
+    }
+
     log::add('reolink', 'debug', 'GetAbility à récupérer : ' . count($deviceAbility) . ' items (canal ' . $channel . ')');
     return count($deviceAbility) > 1 ? $deviceAbility : false;
   }
 
   public static function updatePTZpreset($id, $data) {
     $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera) || !is_array($data) || !isset($data['value']['PtzPreset'])) {
+      return false;
+    }
     $cmd = $camera->getCmd(null, 'SetPtzByPreset');
     $ptzlist = "";
     log::add('reolink', 'debug',  'PTZ à parser = ' . print_r($data['value']['PtzPreset'], true));
-    if (is_object($cmd) && is_array($data)) {
-      foreach ($data['value']['PtzPreset']  as $key => $value) {
+    if (is_object($cmd)) {
+      foreach ($data['value']['PtzPreset'] as $key => $value) {
         if ($value['enable'] == 1) {
           log::add('reolink', 'debug',  'Ajout du PTZ preset = ' . $value['id'] . '|' . $value['name']);
           $ptzlist .=  $value['id'] . '|' . $value['name'] . ";";
@@ -738,12 +772,19 @@ class reolink extends eqLogic {
 
     // Prepare request with INFO needed
     $cmdarr = [];
+    $ipKey = strval($camcmd->getConfiguration('adresseip'));
+    $fwCacheKey = 'last_firmware_check_' . preg_replace('/[^a-zA-Z0-9_.-]/', '_', $ipKey);
+    $lastFwCheck = intval(config::byKey($fwCacheKey, __CLASS__, 0));
+    $skipCheckFirmware = ($lastFwCheck > 0 && (time() - $lastFwCheck) < 43200);
     foreach (reolinkCmd::byEqLogicId($id) as $cmd) {
       $payload = $cmd->getConfiguration('payload');
       if ($cmd->getType() == "info" && $payload != NULL) {
         $payload = str_replace('#CHANNEL#', $channel, $payload);
         $payload = str_replace('\\', '', $payload);
         if (isset($unsupportedMap[$payload])) {
+          continue;
+        }
+        if ($skipCheckFirmware && strpos($payload, '"cmd":"CheckFirmware"') !== false) {
           continue;
         }
         if (!in_array($payload, $cmdarr)) {
@@ -938,6 +979,18 @@ class reolink extends eqLogic {
                 $camcmd->checkAndUpdateCmd('SetEncodingst2State', $enc['subStream']['vType']);
               }
             }
+            // Auto-fill dynamic SetEnc lists when missing (existing equipments)
+            $needEncLists = false;
+            foreach (array('SetResolutionst1', 'SetEncodingst1', 'SetFPSst1', 'SetBitratest1') as $encLid) {
+              $encCmd = $camcmd->getCmd(null, $encLid);
+              if (is_object($encCmd) && strval($encCmd->getConfiguration('listValue', '')) === '') {
+                $needEncLists = true;
+                break;
+              }
+            }
+            if ($needEncLists) {
+              reolink::applyEncListValues($camcmd, $camcnx, $channel);
+            }
             break;
 
           case reolinkAPI::CAM_GET_ISP:
@@ -1043,6 +1096,10 @@ class reolink extends eqLogic {
 
           case reolinkAPI::CAM_CHECKFIRMWARE:
             $camcmd->checkAndUpdateCmd('NewFirmwareState', $json_data['value']['newFirmware'] ?? 0);
+            $ipForFw = strval($camcmd->getConfiguration('adresseip'));
+            if ($ipForFw !== '') {
+              config::save('last_firmware_check_' . preg_replace('/[^a-zA-Z0-9_.-]/', '_', $ipForFw), time(), __CLASS__);
+            }
             break;
 
           case reolinkAPI::CAM_GET_NTP:
@@ -1303,6 +1360,7 @@ class reolink extends eqLogic {
     log::add(__CLASS__, 'info', 'Lancement démon');
     $result = exec($cmd . ' >> ' . log::getPathToLog('reolink_daemon') . ' 2>&1 &');
     $i = 0;
+    $deamon_info = self::deamon_info();
     while ($i < 20) {
       $deamon_info = self::deamon_info();
       if ($deamon_info['state'] == 'ok') {
@@ -1311,7 +1369,7 @@ class reolink extends eqLogic {
       sleep(1);
       $i++;
     }
-    if ($i >= 30) {
+    if ($deamon_info['state'] != 'ok') {
       log::add(__CLASS__, 'error', __('Impossible de lancer le démon, vérifiez le log', __FILE__), 'unableStartDeamon');
       return false;
     }
@@ -1333,14 +1391,32 @@ class reolink extends eqLogic {
     $deamon_info = self::deamon_info();
     if ($deamon_info['state'] != 'ok') {
       log::add('reolink', 'error', 'Envoi des infos de webhook impossible le daemon n\'est pas démarré');
-      return False;
+      return false;
     }
     $params['apikey'] = jeedom::getApiKey(__CLASS__);
     $payLoad = json_encode($params);
-    $socket = socket_create(AF_INET, SOCK_STREAM, 0);
-    socket_connect($socket, '127.0.0.1', config::byKey('socketport', __CLASS__, '44009'));
-    socket_write($socket, $payLoad, strlen($payLoad));
-    socket_close($socket);
+    $socket = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+    if ($socket === false) {
+      log::add('reolink', 'error', 'sendToDaemon : socket_create échoué');
+      return false;
+    }
+    $timeout = array('sec' => 3, 'usec' => 0);
+    @socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, $timeout);
+    @socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, $timeout);
+    $port = intval(config::byKey('socketport', __CLASS__, '44009'));
+    if (!@socket_connect($socket, '127.0.0.1', $port)) {
+      $err = socket_strerror(socket_last_error($socket));
+      @socket_close($socket);
+      log::add('reolink', 'error', 'sendToDaemon : connexion échouée (' . $err . ')');
+      return false;
+    }
+    $written = @socket_write($socket, $payLoad, strlen($payLoad));
+    @socket_close($socket);
+    if ($written === false) {
+      log::add('reolink', 'error', 'sendToDaemon : écriture échouée');
+      return false;
+    }
+    return true;
   }
 
   public static function dependancy_install() {
@@ -1423,14 +1499,24 @@ class reolink extends eqLogic {
       'SetAlarm' => array('GetAlarm', 'Alarm', true),
       'SetNtp' => array('GetNtp', 'Ntp', false),
       'SetWhiteLed' => array('GetWhiteLed', 'WhiteLed', true),
+      'SetBuzzerAlarmV20' => array('GetBuzzerAlarmV20', 'Buzzer', true),
+      'SetAiAlarm' => array('GetAiAlarm', 'AiAlarm', true),
     );
     if (!isset($map[$actionAPI]) || !is_object($camcnx) || !is_array($patchArray)) {
       return null;
     }
     list($getCmd, $rootKey, $withChannel) = $map[$actionAPI];
-    $getPayload = $withChannel
-      ? '[{"cmd":"' . $getCmd . '","action":0,"param":{"channel":' . intval($channel) . '}}]'
-      : '[{"cmd":"' . $getCmd . '","action":0}]';
+    if ($actionAPI === 'SetAiAlarm') {
+      $aiType = $patchArray['AiAlarm']['ai_type'] ?? ($patchArray['ai_type'] ?? '');
+      if ($aiType === '') {
+        return null;
+      }
+      $getPayload = '[{"cmd":"GetAiAlarm","action":0,"param":{"channel":' . intval($channel) . ',"ai_type":"' . $aiType . '"}}]';
+    } elseif ($withChannel) {
+      $getPayload = '[{"cmd":"' . $getCmd . '","action":0,"param":{"channel":' . intval($channel) . '}}]';
+    } else {
+      $getPayload = '[{"cmd":"' . $getCmd . '","action":0}]';
+    }
     $res = $camcnx->SendCMD($getPayload);
     if (!is_array($res) || !isset($res[0]['value']) || !is_array($res[0]['value'])) {
       return null;
@@ -1448,6 +1534,67 @@ class reolink extends eqLogic {
       return null;
     }
     return array_replace_recursive($cur, $patchArray);
+  }
+
+  /**
+   * Clamp SetEnc stream fields to the range profile matching the target size.
+   */
+  public static function clampEncToRange($camcnx, $channel, $mergedEnc, $changedStream = null) {
+    if (!is_object($camcnx) || !is_array($mergedEnc) || !isset($mergedEnc['Enc']) || !is_array($mergedEnc['Enc'])) {
+      return $mergedEnc;
+    }
+    $res = $camcnx->SendCMD('[{"cmd":"GetEnc","action":1,"param":{"channel":' . intval($channel) . '}}]');
+    if (!is_array($res) || !isset($res[0]['range']['Enc']) || !is_array($res[0]['range']['Enc'])) {
+      return $mergedEnc;
+    }
+    $ranges = $res[0]['range']['Enc'];
+    $streams = ($changedStream !== null) ? array($changedStream) : array('mainStream', 'subStream');
+    foreach ($streams as $stream) {
+      if (!isset($mergedEnc['Enc'][$stream]) || !is_array($mergedEnc['Enc'][$stream])) {
+        continue;
+      }
+      $size = $mergedEnc['Enc'][$stream]['size'] ?? null;
+      if ($size === null || $size === '') {
+        continue;
+      }
+      $profile = null;
+      foreach ($ranges as $p) {
+        if (is_array($p) && ($p[$stream]['size'] ?? null) === $size) {
+          $profile = $p[$stream];
+          break;
+        }
+      }
+      if ($profile === null) {
+        continue;
+      }
+      if (!empty($size) && strpos($size, '*') !== false) {
+        list($w, $h) = explode('*', $size, 2);
+        $mergedEnc['Enc'][$stream]['width'] = intval($w);
+        $mergedEnc['Enc'][$stream]['height'] = intval($h);
+      }
+      $fpsAllowed = array_map('intval', (array) ($profile['frameRate'] ?? array()));
+      $brAllowed = array_map('intval', (array) ($profile['bitRate'] ?? array()));
+      $vtAllowed = array_map('strval', (array) ($profile['vType'] ?? array()));
+      if (!empty($fpsAllowed) && isset($mergedEnc['Enc'][$stream]['frameRate'])) {
+        $fps = intval($mergedEnc['Enc'][$stream]['frameRate']);
+        if (!in_array($fps, $fpsAllowed, true)) {
+          $mergedEnc['Enc'][$stream]['frameRate'] = max($fpsAllowed);
+        }
+      }
+      if (!empty($brAllowed) && isset($mergedEnc['Enc'][$stream]['bitRate'])) {
+        $br = intval($mergedEnc['Enc'][$stream]['bitRate']);
+        if (!in_array($br, $brAllowed, true)) {
+          $mergedEnc['Enc'][$stream]['bitRate'] = max($brAllowed);
+        }
+      }
+      if (!empty($vtAllowed) && isset($mergedEnc['Enc'][$stream]['vType'])) {
+        $vt = strval($mergedEnc['Enc'][$stream]['vType']);
+        if (!in_array($vt, $vtAllowed, true)) {
+          $mergedEnc['Enc'][$stream]['vType'] = $vtAllowed[0];
+        }
+      }
+    }
+    return $mergedEnc;
   }
 
   public static function isAbilityOk($abilities, $abilityNeed, $subAbility = null) {
@@ -2050,6 +2197,10 @@ class reolinkCmd extends cmd {
         $res = $camcnx->SendCMD('[{"cmd":"CheckFirmware"}]');
         if (is_array($res) && isset($res[0]['value']['newFirmware']) && is_object($eqLogic)) {
           $eqLogic->checkAndUpdateCmd('NewFirmwareState', $res[0]['value']['newFirmware']);
+          $ipForFw = strval($eqLogic->getConfiguration('adresseip'));
+          if ($ipForFw !== '') {
+            config::save('last_firmware_check_' . preg_replace('/[^a-zA-Z0-9_.-]/', '_', $ipForFw), time(), 'reolink');
+          }
         }
         break;
       case 'UpgradeFirmware':
@@ -2085,24 +2236,83 @@ class reolinkCmd extends cmd {
           $speed = 32;
         }
 
-
         $actionAPI = $this->getConfiguration('actionapi');
         $linkedvalue = $this->getConfiguration('valueFrom');
         $revert_value = intval($this->getConfiguration('revertvalue'));
+        $subtype = $this->getSubType();
+        $payloadTpl = str_replace('\\', '', strval($this->getConfiguration('payload')));
+        $needsSelect = (strpos($payloadTpl, '#OPTSELECTEDINT#') !== false || strpos($payloadTpl, '#OPTSELECTEDSTR#') !== false);
+        $needsSlider = (strpos($payloadTpl, '#OPTSLIDER#') !== false || strpos($payloadTpl, '#OPTR_SLIDER#') !== false);
+        $encSelectCmds = array('SetResolutionst1', 'SetResolutionst2', 'SetFPSst1', 'SetFPSst2', 'SetBitratest1', 'SetBitratest2', 'SetEncodingst1', 'SetEncodingst2');
+        $isEncSelect = in_array($this->getLogicalId(), $encSelectCmds, true);
+
+        $effectiveVal = null;
+        if ($subtype === 'select' || $needsSelect) {
+          if (array_key_exists('select', $_options)) {
+            $effectiveVal = $_options['select'];
+          }
+          if ($isEncSelect && is_object($eqLogic) && is_object($camcnx) && strval($this->getConfiguration('listValue', '')) === '') {
+            reolink::applyEncListValues($eqLogic, $camcnx, $channel);
+            $this->setConfiguration('listValue', $this->getConfiguration('listValue'));
+            $refreshed = reolinkCmd::byEqLogicIdAndLogicalId($EqId, $this->getLogicalId());
+            if (is_object($refreshed)) {
+              $this->setConfiguration('listValue', $refreshed->getConfiguration('listValue'));
+            }
+          }
+          if ($effectiveVal === null || $effectiveVal === '') {
+            throw new Exception(__('Option de sélection manquante pour ', __FILE__) . $this->getName());
+          }
+          $listValue = strval($this->getConfiguration('listValue', ''));
+          if ($listValue !== '') {
+            $allowed = array();
+            foreach (explode(';', $listValue) as $pair) {
+              $parts = explode('|', $pair, 2);
+              if ($parts[0] !== '') {
+                $allowed[] = $parts[0];
+              }
+            }
+            if (!empty($allowed) && !in_array(strval($effectiveVal), $allowed, true)) {
+              throw new Exception(__('Valeur hors liste autorisée pour ', __FILE__) . $this->getName());
+            }
+          }
+        } elseif ($subtype === 'slider' || $needsSlider) {
+          if (array_key_exists('slider', $_options)) {
+            $effectiveVal = intval($_options['slider']);
+          } else {
+            $effectiveVal = 0;
+            if (!empty($linkedvalue) && is_object($eqLogic)) {
+              $infoCmd = $eqLogic->getCmd(null, $linkedvalue);
+              if (is_object($infoCmd)) {
+                $effectiveVal = intval($infoCmd->execCmd());
+              }
+            }
+            $minV = $this->getConfiguration('minValue', null);
+            $maxV = $this->getConfiguration('maxValue', null);
+            if ($minV !== null && $effectiveVal < intval($minV)) {
+              $effectiveVal = intval($minV);
+            }
+            if ($maxV !== null && $effectiveVal > intval($maxV)) {
+              $effectiveVal = intval($maxV);
+            }
+          }
+        }
 
         if ($actionAPI != NULL) {
           if ($actionAPI === 'Reboot') {
             $payload = '[{"cmd":"Reboot"}]';
           } else {
-            $patchJson = str_replace('\\', '', $this->getConfiguration('payload'));
-            $patchJson = str_replace('#OPTSELECTEDINT#', intval($_options['select'] ?? 0), $patchJson);
-            $patchJson = str_replace('#OPTSELECTEDSTR#', '"' . ($_options['select'] ?? '') . '"', $patchJson);
-            $patchJson = str_replace('#OPTSLIDER#', intval($_options['slider'] ?? 0), $patchJson);
-            $patchJson = str_replace('#OPTR_SLIDER#', abs($revert_value - intval($_options['slider'] ?? 0)), $patchJson);
+            $selectInt = ($effectiveVal !== null && ($subtype === 'select' || $needsSelect)) ? intval($effectiveVal) : 0;
+            $selectStr = ($effectiveVal !== null && ($subtype === 'select' || $needsSelect)) ? strval($effectiveVal) : '';
+            $sliderVal = ($effectiveVal !== null && ($subtype === 'slider' || $needsSlider)) ? intval($effectiveVal) : intval($_options['slider'] ?? 0);
+            $patchJson = $payloadTpl;
+            $patchJson = str_replace('#OPTSELECTEDINT#', $selectInt, $patchJson);
+            $patchJson = str_replace('#OPTSELECTEDSTR#', json_encode($selectStr), $patchJson);
+            $patchJson = str_replace('#OPTSLIDER#', $sliderVal, $patchJson);
+            $patchJson = str_replace('#OPTR_SLIDER#', abs($revert_value - $sliderVal), $patchJson);
             $patchJson = str_replace('#CHANNEL#', $channel, $patchJson);
             $patchJson = str_replace('#SPEED#', $speed, $patchJson);
             $patch = json_decode($patchJson, true);
-            $rmwApis = array('SetRecV20', 'SetEnc', 'SetIsp', 'SetOsd', 'SetAiCfg', 'SetAlarm', 'SetNtp', 'SetWhiteLed');
+            $rmwApis = array('SetRecV20', 'SetEnc', 'SetIsp', 'SetOsd', 'SetAiCfg', 'SetAlarm', 'SetNtp', 'SetWhiteLed', 'SetBuzzerAlarmV20', 'SetAiAlarm');
             if (in_array($actionAPI, $rmwApis, true) && is_array($patch)) {
               if ($actionAPI === 'SetEnc') {
                 foreach (array('mainStream', 'subStream') as $stream) {
@@ -2116,6 +2326,17 @@ class reolinkCmd extends cmd {
               $merged = reolink::buildRmwPayload($camcnx, $actionAPI, $channel, $patch);
               if ($merged === null) {
                 throw new Exception(__('Echec lecture état courant pour Read-Modify-Write', __FILE__));
+              }
+              if ($actionAPI === 'SetEnc') {
+                $changedStream = null;
+                if (!empty($patch['Enc']['mainStream']['size'])) {
+                  $changedStream = 'mainStream';
+                } elseif (!empty($patch['Enc']['subStream']['size'])) {
+                  $changedStream = 'subStream';
+                }
+                if ($changedStream !== null) {
+                  $merged = reolink::clampEncToRange($camcnx, $channel, $merged, $changedStream);
+                }
               }
               $payload = json_encode(array(array('cmd' => $actionAPI, 'action' => 0, 'param' => $merged)));
             } elseif ($actionAPI === 'SetManualRec' && is_array($patch)) {
@@ -2141,22 +2362,15 @@ class reolinkCmd extends cmd {
           if ($ok) {
             log::add('reolink', 'debug', 'OK > Action réalisé avec succès sur la caméra');
 
-            if (!empty($linkedvalue)) {
+            if (!empty($linkedvalue) && $effectiveVal !== null) {
               $camcmd = reolink::byId($EqId, 'reolink');
-              $cmd = $camcmd->getCmd(null, $linkedvalue);
-              if (is_object($cmd)) {
-                if (isset($_options['select'])) {
-                  $updtval = $_options['select'];
-                } elseif (isset($_options['slider'])) {
-                  $updtval = $_options['slider'];
-                } else {
-                  $updtval = 0;
-                  log::add('reolink', 'error', 'Impossible de trouver la valeur à inserer');
-                }
-                $camcmd->checkAndUpdateCmd($linkedvalue, $updtval);
-                $camcmd->save();
-                log::add('reolink', 'debug', 'Mise à jour de l\'info liée : ' . $linkedvalue . " Valeur=" . $updtval);
+              if (is_object($camcmd)) {
+                $camcmd->checkAndUpdateCmd($linkedvalue, $effectiveVal);
+                log::add('reolink', 'debug', 'Mise à jour de l\'info liée : ' . $linkedvalue . " Valeur=" . $effectiveVal);
               }
+            }
+            if ($actionAPI === 'SetEnc' && is_object($eqLogic) && is_object($camcnx)) {
+              reolink::applyEncListValues($eqLogic, $camcnx, $channel);
             }
           } else {
             throw new Exception(__('Echec d\'execution de la commande (consultez le log pour plus de détails)', __FILE__));
