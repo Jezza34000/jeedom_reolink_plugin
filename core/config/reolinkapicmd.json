@@ -1380,6 +1380,31 @@
 			"logicalId": "SetMask"
 		},
 		{
+			"abilityneed":"privacyMode",
+			"name": "Mode confidentialité (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetPrivacyModeState"
+		},
+		{
+			"abilityneed":"privacyMode",
+			"name": "Mode confidentialité",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom" : "SetPrivacyModeState"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetPrivacyMode"
+		},
+		{
 			"abilityneed":"white_balance",
 			"name": "Balance des blancs (etat)",
 			"type": "info",
