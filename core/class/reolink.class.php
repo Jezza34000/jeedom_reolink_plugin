@@ -673,27 +673,33 @@ class reolink extends eqLogic {
             break;
 
           case reolinkAPI::CAM_GET_RECV20:
-            $camcmd->checkAndUpdateCmd('SetRecordStateV20', $json_data['value']['Rec']['enable']);
-            if (isset($json_data['value']['Rec']['preRec'])) {
-              $camcmd->checkAndUpdateCmd('SetPreRecordStateV20', $json_data['value']['Rec']['preRec']);
+            $v = $json_data['value']['Rec'];
+            $camcmd->checkAndUpdateCmd('SetRecordStateV20', $v['scheduleEnable'] ?? ($v['enable'] ?? 0));
+            if (isset($v['preRec'])) {
+              $camcmd->checkAndUpdateCmd('SetPreRecordStateV20', $v['preRec']);
             }
-            $camcmd->checkAndUpdateCmd('SetOverwriteStateV20', $json_data['value']['Rec']['overwrite']);
-            $camcmd->checkAndUpdateCmd('SetPostRecordStateV20', $json_data['value']['Rec']['postRec']);
+            $camcmd->checkAndUpdateCmd('SetOverwriteStateV20', $v['overwrite']);
+            $camcmd->checkAndUpdateCmd('SetPostRecordStateV20', $v['postRec']);
             break;
 
           case reolinkAPI::CAM_GET_HDDINFO:
-            if ($json_data['value']['HddInfo'][0]['format'] == 1 && $json_data['value']['HddInfo'][0]['mount'] == 1) {
+            if (empty($json_data['value']['HddInfo'][0])) {
+              $camcmd->checkAndUpdateCmd('driveAvailable', 0);
+              break;
+            }
+            $hdd = $json_data['value']['HddInfo'][0];
+            if ($hdd['format'] == 1 && $hdd['mount'] == 1) {
               $camcmd->checkAndUpdateCmd('driveAvailable', 1);
             } else {
               $camcmd->checkAndUpdateCmd('driveAvailable', 0);
             }
-            if (is_numeric($json_data['value']['HddInfo'][0]['size']) && is_numeric($json_data['value']['HddInfo'][0]['capacity'])) {
-              $percoccupancy = round(($json_data['value']['HddInfo'][0]['size'] * 100) / $json_data['value']['HddInfo'][0]['capacity'], 0, PHP_ROUND_HALF_DOWN);
+            if (is_numeric($hdd['size']) && is_numeric($hdd['capacity'])) {
+              $percoccupancy = round(($hdd['size'] * 100) / $hdd['capacity'], 0, PHP_ROUND_HALF_DOWN);
               $camcmd->checkAndUpdateCmd('driveSpaceAvailable', $percoccupancy);
             }
-            if ($json_data['value']['HddInfo'][0]['storageType'] == 1) {
+            if ($hdd['storageType'] == 1) {
               $camcmd->checkAndUpdateCmd('driveType', "HDD");
-            } elseif ($json_data['value']['HddInfo'][0]['storageType'] == 2) {
+            } elseif ($hdd['storageType'] == 2) {
               $camcmd->checkAndUpdateCmd('driveType', "Sdcard");
             }
             break;
@@ -711,7 +717,8 @@ class reolink extends eqLogic {
             break;
 
           case reolinkAPI::CAM_GET_FTPV20:
-            $camcmd->checkAndUpdateCmd('SetFTPStateV20', $json_data['value']['Ftp']['enable']);
+            $v = $json_data['value']['Ftp'];
+            $camcmd->checkAndUpdateCmd('SetFTPStateV20', $v['scheduleEnable'] ?? ($v['enable'] ?? 0));
             break;
 
           case reolinkAPI::CAM_GET_PUSH:
@@ -719,7 +726,8 @@ class reolink extends eqLogic {
             break;
 
           case reolinkAPI::CAM_GET_PUSHV20:
-            $camcmd->checkAndUpdateCmd('SetPushStateV20', $json_data['value']['Push']['enable']);
+            $v = $json_data['value']['Push'];
+            $camcmd->checkAndUpdateCmd('SetPushStateV20', $v['scheduleEnable'] ?? ($v['enable'] ?? 0));
             break;
 
           case reolinkAPI::CAM_GET_PUSHCFG:
@@ -731,20 +739,26 @@ class reolink extends eqLogic {
             break;
 
           case reolinkAPI::CAM_GET_EMAILV20:
-            $camcmd->checkAndUpdateCmd('SetEmailStateV20', $json_data['value']['Email']['enable']);
+            $v = $json_data['value']['Email'];
+            $camcmd->checkAndUpdateCmd('SetEmailStateV20', $v['scheduleEnable'] ?? ($v['enable'] ?? 0));
             break;
 
           case reolinkAPI::CAM_GET_ENC:
-            $audio = $json_data['value']['Enc']['audio'] ?? ($json_data['value']['audio'] ?? null);
+            $enc = $json_data['value']['Enc'];
+            $audio = $enc['audio'] ?? ($json_data['value']['audio'] ?? null);
             if ($audio !== null) {
               $camcmd->checkAndUpdateCmd('SetMicrophoneState', $audio);
             }
-            $camcmd->checkAndUpdateCmd('SetResolutionst1State', $json_data['value']['Enc']['mainStream']['size']);
-            $camcmd->checkAndUpdateCmd('SetFPSst1State', $json_data['value']['Enc']['mainStream']['size']);
-            $camcmd->checkAndUpdateCmd('SetBitratest1State', $json_data['value']['Enc']['mainStream']['bitRate']);
-            $camcmd->checkAndUpdateCmd('SetResolutionst2State', $json_data['value']['Enc']['subStream']['size']);
-            $camcmd->checkAndUpdateCmd('SetFPSst2State', $json_data['value']['Enc']['subStream']['size']);
-            $camcmd->checkAndUpdateCmd('SetBitratest2State', $json_data['value']['Enc']['subStream']['size']);
+            if (isset($enc['mainStream'])) {
+              $camcmd->checkAndUpdateCmd('SetResolutionst1State', $enc['mainStream']['size']);
+              $camcmd->checkAndUpdateCmd('SetFPSst1State', $enc['mainStream']['frameRate']);
+              $camcmd->checkAndUpdateCmd('SetBitratest1State', $enc['mainStream']['bitRate']);
+            }
+            if (isset($enc['subStream'])) {
+              $camcmd->checkAndUpdateCmd('SetResolutionst2State', $enc['subStream']['size']);
+              $camcmd->checkAndUpdateCmd('SetFPSst2State', $enc['subStream']['frameRate']);
+              $camcmd->checkAndUpdateCmd('SetBitratest2State', $enc['subStream']['bitRate']);
+            }
             break;
 
           case reolinkAPI::CAM_GET_ISP:
@@ -878,16 +892,21 @@ class reolink extends eqLogic {
             break;
 
           case reolinkAPI::CAM_GET_AICFG:
-            $camcmd->checkAndUpdateCmd('SetaiTrackState', $json_data['value']['aiTrack']);
+            $camcmd->checkAndUpdateCmd('SetaiTrackState', $json_data['value']['bSmartTrack'] ?? ($json_data['value']['aiTrack'] ?? 0));
             break;
 
           case reolinkAPI::CAM_GET_MDALARM:
-            $revert_value = reolinkCmd::byEqLogicIdAndLogicalId($id, 'SetMdDefaultSensitivityState')->getConfiguration('revertvalue', 0);
-            $mdsensdef = $revert_value - $json_data['value']['MdAlarm']['newSens']['sensDef'];
-            $camcmd->checkAndUpdateCmd('SetMdDefaultSensitivityState', $mdsensdef);
+            $cmdSens = reolinkCmd::byEqLogicIdAndLogicalId($id, 'SetMdDefaultSensitivityState');
+            $sens = $json_data['value']['MdAlarm']['newSens']['sensDef'] ?? ($json_data['value']['MdAlarm']['sens'][0]['sensitivity'] ?? null);
+            if (is_object($cmdSens) && $sens !== null) {
+              $revert_value = $cmdSens->getConfiguration('revertvalue', 0);
+              $camcmd->checkAndUpdateCmd('SetMdDefaultSensitivityState', $revert_value - $sens);
+            }
             break;
 
           case reolinkAPI::CAM_GET_AIALARM:
+            $s1 = null;
+            $s2 = null;
             switch ($json_data['value']['AiAlarm']['ai_type']) {
               case "people":
                 $s1 = 'SetSdSensitivityPeopleState';
@@ -902,9 +921,10 @@ class reolink extends eqLogic {
                 $s2 = 'SetAlarmDelayDogCatState';
                 break;
             }
-            $camcmd->checkAndUpdateCmd($s1, $json_data['value']['AiAlarm']['sensitivity']);
-            $camcmd->checkAndUpdateCmd($s2, $json_data['value']['AiAlarm']['stay_time']);
-            log::add('reolink', 'debug', 'ai_type check : ' . $json_data['value']['AiAlarm']['ai_type']);
+            if ($s1 !== null) {
+              $camcmd->checkAndUpdateCmd($s1, $json_data['value']['AiAlarm']['sensitivity']);
+              $camcmd->checkAndUpdateCmd($s2, $json_data['value']['AiAlarm']['stay_time']);
+            }
             break;
 
           default:
