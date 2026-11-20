@@ -30,6 +30,12 @@ try {
   */
     ajax::init();
 
+    if (init('action') == 'SyncCameraPlugin') {
+      $id = init('id', null);
+      $count = reolink::syncCameraPlugin(($id === '' || $id === null) ? null : $id);
+      ajax::success(array('count' => $count));
+    }
+
     $camera = reolink::byId(init('id'));
     if (!is_object($camera)) {
       throw new Exception(__('Impossible de trouver la caméra : ' . init('id'), __FILE__));

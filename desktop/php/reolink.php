@@ -24,6 +24,11 @@ $eqLogics = eqLogic::byType($plugin->getId());
 				<br>
 				<span>{{Configuration}}</span>
 			</div>
+			<div class="cursor logoSecondary" id="btSyncCameraPluginAll">
+				<i class="fas fa-video"></i>
+				<br>
+				<span>{{Sync. plugin Caméra}}</span>
+			</div>
 		</div>
 		<legend><i class="fas fa-table"></i> {{Mes caméras}}</legend>
 		<?php
@@ -333,6 +338,12 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							<div class="container-fluid">
 									<div class="form-group">
 											<a class="btn btn-block btn-warning eqLogicAction" id="btManagePatrol"><i class="fas fa-route"></i> {{Gérer les rondes PTZ}}</a>
+									</div>
+									<br>
+							</div>
+							<div class="container-fluid">
+									<div class="form-group">
+											<a class="btn btn-block btn-info" id="btSyncCameraPlugin"><i class="fas fa-video"></i> {{Synchroniser vers plugin Caméra}}</a>
 									</div>
 									<br>
 							</div>
@@ -649,6 +660,40 @@ function updateNvrParentHint() {
 }
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').on('change keyup', updateNvrParentHint);
 setTimeout(updateNvrParentHint, 500);
+
+function syncCameraPlugin(id) {
+	$.ajax({
+		type: "POST",
+		url: "plugins/reolink/core/ajax/reolink.ajax.php",
+		data: {
+			action: "SyncCameraPlugin",
+			id: id || ''
+		},
+		dataType: 'json',
+		error: function (request, status, error) {
+			handleAjaxError(request, status, error);
+		},
+		success: function (data) {
+			if (data.state != 'ok') {
+				$('#div_alert').showAlert({message: data.result, level: 'danger'});
+				return;
+			}
+			var n = (data.result && data.result.count) ? data.result.count : 0;
+			$('#div_alert').showAlert({message: '{{Synchronisation Caméra OK}} (' + n + ')', level: 'success'});
+		}
+	});
+}
+$('#btSyncCameraPluginAll').on('click', function () {
+	syncCameraPlugin('');
+});
+$('#btSyncCameraPlugin').on('click', function () {
+	var id = $('.eqLogicAttr[data-l1key=id]').value();
+	if (id == '') {
+		$('#div_alert').showAlert({message: '{{Veuillez d\'abord sauvegarder l\'équipement}}', level: 'danger'});
+		return;
+	}
+	syncCameraPlugin(id);
+});
 
 $('#btManagePatrol').on('click', function () {
 		var id = $('.eqLogicAttr[data-l1key=id]').value();
