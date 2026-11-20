@@ -89,6 +89,15 @@
 		},
 		{
 			"abilityneed": "alarmMd",
+			"name": "event PackageDetect (etat)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "EvPackageDetect"
+		},
+		{
+			"abilityneed": "alarmMd",
 			"name": "event MotionAlarm (etat)",
 			"type": "info",
 			"subtype": "binary",
@@ -2170,6 +2179,306 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetIntervalAutoReturnPtzGuardPoint"
+		},
+		{
+			"abilityneed": "supportBuzzer",
+			"iastate": 1,
+			"name": "Buzzer canal (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetBuzzerAlarmV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetBuzzerStateV20"
+		},
+		{
+			"abilityneed": "supportBuzzer",
+			"iastate": 1,
+			"name": "Buzzer canal",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom": "SetBuzzerStateV20",
+				"actionapi": "SetBuzzerAlarmV20",
+				"payload": "{\"Buzzer\":{\"scheduleEnable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetBuzzerV20"
+		},
+		{
+			"abilityneed": "supportBuzzerEnable",
+			"iastate": 1,
+			"name": "Buzzer NVR (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetBuzzerAlarmV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetNvrBuzzerState"
+		},
+		{
+			"abilityneed": "supportBuzzerEnable",
+			"iastate": 1,
+			"name": "Buzzer NVR",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom": "SetNvrBuzzerState",
+				"actionapi": "SetBuzzerAlarmV20",
+				"payload": "{\"Buzzer\":{\"enable\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetNvrBuzzer"
+		},
+		{
+			"abilityneed": "supportRecordEnable",
+			"name": "Enregistrement manuel (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetManualRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetManualRecordState"
+		},
+		{
+			"abilityneed": "supportRecordEnable",
+			"name": "Enregistrement manuel",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom": "SetManualRecordState",
+				"actionapi": "SetManualRec",
+				"payload": "{\"Rec\":{\"enable\":#OPTSELECTEDINT#,\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetManualRecord"
+		},
+		{
+			"abilityneed": "alarmMd",
+			"iastate": 0,
+			"name": "Détection mouvement V1 (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetMdEnableState"
+		},
+		{
+			"abilityneed": "alarmMd",
+			"iastate": 0,
+			"name": "Détection mouvement V1",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom": "SetMdEnableState",
+				"actionapi": "SetAlarm",
+				"payload": "{\"Alarm\":{\"enable\":#OPTSELECTEDINT#,\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetMdEnable"
+		},
+		{
+			"abilityneed": "supportAiSensitivity",
+			"name": "Sensibilité Detection Visage (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"face\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetSdSensitivityFaceState"
+		},
+		{
+			"abilityneed": "supportAiSensitivity",
+			"name": "Sensibilité Detection Visage",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 0,
+				"maxValue": 100,
+				"valueFrom": "SetSdSensitivityFaceState",
+				"actionapi": "SetAiAlarm",
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"face\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetSdSensitivityFace"
+		},
+		{
+			"abilityneed": "supportAiStayTime",
+			"name": "Délai Alarme Visage (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"Unite": "s",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"face\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAlarmDelayFaceState"
+		},
+		{
+			"abilityneed": "supportAiStayTime",
+			"name": "Délai Alarme Visage",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 0,
+				"maxValue": 8,
+				"valueFrom": "SetAlarmDelayFaceState",
+				"actionapi": "SetAiAlarm",
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"face\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetAlarmDelayFace"
+		},
+		{
+			"abilityneed": "supportAiSensitivity",
+			"name": "Sensibilité Detection Colis (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"package\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetSdSensitivityPackageState"
+		},
+		{
+			"abilityneed": "supportAiSensitivity",
+			"name": "Sensibilité Detection Colis",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 0,
+				"maxValue": 100,
+				"valueFrom": "SetSdSensitivityPackageState",
+				"actionapi": "SetAiAlarm",
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"package\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetSdSensitivityPackage"
+		},
+		{
+			"abilityneed": "supportAiStayTime",
+			"name": "Délai Alarme Colis (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"Unite": "s",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"package\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAlarmDelayPackageState"
+		},
+		{
+			"abilityneed": "supportAiStayTime",
+			"name": "Délai Alarme Colis",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 0,
+				"maxValue": 8,
+				"valueFrom": "SetAlarmDelayPackageState",
+				"actionapi": "SetAiAlarm",
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"package\"}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetAlarmDelayPackage"
+		},
+		{
+			"abilityneed": "none",
+			"name": "Nouveau firmware (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"CheckFirmware\"}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "NewFirmwareState"
+		},
+		{
+			"abilityneed": "none",
+			"name": "Vérifier firmware",
+			"type": "action",
+			"subtype": "other",
+			"isVisible": 1,
+			"logicalId": "CheckFirmware"
+		},
+		{
+			"abilityneed": "none",
+			"name": "Mise à jour firmware",
+			"type": "action",
+			"subtype": "other",
+			"isVisible": 0,
+			"logicalId": "UpgradeFirmware"
+		},
+		{
+			"abilityneed": "none",
+			"name": "NTP (état)",
+			"type": "info",
+			"subtype": "binary",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetNtp\"}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetNtpEnableState"
+		},
+		{
+			"abilityneed": "none",
+			"name": "NTP",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "1|Activer;0|Désactiver",
+				"valueFrom": "SetNtpEnableState",
+				"actionapi": "SetNtp",
+				"payload": "{\"Ntp\":{\"enable\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetNtpEnable"
+		},
+		{
+			"abilityneed": "none",
+			"name": "Synchroniser l'heure",
+			"type": "action",
+			"subtype": "other",
+			"isVisible": 1,
+			"logicalId": "SyncTime"
 		}
 	]
 }

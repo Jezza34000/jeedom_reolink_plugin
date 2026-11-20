@@ -4,6 +4,7 @@
 
 - Pont plugin Caméra : `reolink::getSnapshot` (Snap CGI authentifié par token), `syncCameraPlugin`, URLs RTSP `GetRtspUrl`
 - Live vidéo : `go2rtc` (Low `sub` H.264 / High `main` H.265), proxy `stream.php`, modale Live
+- Surveillance HTTP : Buzzer canal/NVR, enregistrement manuel, IA Visage/Colis, GetAlarm V1, CheckFirmware/UpgradeOnline, NTP/SyncTime
 - ONVIF : parse XML par `NotificationMessage` + canal `Source`, events IA sans remettre `motion` à 0
 - Démon : suppression du `ping` ICMP (CAP_NET_RAW) ; health-check via socket TCP ONVIF uniquement
 - Routage NVR : événement ONVIF filtré sur le canal `Source` ; lecture AI PHP 8 sûre (`alarm_state` ou entier)
