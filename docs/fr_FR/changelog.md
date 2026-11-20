@@ -6,6 +6,8 @@
 
 # 20/11/2026
 
+- ONVIF : canal `Source`, events IA sans reset motion ; plus de ping ICMP
+- NVR : routage par canal ONVIF ; `onvifPort` dans cron10 ; AI PHP 8 sûr
 - Mode confidentialité (Privacy Mode) via Baichuan TCP (E1 Zoom…)
 - Fix création/sauvegarde d'équipement : `Unknown column 'cnxByIp'`
 - Sondage / nettoyage automatique des commandes non supportées (V1 vs V20, Zoom/Focus, AI, preRec)

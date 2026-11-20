@@ -66,6 +66,33 @@ class reolink extends eqLogic {
       || intval($this->getConfiguration('channelNum', 1)) > 1);
   }
 
+  public static function applyAiStateCmds($eqLogic, $aiValue) {
+    if (!is_array($aiValue) || !is_object($eqLogic)) {
+      return;
+    }
+    $map = array(
+      'people' => 'EvPeopleDetect',
+      'vehicle' => 'EvVehicleDetect',
+      'dog_cat' => 'EvDogCatDetect',
+      'face' => 'EvFaceDetect',
+    );
+    foreach ($map as $key => $cmd) {
+      if (!array_key_exists($key, $aiValue)) {
+        continue;
+      }
+      $v = $aiValue[$key];
+      $state = null;
+      if (is_array($v)) {
+        $state = $v['alarm_state'] ?? null;
+      } elseif (is_numeric($v)) {
+        $state = intval($v);
+      }
+      if ($state !== null) {
+        $eqLogic->checkAndUpdateCmd($cmd, $state);
+      }
+    }
+  }
+
   public static function TryConnect($id) {
     $reolinkConn = reolink::getReolinkConnection($id);
     if ($reolinkConn->is_loggedin == true) {
@@ -921,11 +948,6 @@ class reolink extends eqLogic {
             log::add('reolink', 'debug', '#### CRON refresh ' . $camera->getHumanName());
             $camera->refreshNFO($camera->getId());
           }
-          #Reset detection info if daemon is down
-          $deamon_info = self::deamon_info();
-          if ($deamon_info['state'] != 'ok') {
-            $camera->checkAndUpdateCmd('MdState', 0);
-          }
         } catch (Exception $exc) {
           log::add('reolink', 'error', __('Expression cron non valide pour ', __FILE__) . $camera->getHumanName() . ' : ' . $autorefresh);
         }
@@ -953,9 +975,9 @@ class reolink extends eqLogic {
       }
 
 
-      $port_onvif = $camera->getConfiguration('port_onvif');
-      if ($port_onvif == "") {
-        $port_onvif = "8000";
+      $port_onvif = $camera->getConfiguration('port_onvif', $camera->getConfiguration('onvifPort', '8000'));
+      if ($port_onvif == '') {
+        $port_onvif = '8000';
       }
       $hook_key = $camera_ip . ':' . $port_onvif;
       if (isset($seen[$hook_key])) {
