@@ -62,6 +62,18 @@ function updateEqLogicRoleUi(_eqLogic) {
   $('#fg_hostChannelNum').toggle(!!isNvrParent)
   $('#fg_supportAi').toggle(!isNvrParent)
   $('.cameraOnlyAction').toggle(!isNvrParent)
+
+  $('.reolinkPortBadge').each(function () {
+    var key = $(this).attr('data-enable-key')
+    var raw = String((typeof cfg[key] !== 'undefined' ? cfg[key] : $('.eqLogicAttr[data-l1key=configuration][data-l2key=' + key + ']').text()) || '').trim().toLowerCase()
+    if (raw === '1' || raw.indexOf('actif') !== -1) {
+      $(this).html('<span class="label label-success" style="font-size:1em;cursor:default;">{{Actif}}</span>')
+    } else if (raw === '0' || raw.indexOf('sactiv') !== -1) {
+      $(this).html('<span class="label label-warning" style="font-size:1em;cursor:default;">{{Désactivé}}</span>')
+    } else {
+      $(this).empty()
+    }
+  })
 }
 
 function updateNvrParentHint() {

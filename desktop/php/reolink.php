@@ -367,33 +367,33 @@ $renderCard = function ($eqLogic) {
 												<tbody>
 													<tr>
 														<td>{{HTTP}}</td>
-														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpPort"></span></td>
-														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpEnable"></span></td>
+														<td><span class="eqLogicAttr label label-info" style="font-size:1em;cursor:default;" data-l1key="configuration" data-l2key="httpPort"></span></td>
+														<td><span class="eqLogicAttr hidden" data-l1key="configuration" data-l2key="httpEnable"></span><span class="reolinkPortBadge" data-enable-key="httpEnable"></span></td>
 													</tr>
 													<tr>
 														<td>{{HTTPS}}</td>
-														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpsPort"></span></td>
-														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpsEnable"></span></td>
+														<td><span class="eqLogicAttr label label-info" style="font-size:1em;cursor:default;" data-l1key="configuration" data-l2key="httpsPort"></span></td>
+														<td><span class="eqLogicAttr hidden" data-l1key="configuration" data-l2key="httpsEnable"></span><span class="reolinkPortBadge" data-enable-key="httpsEnable"></span></td>
 													</tr>
 													<tr>
 														<td>{{Media}}</td>
-														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="mediaPort"></span></td>
-														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="mediaEnable"></span></td>
+														<td><span class="eqLogicAttr label label-info" style="font-size:1em;cursor:default;" data-l1key="configuration" data-l2key="mediaPort"></span></td>
+														<td><span class="eqLogicAttr hidden" data-l1key="configuration" data-l2key="mediaEnable"></span><span class="reolinkPortBadge" data-enable-key="mediaEnable"></span></td>
 													</tr>
 													<tr>
 														<td>{{ONVIF}}</td>
-														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="onvifPort"></span></td>
-														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="onvifEnable"></span></td>
+														<td><span class="eqLogicAttr label label-info" style="font-size:1em;cursor:default;" data-l1key="configuration" data-l2key="onvifPort"></span></td>
+														<td><span class="eqLogicAttr hidden" data-l1key="configuration" data-l2key="onvifEnable"></span><span class="reolinkPortBadge" data-enable-key="onvifEnable"></span></td>
 													</tr>
 													<tr>
 														<td>{{RTMP}}</td>
-														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtmpPort"></span></td>
-														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtmpEnable"></span></td>
+														<td><span class="eqLogicAttr label label-info" style="font-size:1em;cursor:default;" data-l1key="configuration" data-l2key="rtmpPort"></span></td>
+														<td><span class="eqLogicAttr hidden" data-l1key="configuration" data-l2key="rtmpEnable"></span><span class="reolinkPortBadge" data-enable-key="rtmpEnable"></span></td>
 													</tr>
 													<tr>
 														<td>{{RTSP}}</td>
-														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtspPort"></span></td>
-														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtspEnable"></span></td>
+														<td><span class="eqLogicAttr label label-info" style="font-size:1em;cursor:default;" data-l1key="configuration" data-l2key="rtspPort"></span></td>
+														<td><span class="eqLogicAttr hidden" data-l1key="configuration" data-l2key="rtspEnable"></span><span class="reolinkPortBadge" data-enable-key="rtspEnable"></span></td>
 													</tr>
 												</tbody>
 											</table>
