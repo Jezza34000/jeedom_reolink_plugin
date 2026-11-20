@@ -1042,9 +1042,10 @@ class reolink extends eqLogic {
             }
             $available = (intval($hdd['format'] ?? 0) === 1 && intval($hdd['mount'] ?? 0) === 1);
             $camcmd->checkAndUpdateCmd('driveAvailable', $available ? 1 : 0);
+            // API: capacity = total Mb, size = remaining Mb (not used space)
             if (isset($hdd['size'], $hdd['capacity']) && is_numeric($hdd['size']) && is_numeric($hdd['capacity']) && floatval($hdd['capacity']) > 0) {
-              $percoccupancy = round((floatval($hdd['size']) * 100) / floatval($hdd['capacity']), 0, PHP_ROUND_HALF_DOWN);
-              $camcmd->checkAndUpdateCmd('driveSpaceAvailable', $percoccupancy);
+              $percAvailable = round((floatval($hdd['size']) * 100) / floatval($hdd['capacity']), 0, PHP_ROUND_HALF_DOWN);
+              $camcmd->checkAndUpdateCmd('driveSpaceAvailable', $percAvailable);
             }
             $storageType = intval($hdd['storageType'] ?? 0);
             if ($storageType === 1) {

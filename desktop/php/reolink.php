@@ -6,6 +6,39 @@ if (!isConnect('admin')) {
 $plugin = plugin::byId('reolink');
 sendVarToJS('eqType', $plugin->getId());
 $eqLogics = eqLogic::byType($plugin->getId());
+$nvrs = array();
+$cameras = array();
+foreach ($eqLogics as $eqLogic) {
+	if (method_exists($eqLogic, 'isNvrParent') && $eqLogic->isNvrParent()) {
+		$nvrs[] = $eqLogic;
+	} else {
+		$cameras[] = $eqLogic;
+	}
+}
+$renderCard = function ($eqLogic) {
+	$opacity = ($eqLogic->getIsEnable()) ? '' : 'disableCard';
+	$model = strval($eqLogic->getConfiguration('model', ''));
+	$ip = strval($eqLogic->getConfiguration('adresseip', ''));
+	$channel = $eqLogic->getConfiguration('defined_channel', '');
+	$info = $ip;
+	if ($channel !== '' && $channel !== null) {
+		$info = trim($ip . ' · Canal ' . $channel);
+	}
+	echo '<div class="eqLogicDisplayCard cursor ' . $opacity . '" data-eqLogic_id="' . $eqLogic->getId() . '">';
+	echo '<img src="' . $eqLogic->getImage() . '"/>';
+	echo '<br>';
+	echo '<span class="name">' . $eqLogic->getHumanName(true, true) . '</span>';
+	echo '<span class="hiddenAsCard displayTableRight hidden">';
+	if ($model !== '') {
+		echo '<span class="label label-default">' . htmlspecialchars($model, ENT_QUOTES, 'UTF-8') . '</span> ';
+	}
+	if ($info !== '') {
+		echo '<span class="label label-info">' . htmlspecialchars($info, ENT_QUOTES, 'UTF-8') . '</span> ';
+	}
+	echo ($eqLogic->getIsVisible() == 1) ? '<i class="fas fa-eye" title="{{Equipement visible}}"></i>' : '<i class="fas fa-eye-slash" title="{{Equipement non visible}}"></i>';
+	echo '</span>';
+	echo '</div>';
+};
 ?>
 
 <div class="row row-overflow">
@@ -30,12 +63,10 @@ $eqLogics = eqLogic::byType($plugin->getId());
 				<span>{{Sync. plugin Caméra}}</span>
 			</div>
 		</div>
-		<legend><i class="fas fa-table"></i> {{Mes caméras}}</legend>
 		<?php
 		if (count($eqLogics) == 0) {
 			echo '<br/><div class="text-center" style="font-size:1.2em;font-weight:bold;">{{Aucune caméra Reolink n\'est paramétré, cliquer sur "Ajouter" pour commencer}}</div>';
 		} else {
-			// Champ de recherche
 			echo '<div class="input-group" style="margin:5px;">';
 			echo '<input class="form-control roundedLeft" placeholder="{{Rechercher}}" id="in_searchEqlogic"/>';
 			echo '<div class="input-group-btn">';
@@ -43,15 +74,20 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			echo '<a class="btn roundedRight hidden" id="bt_pluginDisplayAsTable" data-coreSupport="1" data-state="0"><i class="fas fa-grip-lines"></i></a>';
 			echo '</div>';
 			echo '</div>';
-			// Liste des équipements du plugin
-			echo '<div class="eqLogicThumbnailContainer">';
-			foreach ($eqLogics as $eqLogic) {
-				$opacity = ($eqLogic->getIsEnable()) ? '' : 'disableCard';
-				echo '<div class="eqLogicDisplayCard cursor '.$opacity.'" data-eqLogic_id="' . $eqLogic->getId() . '">';
-				echo '<img src="' . $eqLogic->getImage() . '"/>';
-				echo '<br>';
-				echo '<span class="name">' . $eqLogic->getHumanName(true, true) . '</span>';
+
+			if (!empty($nvrs)) {
+				echo '<legend><i class="fas fa-hdd"></i> {{Mes NVR}}</legend>';
+				echo '<div class="eqLogicThumbnailContainer">';
+				foreach ($nvrs as $eqLogic) {
+					$renderCard($eqLogic);
+				}
 				echo '</div>';
+			}
+
+			echo '<legend><i class="fas fa-video"></i> {{Mes caméras}}</legend>';
+			echo '<div class="eqLogicThumbnailContainer">';
+			foreach ($cameras as $eqLogic) {
+				$renderCard($eqLogic);
 			}
 			echo '</div>';
 		}
@@ -75,16 +111,11 @@ $eqLogics = eqLogic::byType($plugin->getId());
 		<ul class="nav nav-tabs" role="tablist">
 			<li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fas fa-arrow-circle-left"></i></a></li>
 			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i> {{Equipement}}</a></li>
-		<!--	<li role="presentation"><a href="#ability" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-info-circle"></i> {{Informations}}</a></li>-->
 			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i> {{Commandes}}</a></li>
-		<!--<li role="presentation"><a href="#mailnotif" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-envelope-open-text"></i><span class="hidden-xs"> {{Email}}</span></a></li>
-			<li role="presentation"><a href="#ftpsend" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-file-upload"></i><span class="hidden-xs"> {{FTP}}</span></a></li>-->
 		</ul>
 		<div class="tab-content">
 			<!-- Onglet de configuration de l'équipement -->
 			<div role="tabpanel" class="tab-pane active" id="eqlogictab">
-				<!-- Partie gauche de l'onglet "Equipements" -->
-				<!-- Paramètres généraux de l'équipement -->
 				<form class="form-horizontal">
 					<fieldset>
 						<div class="col-lg-6">
@@ -157,10 +188,10 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Canal NVR}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Numéro de canal si la caméra est derrière un NVR (0 = premier canal). Laisser vide pour un NVR parent.}}"></i></sup>
+									<sup><i class="fas fa-question-circle tooltips" title="{{Numéro de canal si la caméra est derrière un NVR (0 = premier canal). Laisser vide pour un NVR parent ou une caméra autonome.}}"></i></sup>
 								</label>
 								<div class="col-sm-7">
-									<input type="number" min="0" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="defined_channel" placeholder="{{0}}"/>
+									<input type="number" min="0" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="defined_channel" placeholder="{{Vide = NVR ou autonome, 0..N = canal}}"/>
 									<div id="div_nvrParentHint" class="alert alert-info" style="display:none;margin-top:8px;">
 										{{Équipement NVR parent (pas de canal) : commandes système uniquement (firmware, NTP, disque, UPnP, buzzer NVR…). Les réglages caméra sont sur les équipements enfants (canal renseigné).}}
 									</div>
@@ -204,20 +235,42 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{}}</label>
 								<div class="col-sm-3">
-									<a class="btn btn-default" id="btCheckConnexion"><i class='fa fa-refresh'></i> {{Tester la connexion}}</a>
+									<a class="btn btn-default" id="btCheckConnexion"><i class="fas fa-sync-alt"></i> {{Tester la connexion}}</a>
 								</div>
 							</div>
 						</div>
 
 						<!-- Partie droite de l'onglet "Équipement" -->
-						<!-- Affiche l'icône du plugin par défaut mais vous pouvez y afficher les informations de votre choix -->
 						<div class="col-lg-6">
 							<legend><i class="fas fa-info"></i> {{Informations}}</legend>
 							<div class="form-group">
 								<div class="text-center">
-									<img name="icon_visu" id="icon_visu" src= "<?php echo $plugin->getPathImgIcon(); ?>" style="max-width:160px;"/>
+									<img name="icon_visu" id="img_device" src="<?php echo $plugin->getPathImgIcon(); ?>" style="max-height:140px;max-width:160px;"/>
 								</div>
 							</div>
+
+							<div class="form-group">
+								<div class="col-sm-12">
+									<div class="row">
+										<div class="col-sm-6 cameraOnlyAction" style="margin-bottom:8px;">
+											<a class="btn btn-block btn-success" id="btOpenLive"><i class="fas fa-play-circle"></i> {{Live Low/High}}</a>
+										</div>
+										<div class="col-sm-6 cameraOnlyAction" style="margin-bottom:8px;">
+											<a class="btn btn-block btn-warning eqLogicAction" id="btManagePatrol"><i class="fas fa-route"></i> {{Gérer les rondes PTZ}}</a>
+										</div>
+										<div class="col-sm-6" style="margin-bottom:8px;">
+											<a class="btn btn-block btn-primary eqLogicAction" id="btGetCamNFO"><i class="fas fa-download"></i> {{Récupérer les informations}}</a>
+										</div>
+										<div class="col-sm-6" style="margin-bottom:8px;">
+											<a class="btn btn-block btn-default eqLogicAction" id="btGetCMD"><i class="fas fa-plus-circle"></i> {{Créer (recréer) les commandes}}</a>
+										</div>
+										<div class="col-sm-12 cameraOnlyAction" style="margin-bottom:8px;">
+											<a class="btn btn-block btn-info" id="btSyncCameraPlugin"><i class="fas fa-video"></i> {{Synchroniser vers plugin Caméra}}</a>
+										</div>
+									</div>
+								</div>
+							</div>
+
 							<div class="form-group">
 								<label class="col-sm-3 control-label" id="lbl_deviceName">{{Nom de la caméra}}</label>
 								<div class="col-sm-7">
@@ -246,42 +299,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label"> {{UID}}</label>
-								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="uid"></span>
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="col-sm-3 control-label"> {{Build No}}</label>
-								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="buildDay"></span>
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="col-sm-3 control-label">{{Version hardware}}</label>
-								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="hardVer"></span>
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="col-sm-3 control-label"> {{Version config}}</label>
-								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="cfgVer"></span>
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="col-sm-3 control-label"> {{Version firmware}}</label>
-								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="firmVer"></span>
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="col-sm-3 control-label">{{Détail}}</label>
-								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="detail"></span>
-								</div>
-							</div>
-							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Connectivité}}</label>
 								<div class="col-sm-7">
 									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="linkconnection"></span>
@@ -294,121 +311,117 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 
-							<hr>
-							<div class="form-group">
-								<label class="col-sm-3 control-label">{{HTTP Port}}</label>
-								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpPort"></span>&nbsp;<span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpEnable"></span>
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="col-sm-3 control-label">{{HTTPS Port}}</label>
-								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpsPort"></span>&nbsp;<span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpsEnable"></span>
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="col-sm-3 control-label">{{Media Port}}</label>
-								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="mediaPort"></span>&nbsp;<span class="eqLogicAttr" data-l1key="configuration" data-l2key="mediaEnable"></span>
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="col-sm-3 control-label">{{ONVIF Port}}</label>
-								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="onvifPort"></span>&nbsp;<span class="eqLogicAttr" data-l1key="configuration" data-l2key="onvifEnable"></span>
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="col-sm-3 control-label">{{RTMP Port}}</label>
-								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtmpPort"></span>&nbsp;<span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtmpEnable"></span>
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="col-sm-3 control-label">{{RTSP Port}}</label>
-								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtspPort"></span>&nbsp;<span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtspEnable"></span>
-								</div>
-						</div>
-						<hr>
-							<div class="container-fluid">
-									<div class="form-group">
-											<a class="btn btn-block btn-primary eqLogicAction" id="btGetCamNFO"><i class="fas fa-download"></i> {{Récupérer les informations}}</a>
+							<div class="panel-group" id="accordionReolinkTech">
+								<div class="panel panel-default">
+									<div class="panel-heading">
+										<h3 class="panel-title">
+											<a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#accordionReolinkTech" aria-expanded="false" href="#panel_techDetails"><i class="fas fa-network-wired"></i> {{Détails techniques & Ports réseau}}</a>
+										</h3>
 									</div>
-									<br>
-							</div>
-							<div class="container-fluid">
-									<div class="form-group">
-											<a class="btn btn-block btn-default eqLogicAction" id="btGetCMD"><i class="fas fa-plus-circle"></i> {{Créer (recréer) les commandes}}</a>
+									<div id="panel_techDetails" class="panel-collapse collapse" aria-expanded="false">
+										<div class="panel-body">
+											<div class="form-group">
+												<label class="col-sm-4 control-label">{{UID}}</label>
+												<div class="col-sm-8">
+													<span class="eqLogicAttr" data-l1key="configuration" data-l2key="uid"></span>
+												</div>
+											</div>
+											<div class="form-group">
+												<label class="col-sm-4 control-label">{{Build No}}</label>
+												<div class="col-sm-8">
+													<span class="eqLogicAttr" data-l1key="configuration" data-l2key="buildDay"></span>
+												</div>
+											</div>
+											<div class="form-group">
+												<label class="col-sm-4 control-label">{{Version hardware}}</label>
+												<div class="col-sm-8">
+													<span class="eqLogicAttr" data-l1key="configuration" data-l2key="hardVer"></span>
+												</div>
+											</div>
+											<div class="form-group">
+												<label class="col-sm-4 control-label">{{Version firmware}}</label>
+												<div class="col-sm-8">
+													<span class="eqLogicAttr" data-l1key="configuration" data-l2key="firmVer"></span>
+												</div>
+											</div>
+											<div class="form-group">
+												<label class="col-sm-4 control-label">{{Version config}}</label>
+												<div class="col-sm-8">
+													<span class="eqLogicAttr" data-l1key="configuration" data-l2key="cfgVer"></span>
+												</div>
+											</div>
+											<div class="form-group">
+												<label class="col-sm-4 control-label">{{Détail}}</label>
+												<div class="col-sm-8">
+													<span class="eqLogicAttr" data-l1key="configuration" data-l2key="detail"></span>
+												</div>
+											</div>
+											<table class="table table-bordered table-condensed" style="margin-top:10px;">
+												<thead>
+													<tr>
+														<th>{{Port}}</th>
+														<th>{{Valeur}}</th>
+														<th>{{État}}</th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr>
+														<td>{{HTTP}}</td>
+														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpPort"></span></td>
+														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpEnable"></span></td>
+													</tr>
+													<tr>
+														<td>{{HTTPS}}</td>
+														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpsPort"></span></td>
+														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="httpsEnable"></span></td>
+													</tr>
+													<tr>
+														<td>{{Media}}</td>
+														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="mediaPort"></span></td>
+														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="mediaEnable"></span></td>
+													</tr>
+													<tr>
+														<td>{{ONVIF}}</td>
+														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="onvifPort"></span></td>
+														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="onvifEnable"></span></td>
+													</tr>
+													<tr>
+														<td>{{RTMP}}</td>
+														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtmpPort"></span></td>
+														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtmpEnable"></span></td>
+													</tr>
+													<tr>
+														<td>{{RTSP}}</td>
+														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtspPort"></span></td>
+														<td><span class="eqLogicAttr" data-l1key="configuration" data-l2key="rtspEnable"></span></td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
 									</div>
-									<br>
-							</div>
-							<div class="container-fluid cameraOnlyAction">
-									<div class="form-group">
-											<a class="btn btn-block btn-warning eqLogicAction" id="btManagePatrol"><i class="fas fa-route"></i> {{Gérer les rondes PTZ}}</a>
-									</div>
-									<br>
-							</div>
-							<div class="container-fluid cameraOnlyAction">
-									<div class="form-group">
-											<a class="btn btn-block btn-info" id="btSyncCameraPlugin"><i class="fas fa-video"></i> {{Synchroniser vers plugin Caméra}}</a>
-									</div>
-									<br>
-							</div>
-							<div class="container-fluid cameraOnlyAction">
-									<div class="form-group">
-											<a class="btn btn-block btn-success" id="btOpenLive"><i class="fas fa-play-circle"></i> {{Live Low/High}}</a>
-									</div>
-									<br>
+								</div>
 							</div>
 						</div>
 					</fieldset>
 				</form>
 				<hr>
 			</div><!-- /.tabpanel #eqlogictab-->
-			<div role="tabpanel" class="tab-pane" id="ability">
-				<div class="col-lg-7" style="padding:10px 35px">
-						<legend>
-								<span>{{Capacité Hardware/Software de la caméra}}</span>
-						</legend>
-						<br />
-						<div class="container" style="width: 90%;">
-								<div class="form-group">
-										<!-- table  -->
-										<table class="table table-bordered table-condensed" style="text-align:center">
-												<tbody>
-														<tr>
-														</tr>
-												</tbody>
-										</table>
-								</div>
-						</div>
-				</div>
-
-
-				<div class="col-lg-5" style="padding:15px 35px">
-						<legend>
-								<span style="text-align:left">{{Action}}</span>
-						</legend>
-				</div>
-			</div>
 
 			<!-- Onglet des commandes de l'équipement -->
 			<div role="tabpanel" class="tab-pane" id="commandtab">
-				<!--<a class="btn btn-default btn-sm pull-right cmdAction" data-action="add" style="margin-top:5px;"><i class="fas fa-plus-circle"></i> {{Ajouter une commande}}</a>-->
 				<br/><br/>
 				<div class="table-responsive">
 					<table id="table_cmd" class="table table-bordered table-condensed">
 						<thead>
 							<tr>
-								<th>{{Id}}</th>
-								<th>{{Nom}}</th>
-								<th>{{Type}}</th>
-								<th>{{Paramètres}}</th>
-								<th>{{Options}}</th>
-								<th>{{Etat}}</th>
-								<th>{{Action}}</th>
+								<th class="hidden-xs" style="min-width:50px;width:70px;">{{Id}}</th>
+								<th style="min-width:200px;width:350px;">{{Nom}}</th>
+								<th style="width:130px;">{{Type}}</th>
+								<th style="min-width:100px;width:150px;">{{Logical ID}}</th>
+								<th style="min-width:150px;width:250px;">{{Paramètres}}</th>
+								<th style="min-width:150px;width:250px;">{{Options}}</th>
+								<th style="min-width:80px;width:120px;">{{Etat}}</th>
+								<th style="min-width:80px;width:140px;">{{Action}}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -416,471 +429,10 @@ $eqLogics = eqLogic::byType($plugin->getId());
 					</table>
 				</div>
 			</div><!-- /.tabpanel #commandtab-->
-			<!--
-			MAIL Notif
-			--->
-						<div role="tabpanel" class="tab-pane" id="mailnotif">
-							<div class="col-lg-7" style="padding:10px 35px">
-									<legend>
-											<span>{{Réglage des notifications email}}</span>
-									</legend>
-									<br />
-									<div class="container" style="width: 90%;">
-											<div class="form-group">
-													<!-- table  -->
-													<legend>
-															<span>{{Serveur SMTP}}</span>
-													</legend>
-													<table class="table table-bordered table-condensed" style="text-align:center">
-															<tbody>
-																<tr style="height: 50px !important;">
-																		<td><label class="control-label">{{Etat}}</label>&nbsp;(l'activation/désactivation s'effectue par la commande "Envoi email")</td>
-																		<td>
-																			<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_state" disabled>
-																				<option value="0">Désactivé</option>
-																				<option value="1">Activé</option>
-																			</select>
-																		</td>
-																</tr>
-																	<tr>
-																			<td><label class="control-label">{{Serveur}}</label></td>
-																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_server" placeholder="{{smtp.free.fr}}"/></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label">{{Port}}</label></td>
-																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_port" placeholder="{{25}}"/></td>
-																	</tr>
-																	<tr style="height: 50px !important;">
-																			<td><label class="control-label ">{{Utiliser SSL/TLS}}</label></td>
-																			<td><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="smtp_usessltls" /></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Login}}</label></td>
-																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_login"/></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Mot de passe}}</label></td>
-																			<td><input type="password" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_password"/></td>
-																	</tr>
-																</tbody>
-														</table>
-														<!-- table  -->
-														<legend>
-																<span>{{Paramètre email}}</span>
-														</legend>
-														<table class="table table-bordered table-condensed" style="text-align:center">
-																<tbody>
-																	<tr>
-																			<td><label class="control-label ">{{Expéditeur (email)}}</label></td>
-																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mailfrom_addr"/></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Expéditeur (nom/prénom)}}</label></td>
-																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mailfrom_name"/></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Sujet}}</label></td>
-																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mail_subject" placeholder="{{Nouvel évènement}}"/></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Destinataire n°1}}</label></td>
-																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mailto_addr1"/></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Destinataire n°2}}</label></td>
-																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mailto_addr2"/></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Destinataire n°3}}</label></td>
-																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mailto_addr3"/></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Fichier joint}}</label></td>
-																			<td>
-																					<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_attachement">
-																							<option value="no">Aucun (texte seul)</option>
-																							<option value="onlyPicture">Image</option>
-																							<option value="picture">Image (avec texte)</option>
-																							<option value="video">Vidéo (avec texte)</option>
-																					</select>
-																			</td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Intervale}}</label></td>
-																			<td>
-																					<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="smtp_interval">
-																							<option value="30 Seconds">30 Seconds</option>
-																							<option value="1 Minute">1 Minute</option>
-																							<option value="5 Minutes">5 Minutes</option>
-																							<option value="10 Minutes">10 Minutes</option>
-																							<option value="30 Minutes">30 Minutes</option>
-																					</select>
-																			</td>
-																	</tr>
-															</tbody>
-													</table>
-											</div>
-									</div>
-							</div>
-
-							<div class="col-lg-5" style="padding:15px 35px">
-									<legend>
-											<span style="text-align:left">{{Action}}</span>
-									</legend>
-									<div class="container-fluid">
-											<div class="form-group">
-													<a  id="btGetEMAIL" onclick="GetCAMinfo('EMAIL')" class="btn btn-block btn-primary eqLogicAction"><i class="fas fa-download"></i> {{Lire la configuration depuis la caméra}}</a>
-											</div>
-											<br>
-									</div>
-									<div class="container-fluid">
-											<div class="form-group">
-													<a  id="btSetEMAIL" onclick="SetCAMconfig('EMAIL')" class="btn btn-block btn-success eqLogicAction"><i class="fas fa-upload"></i> {{Envoyer la configuration dans la caméra}}</a>
-													(Cliquez sur "Sauvegarder" avant d'envoyer la config)
-											</div>
-											<br>
-									</div>
-							</div>
-						</div>
-						<!--
-						FTP Send
-						--->
-						<div role="tabpanel" class="tab-pane" id="ftpsend">
-							<div class="col-lg-7" style="padding:10px 35px">
-									<legend>
-											<span>{{Réglage du FTP}}</span>
-									</legend>
-									<br />
-									<div class="container" style="width: 90%;">
-											<div class="form-group">
-												<legend>
-														<span>{{Serveur FTP}}</span>
-												</legend>
-													<table class="table table-bordered table-condensed" style="text-align:center">
-															<tbody>
-																	<tr style="height: 50px !important;">
-																			<td><label class="control-label">{{Etat}}</label>&nbsp;(l'activation/désactivation s'effectue par la commande "Envoi FTP")</td>
-																			<td>
-																				<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_state" disabled>
-																					<option value="0">Désactivé</option>
-																					<option value="1">Activé</option>
-																				</select>
-																			</td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label">{{Serveur}}</label></td>
-																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_server"/></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label">{{Anonyme}}</label></td>
-																			<td><input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_anonymous"/></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label">{{Login}}</label></td>
-																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_account"/></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Mot de passe}}</label></td>
-																			<td><input type="password" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_passwd"/></td>
-																	</tr>
-																	<tr style="height: 50px !important;">
-																			<td><label class="control-label ">{{Utiliser SSL/TLS}}</label></td>
-																			<td><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="ftp_usessltls" /></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Port}}</label></td>
-																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_port" placeholder="{{21}}"/></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Mode}}</label></td>
-																				<td>
-																					<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_mode">
-																						<option value="0">AUTO</option>
-																						<option value="1">PORT</option>
-																						<option value="2">PASV</option>
-																					</select>
-																				</td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Chemin distant d'upload}}</label></td>
-																			<td><input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_path"/></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Taille maximale de fichier à envoyer (en MB)}}</label></td>
-																			<td><input type="text" class="eqLogicAttr" data-l1key="configuration" data-l2key="ftp_maxfilesize" /></td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Type de fichier à envoyer}}</label></td>
-																			<td>
-																					<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_filetosend">
-																							<option value="0">Image et vidéo (Qualité haute)</option>
-																							<option value="1">Image et vidéo (Qualité moyenne)</option>
-																							<option value="2">Image et vidéo (Qualité basse)</option>
-																							<option value="3">Image seulement</option>
-																					</select>
-																			</td>
-																	</tr>
-																	<tr>
-																			<td><label class="control-label ">{{Intervale}}</label></td>
-																			<td>
-																					<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="ftp_interval">
-																							<option value="30">30 Seconds</option>
-																							<option value="60">1 Minute</option>
-																							<option value="300">5 Minutes</option>
-																							<option value="600">10 Minutes</option>
-																							<option value="1800">30 Minutes</option>
-																					</select>
-																			</td>
-																	</tr>
-																</tr>
-														</tbody>
-												</table>
-											</div>
-									</div>
-							</div>
-
-							<div class="col-lg-5" style="padding:15px 35px">
-									<legend>
-											<span style="text-align:left">{{Action}}</span>
-									</legend>
-									<div class="container-fluid">
-											<div class="form-group">
-													<a  id="btGetFTP" onclick="GetCAMinfo('FTP')" class="btn btn-block btn-primary eqLogicAction"><i class="fas fa-download"></i> {{Lire la configuration depuis la caméra}}</a>
-											</div>
-											<br>
-									</div>
-									<div class="container-fluid">
-											<div class="form-group">
-													<a  id="btSetFTP" onclick="SetCAMconfig('FTP')" class="btn btn-block btn-success eqLogicAction"><i class="fas fa-upload"></i> {{Envoyer la configuration dans la caméra}}</a>
-													(Cliquez sur "Sauvegarder" avant d'envoyer la config)
-											</div>
-											<br>
-									</div>
-							</div>
-						</div>
 
 		</div><!-- /.tab-content -->
 	</div><!-- /.eqLogic -->
 </div><!-- /.row row-overflow -->
 
-<script>
-
-
-function updateEqLogicRoleUi(_eqLogic) {
-	var cfg = (_eqLogic && _eqLogic.configuration) ? _eqLogic.configuration : {};
-	var ch = (typeof cfg.defined_channel !== 'undefined')
-		? cfg.defined_channel
-		: $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').value();
-	var hostType = String(cfg.hostExactType || cfg.exactType || $('.eqLogicAttr[data-l1key=configuration][data-l2key=hostExactType]').text() || $('.eqLogicAttr[data-l1key=configuration][data-l2key=exactType]').text() || '').trim();
-	var hostChannels = parseInt(String(cfg.hostChannelNum || cfg.channelNum || $('.eqLogicAttr[data-l1key=configuration][data-l2key=hostChannelNum]').text() || $('.eqLogicAttr[data-l1key=configuration][data-l2key=channelNum]').text() || '1').trim(), 10) || 1;
-	var hostModel = String(cfg.hostModel || $('.eqLogicAttr[data-l1key=configuration][data-l2key=hostModel]').text() || '').trim();
-	var hostName = String(cfg.hostName || $('.eqLogicAttr[data-l1key=configuration][data-l2key=hostName]').text() || '').trim();
-	var emptyCh = (ch === '' || ch === null || typeof ch === 'undefined');
-	var isChannelChild = !emptyCh;
-	var isNvrParent = emptyCh && (hostType === 'NVR' || hostChannels > 1);
-	var isStandalone = !isNvrParent && !isChannelChild;
-
-	$('#div_nvrParentHint').toggle(!!isNvrParent);
-	$('#lbl_accessParams').text(isNvrParent ? '{{Paramètres d\'accès au NVR}}' : '{{Paramètres d\'accès à la caméra}}');
-	$('#lbl_deviceName').text(isNvrParent ? '{{Nom du NVR}}' : '{{Nom de la caméra}}');
-	$('#lbl_deviceModel').text(isNvrParent ? '{{Modèle du NVR}}' : '{{Modèle}}');
-
-	$('#fg_hostModel').toggle(!!isChannelChild);
-	if (isChannelChild) {
-		var hostDisplay = hostModel;
-		if (hostName !== '') {
-			hostDisplay = hostModel !== '' ? (hostModel + ' (' + hostName + ')') : hostName;
-		}
-		$('#span_hostModelDisplay').text(hostDisplay);
-	} else {
-		$('#span_hostModelDisplay').text('');
-	}
-
-	$('#fg_hostChannelNum').toggle(!!(isNvrParent || isChannelChild));
-	$('#fg_supportAi').toggle(!isNvrParent);
-	$('.cameraOnlyAction').toggle(!isNvrParent);
-}
-
-function updateNvrParentHint() {
-	updateEqLogicRoleUi(null);
-}
-$('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').on('change keyup', updateNvrParentHint);
-
-function syncCameraPlugin(id) {
-	$.ajax({
-		type: "POST",
-		url: "plugins/reolink/core/ajax/reolink.ajax.php",
-		data: {
-			action: "SyncCameraPlugin",
-			id: id || ''
-		},
-		dataType: 'json',
-		error: function (request, status, error) {
-			handleAjaxError(request, status, error);
-		},
-		success: function (data) {
-			if (data.state != 'ok') {
-				$('#div_alert').showAlert({message: data.result, level: 'danger'});
-				return;
-			}
-			var n = (data.result && data.result.count) ? data.result.count : 0;
-			$('#div_alert').showAlert({message: '{{Synchronisation Caméra OK}} (' + n + ')', level: 'success'});
-		}
-	});
-}
-$('#btSyncCameraPluginAll').on('click', function () {
-	syncCameraPlugin('');
-});
-$('#btSyncCameraPlugin').on('click', function () {
-	var id = $('.eqLogicAttr[data-l1key=id]').value();
-	if (id == '') {
-		$('#div_alert').showAlert({message: '{{Veuillez d\'abord sauvegarder l\'équipement}}', level: 'danger'});
-		return;
-	}
-	syncCameraPlugin(id);
-});
-
-$('#btOpenLive').on('click', function () {
-	var id = $('.eqLogicAttr[data-l1key=id]').value();
-	if (id == '') {
-		$('#div_alert').showAlert({message: '{{Veuillez d\'abord sauvegarder l\'équipement}}', level: 'danger'});
-		return;
-	}
-	if (typeof window.reolinkLiveStop === 'function') {
-		window.reolinkLiveStop();
-	}
-	$('#md_modal').dialog({title: "{{Live Reolink}}"});
-	$('#md_modal').load('index.php?v=d&plugin=reolink&modal=modal.live&id=' + id).dialog('open');
-});
-
-$('#btManagePatrol').on('click', function () {
-		var id = $('.eqLogicAttr[data-l1key=id]').value();
-		if (id == '') {
-			$('#div_alert').showAlert({message: '{{Veuillez d\'abord sauvegarder l\'équipement}}', level: 'danger'});
-			return;
-		}
-		$('#md_modal').dialog({title: "{{Gestion des rondes PTZ}}"});
-		$('#md_modal').load('index.php?v=d&plugin=reolink&modal=modal.reolink&id=' + id).dialog('open');
-});
-
-$('#btGetCMD').on('click', function () {
-		$.ajax({// fonction permettant de faire de l'ajax
-				type: "POST", // methode de transmission des données au fichier php
-				url: "plugins/reolink/core/ajax/reolink.ajax.php", // url du fichier php
-				data: {
-					action: "CreateCMD",
-					id : $('.eqLogicAttr[data-l1key=id]').value()
-				},
-				dataType: 'json',
-				error: function (request, status, error) {
-					handleAjaxError(request, status, error);
-				},
-				success: function (data) { // si l'appel a bien fonctionné
-				if (data.state != 'ok') {
-					$('#div_alert').showAlert({message: data.result, level: 'danger'});
-					return;
-				}
-				$('#div_alert').showAlert({message: '{{Commandes créer avec succès}}', level: 'success'});
-				window.location.reload();
-			}
-		});
-});
-
-
-$('#btCheckConnexion').on('click', function () {
-		$.ajax({// fonction permettant de faire de l'ajax
-				type: "POST", // methode de transmission des données au fichier php
-				url: "plugins/reolink/core/ajax/reolink.ajax.php", // url du fichier php
-				data: {
-					action: "CheckConnexion",
-					id : $('.eqLogicAttr[data-l1key=id]').value()
-				},
-				dataType: 'json',
-				error: function (request, status, error) {
-					handleAjaxError(request, status, error);
-				},
-				success: function (data) { // si l'appel a bien fonctionné
-				if (data.state != 'ok') {
-					$('#div_alert').showAlert({message: data.result, level: 'danger'});
-					return;
-				}
-				$('#div_alert').showAlert({message: '{{Connexion à la caméra réussie}}', level: 'success'});
-			}
-		});
-});
-
-$('#btGetCamNFO').on('click', function () {
-		$.ajax({// fonction permettant de faire de l'ajax
-				type: "POST", // methode de transmission des données au fichier php
-				url: "plugins/reolink/core/ajax/reolink.ajax.php", // url du fichier php
-				data: {
-					action: "CheckDeviceInfo",
-					id : $('.eqLogicAttr[data-l1key=id]').value()
-				},
-				dataType: 'json',
-				error: function (request, status, error) {
-					handleAjaxError(request, status, error);
-				},
-				success: function (data) { // si l'appel a bien fonctionné
-				if (data.state != 'ok') {
-					$('#div_alert').showAlert({message: data.result, level: 'danger'});
-					return;
-				}
-				$('#div_alert').showAlert({message: '{{Information récupérer avec succès}}', level: 'success'});
-				window.location.reload();
-			}
-		});
-});
-/* Actions des boutons sur la page */
-function SetCAMconfig(REQgroup){
-	$.ajax({// fonction permettant de faire de l'ajax
-			type: "POST", // methode de transmission des données au fichier php
-			url: "plugins/reolink/core/ajax/reolink.ajax.php", // url du fichier php
-			data: {
-				action: "SetCAMConfig",
-				group:REQgroup,
-				id : $('.eqLogicAttr[data-l1key=id]').value()
-			},
-			dataType: 'json',
-			error: function (request, status, error) {
-				handleAjaxError(request, status, error);
-			},
-			success: function (data) { // si l'appel a bien fonctionné
-			if (data.state != 'ok') {
-				$('#div_alert').showAlert({message: data.result, level: 'danger'});
-				return;
-			}
-			$('#div_alert').showAlert({message: '{{OK configuration envoyé avec succès}}', level: 'success'});
-			//window.location.reload();
-		}
-	});
-}
-/* Actions des boutons sur la page */
-function GetCAMinfo(REQgroup){
-	$.ajax({// fonction permettant de faire de l'ajax
-			type: "POST", // methode de transmission des données au fichier php
-			url: "plugins/reolink/core/ajax/reolink.ajax.php", // url du fichier php
-			data: {
-				action: "GetCAMConfig",
-				group:REQgroup,
-				id : $('.eqLogicAttr[data-l1key=id]').value()
-			},
-			dataType: 'json',
-			error: function (request, status, error) {
-				handleAjaxError(request, status, error);
-			},
-			success: function (data) { // si l'appel a bien fonctionné
-			if (data.state != 'ok') {
-				$('#div_alert').showAlert({message: data.result, level: 'danger'});
-				return;
-			}
-			$('#div_alert').showAlert({message: '{{Lecture OK}}', level: 'success'});
-			window.location.reload();
-		}
-	});
-}
-</script>
-<!-- Inclusion du fichier javascript du plugin (dossier, nom_du_fichier, extension_du_fichier, id_du_plugin) -->
 <?php include_file('desktop', 'reolink', 'js', 'reolink');?>
-<!-- Inclusion du fichier javascript du core - NE PAS MODIFIER NI SUPPRIMER -->
 <?php include_file('core', 'plugin.template', 'js');?>
