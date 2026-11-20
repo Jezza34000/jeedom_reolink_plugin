@@ -707,6 +707,9 @@ $('#btOpenLive').on('click', function () {
 		$('#div_alert').showAlert({message: '{{Veuillez d\'abord sauvegarder l\'équipement}}', level: 'danger'});
 		return;
 	}
+	if (typeof window.reolinkLiveStop === 'function') {
+		window.reolinkLiveStop();
+	}
 	$('#md_modal').dialog({title: "{{Live Reolink}}"});
 	$('#md_modal').load('index.php?v=d&plugin=reolink&modal=modal.live&id=' + id).dialog('open');
 });

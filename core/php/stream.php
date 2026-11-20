@@ -28,11 +28,16 @@ try {
 $src = 'reolink_' . $id . '_' . $quality;
 $url = 'http://127.0.0.1:1984/api/stream.mp4?src=' . rawurlencode($src);
 
+// false = PHP s'arrête quand le navigateur annule (changement qualité / fermeture modale)
+ignore_user_abort(false);
+@set_time_limit(0);
 while (ob_get_level() > 0) {
   ob_end_clean();
 }
 header('Content-Type: video/mp4');
-header('Cache-Control: no-cache, no-store');
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Connection: close');
 header('X-Accel-Buffering: no');
 if (function_exists('apache_setenv')) {
   @apache_setenv('no-gzip', '1');
@@ -44,8 +49,11 @@ $ch = curl_init($url);
 curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
 curl_setopt($ch, CURLOPT_TIMEOUT, 0);
 curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($curl, $data) {
+  if (connection_aborted() || connection_status() !== CONNECTION_NORMAL) {
+    return 0;
+  }
   echo $data;
-  if (function_exists('fastcgi_finish_request') === false) {
+  if (ob_get_level() === 0) {
     flush();
   }
   return strlen($data);
@@ -54,6 +62,6 @@ curl_exec($ch);
 $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $err = curl_error($ch);
 curl_close($ch);
-if ($code && $code >= 400) {
+if ($code && $code >= 400 && !connection_aborted()) {
   log::add('reolink', 'debug', 'stream.php go2rtc HTTP ' . $code . ' ' . $err);
 }
