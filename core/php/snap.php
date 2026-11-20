@@ -1,0 +1,29 @@
+<?php
+require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
+include_file('core', 'authentification', 'php');
+
+if (!isConnect()) {
+  http_response_code(401);
+  exit;
+}
+
+$id = intval(init('id', 0));
+$quality = (init('quality', 'sub') === 'main') ? 'main' : 'sub';
+$eq = reolink::byId($id, 'reolink');
+if (!is_object($eq) || $eq->isNvrParent()) {
+  http_response_code(404);
+  exit;
+}
+$cnx = reolink::getReolinkConnection($id);
+if (!is_object($cnx)) {
+  http_response_code(500);
+  exit;
+}
+$jpeg = $cnx->SendSnap($eq->getChannel(), $quality);
+if ($jpeg === false) {
+  http_response_code(502);
+  exit;
+}
+header('Content-Type: image/jpeg');
+header('Content-Length: ' . strlen($jpeg));
+echo $jpeg;

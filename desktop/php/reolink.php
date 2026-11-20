@@ -347,6 +347,12 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									</div>
 									<br>
 							</div>
+							<div class="container-fluid">
+									<div class="form-group">
+											<a class="btn btn-block btn-success" id="btOpenLive"><i class="fas fa-play-circle"></i> {{Live Low/High}}</a>
+									</div>
+									<br>
+							</div>
 						</div>
 					</fieldset>
 				</form>
@@ -693,6 +699,16 @@ $('#btSyncCameraPlugin').on('click', function () {
 		return;
 	}
 	syncCameraPlugin(id);
+});
+
+$('#btOpenLive').on('click', function () {
+	var id = $('.eqLogicAttr[data-l1key=id]').value();
+	if (id == '') {
+		$('#div_alert').showAlert({message: '{{Veuillez d\'abord sauvegarder l\'équipement}}', level: 'danger'});
+		return;
+	}
+	$('#md_modal').dialog({title: "{{Live Reolink}}"});
+	$('#md_modal').load('index.php?v=d&plugin=reolink&modal=modal.live&id=' + id).dialog('open');
 });
 
 $('#btManagePatrol').on('click', function () {

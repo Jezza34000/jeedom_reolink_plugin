@@ -7,6 +7,7 @@
 # 20/11/2026
 
 - Pont plugin Caméra : Snap par token + sync auto des équipements
+- Live `go2rtc` Low/High (proxy fMP4 authentifié)
 - ONVIF : canal `Source`, events IA sans reset motion ; plus de ping ICMP
 - NVR : routage par canal ONVIF ; `onvifPort` dans cron10 ; AI PHP 8 sûr
 - `refreshNFO` : `scheduleEnable` V20, FPS/bitrate, HddInfo vide, `bSmartTrack`, Md/AiAlarm PHP 8

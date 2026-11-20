@@ -23,3 +23,10 @@ resources/demond/.idea/demond.iml
 desktop/img/camera.png
 desktop/img/camera1092.png
 resources/demond/.htaccess
+resources/bin/go2rtc
+resources/bin/go2rtc.yaml
+resources/venv/
+
+resources/bin/go2rtc
+resources/bin/go2rtc.yaml
+resources/venv/

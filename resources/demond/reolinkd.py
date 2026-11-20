@@ -19,6 +19,7 @@ import logging
 import os
 import signal
 import socket
+import subprocess
 import sys
 import time
 import traceback
@@ -32,6 +33,10 @@ _ENV_CALLBACK = 'REOLINK_JEEDOM_CALLBACK'
 _ENV_APIKEY = 'REOLINK_JEEDOM_APIKEY'
 
 proc = None
+go2rtc_proc = None
+_GO2RTC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'bin'))
+_GO2RTC_BIN = os.path.join(_GO2RTC_DIR, 'go2rtc')
+_GO2RTC_CFG = os.path.join(_GO2RTC_DIR, 'go2rtc.yaml')
 
 
 def read_socket():
@@ -145,6 +150,43 @@ def stop_uvicorn():
     proc = None
 
 
+def start_go2rtc():
+    global go2rtc_proc
+    if not os.path.isfile(_GO2RTC_BIN) or not os.access(_GO2RTC_BIN, os.X_OK):
+        logging.warning("go2rtc binary missing at %s", _GO2RTC_BIN)
+        return
+    if not os.path.isfile(_GO2RTC_CFG):
+        os.makedirs(_GO2RTC_DIR, exist_ok=True)
+        with open(_GO2RTC_CFG, 'w', encoding='utf-8') as fh:
+            fh.write('api:\n  listen: "127.0.0.1:1984"\nwebrtc:\n  listen: ":8555"\n')
+    try:
+        go2rtc_proc = subprocess.Popen(
+            [_GO2RTC_BIN, '-config', _GO2RTC_CFG],
+            cwd=_GO2RTC_DIR,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        logging.info("go2rtc started pid=%s", go2rtc_proc.pid)
+    except Exception as e:
+        logging.error("Unable to start go2rtc: %s", e)
+        go2rtc_proc = None
+
+
+def stop_go2rtc():
+    global go2rtc_proc
+    if not go2rtc_proc:
+        return
+    try:
+        go2rtc_proc.terminate()
+        go2rtc_proc.wait(timeout=3)
+    except Exception:
+        try:
+            go2rtc_proc.kill()
+        except Exception:
+            pass
+    go2rtc_proc = None
+
+
 def handler(signum=None, frame=None):
     logging.debug("Signal %i caught, exiting...", int(signum))
     shutdown()
@@ -162,6 +204,7 @@ def shutdown():
     except Exception:
         pass
     stop_uvicorn()
+    stop_go2rtc()
     logging.debug("Exit 0")
     sys.stdout.flush()
     sys.exit(0)
@@ -239,6 +282,7 @@ logging.info('Webhook port: %s', _webhook_port)
 os.environ[_ENV_CALLBACK] = _callback or ''
 os.environ[_ENV_APIKEY] = _apikey or ''
 
+start_go2rtc()
 start_uvicorn()
 
 signal.signal(signal.SIGINT, handler)
