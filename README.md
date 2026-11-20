@@ -1,7 +1,7 @@
 # Plugin Reolink pour Jeedom
 
 Ce plugin permet le controle des caméras de marque Réolink qui possède l'API.
-Il ne permet pas le visionnage des flux vidéo, pour ceci vous devrait utiliser le plugin Jeedom officiel "Caméra"
+Live Low/High via `go2rtc` (fMP4/WebRTC) ; pont optionnel vers le plugin Jeedom officiel « Caméra » (`reolink::getSnapshot`).
 
 ### Support des caméras
 
@@ -77,16 +77,16 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
   - [x] Activation/Désactivation Auto Reboot
   - [ ] Planning Auto Reboot
 - [ ] Gestion des utilisateurs (ajout/supression/modification)
-- [ ] Gestion de l'heure / NTP
+- [x] Gestion de l'heure / NTP
 - [ ] Restaurer la config par défaut
 - [ ] Stockage
   - [x] Etat du stockage
   - [x] Espace utilisé
   - [ ] Formattage de l'espace de stockage
 - [x] Contrôle de la Led d'état
-- [ ] Controle des mise à jour logiciel (vérification + installation OTA)
+- [x] Controle des mise à jour logiciel (vérification + installation OTA)
 - [x] Monitoring de la caméra : Utilisation CPU, Débit codec et Débit réseau
-- [ ] Buzzer NVR / Home Hub (activation/désactivation)
+- [x] Buzzer NVR / Home Hub (activation/désactivation)
 - [ ] Scènes / Modes Reolink (Home, Away, Night…)
 - [ ] Caméras sur batterie via NVR / Home Hub (niveau batterie, charge, mode veille)
 
@@ -125,18 +125,18 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 #### Image/Vidéo
 - [x] Luminosité, Contraste, Saturation, Teinte, Netteté
 - [x] Retourner l'image : Verticalement/Horizontalement
-- [ ] Encodage flux Principal / Secondaire
+- [x] Encodage flux Principal / Secondaire
   - [x] Lecture Résolution, FPS et Bitrate
-  - [ ] Modification Résolution, FPS, Bitrate et Codec (H.264/H.265)
-- [ ] Avancée (Anti-scintillement, Exposition, Balance des blancs, Jour/nuit, Rétroeclairage, 3D-NR, HDR, Binning)
+  - [x] Modification Résolution, FPS, Bitrate et Codec (H.264/H.265)
+- [x] Avancée (Anti-scintillement, Exposition, Balance des blancs, Jour/nuit, Rétroeclairage, 3D-NR, HDR, Binning)
   - [x] Anti-scintillement
   - [x] Jour/nuit
-  - [ ] Seuil de bascule Jour/Nuit
+  - [x] Seuil de bascule Jour/Nuit
   - [x] 3D-NR
-  - [ ] HDR
-  - [ ] Mode Binning (basse lumière)
-  - [ ] Exposition
-  - [ ] Rétroeclairage
+  - [x] HDR
+  - [x] Mode Binning (basse lumière)
+  - [x] Exposition
+  - [x] Rétroeclairage
   - [ ] Balance des blancs
 - [x] Leds Infra rouge
   - [x] Contrôle des Leds Infra rouge
@@ -145,7 +145,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
   - [x] Gestion du mode des leds blanches : Off/Auto
   - [x] Activation/Désactivation manuelle des leds blanches
   - [x] Gestion de l'intensité des leds blanches
-  - [ ] Température de couleur et planning / mode événement du projecteur
+  - [x] Température de couleur et planning / mode événement du projecteur
 - [ ] Led du bouton de sonnette (Doorbell LED)
 - [ ] Masque de vie privée
   - [x] Activation/Désactivation masque de vie privée
@@ -168,7 +168,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
   - [x] Ecraser les enregistrements
   - [x] Enregistrement avant détection (pré-enregistrement)
   - [x] Durée enregistrement après détection
-  - [ ] Enregistrement manuel (Start/Stop) et durée de découpage (`pakTime`)
+  - [x] Enregistrement manuel (Start/Stop) et durée de découpage (`pakTime`)
   - [ ] Planning enregistrement SDCARD/HDD
 - [ ] Email (cameras AI **ET** non-AI)
   - [x] Activation/désactivation Email
@@ -187,24 +187,26 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [x] Activation/désactivation Enregistrement audio
 
 #### Detection de mouvement & IA
-- [x] Remontée des détections en temps-réel (ONVIF : Mouvement, Visage, Personne, Véhicule, Chien/Chat, Sonnette)
+- [x] Remontée des détections en temps-réel (ONVIF : Mouvement, Visage, Personne, Véhicule, Chien/Chat, Colis, Sonnette)
 - [ ] Push d'événements temps-réel via Baichuan TCP (modèles sans ONVIF : E1 Pro, Lumus, sonnettes…)
 - [ ] Suivi automatique (AI Track)
   - [x] Activation/désactivation AI Track
   - [ ] Méthode de suivi, limites gauche/droite et délais d'arrêt
 - [ ] Capteur PIR (activation, sensibilité, intervalle)
 - [ ] Configuration de la Détection de mouvement & IA
-  - [ ] Activation/désactivation globale de la détection de mouvement
+  - [x] Activation/désactivation globale de la détection de mouvement
   - [ ] Configuration de la zone de detection de mouvement (cameras AI **ET** non-AI)
   - [x] Sensibilité par défaut (cameras AI **ET** non-AI)
   - [ ] Planning Sensibilité (cameras AI **ET** non-AI)
   - [x] Sensibilité Detection intelligente Personne **(cameras AI)**
   - [x] Sensibilité Detection intelligente Véhicule **(cameras AI)**
   - [x] Sensibilité Detection intelligente Chien/Chat **(cameras AI)**
+  - [x] Sensibilité Detection intelligente Visage **(cameras AI)**
   - [x] Delai d'alarme Personne **(cameras AI)**
   - [x] Delai d'alarme Véhicule **(cameras AI)**
   - [x] Delai d'alarme Chien/Chat **(cameras AI)**
-  - [ ] Détection Colis (`Package` : événement, sensibilité, délai)
+  - [x] Delai d'alarme Visage **(cameras AI)**
+  - [x] Détection Colis (`Package` : événement, sensibilité, délai)
   - [ ] Détection Pleurs de bébé (`Cry`)
   - [ ] Détections périmétriques IA (Franchissement de ligne, Intrusion, Flânerie, Objet oublié/retiré)
   - [ ] Détection de sabotage (`Tamper`) et détection étendue YOLO World

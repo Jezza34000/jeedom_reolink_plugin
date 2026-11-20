@@ -1191,8 +1191,8 @@
 			"logicalId": "SetMirroringState"
 		},
 		{
-			"abilityneed": "ispBackLight",
-			"name": "Rétro éclairage (état)",
+			"abilityneed": "isp",
+			"name": "Rétroéclairage (état)",
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
@@ -1200,10 +1200,10 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetBacklightState"
+			"logicalId": "SetBackLightState"
 		},
 		{
-			"abilityneed": "ispExposureMode",
+			"abilityneed": "isp",
 			"name": "Exposition (état)",
 			"type": "info",
 			"subtype": "string",
@@ -2479,6 +2479,275 @@
 			"subtype": "other",
 			"isVisible": 1,
 			"logicalId": "SyncTime"
+		},
+		{
+			"abilityneed": "enc",
+			"name": "Codec (Stream1)",
+			"type": "info",
+			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetEncodingst1State"
+		},
+		{
+			"abilityneed": "enc",
+			"name": "Codec (Stream2)",
+			"type": "info",
+			"subtype": "string",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetEncodingst2State"
+		},
+		{
+			"abilityneed": "enc",
+			"name": "Résolution Stream1",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "",
+				"valueFrom": "SetResolutionst1State",
+				"actionapi": "SetEnc",
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"mainStream\":{\"size\":#OPTSELECTEDSTR#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetResolutionst1"
+		},
+		{
+			"abilityneed": "enc",
+			"name": "FPS Stream1",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "",
+				"valueFrom": "SetFPSst1State",
+				"actionapi": "SetEnc",
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"mainStream\":{\"frameRate\":#OPTSELECTEDINT#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetFPSst1"
+		},
+		{
+			"abilityneed": "enc",
+			"name": "Bitrate Stream1",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "",
+				"valueFrom": "SetBitratest1State",
+				"actionapi": "SetEnc",
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"mainStream\":{\"bitRate\":#OPTSELECTEDINT#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetBitratest1"
+		},
+		{
+			"abilityneed": "enc",
+			"name": "Codec Stream1",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "",
+				"valueFrom": "SetEncodingst1State",
+				"actionapi": "SetEnc",
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"mainStream\":{\"vType\":#OPTSELECTEDSTR#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetEncodingst1"
+		},
+		{
+			"abilityneed": "enc",
+			"name": "Résolution Stream2",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "",
+				"valueFrom": "SetResolutionst2State",
+				"actionapi": "SetEnc",
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"subStream\":{\"size\":#OPTSELECTEDSTR#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetResolutionst2"
+		},
+		{
+			"abilityneed": "enc",
+			"name": "FPS Stream2",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "",
+				"valueFrom": "SetFPSst2State",
+				"actionapi": "SetEnc",
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"subStream\":{\"frameRate\":#OPTSELECTEDINT#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetFPSst2"
+		},
+		{
+			"abilityneed": "enc",
+			"name": "Bitrate Stream2",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "",
+				"valueFrom": "SetBitratest2State",
+				"actionapi": "SetEnc",
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"subStream\":{\"bitRate\":#OPTSELECTEDINT#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetBitratest2"
+		},
+		{
+			"abilityneed": "enc",
+			"name": "Codec Stream2",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "",
+				"valueFrom": "SetEncodingst2State",
+				"actionapi": "SetEnc",
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"subStream\":{\"vType\":#OPTSELECTEDSTR#}}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetEncodingst2"
+		},
+		{
+			"abilityneed": "isp",
+			"name": "Seuil Jour/Nuit (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetDayNightThresholdState"
+		},
+		{
+			"abilityneed": "isp",
+			"name": "Seuil Jour/Nuit",
+			"type": "action",
+			"subtype": "slider",
+			"configuration": {
+				"option": "slider",
+				"minValue": 0,
+				"maxValue": 100,
+				"valueFrom": "SetDayNightThresholdState",
+				"actionapi": "SetIsp",
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"dayNightThreshold\":#OPTSLIDER#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetDayNightThreshold"
+		},
+		{
+			"abilityneed": "isp",
+			"name": "Binning (état)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetBinningModeState"
+		},
+		{
+			"abilityneed": "isp",
+			"name": "Binning",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|Off;1|Auto",
+				"valueFrom": "SetBinningModeState",
+				"actionapi": "SetIsp",
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"binningMode\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetBinningMode"
+		},
+		{
+			"abilityneed": "isp",
+			"name": "HDR (état)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetHdrState"
+		},
+		{
+			"abilityneed": "isp",
+			"name": "HDR",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|Off;1|Auto;2|On",
+				"valueFrom": "SetHdrState",
+				"actionapi": "SetIsp",
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"hdr\":#OPTSELECTEDINT#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetHdr"
+		},
+		{
+			"abilityneed": "isp",
+			"name": "Exposition",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "Auto|Auto;LowNoise|Faible bruit;AntiSmear|Anti-smear;Manual|Manuel",
+				"valueFrom": "SetExposureState",
+				"actionapi": "SetIsp",
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"exposure\":#OPTSELECTEDSTR#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetExposure"
+		},
+		{
+			"abilityneed": "isp",
+			"name": "Rétroéclairage",
+			"type": "action",
+			"subtype": "select",
+			"configuration": {
+				"option": "select",
+				"listValue": "Off|Off;On|On;Auto|Auto",
+				"valueFrom": "SetBackLightState",
+				"actionapi": "SetIsp",
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"backLight\":#OPTSELECTEDSTR#}}"
+			},
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetBackLight"
 		}
 	]
 }
