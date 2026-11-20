@@ -75,6 +75,13 @@ $renderCard = function ($eqLogic) {
 			echo '</div>';
 			echo '</div>';
 
+			echo '<legend><i class="fas fa-video"></i> {{Mes caméras}}</legend>';
+			echo '<div class="eqLogicThumbnailContainer">';
+			foreach ($cameras as $eqLogic) {
+				$renderCard($eqLogic);
+			}
+			echo '</div>';
+
 			if (!empty($nvrs)) {
 				echo '<legend><i class="fas fa-hdd"></i> {{Mes NVR}}</legend>';
 				echo '<div class="eqLogicThumbnailContainer">';
@@ -83,13 +90,6 @@ $renderCard = function ($eqLogic) {
 				}
 				echo '</div>';
 			}
-
-			echo '<legend><i class="fas fa-video"></i> {{Mes caméras}}</legend>';
-			echo '<div class="eqLogicThumbnailContainer">';
-			foreach ($cameras as $eqLogic) {
-				$renderCard($eqLogic);
-			}
-			echo '</div>';
 		}
 		?>
 	</div> <!-- /.eqLogicThumbnailDisplay -->
