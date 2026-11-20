@@ -292,7 +292,7 @@ class reolink extends eqLogic {
     if (isset($byCmd['GetNetPort']['value']['NetPort']) && is_array($byCmd['GetNetPort']['value']['NetPort'])) {
       foreach ($byCmd['GetNetPort']['value']['NetPort'] as $key => $value) {
         if (strpos($key, 'Enable') !== false) {
-          $value = str_replace(array('0', '1'), array('(désactiver)', '(actif)'), $value);
+          $value = str_replace(array('0', '1'), array('Désactivé', 'Actif'), strval($value));
         }
         $camera->setConfiguration($key, $value);
       }
