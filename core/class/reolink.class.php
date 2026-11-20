@@ -75,6 +75,7 @@ class reolink extends eqLogic {
       'vehicle' => 'EvVehicleDetect',
       'dog_cat' => 'EvDogCatDetect',
       'face' => 'EvFaceDetect',
+      'package' => 'EvPackageDetect',
     );
     foreach ($map as $key => $cmd) {
       if (!array_key_exists($key, $aiValue)) {
@@ -1003,7 +1004,33 @@ class reolink extends eqLogic {
             break;
 
           case reolinkAPI::CAM_GET_ALARM:
-            // Not supported for now
+            $enable = $json_data['value']['Alarm']['enable']
+              ?? ($json_data['value']['Alarm']['schedule']['enable'] ?? null);
+            if ($enable !== null) {
+              $camcmd->checkAndUpdateCmd('SetMdEnableState', $enable);
+            }
+            break;
+
+          case reolinkAPI::CAM_GET_BUZZERALARMV20:
+            $buzzer = $json_data['value']['Buzzer'] ?? array();
+            if (array_key_exists('scheduleEnable', $buzzer)) {
+              $camcmd->checkAndUpdateCmd('SetBuzzerStateV20', $buzzer['scheduleEnable']);
+            }
+            if (array_key_exists('enable', $buzzer)) {
+              $camcmd->checkAndUpdateCmd('SetNvrBuzzerState', $buzzer['enable']);
+            }
+            break;
+
+          case reolinkAPI::CAM_GET_MANUALREC:
+            $camcmd->checkAndUpdateCmd('SetManualRecordState', $json_data['value']['Rec']['enable'] ?? 0);
+            break;
+
+          case reolinkAPI::CAM_CHECKFIRMWARE:
+            $camcmd->checkAndUpdateCmd('NewFirmwareState', $json_data['value']['newFirmware'] ?? 0);
+            break;
+
+          case reolinkAPI::CAM_GET_NTP:
+            $camcmd->checkAndUpdateCmd('SetNtpEnableState', $json_data['value']['Ntp']['enable'] ?? 0);
             break;
 
           case reolinkAPI::CAM_GET_AUDIOALARM:
@@ -1091,6 +1118,14 @@ class reolink extends eqLogic {
               case "dog_cat":
                 $s1 = 'SetSdSensitivityDogCatState';
                 $s2 = 'SetAlarmDelayDogCatState';
+                break;
+              case "face":
+                $s1 = 'SetSdSensitivityFaceState';
+                $s2 = 'SetAlarmDelayFaceState';
+                break;
+              case "package":
+                $s1 = 'SetSdSensitivityPackageState';
+                $s2 = 'SetAlarmDelayPackageState';
                 break;
             }
             if ($s1 !== null) {
@@ -1364,17 +1399,22 @@ class reolink extends eqLogic {
 
   public static function buildRmwPayload($camcnx, $actionAPI, $channel, $patchArray) {
     $map = array(
-      'SetRecV20' => array('GetRecV20', 'Rec'),
-      'SetEnc' => array('GetEnc', 'Enc'),
-      'SetIsp' => array('GetIsp', 'Isp'),
-      'SetOsd' => array('GetOsd', 'Osd'),
-      'SetAiCfg' => array('GetAiCfg', null),
+      'SetRecV20' => array('GetRecV20', 'Rec', true),
+      'SetEnc' => array('GetEnc', 'Enc', true),
+      'SetIsp' => array('GetIsp', 'Isp', true),
+      'SetOsd' => array('GetOsd', 'Osd', true),
+      'SetAiCfg' => array('GetAiCfg', null, true),
+      'SetAlarm' => array('GetAlarm', 'Alarm', true),
+      'SetNtp' => array('GetNtp', 'Ntp', false),
     );
     if (!isset($map[$actionAPI]) || !is_object($camcnx) || !is_array($patchArray)) {
       return null;
     }
-    list($getCmd, $rootKey) = $map[$actionAPI];
-    $res = $camcnx->SendCMD('[{"cmd":"' . $getCmd . '","action":0,"param":{"channel":' . intval($channel) . '}}]');
+    list($getCmd, $rootKey, $withChannel) = $map[$actionAPI];
+    $getPayload = $withChannel
+      ? '[{"cmd":"' . $getCmd . '","action":0,"param":{"channel":' . intval($channel) . '}}]'
+      : '[{"cmd":"' . $getCmd . '","action":0}]';
+    $res = $camcnx->SendCMD($getPayload);
     if (!is_array($res) || !isset($res[0]['value']) || !is_array($res[0]['value'])) {
       return null;
     }
@@ -1899,6 +1939,36 @@ class reolinkCmd extends cmd {
           usleep(2500000);
         }
         break;
+      case 'CheckFirmware':
+        $camcnx = reolink::getReolinkConnection($EqId);
+        $res = $camcnx->SendCMD('[{"cmd":"CheckFirmware"}]');
+        if (is_array($res) && isset($res[0]['value']['newFirmware']) && is_object($eqLogic)) {
+          $eqLogic->checkAndUpdateCmd('NewFirmwareState', $res[0]['value']['newFirmware']);
+        }
+        break;
+      case 'UpgradeFirmware':
+        $camcnx = reolink::getReolinkConnection($EqId);
+        $camcnx->SendCMD('[{"cmd":"UpgradeOnline"}]');
+        break;
+      case 'SyncTime':
+        $camcnx = reolink::getReolinkConnection($EqId);
+        $tres = $camcnx->SendCMD('[{"cmd":"GetTime"}]');
+        if (!is_array($tres) || !isset($tres[0]['value']) || !is_array($tres[0]['value'])) {
+          throw new Exception(__('Echec lecture GetTime', __FILE__));
+        }
+        $now = new DateTime('now');
+        $val = $tres[0]['value'];
+        $val['Time']['year'] = intval($now->format('Y'));
+        $val['Time']['mon'] = intval($now->format('n'));
+        $val['Time']['day'] = intval($now->format('j'));
+        $val['Time']['hour'] = intval($now->format('G'));
+        $val['Time']['min'] = intval($now->format('i'));
+        $val['Time']['sec'] = intval($now->format('s'));
+        $camresp = $camcnx->SendCMD(json_encode(array(array('cmd' => 'SetTime', 'action' => 0, 'param' => $val))));
+        if (!(is_array($camresp) && intval($camresp[0]['code'] ?? -1) === 0)) {
+          throw new Exception(__('Echec SyncTime', __FILE__));
+        }
+        break;
       default:
         $camcnx = reolink::getReolinkConnection($EqId);
         // Speed NFO
@@ -1926,13 +1996,21 @@ class reolinkCmd extends cmd {
             $patchJson = str_replace('#CHANNEL#', $channel, $patchJson);
             $patchJson = str_replace('#SPEED#', $speed, $patchJson);
             $patch = json_decode($patchJson, true);
-            $rmwApis = array('SetRecV20', 'SetEnc', 'SetIsp', 'SetOsd', 'SetAiCfg');
+            $rmwApis = array('SetRecV20', 'SetEnc', 'SetIsp', 'SetOsd', 'SetAiCfg', 'SetAlarm', 'SetNtp');
             if (in_array($actionAPI, $rmwApis, true) && is_array($patch)) {
               $merged = reolink::buildRmwPayload($camcnx, $actionAPI, $channel, $patch);
               if ($merged === null) {
                 throw new Exception(__('Echec lecture état courant pour Read-Modify-Write', __FILE__));
               }
               $payload = json_encode(array(array('cmd' => $actionAPI, 'action' => 0, 'param' => $merged)));
+            } elseif ($actionAPI === 'SetManualRec' && is_array($patch)) {
+              if (intval($patch['Rec']['enable'] ?? 0) === 1) {
+                $patch['Rec']['duration'] = 600;
+              }
+              if (!isset($patch['Rec']['channel'])) {
+                $patch['Rec']['channel'] = $channel;
+              }
+              $payload = json_encode(array(array('cmd' => $actionAPI, 'action' => 0, 'param' => $patch)));
             } else {
               $payload = '[{"cmd":"' . $actionAPI . '","action":0,"param":' . $patchJson . '}]';
             }
