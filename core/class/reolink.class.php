@@ -61,13 +61,115 @@ class reolink extends eqLogic {
     return intval($this->getConfiguration('defined_channel', 0));
   }
 
-  public function isNvrParent() {
+  public function isChannelChild() {
     $defCh = $this->getConfiguration('defined_channel', '');
-    if ($defCh !== '' && $defCh !== null) {
+    return ($defCh !== '' && $defCh !== null);
+  }
+
+  public function isNvrParent() {
+    if ($this->isChannelChild()) {
       return false;
     }
-    return ($this->getConfiguration('exactType') === 'NVR'
-      || intval($this->getConfiguration('channelNum', 1)) > 1);
+    $hostType = strval($this->getConfiguration('hostExactType', $this->getConfiguration('exactType', '')));
+    $hostChannels = intval($this->getConfiguration('hostChannelNum', $this->getConfiguration('channelNum', 1)));
+    return ($hostType === 'NVR' || $hostChannels > 1);
+  }
+
+  public function isStandaloneCamera() {
+    return !$this->isNvrParent() && !$this->isChannelChild();
+  }
+
+  /**
+   * Command scope: host = NVR parent or standalone device; channel = channel child or standalone.
+   */
+  public function allowsCommandScope($scope) {
+    $scope = ($scope === null || $scope === '') ? 'channel' : strval($scope);
+    if ($scope === 'any') {
+      return true;
+    }
+    if ($this->isNvrParent()) {
+      return ($scope === 'host');
+    }
+    if ($this->isChannelChild()) {
+      return ($scope === 'channel');
+    }
+    // Standalone IPC: host + channel commands
+    return ($scope === 'host' || $scope === 'channel');
+  }
+
+  public function getImage() {
+    $file = dirname(__FILE__) . '/../../desktop/img/camera' . $this->getId() . '.png';
+    if (file_exists($file) && filesize($file) > 100) {
+      return 'plugins/reolink/desktop/img/camera' . $this->getId() . '.png?v=' . filemtime($file);
+    }
+    return parent::getImage();
+  }
+
+  public static function downloadCamIcon($id, $model, $camera = null) {
+    if ($model === '' || $model === null) {
+      return '';
+    }
+    $modelURL = rawurlencode(strval($model));
+    $iconurl = "https://cdn.reolink.com/wp-content/assets/app/model-images/$modelURL/light_off.png";
+    if (!is_object($camera)) {
+      $camera = reolink::byId($id, 'reolink');
+    }
+    if (is_object($camera)) {
+      $camera->setConfiguration('camicon', $iconurl);
+    }
+    $dir = realpath(dirname(__FILE__) . '/../../desktop');
+    if ($dir === false) {
+      return $iconurl;
+    }
+    if (!file_exists($dir . '/img')) {
+      mkdir($dir . '/img', 0775, true);
+    }
+    $fileToWrite = $dir . '/img/camera' . $id . '.png';
+    $ch = curl_init($iconurl);
+    curl_setopt($ch, CURLOPT_HEADER, false);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $rawdata = curl_exec($ch);
+    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($httpcode == 200 && $rawdata !== false && strlen($rawdata) > 100) {
+      $fp = fopen($fileToWrite, 'w');
+      fwrite($fp, $rawdata);
+      fclose($fp);
+      @chown($fileToWrite, 'www-data');
+      @chgrp($fileToWrite, 'www-data');
+    } else {
+      log::add('reolink', 'warning', 'Icône CDN HTTP ' . $httpcode . ' pour modèle ' . $model . ' (URL ' . $iconurl . ')');
+    }
+    curl_close($ch);
+    return $iconurl;
+  }
+
+  public static function mapModelToCameraDevice($model) {
+    $m = strtolower(strval($model));
+    if ($m === '') {
+      return '';
+    }
+    if (strpos($m, 'trackmix') !== false) {
+      return 'reolink.trackMix';
+    }
+    if (strpos($m, 'e1 pro') !== false) {
+      return 'reolink.E1_Pro';
+    }
+    if (strpos($m, 'e1 zoom') !== false || strpos($m, 'e1 outdoor') !== false) {
+      return 'reolink.E1_Zoom';
+    }
+    if (strpos($m, 'rlc-410-5') !== false) {
+      return 'reolink.rlc-410-5mp';
+    }
+    if (strpos($m, 'rlc-410') !== false) {
+      return 'reolink.rlc-410w';
+    }
+    return '';
   }
 
   public static function applyAiStateCmds($eqLogic, $aiValue) {
@@ -116,134 +218,152 @@ class reolink extends eqLogic {
       return false;
     }
     $channel = $camera->getChannel();
+    $isChannel = $camera->isChannelChild();
 
-    // Devices Info
     $reolinkConn = reolink::getReolinkConnection($id);
     if (!is_object($reolinkConn)) {
       return false;
     }
-    $deviceInfo = $reolinkConn->SendCMD('[{"cmd":"GetDevInfo"},{"cmd":"GetP2P"},{"cmd":"GetLocalLink"},{"cmd":"GetAiState","action":0,"param":{"channel":' . $channel . '}},{"cmd":"GetNetPort"},{"cmd":"GetRtspUrl","action":0,"param":{"channel":' . $channel . '}}]');
 
+    $batch = array(
+      array('cmd' => 'GetDevInfo'),
+      array('cmd' => 'GetP2P'),
+      array('cmd' => 'GetLocalLink'),
+      array('cmd' => 'GetNetPort'),
+    );
+    if (!$camera->isNvrParent()) {
+      $batch[] = array('cmd' => 'GetAiState', 'action' => 0, 'param' => array('channel' => $channel));
+      $batch[] = array('cmd' => 'GetRtspUrl', 'action' => 0, 'param' => array('channel' => $channel));
+    }
+    if ($isChannel) {
+      $batch[] = array('cmd' => 'GetChnTypeInfo', 'action' => 0, 'param' => array('channel' => $channel));
+      $batch[] = array('cmd' => 'GetChannelstatus');
+    }
+    $deviceInfo = $reolinkConn->SendCMD(json_encode($batch));
     if (!$deviceInfo || !isset($deviceInfo[0]['value']['DevInfo'])) {
       return false;
     }
 
-    foreach ($deviceInfo[0]['value']["DevInfo"] as $key => $value) {
+    $devInfo = $deviceInfo[0]['value']['DevInfo'];
+    // Always keep host/NVR identity separately (needed for channel cameras behind NVR)
+    $camera->setConfiguration('hostExactType', $devInfo['exactType'] ?? ($devInfo['type'] ?? ''));
+    $camera->setConfiguration('hostChannelNum', $devInfo['channelNum'] ?? 1);
+    $camera->setConfiguration('hostModel', $devInfo['model'] ?? '');
+    $camera->setConfiguration('hostName', $devInfo['name'] ?? '');
+    $camera->setConfiguration('hostFirmVer', $devInfo['firmVer'] ?? '');
 
-      log::add('reolink', 'debug', 'Enregistrement : K=' . $key . ' V=' . $value);
-      $camera->setConfiguration($key, $value);
+    if ($camera->isNvrParent() || $camera->isStandaloneCamera()) {
+      foreach ($devInfo as $key => $value) {
+        $camera->setConfiguration($key, $value);
+      }
+      reolink::downloadCamIcon($id, $devInfo['model'] ?? '', $camera);
+    } else {
+      // Channel child: do not overwrite camera model with NVR DevInfo
+      $camera->setConfiguration('exactType', $devInfo['exactType'] ?? 'NVR');
+      $camera->setConfiguration('channelNum', $devInfo['channelNum'] ?? 1);
+      $camera->setConfiguration('nvrModel', $devInfo['model'] ?? '');
+      $camera->setConfiguration('nvrName', $devInfo['name'] ?? '');
+      $camera->setConfiguration('nvrFirmVer', $devInfo['firmVer'] ?? '');
+      $camera->setConfiguration('nvrHardVer', $devInfo['hardVer'] ?? '');
+    }
 
-      if ($key == "model") {
-        // Download CAM img ICON (cosmetic; never abort GetCamNFO on CDN failure)
-        $modelURL = urlencode($value);
-        $iconurl = "https://cdn.reolink.com/wp-content/assets/app/model-images/$modelURL/light_off.png";
-        $camera->setConfiguration("camicon", $iconurl);
-
-        $dir = realpath(dirname(__FILE__) . '/../../desktop');
-
-        if (!file_exists($dir . '/img')) {
-          mkdir($dir . '/img', 0775, true);
-          log::add('reolink', 'debug', 'Création du répertoire visuel caméra = ' . $dir . '/img');
-        }
-
-        $fileToWrite = $dir . '/img/camera' . $id . '.png';
-
-        log::add('reolink', 'debug', 'Enregistrement du visuel de la caméra ' . $value . ' depuis serveur Reolink (' . $iconurl . ' => ' . $fileToWrite . ')');
-
-        $ch = curl_init($iconurl);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        $rawdata = curl_exec($ch);
-
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if ($httpcode == 200 && $rawdata !== false) {
-          log::add('reolink', 'debug', 'HTTP code 200 OK');
-          $fp = fopen($fileToWrite, 'w');
-          fwrite($fp, $rawdata);
-          fclose($fp);
-          log::add('reolink', 'debug', 'Ecriture OK');
-        } else {
-          log::add('reolink', 'warning', 'Icône caméra CDN HTTP ' . $httpcode . ' (ignoré) ' . curl_error($ch));
-        }
-        curl_close($ch);
+    $byCmd = array();
+    foreach ($deviceInfo as $item) {
+      if (isset($item['cmd'])) {
+        $byCmd[$item['cmd']] = $item;
       }
     }
-
-    // Alone value
-    if (isset($deviceInfo[1]['value']['P2p']['uid'])) {
-      $value = $deviceInfo[1]['value']["P2p"]['uid'];
-      log::add('reolink', 'debug', 'Enregistrement : K=uid V=' . $value);
-      $camera->setConfiguration("uid", $value);
+    // API may answer GetChannelstatus with that exact casing
+    if (!isset($byCmd['GetChannelstatus']) && isset($byCmd['GetChannelStatus'])) {
+      $byCmd['GetChannelstatus'] = $byCmd['GetChannelStatus'];
     }
 
-    if (isset($deviceInfo[2]['value']['LocalLink']['activeLink'])) {
-      $value = $deviceInfo[2]['value']["LocalLink"]['activeLink'];
-      log::add('reolink', 'debug', 'Enregistrement : K=linkconnection V=' . $value);
-      $camera->setConfiguration("linkconnection", $value);
+    if (isset($byCmd['GetP2P']['value']['P2p']['uid']) && !$isChannel) {
+      $camera->setConfiguration('uid', $byCmd['GetP2P']['value']['P2p']['uid']);
     }
-
-    // Check if cam is AI (channel-aware)
-    if (isset($deviceInfo[3]['value'])) {
-      $camera->setConfiguration("supportai", "Oui");
-    } else {
-      $camera->setConfiguration("supportai", "Non");
+    if (isset($byCmd['GetLocalLink']['value']['LocalLink']['activeLink'])) {
+      $camera->setConfiguration('linkconnection', $byCmd['GetLocalLink']['value']['LocalLink']['activeLink']);
     }
-
-    // Save cam port
-    if (isset($deviceInfo[4]['value']['NetPort']) && is_array($deviceInfo[4]['value']['NetPort'])) {
-      foreach ($deviceInfo[4]['value']['NetPort'] as $key => $value) {
-        log::add('reolink', 'debug', 'Enregistrement : K=' . $key . ' V=' . $value);
-
+    if (isset($byCmd['GetAiState']['value'])) {
+      $camera->setConfiguration('supportai', 'Oui');
+    } elseif (!$camera->isNvrParent()) {
+      $camera->setConfiguration('supportai', 'Non');
+    }
+    if (isset($byCmd['GetNetPort']['value']['NetPort']) && is_array($byCmd['GetNetPort']['value']['NetPort'])) {
+      foreach ($byCmd['GetNetPort']['value']['NetPort'] as $key => $value) {
         if (strpos($key, 'Enable') !== false) {
-          $value = str_replace("0", "(désactiver)", $value);
-          $value = str_replace("1", "(actif)", $value);
+          $value = str_replace(array('0', '1'), array('(désactiver)', '(actif)'), $value);
         }
-
         $camera->setConfiguration($key, $value);
       }
     }
 
-    $rtspPort = intval(preg_replace('/\D/', '', strval($camera->getConfiguration('rtspPort', '554'))));
-    if ($rtspPort <= 0) {
-      $rtspPort = 554;
-    }
-    $userEnc = rawurlencode(strval($camera->getConfiguration('login')));
-    $passEnc = rawurlencode(strval($camera->getConfiguration('password')));
-    $ip = strval($camera->getConfiguration('adresseip'));
-    $chStr = str_pad(strval($channel + 1), 2, '0', STR_PAD_LEFT);
-    $mainUrl = null;
-    $subUrl = null;
-    if (isset($deviceInfo[5]['value']['rtspUrl']) && is_array($deviceInfo[5]['value']['rtspUrl'])) {
-      $rtsp = $deviceInfo[5]['value']['rtspUrl'];
-      if (!empty($rtsp['mainStream'])) {
-        $mainUrl = preg_replace('#^rtsp://([^/@]+@)?#', 'rtsp://' . $userEnc . ':' . $passEnc . '@', $rtsp['mainStream'], 1);
+    if ($isChannel) {
+      $typeInfo = $byCmd['GetChnTypeInfo']['value']['typeInfo'] ?? null;
+      if ($typeInfo) {
+        $camera->setConfiguration('model', $typeInfo);
+        $camera->setConfiguration('camModel', $typeInfo);
+        if (isset($byCmd['GetChnTypeInfo']['value']['firmVer'])) {
+          $camera->setConfiguration('firmVer', $byCmd['GetChnTypeInfo']['value']['firmVer']);
+        }
+        if (isset($byCmd['GetChnTypeInfo']['value']['boardInfo'])) {
+          $camera->setConfiguration('hardVer', $byCmd['GetChnTypeInfo']['value']['boardInfo']);
+          $camera->setConfiguration('boardInfo', $byCmd['GetChnTypeInfo']['value']['boardInfo']);
+        }
+        reolink::downloadCamIcon($id, $typeInfo, $camera);
       }
-      if (!empty($rtsp['subStream'])) {
-        $subUrl = preg_replace('#^rtsp://([^/@]+@)?#', 'rtsp://' . $userEnc . ':' . $passEnc . '@', $rtsp['subStream'], 1);
+      $statuses = $byCmd['GetChannelstatus']['value']['status'] ?? array();
+      foreach ($statuses as $st) {
+        if (!is_array($st) || intval($st['channel'] ?? -1) !== $channel) {
+          continue;
+        }
+        if (!empty($st['name'])) {
+          $camera->setConfiguration('name', $st['name']);
+        }
+        if (!empty($st['uid'])) {
+          $camera->setConfiguration('uid', $st['uid']);
+        }
+        if (!empty($st['typeInfo']) && !$typeInfo) {
+          $camera->setConfiguration('model', $st['typeInfo']);
+          $camera->setConfiguration('camModel', $st['typeInfo']);
+          reolink::downloadCamIcon($id, $st['typeInfo'], $camera);
+        }
+        break;
       }
     }
-    if ($mainUrl === null) {
-      $mainUrl = 'rtsp://' . $userEnc . ':' . $passEnc . '@' . $ip . ':' . $rtspPort . '/Preview_' . $chStr . '_main';
-    }
-    if ($subUrl === null) {
-      $subUrl = 'rtsp://' . $userEnc . ':' . $passEnc . '@' . $ip . ':' . $rtspPort . '/h264Preview_' . $chStr . '_sub';
-    }
-    $camera->setConfiguration('rtspMainUrl', $mainUrl);
-    $camera->setConfiguration('rtspSubUrl', $subUrl);
 
-    log::add('reolink', 'debug', 'GetDeviceInfo ajout de ' . count($deviceInfo[0]['value']["DevInfo"]) . ' items');
-    if (count($deviceInfo[0]['value']["DevInfo"]) > 1) {
-      $camera->Save();
-      return true;
-    } else {
-      return false;
+    if (!$camera->isNvrParent()) {
+      $rtspPort = intval(preg_replace('/\D/', '', strval($camera->getConfiguration('rtspPort', '554'))));
+      if ($rtspPort <= 0) {
+        $rtspPort = 554;
+      }
+      $userEnc = rawurlencode(strval($camera->getConfiguration('login')));
+      $passEnc = rawurlencode(strval($camera->getConfiguration('password')));
+      $ip = strval($camera->getConfiguration('adresseip'));
+      $chStr = str_pad(strval($channel + 1), 2, '0', STR_PAD_LEFT);
+      $mainUrl = null;
+      $subUrl = null;
+      if (isset($byCmd['GetRtspUrl']['value']['rtspUrl']) && is_array($byCmd['GetRtspUrl']['value']['rtspUrl'])) {
+        $rtsp = $byCmd['GetRtspUrl']['value']['rtspUrl'];
+        if (!empty($rtsp['mainStream'])) {
+          $mainUrl = preg_replace('#^rtsp://([^/@]+@)?#', 'rtsp://' . $userEnc . ':' . $passEnc . '@', $rtsp['mainStream'], 1);
+        }
+        if (!empty($rtsp['subStream'])) {
+          $subUrl = preg_replace('#^rtsp://([^/@]+@)?#', 'rtsp://' . $userEnc . ':' . $passEnc . '@', $rtsp['subStream'], 1);
+        }
+      }
+      if ($mainUrl === null) {
+        $mainUrl = 'rtsp://' . $userEnc . ':' . $passEnc . '@' . $ip . ':' . $rtspPort . '/Preview_' . $chStr . '_main';
+      }
+      if ($subUrl === null) {
+        $subUrl = 'rtsp://' . $userEnc . ':' . $passEnc . '@' . $ip . ':' . $rtspPort . '/h264Preview_' . $chStr . '_sub';
+      }
+      $camera->setConfiguration('rtspMainUrl', $mainUrl);
+      $camera->setConfiguration('rtspSubUrl', $subUrl);
     }
+
+    $camera->save();
+    return true;
   }
 
   public static function getSnapshot($_cameraEqLogic) {
@@ -342,6 +462,8 @@ class reolink extends eqLogic {
         $camEq->setIsVisible(1);
         $camEq->setObject_id($reolinkEq->getObject_id());
       }
+      $model = strval($reolinkEq->getConfiguration('camModel', $reolinkEq->getConfiguration('model', '')));
+      $deviceId = reolink::mapModelToCameraDevice($model);
       $camEq->setConfiguration('ip', $ip);
       $camEq->setConfiguration('port', preg_replace('/\D/', '', strval($reolinkEq->getConfiguration('rtspPort', '554'))) ?: '554');
       $camEq->setConfiguration('username', $reolinkEq->getConfiguration('login'));
@@ -352,6 +474,15 @@ class reolink extends eqLogic {
       $camEq->setConfiguration('rtsp_option', '-rtsp_transport tcp');
       $camEq->setConfiguration('reolink_channel', strval($channel));
       $camEq->setConfiguration('reolink_eqLogic_id', intval($reolinkEq->getId()));
+      $camEq->setConfiguration('reolink_model', $model);
+      if ($deviceId !== '') {
+        // Set both to avoid camera plugin re-import overwriting our Snap/RTSP bridge
+        $camEq->setConfiguration('device', $deviceId);
+        $camEq->setConfiguration('applyDevice', $deviceId);
+      }
+      if ($model !== '' && strpos($camEq->getName(), $model) === false && strpos($camEq->getName(), 'Caméra ') === 0) {
+        $camEq->setName('Caméra ' . $reolinkEq->getName() . ' (' . $model . ')');
+      }
       $camEq->save();
       $synced++;
     }
@@ -580,6 +711,9 @@ class reolink extends eqLogic {
     if (!is_object($camera) || !is_object($cnx)) {
       throw new Exception(__('Caméra introuvable', __FILE__));
     }
+    if ($camera->isNvrParent()) {
+      throw new Exception(__('Les rondes PTZ ne s\'appliquent pas à un NVR parent', __FILE__));
+    }
     $channel = $camera->getChannel();
     $res = $cnx->SendCMD('[{"cmd":"GetPtzPreset","action":1,"param":{"channel":' . $channel . '}},{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
     if (!is_array($res)) {
@@ -615,6 +749,9 @@ class reolink extends eqLogic {
     $cnx = reolink::getReolinkConnection($id);
     if (!is_object($camera) || !is_object($cnx)) {
       throw new Exception(__('Caméra introuvable', __FILE__));
+    }
+    if ($camera->isNvrParent()) {
+      throw new Exception(__('Les rondes PTZ ne s\'appliquent pas à un NVR parent', __FILE__));
     }
     $channel = $camera->getChannel();
     $patrolId = intval($patrolId);
@@ -668,6 +805,9 @@ class reolink extends eqLogic {
     if (!is_object($camera) || !is_object($cnx)) {
       throw new Exception(__('Caméra introuvable', __FILE__));
     }
+    if ($camera->isNvrParent()) {
+      throw new Exception(__('Les rondes PTZ ne s\'appliquent pas à un NVR parent', __FILE__));
+    }
     $channel = $camera->getChannel();
     $op = ($op === 'StopPatrol') ? 'StopPatrol' : 'StartPatrol';
     if ($patrolId === null || $patrolId === '') {
@@ -716,8 +856,8 @@ class reolink extends eqLogic {
 
   public static function refreshNFO($id) {
     $camcmd = reolink::byId($id, 'reolink');
-    if (!is_object($camcmd) || $camcmd->isNvrParent()) {
-      log::add('reolink', 'debug', 'refreshNFO ignoré : équipement NVR parent ou introuvable');
+    if (!is_object($camcmd)) {
+      log::add('reolink', 'debug', 'refreshNFO ignoré : équipement introuvable');
       return;
     }
 
@@ -729,9 +869,7 @@ class reolink extends eqLogic {
         $privacy = $bc->getPrivacyMode($camcmd->getChannel());
         if ($privacy !== null) {
           $camcmd->checkAndUpdateCmd('SetPrivacyModeState', $privacy ? 1 : 0);
-          $isStandalone = ($camcmd->getConfiguration('exactType') !== 'NVR'
-            && intval($camcmd->getConfiguration('channelNum', 1)) <= 1);
-          if ($privacy && $isStandalone) {
+          if ($privacy && $camcmd->isStandaloneCamera()) {
             log::add('reolink', 'debug', 'Caméra en mode confidentialité, rafraîchissement HTTP ignoré');
             return;
           }
@@ -1235,9 +1373,6 @@ class reolink extends eqLogic {
     $eqLogics = eqLogic::byType('reolink', true);
     /** @var reolink */
     foreach ($eqLogics as $camera) {
-      if ($camera->isNvrParent()) {
-        continue;
-      }
       $autorefresh = $camera->getConfiguration('autorefresh', '*/15 * * * *');
       if ($autorefresh != '') {
         try {
@@ -1706,8 +1841,7 @@ class reolink extends eqLogic {
 
   public function loadCmdFromConf($id, $pruneUnsupported = true) {
     $camera = reolink::byId($id, 'reolink');
-    if (!is_object($camera) || $camera->isNvrParent()) {
-      log::add('reolink', 'info', 'CreateCMD ignoré : équipement NVR parent');
+    if (!is_object($camera)) {
       return false;
     }
 
@@ -1717,8 +1851,25 @@ class reolink extends eqLogic {
 
     $devAbilityReturn = reolink::GetCamAbility($id);
     if (!$devAbilityReturn) {
-      log::add('reolink', 'debug', 'Erreur lors de l\'obtention des capacités hardware/software de la caméra (resync différé)');
-      return false;
+      // NVR parent: GetCamAbility is channel-oriented; synthesize from GetDevInfo/GetAbility host
+      if ($camera->isNvrParent()) {
+        $cnxTmp = reolink::getReolinkConnection($id);
+        if (is_object($cnxTmp)) {
+          $ab = $cnxTmp->SendCMD('[{"cmd":"GetAbility","param":{"User":{"userName":"' . $camera->getConfiguration('login', 'admin') . '"}}}]');
+          if (is_array($ab) && isset($ab[0]['value']['Ability'])) {
+            $devAbilityReturn = $ab[0]['value']['Ability'];
+            unset($devAbilityReturn['abilityChn']);
+            if ((!isset($devAbilityReturn['upgrade']) || intval($devAbilityReturn['upgrade']['permit'] ?? 0) === 0)
+              && isset($devAbilityReturn['supportRemoteUpgrade'])) {
+              $devAbilityReturn['upgrade'] = $devAbilityReturn['supportRemoteUpgrade'];
+            }
+          }
+        }
+      }
+      if (!$devAbilityReturn) {
+        log::add('reolink', 'debug', 'Erreur lors de l\'obtention des capacités hardware/software de la caméra (resync différé)');
+        return false;
+      }
     }
 
     $cnx = reolink::getReolinkConnection($id);
@@ -1728,12 +1879,14 @@ class reolink extends eqLogic {
     }
 
     $channel = $camera->getChannel();
-    $mdProbe = $cnx->SendCMD('[{"cmd":"GetMdState","action":0,"param":{"channel":' . $channel . '}}]');
-    $channelOnline = is_array($mdProbe) && isset($mdProbe[0]['value']['state']);
-    if (!$channelOnline) {
-      $mdRsp = intval(($cnx->lastResponseData[0]['error']['rspCode'] ?? 0));
-      log::add('reolink', 'info', 'Canal ' . $channel . ' hors ligne (rsp=' . $mdRsp . '), nettoyage reporté');
-      return false;
+    if (!$camera->isNvrParent()) {
+      $mdProbe = $cnx->SendCMD('[{"cmd":"GetMdState","action":0,"param":{"channel":' . $channel . '}}]');
+      $channelOnline = is_array($mdProbe) && isset($mdProbe[0]['value']['state']);
+      if (!$channelOnline) {
+        $mdRsp = intval(($cnx->lastResponseData[0]['error']['rspCode'] ?? 0));
+        log::add('reolink', 'info', 'Canal ' . $channel . ' hors ligne (rsp=' . $mdRsp . '), nettoyage reporté');
+        return false;
+      }
     }
 
     log::add('reolink', 'debug', 'Chargement des commandes depuis le fichiers de config : ' . dirname(__FILE__) . '/../config/reolinkapicmd.json');
@@ -1789,6 +1942,9 @@ class reolink extends eqLogic {
       if (($command['type'] ?? '') !== 'info') {
         continue;
       }
+      if (!$camera->allowsCommandScope($command['scope'] ?? 'channel')) {
+        continue;
+      }
       $payloadTpl = $command['configuration']['payload'] ?? null;
       if ($payloadTpl === null || $payloadTpl === '') {
         continue;
@@ -1803,10 +1959,20 @@ class reolink extends eqLogic {
     $probeList = array_values(array_unique($probeList));
     $probeResults = reolink::probePayloads($cnx, $probeList);
 
-    // Resolve dual families
+    // Resolve dual families (channel/standalone only)
     $allowedLogical = array();
     $deniedLogical = array();
+    if ($camera->isNvrParent()) {
+      foreach ($dualFamilies as $fam) {
+        foreach (array_merge($fam['v20'], $fam['v1']) as $lid) {
+          $deniedLogical[$lid] = true;
+        }
+      }
+    }
     foreach ($dualFamilies as $abilityKey => $fam) {
+      if ($camera->isNvrParent()) {
+        break;
+      }
       if (!reolink::isAbilityOk($devAbilityReturn, $abilityKey)) {
         foreach (array_merge($fam['v20'], $fam['v1']) as $lid) {
           $deniedLogical[$lid] = true;
@@ -1858,16 +2024,22 @@ class reolink extends eqLogic {
     $unsupportedPayloads = array();
     $cmd_order = 0;
 
-    $ispProbe = $cnx->SendCMD('[{"cmd":"GetIsp","action":0,"param":{"channel":' . intval($channel) . '}}]');
-    $hasHdr = is_array($ispProbe) && array_key_exists('hdr', $ispProbe[0]['value']['Isp'] ?? array());
-    if (!$hasHdr) {
-      $deniedLogical['SetHdrState'] = true;
-      $deniedLogical['SetHdr'] = true;
+    if (!$camera->isNvrParent()) {
+      $ispProbe = $cnx->SendCMD('[{"cmd":"GetIsp","action":0,"param":{"channel":' . intval($channel) . '}}]');
+      $hasHdr = is_array($ispProbe) && array_key_exists('hdr', $ispProbe[0]['value']['Isp'] ?? array());
+      if (!$hasHdr) {
+        $deniedLogical['SetHdrState'] = true;
+        $deniedLogical['SetHdr'] = true;
+      }
     }
 
     foreach ($device['commands'] as $command) {
       $logicalId = $command['logicalId'] ?? null;
       if ($logicalId === null) {
+        continue;
+      }
+      if (!$camera->allowsCommandScope($command['scope'] ?? 'channel')) {
+        $deniedLogical[$logicalId] = true;
         continue;
       }
       if (isset($deniedLogical[$logicalId])) {
@@ -1953,8 +2125,12 @@ class reolink extends eqLogic {
         if ($lid === '' || $lid === null) {
           continue;
         }
-        // Never prune refresh / ChannelOnline / ONVIF event infos without payload
-        if (in_array($lid, array('refresh', 'ChannelOnline', 'EvMotion', 'EvFaceDetect', 'EvPeopleDetect', 'EvVehicleDetect', 'EvDogCatDetect', 'EvPackageDetect', 'EvMotionAlarm', 'EvVisitor', 'EvLastOnvifFull', 'EvLastOnvifName', 'EvLastOnvifState', 'MdState'), true)) {
+        // Never prune refresh (and channel ONVIF/motion infos on camera equipments)
+        $keepAlways = array('refresh');
+        if (!$camera->isNvrParent()) {
+          $keepAlways = array_merge($keepAlways, array('ChannelOnline', 'EvMotion', 'EvFaceDetect', 'EvPeopleDetect', 'EvVehicleDetect', 'EvDogCatDetect', 'EvPackageDetect', 'EvMotionAlarm', 'EvVisitor', 'EvLastOnvifFull', 'EvLastOnvifName', 'EvLastOnvifState', 'MdState'));
+        }
+        if (in_array($lid, $keepAlways, true)) {
           continue;
         }
         $payloadTpl = $existing->getConfiguration('payload');
@@ -1963,16 +2139,24 @@ class reolink extends eqLogic {
           && reolink::isPermanentUnsupportedRsp($probeResults[$payload]['rsp']));
 
         $shouldRemove = isset($deniedLogical[$lid]) || $probeFailed;
-        // Also remove if ability/subability from JSON would deny (match by logicalId in conf)
+        // Also remove if ability/subability/scope from JSON would deny
         if (!$shouldRemove) {
+          $foundInConf = false;
           foreach ($device['commands'] as $command) {
             if (($command['logicalId'] ?? '') !== $lid) {
               continue;
             }
-            if (!reolink::isAbilityOk($devAbilityReturn, $command['abilityneed'] ?? 'none', $command['subability'] ?? null)) {
+            $foundInConf = true;
+            if (!$camera->allowsCommandScope($command['scope'] ?? 'channel')) {
+              $shouldRemove = true;
+            } elseif (!reolink::isAbilityOk($devAbilityReturn, $command['abilityneed'] ?? 'none', $command['subability'] ?? null)) {
               $shouldRemove = true;
             }
             break;
+          }
+          // Orphan camera cmds on NVR parent (legacy) not in host scope
+          if (!$foundInConf && $camera->isNvrParent()) {
+            $shouldRemove = true;
           }
         }
         if (!$shouldRemove) {
@@ -2003,7 +2187,9 @@ class reolink extends eqLogic {
       }
     }
 
-    reolink::applyEncListValues($camera, $cnx, $channel);
+    if (!$camera->isNvrParent()) {
+      reolink::applyEncListValues($camera, $cnx, $channel);
+    }
 
     $camera->setConfiguration('unsupported_payloads', array_keys(array_merge($unsupportedPayloads, $keptUnsupported)));
     $camera->setConfiguration('unsupported_fail_counts', array());

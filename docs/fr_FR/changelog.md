@@ -6,6 +6,7 @@
 
 # 20/11/2026
 
+- NVR/canaux : vrai modèle caméra (`GetChnTypeInfo`), séparation commandes host NVR vs canal, sync Caméra avec device mappé
 - Stabilité : options select/slider, listes SetEnc auto, filtre IA Face/Colis, RMW Buzzer/AiAlarm, CheckFirmware 12h/IP
 - API : codes -12/-17 sans retry ERROR ; démon et sendToDaemon plus robustes
 - Pont plugin Caméra : Snap par token + sync auto des équipements

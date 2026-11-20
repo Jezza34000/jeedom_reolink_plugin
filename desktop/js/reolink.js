@@ -27,7 +27,17 @@ $("#table_cmd").sortable({
 });
 
 function printEqLogic(_eqLogic) {
-    $('#icon_visu').attr('src', 'plugins/reolink/desktop/img/camera' + _eqLogic.id + '.png')
+    var v = ''
+    if (isset(_eqLogic.configuration) && isset(_eqLogic.configuration.camicon)) {
+      // bust browser cache when model/icon URL changes
+      v = '?v=' + encodeURIComponent(String(_eqLogic.configuration.camicon).slice(-24))
+    } else {
+      v = '?v=' + Date.now()
+    }
+    $('#icon_visu').attr('src', 'plugins/reolink/desktop/img/camera' + _eqLogic.id + '.png' + v)
+    if (typeof updateEqLogicRoleUi === 'function') {
+      updateEqLogicRoleUi(_eqLogic)
+    }
 }
 
 /* Fonction permettant l'affichage des commandes dans l'équipement */
