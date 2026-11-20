@@ -69,6 +69,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [x] Authentification
   - [x] Login
   - [x] Logout
+- [x] Support NVR multi-canaux (équipement par canal + état `ChannelOnline`)
 - [x] Reboot
 - [x] Obtention des informations de la caméra
 - [x] Obtention des capacités hardware/software de la caméra
@@ -76,71 +77,90 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
   - [x] Activation/Désactivation Auto Reboot
   - [ ] Planning Auto Reboot
 - [ ] Gestion des utilisateurs (ajout/supression/modification)
-- [ ] Gestion de l'heure
+- [ ] Gestion de l'heure / NTP
 - [ ] Restaurer la config par défaut
 - [ ] Stockage
   - [x] Etat du stockage
   - [x] Espace utilisé
   - [ ] Formattage de l'espace de stockage
 - [x] Contrôle de la Led d'état
-- [ ] Controle des mise à jour logiciel
+- [ ] Controle des mise à jour logiciel (vérification + installation OTA)
 - [x] Monitoring de la caméra : Utilisation CPU, Débit codec et Débit réseau
+- [ ] Buzzer NVR / Home Hub (activation/désactivation)
+- [ ] Scènes / Modes Reolink (Home, Away, Night…)
+- [ ] Caméras sur batterie via NVR / Home Hub (niveau batterie, charge, mode veille)
 
 #### PTZ
 - [x] Zoom/Focus
   - [x] Zoom
   - [x] Focus
-  - [X] Activation/Désactivation Auto-Focus
+  - [x] Activation/Désactivation Auto-Focus
 - [x] Mouvement (Haut/Bas/Gauche/Droite)
+- [ ] Position PTZ exacte (lecture/écriture Pan & Tilt)
+- [ ] Zoom 3D
 - [x] Presets PTZ
   - [x] Récupération des presets PTZ
   - [x] Utilisation des presets PTZ
 - [x] PTZ Patrol
   - [x] Activation/Désactivation du PTZ Patrol
   - [x] Gestion PTZ Patrol
-- [X] PTZ Guard (3)
-  - [X] Etat du point de garde
-  - [X] Création/Actualisation du point de garde
-  - [X] Activation/Désactivation du retour auto. au point de garde
-  - [X] Réglage du délai de retour auto. au point de garde
+- [x] PTZ Guard (3)
+  - [x] Etat du point de garde
+  - [x] Création/Actualisation du point de garde
+  - [x] Activation/Désactivation du retour auto. au point de garde
+  - [x] Réglage du délai de retour auto. au point de garde
 - [ ] PTZ Serial
-- [X] Calibration de la camera (1)
+- [x] Calibration de la camera (1)
   - [x] Etat de la calibration
   - [x] Exécution de la calibration
 
 #### Réseau
 - [ ] IP/DNS/MASQUE
 - [ ] DDNS
-- [ ] Wifi
-- [X] Activation/Désactivation UPNP
-- [X] Activation/Désactivation P2P
+- [ ] Wifi (configuration + niveau de signal RSSI)
+- [ ] Activation/Désactivation des ports réseau (HTTP, HTTPS, RTSP, RTMP, ONVIF)
+- [x] Activation/Désactivation UPNP
+- [x] Activation/Désactivation P2P
 
 #### Image/Vidéo
 - [x] Luminosité, Contraste, Saturation, Teinte, Netteté
 - [x] Retourner l'image : Verticalement/Horizontalement
-- [ ] Avancée (Anti-scintillement, Exposition, Balance des blancs, Jour/nuit, Rétroeclairage, 3D-NR)
+- [ ] Encodage flux Principal / Secondaire
+  - [x] Lecture Résolution, FPS et Bitrate
+  - [ ] Modification Résolution, FPS, Bitrate et Codec (H.264/H.265)
+- [ ] Avancée (Anti-scintillement, Exposition, Balance des blancs, Jour/nuit, Rétroeclairage, 3D-NR, HDR, Binning)
   - [x] Anti-scintillement
   - [x] Jour/nuit
+  - [ ] Seuil de bascule Jour/Nuit
   - [x] 3D-NR
+  - [ ] HDR
+  - [ ] Mode Binning (basse lumière)
   - [ ] Exposition
   - [ ] Rétroeclairage
   - [ ] Balance des blancs
 - [x] Leds Infra rouge
   - [x] Contrôle des Leds Infra rouge
+  - [ ] Intensité des Leds Infra rouge
 - [x] Leds blanches d'éclairage (Projecteur Led)
   - [x] Gestion du mode des leds blanches : Off/Auto
   - [x] Activation/Désactivation manuelle des leds blanches
-  - [X] Gestion de l'intensité des leds blanches
+  - [x] Gestion de l'intensité des leds blanches
+  - [ ] Température de couleur et planning / mode événement du projecteur
+- [ ] Led du bouton de sonnette (Doorbell LED)
 - [ ] Masque de vie privée
   - [x] Activation/Désactivation masque de vie privée
   - [ ] Configuration du masque de vie privée
 - [x] Mode confidentialité / Privacy Mode (4)
   - [x] Activation/Désactivation du mode confidentialité (Baichuan TCP)
 
-#### Audio
+#### Audio & Sonnette
 - [x] Sirène
   - [x] Déclenchement manuel de la sirène(2)
   - [x] Volume de la sirène(2)
+- [ ] Volume haut-parleur (conversation et bouton sonnette)
+- [ ] Réponses rapides vocales (Quick Reply : activation, choix et lecture manuelle d'un message)
+- [ ] Réduction de bruit IA et Pré-alarme sonore
+- [ ] Carillon Reolink Chime (association, mélodie, volume, LED, mode silencieux)
 
 #### Surveillance/Notification
 - [ ] Enregistrement SDCARD/HDD (cameras AI **ET** non-AI)
@@ -148,6 +168,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
   - [x] Ecraser les enregistrements
   - [x] Enregistrement avant détection (pré-enregistrement)
   - [x] Durée enregistrement après détection
+  - [ ] Enregistrement manuel (Start/Stop) et durée de découpage (`pakTime`)
   - [ ] Planning enregistrement SDCARD/HDD
 - [ ] Email (cameras AI **ET** non-AI)
   - [x] Activation/désactivation Email
@@ -160,15 +181,20 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
   - [ ] Planning Alarme audio
 - [ ] Push (cameras AI **ET** non-AI)
   - [x] Activation/désactivation Push
+  - [x] Intervalle Push (`PushCfg`)
   - [ ] Planning Push
+- [ ] Règles / Linkages Reolink (Home Hub / IFTTT)
+- [x] Activation/désactivation Enregistrement audio
 
- - [x] Activation/désactivation Enregistrement audio
-
-#### Detection de mouvement
-- [x] Remontée des détections de mouvements en temps-réel (ONVIF)
-- [x] Activation/désactivation AI Track
-
-- [ ] Configuration de la Détection de mouvement
+#### Detection de mouvement & IA
+- [x] Remontée des détections en temps-réel (ONVIF : Mouvement, Visage, Personne, Véhicule, Chien/Chat, Sonnette)
+- [ ] Push d'événements temps-réel via Baichuan TCP (modèles sans ONVIF : E1 Pro, Lumus, sonnettes…)
+- [ ] Suivi automatique (AI Track)
+  - [x] Activation/désactivation AI Track
+  - [ ] Méthode de suivi, limites gauche/droite et délais d'arrêt
+- [ ] Capteur PIR (activation, sensibilité, intervalle)
+- [ ] Configuration de la Détection de mouvement & IA
+  - [ ] Activation/désactivation globale de la détection de mouvement
   - [ ] Configuration de la zone de detection de mouvement (cameras AI **ET** non-AI)
   - [x] Sensibilité par défaut (cameras AI **ET** non-AI)
   - [ ] Planning Sensibilité (cameras AI **ET** non-AI)
@@ -178,9 +204,11 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
   - [x] Delai d'alarme Personne **(cameras AI)**
   - [x] Delai d'alarme Véhicule **(cameras AI)**
   - [x] Delai d'alarme Chien/Chat **(cameras AI)**
-  - [ ] Dimension d'objet Personne **(cameras AI)**
-  - [ ] Dimension d'objet Véhicule **(cameras AI)**
-  - [ ] Dimension d'objet Chien/Chat **(cameras AI)**
+  - [ ] Détection Colis (`Package` : événement, sensibilité, délai)
+  - [ ] Détection Pleurs de bébé (`Cry`)
+  - [ ] Détections périmétriques IA (Franchissement de ligne, Intrusion, Flânerie, Objet oublié/retiré)
+  - [ ] Détection de sabotage (`Tamper`) et détection étendue YOLO World
+  - [ ] Dimension d'objet Personne / Véhicule / Chien-Chat **(cameras AI)**
 
 
 #### OSD
