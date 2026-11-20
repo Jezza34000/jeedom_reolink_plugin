@@ -10,6 +10,7 @@
 - API : codes -12/-17 sans retry ERROR ; démon et sendToDaemon plus robustes
 - Pont plugin Caméra : Snap par token + sync auto des équipements
 - Live `go2rtc` Low/High (proxy fMP4 authentifié)
+- Live : arrêt propre des flux, PTZ pas/clic, select Jeedom corrigé
 - Buzzer NVR/canal, enregistrement manuel, IA Visage/Colis, firmware/NTP/SyncTime
 - SetEnc dynamique + ISP avancés (HDR/Binning/seuil Jour-Nuit) + RMW SetWhiteLed
 - ONVIF : canal `Source`, events IA sans reset motion ; plus de ping ICMP
