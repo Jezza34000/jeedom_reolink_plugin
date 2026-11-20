@@ -7,7 +7,8 @@
 			"type": "action",
 			"subtype": "other",
 			"isVisible": 1,
-			"logicalId": "refresh"
+			"logicalId": "refresh",
+			"scope": "any"
 		},
 		{
 			"abilityneed": "reboot",
@@ -19,7 +20,8 @@
 				"payload": "{}"
 			},
 			"isVisible": 0,
-			"logicalId": "reboot"
+			"logicalId": "reboot",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -31,7 +33,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "MdState"
+			"logicalId": "MdState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "none",
@@ -40,7 +43,8 @@
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "ChannelOnline"
+			"logicalId": "ChannelOnline",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -49,7 +53,8 @@
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "EvMotion"
+			"logicalId": "EvMotion",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -59,7 +64,8 @@
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "EvFaceDetect"
+			"logicalId": "EvFaceDetect",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -69,7 +75,8 @@
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "EvPeopleDetect"
+			"logicalId": "EvPeopleDetect",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -79,7 +86,8 @@
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "EvVehicleDetect"
+			"logicalId": "EvVehicleDetect",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -89,7 +97,8 @@
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "EvDogCatDetect"
+			"logicalId": "EvDogCatDetect",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -99,7 +108,8 @@
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "EvPackageDetect"
+			"logicalId": "EvPackageDetect",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -108,7 +118,8 @@
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "EvMotionAlarm"
+			"logicalId": "EvMotionAlarm",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -117,7 +128,8 @@
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "EvVisitor"
+			"logicalId": "EvVisitor",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -126,7 +138,8 @@
 			"subtype": "string",
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "EvLastOnvifFull"
+			"logicalId": "EvLastOnvifFull",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -135,7 +148,8 @@
 			"subtype": "string",
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "EvLastOnvifName"
+			"logicalId": "EvLastOnvifName",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -144,7 +158,8 @@
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "EvLastOnvifState"
+			"logicalId": "EvLastOnvifState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "performance",
@@ -152,11 +167,12 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPerformance\"}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetCodecRateState"
+			"logicalId": "SetCodecRateState",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "performance",
@@ -167,11 +183,12 @@
 			"configuration": {
 				"minValue": 0,
 				"maxValue": 100,
-				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPerformance\"}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetCpuUsedState"
+			"logicalId": "SetCpuUsedState",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "performance",
@@ -179,11 +196,12 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPerformance\",\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPerformance\"}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetNetThroughputState"
+			"logicalId": "SetNetThroughputState",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "push",
@@ -197,7 +215,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetPushState"
+			"logicalId": "SetPushState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "push",
@@ -214,7 +233,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetPush"
+			"logicalId": "SetPush",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "push",
@@ -228,7 +248,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetPushStateV20"
+			"logicalId": "SetPushStateV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "push",
@@ -245,7 +266,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetPushV20"
+			"logicalId": "SetPushV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportPushInterval",
@@ -257,7 +279,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetPushCfgState"
+			"logicalId": "SetPushCfgState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportPushInterval",
@@ -273,7 +296,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetPushCfg"
+			"logicalId": "SetPushCfg",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -286,7 +310,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetRecordState"
+			"logicalId": "SetRecordState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -303,7 +328,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetRecord"
+			"logicalId": "SetRecord",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -316,7 +342,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetRecordStateV20"
+			"logicalId": "SetRecordStateV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -333,7 +360,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetRecordV20"
+			"logicalId": "SetRecordV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -346,7 +374,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetPreRecordState"
+			"logicalId": "SetPreRecordState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -363,7 +392,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetPreRecord"
+			"logicalId": "SetPreRecord",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -377,7 +407,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetPreRecordStateV20"
+			"logicalId": "SetPreRecordStateV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -395,7 +426,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetPreRecordV20"
+			"logicalId": "SetPreRecordV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -408,7 +440,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetOverwriteState"
+			"logicalId": "SetOverwriteState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -425,7 +458,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetOverwrite"
+			"logicalId": "SetOverwrite",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -438,7 +472,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetOverwriteStateV20"
+			"logicalId": "SetOverwriteStateV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -455,7 +490,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetOverwriteV20"
+			"logicalId": "SetOverwriteV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -468,7 +504,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetPostRecordState"
+			"logicalId": "SetPostRecordState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -485,7 +522,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetPostRecord"
+			"logicalId": "SetPostRecord",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -498,7 +536,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetPostRecordStateV20"
+			"logicalId": "SetPostRecordStateV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -515,7 +554,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetPostRecordV20"
+			"logicalId": "SetPostRecordV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "email",
@@ -528,7 +568,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetEmailState"
+			"logicalId": "SetEmailState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "email",
@@ -545,7 +586,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetEmail"
+			"logicalId": "SetEmail",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "email",
@@ -558,7 +600,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetEmailStateV20"
+			"logicalId": "SetEmailStateV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "email",
@@ -575,7 +618,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetEmailV20"
+			"logicalId": "SetEmailV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ftp",
@@ -588,7 +632,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetFTPState"
+			"logicalId": "SetFTPState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ftp",
@@ -605,7 +650,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetFTP"
+			"logicalId": "SetFTP",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ftp",
@@ -618,7 +664,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetFTPStateV20"
+			"logicalId": "SetFTPStateV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ftp",
@@ -635,7 +682,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetFTPV20"
+			"logicalId": "SetFTPV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ledControl",
@@ -647,7 +695,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetIrLightsState"
+			"logicalId": "SetIrLightsState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ledControl",
@@ -663,7 +712,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetIrLights"
+			"logicalId": "SetIrLights",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportFLswitch",
@@ -675,7 +725,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetWhitLedState"
+			"logicalId": "SetWhitLedState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportFLswitch",
@@ -691,7 +742,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetWhitLed"
+			"logicalId": "SetWhitLed",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportFLswitch",
@@ -703,7 +755,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetWhiteLedModeState"
+			"logicalId": "SetWhiteLedModeState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportFLswitch",
@@ -719,7 +772,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetWhiteLedMode"
+			"logicalId": "SetWhiteLedMode",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportFLBrightness",
@@ -731,7 +785,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetWhitLedLuxState"
+			"logicalId": "SetWhitLedLuxState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportFLBrightness",
@@ -748,7 +803,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetWhitLedLux"
+			"logicalId": "SetWhitLedLux",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmAudio",
@@ -761,7 +817,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetAudioAlarmState"
+			"logicalId": "SetAudioAlarmState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmAudio",
@@ -778,7 +835,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetAudioAlarm"
+			"logicalId": "SetAudioAlarm",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmAudio",
@@ -791,7 +849,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetAudioAlarmStateV20"
+			"logicalId": "SetAudioAlarmStateV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmAudio",
@@ -808,7 +867,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetAudioAlarmV20"
+			"logicalId": "SetAudioAlarmV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "powerLed",
@@ -820,7 +880,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetPowerLedState"
+			"logicalId": "SetPowerLedState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "powerLed",
@@ -836,7 +897,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetPowerLed"
+			"logicalId": "SetPowerLed",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -848,7 +910,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetMicrophoneState"
+			"logicalId": "SetMicrophoneState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -864,7 +927,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetMicrophone"
+			"logicalId": "SetMicrophone",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "disableAutoFocus",
@@ -876,7 +940,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetAutoFocusState"
+			"logicalId": "SetAutoFocusState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "disableAutoFocus",
@@ -892,7 +957,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetAutoFocus"
+			"logicalId": "SetAutoFocus",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "autoMaint",
@@ -900,11 +966,12 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAutoMaint\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetAutoMaint\",\"action\":0}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetAutoMaintState"
+			"logicalId": "SetAutoMaintState",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "autoMaint",
@@ -920,7 +987,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetAutoMaint"
+			"logicalId": "SetAutoMaint",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -933,7 +1001,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "GetPtzPreset"
+			"logicalId": "GetPtzPreset",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -948,7 +1017,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetPtzByPreset"
+			"logicalId": "SetPtzByPreset",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzCtrl",
@@ -963,7 +1033,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetPTZmoove"
+			"logicalId": "SetPTZmoove",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzCtrl",
@@ -979,7 +1050,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetSpeed"
+			"logicalId": "SetSpeed",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportZoom",
@@ -991,7 +1063,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetZoomState"
+			"logicalId": "SetZoomState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportZoom",
@@ -1008,7 +1081,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetZoom"
+			"logicalId": "SetZoom",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportFocus",
@@ -1020,7 +1094,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetFocusState"
+			"logicalId": "SetFocusState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportFocus",
@@ -1037,7 +1112,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetFocus"
+			"logicalId": "SetFocus",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzPatrol",
@@ -1050,7 +1126,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "GetPtzPatrol"
+			"logicalId": "GetPtzPatrol",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzPatrol",
@@ -1062,7 +1139,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "PtzPatrolState"
+			"logicalId": "PtzPatrolState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzPatrol",
@@ -1074,7 +1152,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "PtzPatrolId"
+			"logicalId": "PtzPatrolId",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzPatrol",
@@ -1089,7 +1168,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "StartPtzPatrol"
+			"logicalId": "StartPtzPatrol",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzPatrol",
@@ -1102,7 +1182,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "StopPtzPatrol"
+			"logicalId": "StopPtzPatrol",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportPtzCheck",
@@ -1115,7 +1196,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "PtzCheck"
+			"logicalId": "PtzCheck",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportPtzCheck",
@@ -1127,7 +1209,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetPtzCheckState"
+			"logicalId": "SetPtzCheckState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAudioAlarm",
@@ -1140,7 +1223,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "AudioAlarmPlayTimes"
+			"logicalId": "AudioAlarmPlayTimes",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAudioAlarm",
@@ -1152,7 +1236,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetSirenVolumeState"
+			"logicalId": "SetSirenVolumeState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAudioAlarm",
@@ -1169,7 +1254,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetSirenVolume"
+			"logicalId": "SetSirenVolume",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ispMirror",
@@ -1181,7 +1267,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetRotationState"
+			"logicalId": "SetRotationState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ispFlip",
@@ -1193,7 +1280,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetMirroringState"
+			"logicalId": "SetMirroringState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp",
@@ -1205,7 +1293,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetBackLightState"
+			"logicalId": "SetBackLightState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp",
@@ -1217,7 +1306,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetExposureState"
+			"logicalId": "SetExposureState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp",
@@ -1229,7 +1319,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetDayNightState"
+			"logicalId": "SetDayNightState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp",
@@ -1245,7 +1336,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetDayNight"
+			"logicalId": "SetDayNight",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ispAntiFlick",
@@ -1257,7 +1349,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetAntiFlickerState"
+			"logicalId": "SetAntiFlickerState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ispAntiFlick",
@@ -1273,7 +1366,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetAntiFlicker"
+			"logicalId": "SetAntiFlicker",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp3Dnr",
@@ -1285,7 +1379,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetNr3dState"
+			"logicalId": "SetNr3dState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp3Dnr",
@@ -1301,7 +1396,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetNr3d"
+			"logicalId": "SetNr3d",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "upnp",
@@ -1309,11 +1405,12 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetUpnp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetUpnp\",\"action\":0}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetUpnpState"
+			"logicalId": "SetUpnpState",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "upnp",
@@ -1329,7 +1426,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetUpnpp"
+			"logicalId": "SetUpnpp",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "p2p",
@@ -1337,11 +1435,12 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetP2p\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetP2p\",\"action\":0}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetUidP2pState"
+			"logicalId": "SetUidP2pState",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "p2p",
@@ -1357,7 +1456,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetUidP2p"
+			"logicalId": "SetUidP2p",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "mask",
@@ -1369,7 +1469,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetMaskState"
+			"logicalId": "SetMaskState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "mask",
@@ -1385,7 +1486,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetMask"
+			"logicalId": "SetMask",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "privacyMode",
@@ -1395,7 +1497,8 @@
 			"configuration": {},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetPrivacyModeState"
+			"logicalId": "SetPrivacyModeState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "privacyMode",
@@ -1409,7 +1512,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetPrivacyMode"
+			"logicalId": "SetPrivacyMode",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "white_balance",
@@ -1421,7 +1525,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetWhiteBalanceState"
+			"logicalId": "SetWhiteBalanceState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "image",
@@ -1433,7 +1538,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetBrightState"
+			"logicalId": "SetBrightState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "image",
@@ -1450,7 +1556,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetBright"
+			"logicalId": "SetBright",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "image",
@@ -1462,7 +1569,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetContrastState"
+			"logicalId": "SetContrastState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "image",
@@ -1479,7 +1587,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetContrast"
+			"logicalId": "SetContrast",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "image",
@@ -1491,7 +1600,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetSaturationState"
+			"logicalId": "SetSaturationState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "image",
@@ -1508,7 +1618,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetSaturation"
+			"logicalId": "SetSaturation",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ispHue",
@@ -1520,7 +1631,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetHueState"
+			"logicalId": "SetHueState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ispHue",
@@ -1537,7 +1649,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetHue"
+			"logicalId": "SetHue",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ispSharpen",
@@ -1549,7 +1662,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetSharpenState"
+			"logicalId": "SetSharpenState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ispSharpen",
@@ -1566,7 +1680,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetSharpen"
+			"logicalId": "SetSharpen",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "waterMark",
@@ -1578,7 +1693,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetWatermarkState"
+			"logicalId": "SetWatermarkState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "waterMark",
@@ -1594,7 +1710,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetWatermark"
+			"logicalId": "SetWatermark",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "osd",
@@ -1606,7 +1723,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetOsdTimeState"
+			"logicalId": "SetOsdTimeState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "osd",
@@ -1622,7 +1740,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetOsdTime"
+			"logicalId": "SetOsdTime",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "osd",
@@ -1634,7 +1753,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetPosOsdTimeState"
+			"logicalId": "SetPosOsdTimeState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "osd",
@@ -1650,7 +1770,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetPosOsdTime"
+			"logicalId": "SetPosOsdTime",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "osd",
@@ -1662,7 +1783,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetOsdChannelState"
+			"logicalId": "SetOsdChannelState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "osd",
@@ -1678,7 +1800,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetOsdChannel"
+			"logicalId": "SetOsdChannel",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "osd",
@@ -1690,7 +1813,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetPosOsdChannelState"
+			"logicalId": "SetPosOsdChannelState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "osd",
@@ -1706,7 +1830,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetPosOsdChannel"
+			"logicalId": "SetPosOsdChannel",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -1718,7 +1843,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetResolutionst1State"
+			"logicalId": "SetResolutionst1State",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -1730,7 +1856,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetFPSst1State"
+			"logicalId": "SetFPSst1State",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -1742,7 +1869,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetBitratest1State"
+			"logicalId": "SetBitratest1State",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -1754,7 +1882,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetResolutionst2State"
+			"logicalId": "SetResolutionst2State",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -1766,7 +1895,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetFPSst2State"
+			"logicalId": "SetFPSst2State",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -1778,7 +1908,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetBitratest2State"
+			"logicalId": "SetBitratest2State",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -1790,7 +1921,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "driveAvailable"
+			"logicalId": "driveAvailable",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -1805,7 +1937,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "driveSpaceAvailable"
+			"logicalId": "driveSpaceAvailable",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -1817,7 +1950,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "driveType"
+			"logicalId": "driveType",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "aiTrack",
@@ -1829,7 +1963,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetaiTrackState"
+			"logicalId": "SetaiTrackState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "aiTrack",
@@ -1845,7 +1980,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetaiTrack"
+			"logicalId": "SetaiTrack",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -1860,7 +1996,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetMdDefaultSensitivityState"
+			"logicalId": "SetMdDefaultSensitivityState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -1878,7 +2015,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetMdDefaultSensitivity"
+			"logicalId": "SetMdDefaultSensitivity",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -1892,7 +2030,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetSdSensitivityPeopleState"
+			"logicalId": "SetSdSensitivityPeopleState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -1911,7 +2050,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetSdSensitivityPeople"
+			"logicalId": "SetSdSensitivityPeople",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -1925,7 +2065,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetSdSensitivityVehicleState"
+			"logicalId": "SetSdSensitivityVehicleState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -1944,7 +2085,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetSdSensitivityVehicle"
+			"logicalId": "SetSdSensitivityVehicle",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -1958,7 +2100,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetSdSensitivityDogCatState"
+			"logicalId": "SetSdSensitivityDogCatState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -1977,7 +2120,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetSdSensitivityDogCat"
+			"logicalId": "SetSdSensitivityDogCat",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -1992,7 +2136,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetAlarmDelayPeopleState"
+			"logicalId": "SetAlarmDelayPeopleState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2011,7 +2156,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetAlarmDelayPeople"
+			"logicalId": "SetAlarmDelayPeople",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2026,7 +2172,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetAlarmDelayVehicleState"
+			"logicalId": "SetAlarmDelayVehicleState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2045,7 +2192,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetAlarmDelayVehicle"
+			"logicalId": "SetAlarmDelayVehicle",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2060,7 +2208,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetAlarmDelayDogCatState"
+			"logicalId": "SetAlarmDelayDogCatState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2079,7 +2228,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetAlarmDelayDogCat"
+			"logicalId": "SetAlarmDelayDogCat",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2092,7 +2242,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "CheckIsExistsPtzGuardPoint"
+			"logicalId": "CheckIsExistsPtzGuardPoint",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2106,7 +2257,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetPtzGuardPoint"
+			"logicalId": "SetPtzGuardPoint",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2120,7 +2272,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "ToPosPtzGuardPoint"
+			"logicalId": "ToPosPtzGuardPoint",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2134,7 +2287,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetAutoReturnPtzGuardPointState"
+			"logicalId": "SetAutoReturnPtzGuardPointState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2151,7 +2305,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetAutoReturnPtzGuardPoint"
+			"logicalId": "SetAutoReturnPtzGuardPoint",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2165,7 +2320,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetIntervalAutoReturnPtzGuardPointState"
+			"logicalId": "SetIntervalAutoReturnPtzGuardPointState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2183,7 +2339,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetIntervalAutoReturnPtzGuardPoint"
+			"logicalId": "SetIntervalAutoReturnPtzGuardPoint",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportBuzzer",
@@ -2196,7 +2353,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetBuzzerStateV20"
+			"logicalId": "SetBuzzerStateV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportBuzzer",
@@ -2213,7 +2371,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetBuzzerV20"
+			"logicalId": "SetBuzzerV20",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportBuzzerEnable",
@@ -2222,11 +2381,12 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetBuzzerAlarmV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetBuzzerAlarmV20\",\"action\":0,\"param\":{\"channel\":0}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetNvrBuzzerState"
+			"logicalId": "SetNvrBuzzerState",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "supportBuzzerEnable",
@@ -2243,7 +2403,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetNvrBuzzer"
+			"logicalId": "SetNvrBuzzer",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "supportRecordEnable",
@@ -2255,7 +2416,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetManualRecordState"
+			"logicalId": "SetManualRecordState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportRecordEnable",
@@ -2271,7 +2433,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetManualRecord"
+			"logicalId": "SetManualRecord",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -2284,7 +2447,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetMdEnableState"
+			"logicalId": "SetMdEnableState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -2301,7 +2465,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetMdEnable"
+			"logicalId": "SetMdEnable",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2314,7 +2479,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetSdSensitivityFaceState"
+			"logicalId": "SetSdSensitivityFaceState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2332,7 +2498,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetSdSensitivityFace"
+			"logicalId": "SetSdSensitivityFace",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2346,7 +2513,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetAlarmDelayFaceState"
+			"logicalId": "SetAlarmDelayFaceState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2364,7 +2532,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetAlarmDelayFace"
+			"logicalId": "SetAlarmDelayFace",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2377,7 +2546,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetSdSensitivityPackageState"
+			"logicalId": "SetSdSensitivityPackageState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2395,7 +2565,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetSdSensitivityPackage"
+			"logicalId": "SetSdSensitivityPackage",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2409,7 +2580,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetAlarmDelayPackageState"
+			"logicalId": "SetAlarmDelayPackageState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2427,7 +2599,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetAlarmDelayPackage"
+			"logicalId": "SetAlarmDelayPackage",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "upgrade",
@@ -2439,7 +2612,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "NewFirmwareState"
+			"logicalId": "NewFirmwareState",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "upgrade",
@@ -2447,7 +2621,8 @@
 			"type": "action",
 			"subtype": "other",
 			"isVisible": 1,
-			"logicalId": "CheckFirmware"
+			"logicalId": "CheckFirmware",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "upgrade",
@@ -2455,7 +2630,8 @@
 			"type": "action",
 			"subtype": "other",
 			"isVisible": 0,
-			"logicalId": "UpgradeFirmware"
+			"logicalId": "UpgradeFirmware",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "ntp",
@@ -2467,7 +2643,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetNtpEnableState"
+			"logicalId": "SetNtpEnableState",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "ntp",
@@ -2483,7 +2660,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetNtpEnable"
+			"logicalId": "SetNtpEnable",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "ntp",
@@ -2491,7 +2669,8 @@
 			"type": "action",
 			"subtype": "other",
 			"isVisible": 1,
-			"logicalId": "SyncTime"
+			"logicalId": "SyncTime",
+			"scope": "host"
 		},
 		{
 			"abilityneed": "enc",
@@ -2503,7 +2682,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetEncodingst1State"
+			"logicalId": "SetEncodingst1State",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -2515,7 +2695,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetEncodingst2State"
+			"logicalId": "SetEncodingst2State",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -2531,7 +2712,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetResolutionst1"
+			"logicalId": "SetResolutionst1",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -2547,7 +2729,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetFPSst1"
+			"logicalId": "SetFPSst1",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -2563,7 +2746,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetBitratest1"
+			"logicalId": "SetBitratest1",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -2579,7 +2763,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetEncodingst1"
+			"logicalId": "SetEncodingst1",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -2595,7 +2780,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetResolutionst2"
+			"logicalId": "SetResolutionst2",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -2611,7 +2797,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetFPSst2"
+			"logicalId": "SetFPSst2",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -2627,7 +2814,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetBitratest2"
+			"logicalId": "SetBitratest2",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "enc",
@@ -2643,7 +2831,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetEncodingst2"
+			"logicalId": "SetEncodingst2",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp",
@@ -2655,7 +2844,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetDayNightThresholdState"
+			"logicalId": "SetDayNightThresholdState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp",
@@ -2672,7 +2862,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetDayNightThreshold"
+			"logicalId": "SetDayNightThreshold",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp",
@@ -2684,7 +2875,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetBinningModeState"
+			"logicalId": "SetBinningModeState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp",
@@ -2700,7 +2892,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetBinningMode"
+			"logicalId": "SetBinningMode",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp",
@@ -2712,7 +2905,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
-			"logicalId": "SetHdrState"
+			"logicalId": "SetHdrState",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp",
@@ -2728,7 +2922,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetHdr"
+			"logicalId": "SetHdr",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp",
@@ -2744,7 +2939,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetExposure"
+			"logicalId": "SetExposure",
+			"scope": "channel"
 		},
 		{
 			"abilityneed": "isp",
@@ -2760,7 +2956,8 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
-			"logicalId": "SetBackLight"
+			"logicalId": "SetBackLight",
+			"scope": "channel"
 		}
 	]
 }

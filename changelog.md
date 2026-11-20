@@ -2,6 +2,7 @@
 
 20/11/2026
 
+- NVR/canaux : modèle caméra via `GetChnTypeInfo` (ex. E1 Outdoor PoE) au lieu du modèle NVR ; commandes host (NTP/firmware/HDD/UPnP…) uniquement sur le parent NVR ; sync plugin Caméra avec `device` mappé
 - Stabilité : validation des options `select`/`slider` (plus d'erreur « valeur à inserer »), listes `SetEnc` auto-peuplées, refus des `size` vides
 - IA : filtre `supportAiFace`/`supportAiPackage` (+ `GetAiState`) ; RMW `SetBuzzerAlarmV20` / `SetAiAlarm` ; `CheckFirmware` throttlé 12 h/IP
 - API : `-12`/`-17` sans retry/`ERROR` ; `deamon_start` détecte vraiment l'échec ; `sendToDaemon` avec timeout ; gardes `is_object`

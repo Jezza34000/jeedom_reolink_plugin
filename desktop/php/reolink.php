@@ -162,7 +162,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<div class="col-sm-7">
 									<input type="number" min="0" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="defined_channel" placeholder="{{0}}"/>
 									<div id="div_nvrParentHint" class="alert alert-info" style="display:none;margin-top:8px;">
-										{{Équipement NVR parent détecté (pas de canal) : pas de commandes caméra ni de refresh automatique. Utilisez les équipements enfants avec un canal renseigné.}}
+										{{Équipement NVR parent (pas de canal) : commandes système uniquement (firmware, NTP, disque, UPnP, buzzer NVR…). Les réglages caméra sont sur les équipements enfants (canal renseigné).}}
 									</div>
 								</div>
 							</div>
@@ -231,9 +231,16 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">{{Channel}}</label>
+								<label class="col-sm-3 control-label">{{Modèle NVR (hôte)}}</label>
 								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="channelNum"></span>
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="hostModel"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{Canaux NVR}}</label>
+								<div class="col-sm-7">
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="hostChannelNum"></span>
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="channelNum" style="display:none;"></span>
 								</div>
 							</div>
 							<div class="form-group">
