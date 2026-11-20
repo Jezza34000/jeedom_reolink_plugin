@@ -26,7 +26,8 @@ class reolink extends eqLogic {
   const PYTHON_PATH = __DIR__ . '/../../resources/venv/bin/python3';
 
   /************* Static methods ************/
-  private static $cnxByIp = array();
+  // Leading underscore required: Jeedom utils::o2a() persists non-_ properties into eqLogic INSERT/UPDATE
+  private static $_cnxByIp = array();
 
   public static function getReolinkConnection($id) {
     $camera = reolink::byId($id, 'reolink');
@@ -38,12 +39,12 @@ class reolink extends eqLogic {
 
     if (!empty($adresseIP) && !empty($username) && !empty($password)) {
       $cacheKey = $adresseIP . '|' . strval($port);
-      if (isset(self::$cnxByIp[$cacheKey]) && is_object(self::$cnxByIp[$cacheKey])) {
-        return self::$cnxByIp[$cacheKey];
+      if (isset(self::$_cnxByIp[$cacheKey]) && is_object(self::$_cnxByIp[$cacheKey])) {
+        return self::$_cnxByIp[$cacheKey];
       }
       $cnxinfo = array("adresseIP" => $adresseIP, "port" => $port, "username" => $username, "password" => $password, "cnxtype" => $cnxtype);
       $camcnx = new reolinkAPI($cnxinfo);
-      self::$cnxByIp[$cacheKey] = $camcnx;
+      self::$_cnxByIp[$cacheKey] = $camcnx;
       return $camcnx;
     } else {
       log::add('reolink', 'warning', "Information de connexion manquantes : connexion à la caméra impossible");
