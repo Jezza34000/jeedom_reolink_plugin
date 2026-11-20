@@ -134,6 +134,8 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [ ] Masque de vie privée
   - [x] Activation/Désactivation masque de vie privée
   - [ ] Configuration du masque de vie privée
+- [x] Mode confidentialité / Privacy Mode (4)
+  - [x] Activation/Désactivation du mode confidentialité (Baichuan TCP)
 
 #### Audio
 - [x] Sirène
@@ -194,3 +196,5 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 (2): Ne fonctionne qu'avec les Cameras ayant la fonctionnalité (Ability) "supportAudioAlarm"
 
 (3): Ne fonctionne qu'avec les **Cameras AI** ayant la fonctionnalité (Ability) "ptzPreset" ET les commandes Get(Set)PtzGuard intégrées aux firmwares : E1Outdoor, RLC-523WA et RLC-823A UNIQUEMENT
+
+(4): Via protocole Baichuan (port 9000), distinct du masque vidéo. Détection automatique (remoteAbility + sondage) ; typiquement E1 Zoom et firmwares récents avec Privacy Mode dans l'appli Reolink. Quand le mode est actif, HTTP/RTSP peuvent être coupés sur les caméras autonomes.
