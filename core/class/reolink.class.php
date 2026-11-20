@@ -18,6 +18,7 @@
 /* * ***************************Includes********************************* */
 require_once __DIR__  . '/../../../../core/php/core.inc.php';
 require_once dirname(__FILE__) . '/../../3rdparty/reolinkapi.class.php';
+require_once dirname(__FILE__) . '/../../3rdparty/reolinkbaichuan.class.php';
 
 const CMD_SEND_QTY = 8;
 
@@ -241,6 +242,19 @@ class reolink extends eqLogic {
     }
     if (!isset($deviceAbility['supportFocus']) && isset($deviceAbility['focus'])) {
       $deviceAbility['supportFocus'] = $deviceAbility['focus'];
+    }
+
+    // Privacy Mode (Baichuan TCP) — triple-guard like reolink_aio (no false positives)
+    $deviceAbility['privacyMode'] = array('permit' => 0, 'ver' => 0);
+    $bc = reolinkBaichuan::fromEqLogic($camera);
+    if (is_object($bc)) {
+      $isNvr = ($camera->getConfiguration('exactType') === 'NVR'
+        || intval($camera->getConfiguration('channelNum', 1)) > 1);
+      $privacy = $bc->probePrivacySupport($channel, $isNvr);
+      if ($privacy !== null) {
+        $deviceAbility['privacyMode'] = array('permit' => 1, 'ver' => 1);
+        log::add('reolink', 'info', 'privacyMode détecté via Baichuan (canal ' . $channel . ', sleep=' . ($privacy ? '1' : '0') . ')');
+      }
     }
 
     log::add('reolink', 'debug', 'GetAbility à récupérer : ' . count($deviceAbility) . ' items (canal ' . $channel . ')');
@@ -472,6 +486,25 @@ class reolink extends eqLogic {
       log::add('reolink', 'debug', 'refreshNFO ignoré : équipement NVR parent ou introuvable');
       return;
     }
+
+    // Privacy Mode via Baichuan before HTTP login (HTTP is down when privacy is ON on standalone cams)
+    $privacyInfo = $camcmd->getCmd(null, 'SetPrivacyModeState');
+    if (is_object($privacyInfo)) {
+      $bc = reolinkBaichuan::fromEqLogic($camcmd);
+      if (is_object($bc)) {
+        $privacy = $bc->getPrivacyMode($camcmd->getChannel());
+        if ($privacy !== null) {
+          $camcmd->checkAndUpdateCmd('SetPrivacyModeState', $privacy ? 1 : 0);
+          $isStandalone = ($camcmd->getConfiguration('exactType') !== 'NVR'
+            && intval($camcmd->getConfiguration('channelNum', 1)) <= 1);
+          if ($privacy && $isStandalone) {
+            log::add('reolink', 'debug', 'Caméra en mode confidentialité, rafraîchissement HTTP ignoré');
+            return;
+          }
+        }
+      }
+    }
+
     $camcnx = reolink::getReolinkConnection($id);
     $cmdget = NULL;
 
@@ -1581,6 +1614,23 @@ class reolinkCmd extends cmd {
       case 'SetSpeed':
         $this->setConfiguration('speedvalue', $_options['slider']);
         $this->save();
+        break;
+      case 'SetPrivacyMode':
+        $bc = reolinkBaichuan::fromEqLogic($eqLogic);
+        if (!is_object($bc)) {
+          throw new Exception(__('Connexion Baichuan impossible (IP/identifiants manquants)', __FILE__));
+        }
+        $enable = intval($_options['select'] ?? 0) === 1;
+        if (!$bc->setPrivacyMode($channel, $enable)) {
+          throw new Exception(__('Échec Mode confidentialité (Baichuan)', __FILE__));
+        }
+        if (is_object($eqLogic)) {
+          $eqLogic->checkAndUpdateCmd('SetPrivacyModeState', $enable ? 1 : 0);
+        }
+        if (!$enable) {
+          // HTTP comes back a few seconds after disabling privacy (reolink_aio waits ~7.5s)
+          usleep(2500000);
+        }
         break;
       default:
         $camcnx = reolink::getReolinkConnection($EqId);

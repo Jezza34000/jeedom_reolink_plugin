@@ -2,6 +2,7 @@
 
 20/11/2026
 
+- Mode confidentialité (Privacy Mode) via Baichuan TCP 9000 : commandes `SetPrivacyMode` / `SetPrivacyModeState` (E1 Zoom…), garde anti faux-positif (remoteAbility + cmd 574), skip HTTP si privacy ON
 - Fix création/sauvegarde d'équipement : `Unknown column 'cnxByIp'` (cache connexion renommé `$_cnxByIp`, convention Jeedom)
 - Commandes non supportées : sondage réel des `Get*` à la création/mise à jour, choix automatique V1 vs V20, nettoyage sûr (conserve les commandes utilisées dans scénarios)
 - Payloads corrigés : `GetAiCfg` / `GetPowerLed` avec canal ; Zoom/Focus via `supportZoom`/`supportFocus` ; subability AI / preRec
