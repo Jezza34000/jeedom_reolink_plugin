@@ -6,6 +6,7 @@
 
 # 20/11/2026
 
+- Fix création/sauvegarde d'équipement : `Unknown column 'cnxByIp'`
 - Sondage / nettoyage automatique des commandes non supportées (V1 vs V20, Zoom/Focus, AI, preRec)
 - Payloads `GetAiCfg` / `GetPowerLed` avec canal ; filet runtime `unsupported_payloads`
 - Timeouts cURL ; plus d'`exit()` dans `refreshNFO` ; resync différé si caméra hors ligne à la MAJ

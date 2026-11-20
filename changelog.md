@@ -2,6 +2,7 @@
 
 20/11/2026
 
+- Fix création/sauvegarde d'équipement : `Unknown column 'cnxByIp'` (cache connexion renommé `$_cnxByIp`, convention Jeedom)
 - Commandes non supportées : sondage réel des `Get*` à la création/mise à jour, choix automatique V1 vs V20, nettoyage sûr (conserve les commandes utilisées dans scénarios)
 - Payloads corrigés : `GetAiCfg` / `GetPowerLed` avec canal ; Zoom/Focus via `supportZoom`/`supportFocus` ; subability AI / preRec
 - Runtime : filet `unsupported_payloads` (codes francs immédiats, `-12`/`-17` après 3 échecs canal en ligne)
