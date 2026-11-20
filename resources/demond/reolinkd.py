@@ -19,7 +19,6 @@ import logging
 import os
 import signal
 import socket
-import subprocess
 import sys
 import time
 import traceback
@@ -59,20 +58,14 @@ def read_socket():
             "ip": cam_ip,
         }
 
-        if chk_ping(cam_ip) is False:
+        if check_onvif(cam_ip, int(cam_onvif_port)) is False:
             logging.error(
-                "CAM IP=%s is not reachable. (Please check that the camera is switched ON and correctly connected to the network)",
+                "CAM IP=%s ONVIF port %s unreachable",
                 cam_ip,
+                cam_onvif_port,
             )
             result_resp['state'] = 0
-            result_resp['details'] = "Camera is not reachable"
-        elif check_onvif(cam_ip, int(cam_onvif_port)) is False:
-            logging.error(
-                "CAM IP=%s is not ONVIF capable. (Please check the camera settings if the ONVIF protocol is enabled correctly)",
-                cam_ip,
-            )
-            result_resp['state'] = 0
-            result_resp['details'] = "Camera is not ONVIF capable"
+            result_resp['details'] = "Camera ONVIF port unreachable"
         elif asyncio.run(subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd)):
             logging.debug("Subscribe OK")
             result_resp['state'] = 1
@@ -182,12 +175,6 @@ def check_onvif(cam_ip, cam_onvif_port):
     finally:
         sock.close()
     return result == 0
-
-
-def chk_ping(host):
-    command = ['ping', '-c', '1', host]
-    response = subprocess.call(command, stdout=subprocess.DEVNULL)
-    return response == 0
 
 
 local_ip = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or

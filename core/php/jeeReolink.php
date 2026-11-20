@@ -16,13 +16,11 @@ try {
         die();
     }
 
-# BEGIN  modified by t0urista to handle ONVIF events
-    if (isset($result['message']) && (($result['message']=="motion") || (strpos($result['message'], 'Ev') !== false) )) {
-# END  modified by t0urista to handle ONVIF events
-
+    if (isset($result['message']) && (($result['message'] == "motion") || (strpos($result['message'], 'Ev') !== false))) {
         $plugin = plugin::byId('reolink');
         $eqLogics = eqLogic::byType($plugin->getId(), true);
         $cnxByIp = array();
+        $eventChannel = array_key_exists('channel', $result) ? intval($result['channel']) : null;
 
         foreach ($eqLogics as $eqLogic) {
             $camera_contact_point = $eqLogic->getConfiguration('adresseip');
@@ -34,71 +32,70 @@ try {
               $camera_ip = gethostbyname($camera_contact_point);
             }
 
-            if ($camera_ip == $result['ip']) {
-              $defCh = $eqLogic->getConfiguration('defined_channel', '');
-              $isNvr = ($eqLogic->getConfiguration('exactType') === 'NVR' || intval($eqLogic->getConfiguration('channelNum', 1)) > 1);
-              if ($isNvr && $defCh === '') {
-                continue;
+            if ($camera_ip != $result['ip']) {
+              continue;
+            }
+
+            $defCh = $eqLogic->getConfiguration('defined_channel', '');
+            $isNvr = ($eqLogic->getConfiguration('exactType') === 'NVR' || intval($eqLogic->getConfiguration('channelNum', 1)) > 1);
+            $multiChannel = ($defCh !== '' || $isNvr);
+            if ($isNvr && $defCh === '') {
+              continue;
+            }
+            $channel = ($defCh !== '') ? intval($defCh) : max(0, intval($eqLogic->getConfiguration('channelNum', 1)) - 1);
+            if ($eventChannel !== null && $multiChannel && $channel !== $eventChannel) {
+              continue;
+            }
+
+            $eqLogic->checkAndUpdateCmd('EvLastOnvifName', $result['message']);
+            $eqLogic->checkAndUpdateCmd('EvLastOnvifState', $result['motionstate']);
+            $eqLogic->checkAndUpdateCmd('EvLastOnvifFull', $result['message'] . '-' . $result['motionstate']);
+
+            if ($result['message'] == "motion") {
+              $eqLogic->checkAndUpdateCmd('MdState', $result['motionstate']);
+              $eqLogic->checkAndUpdateCmd('EvMotion', $result['motionstate']);
+            } elseif (strpos($result['message'], 'Ev') !== false) {
+              $eqLogic->checkAndUpdateCmd($result['message'], $result['motionstate']);
+            }
+
+            $needAiPoll = ($camera_AI == "Oui" && $result['message'] == "motion");
+            $needMdPoll = ($multiChannel && $eventChannel === null && $result['message'] == "motion");
+            if (!$needAiPoll && !$needMdPoll) {
+              if ($multiChannel) {
+                $eqLogic->checkAndUpdateCmd('ChannelOnline', 1);
               }
-              $channel = ($defCh !== '') ? intval($defCh) : max(0, intval($eqLogic->getConfiguration('channelNum', 1)) - 1);
+              continue;
+            }
 
-              $eqLogic->checkAndUpdateCmd('EvLastOnvifName', $result['message']);
-              $eqLogic->checkAndUpdateCmd('EvLastOnvifState', $result['motionstate']);
-              $eqLogic->checkAndUpdateCmd('EvLastOnvifFull', $result['message'] . '-' . $result['motionstate']);
-
-              if ($isNvr) {
-                if (!isset($cnxByIp[$camera_ip])) {
-                  $cnxByIp[$camera_ip] = reolink::getReolinkConnection($eqLogic->getId());
-                }
-                $camcnx = $cnxByIp[$camera_ip];
-                $payload = '[{"cmd":"GetMdState","action":0,"param":{"channel":'.$channel.'}}'
-                  . ($camera_AI == "Oui" ? ',{"cmd":"GetAiState","action":0,"param":{"channel":'.$channel.'}}' : '') . ']';
-                $res = is_object($camcnx) ? $camcnx->SendCMD($payload) : false;
-                $mdOk = false;
-                $aiOk = false;
-                if (is_array($res)) {
-                  foreach ($res as $item) {
-                    if (($item['cmd'] ?? '') === 'GetMdState' && isset($item['value']['state'])) {
-                      $mdOk = true;
-                      $md = intval($item['value']['state']);
-                      $eqLogic->checkAndUpdateCmd('MdState', $md);
-                      $eqLogic->checkAndUpdateCmd('EvMotion', $md);
-                    } elseif (($item['cmd'] ?? '') === 'GetAiState' && isset($item['value']['people'])) {
-                      $aiOk = true;
-                      $eqLogic->checkAndUpdateCmd('EvPeopleDetect', $item['value']['people']['alarm_state']);
-                      $eqLogic->checkAndUpdateCmd('EvVehicleDetect', $item['value']['vehicle']['alarm_state']);
-                      $eqLogic->checkAndUpdateCmd('EvDogCatDetect', $item['value']['dog_cat']['alarm_state']);
-                      log::add('reolink', 'debug', 'Cam AI : Evènements Motion | Personne : ' . $item['value']['people']['alarm_state'] . ' / Vehicule : ' . $item['value']['vehicle']['alarm_state'] . ' / Chien/Chat : ' . $item['value']['dog_cat']['alarm_state']);
-                    }
-                  }
-                }
-                // MD offline but AI ok: keep last MdState, mark channel offline
-                $eqLogic->checkAndUpdateCmd('ChannelOnline', $mdOk ? 1 : 0);
-                if (!$mdOk && !$aiOk) {
-                  log::add('reolink', 'debug', 'Canal ' . $channel . ' offline (GetMdState/GetAiState)');
-                }
-              } else {
-                if ($result['message'] == "motion") {
-                  log::add('reolink', 'debug', 'Cam IP='.$result['ip']. ' Onvif event reçu depuis le daemon. name= MDstate, état='.$result['motionstate']);
-                  $eqLogic->checkAndUpdateCmd('MdState', $result['motionstate']);
-                }
-                if (strpos($result['message'], 'Ev') !== false) {
-                  log::add('reolink', 'debug', 'Cam IP='.$result['ip']. ' Onvif event reçu depuis le daemon. name= ' . $result['message'] . ', etat='.$result['motionstate']);
-                  $eqLogic->checkAndUpdateCmd($result['message'], $result['motionstate']);
-                }
-                if ($camera_AI == "Oui") {
-                  $camcnx = reolink::getReolinkConnection($eqLogic->getId());
-                  $res = $camcnx->SendCMD('[{"cmd":"GetAiState","action":0,"param":{"channel":'.$channel.'}}]');
-                  if (isset($res[0]['value'])) {
-                    $eqLogic->checkAndUpdateCmd('EvPeopleDetect', $res[0]['value']['people']['alarm_state']);
-                    $eqLogic->checkAndUpdateCmd('EvVehicleDetect', $res[0]['value']['vehicle']['alarm_state']);
-                    $eqLogic->checkAndUpdateCmd('EvDogCatDetect', $res[0]['value']['dog_cat']['alarm_state']);
-                    log::add('reolink', 'debug', 'Cam AI : Evènements Motion | Personne : ' . $res[0]['value']['people']['alarm_state'] . ' / Vehicule : ' . $res[0]['value']['vehicle']['alarm_state'] . ' / Chien/Chat : ' . $res[0]['value']['dog_cat']['alarm_state']);
-                  }
+            if (!isset($cnxByIp[$camera_ip])) {
+              $cnxByIp[$camera_ip] = reolink::getReolinkConnection($eqLogic->getId());
+            }
+            $camcnx = $cnxByIp[$camera_ip];
+            $parts = array();
+            if ($needMdPoll) {
+              $parts[] = '{"cmd":"GetMdState","action":0,"param":{"channel":' . $channel . '}}';
+            }
+            if ($needAiPoll) {
+              $parts[] = '{"cmd":"GetAiState","action":0,"param":{"channel":' . $channel . '}}';
+            }
+            $res = is_object($camcnx) ? $camcnx->SendCMD('[' . implode(',', $parts) . ']') : false;
+            $mdOk = false;
+            if (is_array($res)) {
+              foreach ($res as $item) {
+                if (($item['cmd'] ?? '') === 'GetMdState' && isset($item['value']['state'])) {
+                  $mdOk = true;
+                  $md = intval($item['value']['state']);
+                  $eqLogic->checkAndUpdateCmd('MdState', $md);
+                  $eqLogic->checkAndUpdateCmd('EvMotion', $md);
+                } elseif (($item['cmd'] ?? '') === 'GetAiState' && isset($item['value'])) {
+                  reolink::applyAiStateCmds($eqLogic, $item['value']);
                 }
               }
             }
-          }
+            if ($multiChannel) {
+              $eqLogic->checkAndUpdateCmd('ChannelOnline', ($needMdPoll ? ($mdOk ? 1 : 0) : 1));
+            }
+        }
     } elseif (isset($result['message']) && $result['message'] == "subscription") {
         if ($result['state'] == 0) {
           $title = 'Plugin Reolink';
@@ -111,4 +108,3 @@ try {
 } catch (Exception $e) {
     log::add('reolink', 'error', displayException($e));
 }
-?>

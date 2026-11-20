@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Request
 import logging
 import os
-import re
 import sys
+from os.path import basename
+from xml.etree import ElementTree as XML
 
 from jeedom.jeedom import jeedom_com
 
@@ -13,16 +14,47 @@ if not _callback or not _apikey:
     sys.exit(1)
 
 jeedom_cnx = jeedom_com(_apikey, _callback, cycle=0)
-detect_state_by_ip = {}
-event_table_by_ip = {}
+event_state = {}
 
-MOTION_RE = re.compile(r'IsMotion" Value="true"')
-EVENT_RE = re.compile(
-    r'<wsnt:.*?ConcreteSet">(.*?)</wsnt:Topic>.*?<tt:Data>.*?Value="(.*?)" /></tt:Data>'
-)
-TOPIC_RE = re.compile(r'tns1:.*/(.*)')
+NS_WSNT = '{http://docs.oasis-open.org/wsn/b-2}'
+NS_TT = '{http://www.onvif.org/ver10/schema}'
+KNOWN_RULES = {
+    'Motion': 'IsMotion',
+    'MotionAlarm': 'IsMotion',
+    'FaceDetect': 'State',
+    'PeopleDetect': 'State',
+    'VehicleDetect': 'State',
+    'DogCatDetect': 'State',
+    'Package': 'State',
+    'Visitor': 'State',
+}
+EVENT_NAME = {
+    'Motion': 'motion',
+    'MotionAlarm': 'motion',
+    'FaceDetect': 'EvFaceDetect',
+    'PeopleDetect': 'EvPeopleDetect',
+    'VehicleDetect': 'EvVehicleDetect',
+    'DogCatDetect': 'EvDogCatDetect',
+    'Package': 'EvPackageDetect',
+    'Visitor': 'EvVisitor',
+}
 
 app = FastAPI()
+
+
+def _simple_item(message, name):
+    return message.find(f'.//{NS_TT}SimpleItem[@Name="{name}"]')
+
+
+def _parse_channel(message):
+    for name in ('Source', 'VideoSourceConfigurationToken'):
+        el = _simple_item(message, name)
+        if el is not None and 'Value' in el.attrib:
+            try:
+                return int(el.attrib['Value'])
+            except ValueError:
+                return None
+    return None
 
 
 @app.post("/inbound_events", status_code=200)
@@ -30,30 +62,35 @@ async def get_body(request: Request):
     ip = request.client.host
     logging.debug("Incoming XML camera event on webhook from IP=%s", ip)
     body = (await request.body()).decode('utf-8', errors='ignore')
+    try:
+        root = XML.fromstring(body)
+    except XML.ParseError:
+        logging.debug("Invalid ONVIF XML from IP=%s", ip)
+        return
 
-    new_detect_state = 1 if MOTION_RE.search(body) else 0
-    if detect_state_by_ip.get(ip, 0) != new_detect_state:
-        detect_state_by_ip[ip] = new_detect_state
-        jeedom_cnx.send_change_immediate({
-            "message": "motion",
-            "ip": ip,
-            "motionstate": new_detect_state,
-        })
-
-    event_states = event_table_by_ip.setdefault(ip, {})
-    for topic, value in EVENT_RE.findall(body):
-        topic_match = TOPIC_RE.search(topic)
-        if not topic_match:
+    for message in root.iter(f'{NS_WSNT}NotificationMessage'):
+        topic_el = message.find(f"{NS_WSNT}Topic[@Dialect='http://www.onvif.org/ver10/tev/topicExpression/ConcreteSet']")
+        if topic_el is None or not topic_el.text:
             continue
-        event_name = "Ev" + topic_match.group(1)
-        status = 0 if value == "false" else 1
-        logging.debug("received event %s %s", event_name, status)
-        if event_states.get(event_name) == status:
+        rule = basename(topic_el.text.strip())
+        if rule not in KNOWN_RULES:
             continue
-        event_states[event_name] = status
-        logging.debug("%s --> %s", event_name, status)
-        jeedom_cnx.send_change_immediate({
+        data_el = _simple_item(message, KNOWN_RULES[rule])
+        if data_el is None or 'Value' not in data_el.attrib:
+            continue
+        state = 1 if data_el.attrib['Value'] == 'true' else 0
+        channel = _parse_channel(message)
+        event_name = EVENT_NAME[rule]
+        key = (ip, channel, event_name)
+        if event_state.get(key) == state:
+            continue
+        event_state[key] = state
+        logging.debug("ONVIF %s ip=%s channel=%s state=%s", event_name, ip, channel, state)
+        payload = {
             "message": event_name,
             "ip": ip,
-            "motionstate": status,
-        })
+            "motionstate": state,
+        }
+        if channel is not None:
+            payload["channel"] = channel
+        jeedom_cnx.send_change_immediate(payload)
