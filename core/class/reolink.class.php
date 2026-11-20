@@ -897,24 +897,22 @@ class reolink extends eqLogic {
             break;
 
           case reolinkAPI::CAM_GET_HDDINFO:
-            if (empty($json_data['value']['HddInfo'][0])) {
+            $hdd = $json_data['value']['HddInfo'][0] ?? null;
+            if (!is_array($hdd)) {
               $camcmd->checkAndUpdateCmd('driveAvailable', 0);
               break;
             }
-            $hdd = $json_data['value']['HddInfo'][0];
-            if ($hdd['format'] == 1 && $hdd['mount'] == 1) {
-              $camcmd->checkAndUpdateCmd('driveAvailable', 1);
-            } else {
-              $camcmd->checkAndUpdateCmd('driveAvailable', 0);
-            }
-            if (is_numeric($hdd['size']) && is_numeric($hdd['capacity'])) {
-              $percoccupancy = round(($hdd['size'] * 100) / $hdd['capacity'], 0, PHP_ROUND_HALF_DOWN);
+            $available = (intval($hdd['format'] ?? 0) === 1 && intval($hdd['mount'] ?? 0) === 1);
+            $camcmd->checkAndUpdateCmd('driveAvailable', $available ? 1 : 0);
+            if (isset($hdd['size'], $hdd['capacity']) && is_numeric($hdd['size']) && is_numeric($hdd['capacity']) && floatval($hdd['capacity']) > 0) {
+              $percoccupancy = round((floatval($hdd['size']) * 100) / floatval($hdd['capacity']), 0, PHP_ROUND_HALF_DOWN);
               $camcmd->checkAndUpdateCmd('driveSpaceAvailable', $percoccupancy);
             }
-            if ($hdd['storageType'] == 1) {
-              $camcmd->checkAndUpdateCmd('driveType', "HDD");
-            } elseif ($hdd['storageType'] == 2) {
-              $camcmd->checkAndUpdateCmd('driveType', "Sdcard");
+            $storageType = intval($hdd['storageType'] ?? 0);
+            if ($storageType === 1) {
+              $camcmd->checkAndUpdateCmd('driveType', 'HDD');
+            } elseif ($storageType === 2) {
+              $camcmd->checkAndUpdateCmd('driveType', 'Sdcard');
             }
             break;
 
