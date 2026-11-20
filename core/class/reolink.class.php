@@ -97,19 +97,29 @@ class reolink extends eqLogic {
     return ($scope === 'host' || $scope === 'channel');
   }
 
-  public static function downloadCamIcon($id, $model) {
-    if ($model === '' || $model === null) {
-      return;
+  public function getImage() {
+    $file = dirname(__FILE__) . '/../../desktop/img/camera' . $this->getId() . '.png';
+    if (file_exists($file) && filesize($file) > 100) {
+      return 'plugins/reolink/desktop/img/camera' . $this->getId() . '.png?v=' . filemtime($file);
     }
-    $modelURL = urlencode(strval($model));
+    return parent::getImage();
+  }
+
+  public static function downloadCamIcon($id, $model, $camera = null) {
+    if ($model === '' || $model === null) {
+      return '';
+    }
+    $modelURL = rawurlencode(strval($model));
     $iconurl = "https://cdn.reolink.com/wp-content/assets/app/model-images/$modelURL/light_off.png";
-    $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera)) {
+      $camera = reolink::byId($id, 'reolink');
+    }
     if (is_object($camera)) {
       $camera->setConfiguration('camicon', $iconurl);
     }
     $dir = realpath(dirname(__FILE__) . '/../../desktop');
     if ($dir === false) {
-      return;
+      return $iconurl;
     }
     if (!file_exists($dir . '/img')) {
       mkdir($dir . '/img', 0775, true);
@@ -126,14 +136,17 @@ class reolink extends eqLogic {
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     $rawdata = curl_exec($ch);
     $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    if ($httpcode == 200 && $rawdata !== false) {
+    if ($httpcode == 200 && $rawdata !== false && strlen($rawdata) > 100) {
       $fp = fopen($fileToWrite, 'w');
       fwrite($fp, $rawdata);
       fclose($fp);
+      @chown($fileToWrite, 'www-data');
+      @chgrp($fileToWrite, 'www-data');
     } else {
-      log::add('reolink', 'debug', 'Icône CDN HTTP ' . $httpcode . ' pour modèle ' . $model);
+      log::add('reolink', 'warning', 'Icône CDN HTTP ' . $httpcode . ' pour modèle ' . $model . ' (URL ' . $iconurl . ')');
     }
     curl_close($ch);
+    return $iconurl;
   }
 
   public static function mapModelToCameraDevice($model) {
@@ -243,7 +256,7 @@ class reolink extends eqLogic {
       foreach ($devInfo as $key => $value) {
         $camera->setConfiguration($key, $value);
       }
-      reolink::downloadCamIcon($id, $devInfo['model'] ?? '');
+      reolink::downloadCamIcon($id, $devInfo['model'] ?? '', $camera);
     } else {
       // Channel child: do not overwrite camera model with NVR DevInfo
       $camera->setConfiguration('exactType', $devInfo['exactType'] ?? 'NVR');
@@ -297,7 +310,7 @@ class reolink extends eqLogic {
           $camera->setConfiguration('hardVer', $byCmd['GetChnTypeInfo']['value']['boardInfo']);
           $camera->setConfiguration('boardInfo', $byCmd['GetChnTypeInfo']['value']['boardInfo']);
         }
-        reolink::downloadCamIcon($id, $typeInfo);
+        reolink::downloadCamIcon($id, $typeInfo, $camera);
       }
       $statuses = $byCmd['GetChannelstatus']['value']['status'] ?? array();
       foreach ($statuses as $st) {
@@ -313,7 +326,7 @@ class reolink extends eqLogic {
         if (!empty($st['typeInfo']) && !$typeInfo) {
           $camera->setConfiguration('model', $st['typeInfo']);
           $camera->setConfiguration('camModel', $st['typeInfo']);
-          reolink::downloadCamIcon($id, $st['typeInfo']);
+          reolink::downloadCamIcon($id, $st['typeInfo'], $camera);
         }
         break;
       }
@@ -698,6 +711,9 @@ class reolink extends eqLogic {
     if (!is_object($camera) || !is_object($cnx)) {
       throw new Exception(__('Caméra introuvable', __FILE__));
     }
+    if ($camera->isNvrParent()) {
+      throw new Exception(__('Les rondes PTZ ne s\'appliquent pas à un NVR parent', __FILE__));
+    }
     $channel = $camera->getChannel();
     $res = $cnx->SendCMD('[{"cmd":"GetPtzPreset","action":1,"param":{"channel":' . $channel . '}},{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
     if (!is_array($res)) {
@@ -733,6 +749,9 @@ class reolink extends eqLogic {
     $cnx = reolink::getReolinkConnection($id);
     if (!is_object($camera) || !is_object($cnx)) {
       throw new Exception(__('Caméra introuvable', __FILE__));
+    }
+    if ($camera->isNvrParent()) {
+      throw new Exception(__('Les rondes PTZ ne s\'appliquent pas à un NVR parent', __FILE__));
     }
     $channel = $camera->getChannel();
     $patrolId = intval($patrolId);
@@ -785,6 +804,9 @@ class reolink extends eqLogic {
     $cnx = reolink::getReolinkConnection($id);
     if (!is_object($camera) || !is_object($cnx)) {
       throw new Exception(__('Caméra introuvable', __FILE__));
+    }
+    if ($camera->isNvrParent()) {
+      throw new Exception(__('Les rondes PTZ ne s\'appliquent pas à un NVR parent', __FILE__));
     }
     $channel = $camera->getChannel();
     $op = ($op === 'StopPatrol') ? 'StopPatrol' : 'StartPatrol';

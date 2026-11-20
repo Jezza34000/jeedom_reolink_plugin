@@ -48,7 +48,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			foreach ($eqLogics as $eqLogic) {
 				$opacity = ($eqLogic->getIsEnable()) ? '' : 'disableCard';
 				echo '<div class="eqLogicDisplayCard cursor '.$opacity.'" data-eqLogic_id="' . $eqLogic->getId() . '">';
-				echo '<img src="' . $plugin->getPathImgIcon() . '"/>';
+				echo '<img src="' . $eqLogic->getImage() . '"/>';
 				echo '<br>';
 				echo '<span class="name">' . $eqLogic->getHumanName(true, true) . '</span>';
 				echo '</div>';
@@ -130,7 +130,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked/>{{Visible}}</label>
 								</div>
 							</div>
-							<legend><i class="fas fa-cogs"></i> {{Paramètres d'accès à la caméra}}</legend>
+							<legend id="lgd_accessParams"><i class="fas fa-cogs"></i> <span id="lbl_accessParams">{{Paramètres d'accès à la caméra}}</span></legend>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{IP / Nom d'hôte}}
 									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez l'adresse IP ou le nom d'hôte de la caméra}}"></i></sup>
@@ -157,7 +157,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Canal NVR}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Numéro de canal si la caméra est derrière un NVR (0 = premier canal)}}"></i></sup>
+									<sup><i class="fas fa-question-circle tooltips" title="{{Numéro de canal si la caméra est derrière un NVR (0 = premier canal). Laisser vide pour un NVR parent.}}"></i></sup>
 								</label>
 								<div class="col-sm-7">
 									<input type="number" min="0" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="defined_channel" placeholder="{{0}}"/>
@@ -219,24 +219,26 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label"> {{Nom de la caméra}}</label>
+								<label class="col-sm-3 control-label" id="lbl_deviceName">{{Nom de la caméra}}</label>
 								<div class="col-sm-7">
 									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="name"></span>
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">{{Modèle}}</label>
+								<label class="col-sm-3 control-label" id="lbl_deviceModel">{{Modèle}}</label>
 								<div class="col-sm-7">
 									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="model"></span>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group" id="fg_hostModel">
 								<label class="col-sm-3 control-label">{{Modèle NVR (hôte)}}</label>
 								<div class="col-sm-7">
-									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="hostModel"></span>
+									<span id="span_hostModelDisplay"></span>
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="hostModel" style="display:none;"></span>
+									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="hostName" style="display:none;"></span>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group" id="fg_hostChannelNum">
 								<label class="col-sm-3 control-label">{{Canaux NVR}}</label>
 								<div class="col-sm-7">
 									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="hostChannelNum"></span>
@@ -285,7 +287,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="linkconnection"></span>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group" id="fg_supportAi">
 								<label class="col-sm-3 control-label">{{Caméra IA}}</label>
 								<div class="col-sm-7">
 									<span class="eqLogicAttr" data-l1key="configuration" data-l2key="supportai"></span>
@@ -342,19 +344,19 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									</div>
 									<br>
 							</div>
-							<div class="container-fluid">
+							<div class="container-fluid cameraOnlyAction">
 									<div class="form-group">
 											<a class="btn btn-block btn-warning eqLogicAction" id="btManagePatrol"><i class="fas fa-route"></i> {{Gérer les rondes PTZ}}</a>
 									</div>
 									<br>
 							</div>
-							<div class="container-fluid">
+							<div class="container-fluid cameraOnlyAction">
 									<div class="form-group">
 											<a class="btn btn-block btn-info" id="btSyncCameraPlugin"><i class="fas fa-video"></i> {{Synchroniser vers plugin Caméra}}</a>
 									</div>
 									<br>
 							</div>
-							<div class="container-fluid">
+							<div class="container-fluid cameraOnlyAction">
 									<div class="form-group">
 											<a class="btn btn-block btn-success" id="btOpenLive"><i class="fas fa-play-circle"></i> {{Live Low/High}}</a>
 									</div>
@@ -664,15 +666,45 @@ $eqLogics = eqLogic::byType($plugin->getId());
 <script>
 
 
-function updateNvrParentHint() {
-	var ch = $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').value();
-	var channelNum = parseInt(($('.eqLogicAttr[data-l1key=configuration][data-l2key=channelNum]').text() || '1').toString().trim(), 10) || 1;
+function updateEqLogicRoleUi(_eqLogic) {
+	var cfg = (_eqLogic && _eqLogic.configuration) ? _eqLogic.configuration : {};
+	var ch = (typeof cfg.defined_channel !== 'undefined')
+		? cfg.defined_channel
+		: $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').value();
+	var hostType = String(cfg.hostExactType || cfg.exactType || $('.eqLogicAttr[data-l1key=configuration][data-l2key=hostExactType]').text() || $('.eqLogicAttr[data-l1key=configuration][data-l2key=exactType]').text() || '').trim();
+	var hostChannels = parseInt(String(cfg.hostChannelNum || cfg.channelNum || $('.eqLogicAttr[data-l1key=configuration][data-l2key=hostChannelNum]').text() || $('.eqLogicAttr[data-l1key=configuration][data-l2key=channelNum]').text() || '1').trim(), 10) || 1;
+	var hostModel = String(cfg.hostModel || $('.eqLogicAttr[data-l1key=configuration][data-l2key=hostModel]').text() || '').trim();
+	var hostName = String(cfg.hostName || $('.eqLogicAttr[data-l1key=configuration][data-l2key=hostName]').text() || '').trim();
 	var emptyCh = (ch === '' || ch === null || typeof ch === 'undefined');
-	var isParent = emptyCh && channelNum > 1;
-	$('#div_nvrParentHint').toggle(!!isParent);
+	var isChannelChild = !emptyCh;
+	var isNvrParent = emptyCh && (hostType === 'NVR' || hostChannels > 1);
+	var isStandalone = !isNvrParent && !isChannelChild;
+
+	$('#div_nvrParentHint').toggle(!!isNvrParent);
+	$('#lbl_accessParams').text(isNvrParent ? '{{Paramètres d\'accès au NVR}}' : '{{Paramètres d\'accès à la caméra}}');
+	$('#lbl_deviceName').text(isNvrParent ? '{{Nom du NVR}}' : '{{Nom de la caméra}}');
+	$('#lbl_deviceModel').text(isNvrParent ? '{{Modèle du NVR}}' : '{{Modèle}}');
+
+	$('#fg_hostModel').toggle(!!isChannelChild);
+	if (isChannelChild) {
+		var hostDisplay = hostModel;
+		if (hostName !== '') {
+			hostDisplay = hostModel !== '' ? (hostModel + ' (' + hostName + ')') : hostName;
+		}
+		$('#span_hostModelDisplay').text(hostDisplay);
+	} else {
+		$('#span_hostModelDisplay').text('');
+	}
+
+	$('#fg_hostChannelNum').toggle(!!(isNvrParent || isChannelChild));
+	$('#fg_supportAi').toggle(!isNvrParent);
+	$('.cameraOnlyAction').toggle(!isNvrParent);
+}
+
+function updateNvrParentHint() {
+	updateEqLogicRoleUi(null);
 }
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').on('change keyup', updateNvrParentHint);
-setTimeout(updateNvrParentHint, 500);
 
 function syncCameraPlugin(id) {
 	$.ajax({
