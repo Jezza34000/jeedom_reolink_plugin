@@ -1152,6 +1152,17 @@ class reolink extends eqLogic {
     $fixes = array(
       'SetaiTrackState' => '{"cmd":"GetAiCfg","action":0,"param":{"channel":#CHANNEL#}}',
       'SetPowerLedState' => '{"cmd":"GetPowerLed","action":0,"param":{"channel":#CHANNEL#}}',
+      'reboot' => '{}',
+      'SetIrLights' => '{"IrLights":{"channel":#CHANNEL#,"state":#OPTSELECTEDSTR#}}',
+      'SetPushV20' => '{"Push":{"scheduleEnable":#OPTSELECTEDINT#,"schedule":{"channel":#CHANNEL#}}}',
+      'SetEmailV20' => '{"Email":{"scheduleEnable":#OPTSELECTEDINT#,"schedule":{"channel":#CHANNEL#}}}',
+      'SetFTPV20' => '{"Ftp":{"scheduleEnable":#OPTSELECTEDINT#,"schedule":{"channel":#CHANNEL#}}}',
+      'SetAudioAlarmV20' => '{"Audio":{"enable":#OPTSELECTEDINT#,"schedule":{"channel":#CHANNEL#}}}',
+      'SetRecordV20' => '{"Rec":{"channel":#CHANNEL#,"scheduleEnable":#OPTSELECTEDINT#}}',
+      'SetPush' => '{"Push":{"schedule":{"channel":#CHANNEL#,"enable":#OPTSELECTEDINT#}}}',
+      'SetEmail' => '{"Email":{"schedule":{"channel":#CHANNEL#,"enable":#OPTSELECTEDINT#}}}',
+      'SetFTP' => '{"Ftp":{"schedule":{"channel":#CHANNEL#,"enable":#OPTSELECTEDINT#}}}',
+      'SetAudioAlarm' => '{"Audio":{"schedule":{"channel":#CHANNEL#,"enable":#OPTSELECTEDINT#}}}',
     );
     foreach ($fixes as $logicalId => $newPayload) {
       $cmd = $this->getCmd(null, $logicalId);
@@ -1159,13 +1170,48 @@ class reolink extends eqLogic {
         continue;
       }
       $cur = strval($cmd->getConfiguration('payload'));
-      if ($cur === '' || strpos($cur, '#CHANNEL#') !== false || strpos($cur, 'channel') !== false) {
+      if ($logicalId === 'SetaiTrackState' || $logicalId === 'SetPowerLedState') {
+        if ($cur === '' || strpos($cur, '#CHANNEL#') !== false || strpos($cur, 'channel') !== false) {
+          continue;
+        }
+      } elseif ($cur === $newPayload) {
         continue;
       }
       $cmd->setConfiguration('payload', $newPayload);
       $cmd->save();
       log::add('reolink', 'info', 'Payload legacy mis à jour : ' . $logicalId);
     }
+  }
+
+  public static function buildRmwPayload($camcnx, $actionAPI, $channel, $patchArray) {
+    $map = array(
+      'SetRecV20' => array('GetRecV20', 'Rec'),
+      'SetEnc' => array('GetEnc', 'Enc'),
+      'SetIsp' => array('GetIsp', 'Isp'),
+      'SetOsd' => array('GetOsd', 'Osd'),
+      'SetAiCfg' => array('GetAiCfg', null),
+    );
+    if (!isset($map[$actionAPI]) || !is_object($camcnx) || !is_array($patchArray)) {
+      return null;
+    }
+    list($getCmd, $rootKey) = $map[$actionAPI];
+    $res = $camcnx->SendCMD('[{"cmd":"' . $getCmd . '","action":0,"param":{"channel":' . intval($channel) . '}}]');
+    if (!is_array($res) || !isset($res[0]['value']) || !is_array($res[0]['value'])) {
+      return null;
+    }
+    $cur = $res[0]['value'];
+    if ($actionAPI === 'SetAiCfg') {
+      $val = $patchArray['aiTrack'] ?? ($patchArray['bSmartTrack'] ?? null);
+      if ($val !== null && array_key_exists('bSmartTrack', $cur)) {
+        unset($patchArray['aiTrack']);
+        $patchArray['bSmartTrack'] = $val;
+      }
+      return array_replace_recursive($cur, $patchArray);
+    }
+    if ($rootKey === null || !isset($cur[$rootKey]) || !is_array($cur[$rootKey])) {
+      return null;
+    }
+    return array_replace_recursive($cur, $patchArray);
   }
 
   public static function isAbilityOk($abilities, $abilityNeed, $subAbility = null) {
@@ -1690,20 +1736,37 @@ class reolinkCmd extends cmd {
         $revert_value = intval($this->getConfiguration('revertvalue'));
 
         if ($actionAPI != NULL) {
-          $payload = str_replace('\\', '', $this->getConfiguration('payload'));
-          $payload = str_replace('#OPTSELECTEDINT#', intval($_options['select']), $payload);
-          $payload = str_replace('#OPTSELECTEDSTR#', '"' . $_options['select'] . '"', $payload);
-          $payload = str_replace('#OPTSLIDER#', intval($_options['slider']), $payload);
-          $payload = str_replace('#OPTR_SLIDER#', abs($revert_value - intval($_options['slider'])), $payload);
-          $payload = str_replace('#CHANNEL#', $channel, $payload);
-          $payload = str_replace('#SPEED#', $speed, $payload);
-          $payload = '[{"cmd":"' . $actionAPI . '","param":' . $payload . '}]';
+          if ($actionAPI === 'Reboot') {
+            $payload = '[{"cmd":"Reboot"}]';
+          } else {
+            $patchJson = str_replace('\\', '', $this->getConfiguration('payload'));
+            $patchJson = str_replace('#OPTSELECTEDINT#', intval($_options['select'] ?? 0), $patchJson);
+            $patchJson = str_replace('#OPTSELECTEDSTR#', '"' . ($_options['select'] ?? '') . '"', $patchJson);
+            $patchJson = str_replace('#OPTSLIDER#', intval($_options['slider'] ?? 0), $patchJson);
+            $patchJson = str_replace('#OPTR_SLIDER#', abs($revert_value - intval($_options['slider'] ?? 0)), $patchJson);
+            $patchJson = str_replace('#CHANNEL#', $channel, $patchJson);
+            $patchJson = str_replace('#SPEED#', $speed, $patchJson);
+            $patch = json_decode($patchJson, true);
+            $rmwApis = array('SetRecV20', 'SetEnc', 'SetIsp', 'SetOsd', 'SetAiCfg');
+            if (in_array($actionAPI, $rmwApis, true) && is_array($patch)) {
+              $merged = reolink::buildRmwPayload($camcnx, $actionAPI, $channel, $patch);
+              if ($merged === null) {
+                throw new Exception(__('Echec lecture état courant pour Read-Modify-Write', __FILE__));
+              }
+              $payload = json_encode(array(array('cmd' => $actionAPI, 'action' => 0, 'param' => $merged)));
+            } else {
+              $payload = '[{"cmd":"' . $actionAPI . '","action":0,"param":' . $patchJson . '}]';
+            }
+          }
 
           log::add('reolink', 'debug', 'Payload avec paramètre utilisateur demandé = ' . $payload);
 
           $camresp = $camcnx->SendCMD($payload);
-          // Check return and update CMD State
-          if ($camresp[0]["value"]["rspCode"] == 200) {
+          $ok = is_array($camresp) && intval($camresp[0]['code'] ?? -1) === 0;
+          if ($ok && array_key_exists('rspCode', $camresp[0]['value'] ?? array())) {
+            $ok = intval($camresp[0]['value']['rspCode']) === 200;
+          }
+          if ($ok) {
             log::add('reolink', 'debug', 'OK > Action réalisé avec succès sur la caméra');
 
             if (!empty($linkedvalue)) {

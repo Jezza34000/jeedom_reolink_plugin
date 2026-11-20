@@ -2,7 +2,7 @@
 	"name": "allparam",
 	"commands": [
 		{
-			"abilityneed":"none",
+			"abilityneed": "none",
 			"name": "Rafraîchir",
 			"type": "action",
 			"subtype": "other",
@@ -10,19 +10,19 @@
 			"logicalId": "refresh"
 		},
 		{
-			"abilityneed":"reboot",
+			"abilityneed": "reboot",
 			"name": "Redémarrer",
 			"type": "action",
 			"subtype": "other",
 			"configuration": {
 				"actionapi": "Reboot",
-				"payload": "{\"cmd\":\"Reboot\"}"
+				"payload": "{}"
 			},
 			"isVisible": 0,
 			"logicalId": "reboot"
 		},
 		{
-			"abilityneed":"alarmMd",
+			"abilityneed": "alarmMd",
 			"name": "Mouvement détecté (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -34,7 +34,7 @@
 			"logicalId": "MdState"
 		},
 		{
-			"abilityneed":"none",
+			"abilityneed": "none",
 			"name": "Canal en ligne",
 			"type": "info",
 			"subtype": "binary",
@@ -42,46 +42,44 @@
 			"isVisible": 1,
 			"logicalId": "ChannelOnline"
 		},
-
-
-        {
-			"abilityneed":"alarmMd",
+		{
+			"abilityneed": "alarmMd",
 			"name": "event Motion (etat)",
 			"type": "info",
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvMotion"
-		},     
-        {
-			"abilityneed":"alarmMd",
+		},
+		{
+			"abilityneed": "alarmMd",
 			"name": "event FaceDetect (etat)",
 			"type": "info",
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvFaceDetect"
-		},  
-        {
-			"abilityneed":"alarmMd",
+		},
+		{
+			"abilityneed": "alarmMd",
 			"name": "event PeopleDetect (etat)",
 			"type": "info",
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvPeopleDetect"
-		},    
-        {
-			"abilityneed":"alarmMd",
+		},
+		{
+			"abilityneed": "alarmMd",
 			"name": "event VehicleDetect (etat)",
 			"type": "info",
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvVehicleDetect"
-		},  
-        {
-			"abilityneed":"alarmMd",
+		},
+		{
+			"abilityneed": "alarmMd",
 			"name": "event DogCatDetect (etat)",
 			"type": "info",
 			"subtype": "binary",
@@ -89,8 +87,8 @@
 			"isVisible": 1,
 			"logicalId": "EvDogCatDetect"
 		},
-        {
-			"abilityneed":"alarmMd",
+		{
+			"abilityneed": "alarmMd",
 			"name": "event MotionAlarm (etat)",
 			"type": "info",
 			"subtype": "binary",
@@ -98,48 +96,44 @@
 			"isVisible": 1,
 			"logicalId": "EvMotionAlarm"
 		},
-         {
-			"abilityneed":"alarmMd",
+		{
+			"abilityneed": "alarmMd",
 			"name": "event Visitor (etat)",
 			"type": "info",
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvVisitor"
-		},       
-      
-         {
-			"abilityneed":"alarmMd",
+		},
+		{
+			"abilityneed": "alarmMd",
 			"name": "last Onvif Event (full) ",
 			"type": "info",
 			"subtype": "string",
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvLastOnvifFull"
-		}, 
-      
-        {
-			"abilityneed":"alarmMd",
+		},
+		{
+			"abilityneed": "alarmMd",
 			"name": "last Onvif Event (name) ",
 			"type": "info",
 			"subtype": "string",
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvLastOnvifName"
-		}, 
-      
-       {
-			"abilityneed":"alarmMd",
+		},
+		{
+			"abilityneed": "alarmMd",
 			"name": "last Onvif Event (etat)",
 			"type": "info",
 			"subtype": "binary",
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvLastOnvifState"
-		},    
-      
+		},
 		{
-			"abilityneed":"performance",
+			"abilityneed": "performance",
 			"name": "Débit codec (Kbps)",
 			"type": "info",
 			"subtype": "numeric",
@@ -151,7 +145,7 @@
 			"logicalId": "SetCodecRateState"
 		},
 		{
-			"abilityneed":"performance",
+			"abilityneed": "performance",
 			"name": "Charge CPU",
 			"type": "info",
 			"subtype": "numeric",
@@ -166,7 +160,7 @@
 			"logicalId": "SetCpuUsedState"
 		},
 		{
-			"abilityneed":"performance",
+			"abilityneed": "performance",
 			"name": "Débit réseau (Kbps)",
 			"type": "info",
 			"subtype": "numeric",
@@ -178,8 +172,8 @@
 			"logicalId": "SetNetThroughputState"
 		},
 		{
-			"abilityneed":"push",
-			"iastate":0,
+			"abilityneed": "push",
+			"iastate": 0,
 			"name": "Notification push (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -192,25 +186,25 @@
 			"logicalId": "SetPushState"
 		},
 		{
-			"abilityneed":"push",
-			"iastate":0,
+			"abilityneed": "push",
+			"iastate": 0,
 			"name": "Notification push",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetPushState",
+				"valueFrom": "SetPushState",
 				"actionapi": "SetPush",
-				"payload": "{\"Push\":{\"schedule\":{\"enable\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Push\":{\"schedule\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetPush"
 		},
 		{
-			"abilityneed":"push",
-			"iastate":1,
+			"abilityneed": "push",
+			"iastate": 1,
 			"name": "Notification push AI (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -223,24 +217,24 @@
 			"logicalId": "SetPushStateV20"
 		},
 		{
-			"abilityneed":"push",
-			"iastate":1,
+			"abilityneed": "push",
+			"iastate": 1,
 			"name": "Notification push AI",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetPushStateV20",
+				"valueFrom": "SetPushStateV20",
 				"actionapi": "SetPushV20",
-				"payload": "{\"Push\":{\"enable\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Push\":{\"scheduleEnable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetPushV20"
 		},
 		{
-			"abilityneed":"supportPushInterval",
+			"abilityneed": "supportPushInterval",
 			"name": "Intervalle Push (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -252,14 +246,14 @@
 			"logicalId": "SetPushCfgState"
 		},
 		{
-			"abilityneed":"supportPushInterval",
+			"abilityneed": "supportPushInterval",
 			"name": "Intervalle Push",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "20|20 Sec;30|30 Sec;60|1 Min;120|2 Min",
-				"valueFrom" : "SetPushCfgState",
+				"valueFrom": "SetPushCfgState",
 				"actionapi": "SetPushCfg",
 				"payload": "{\"PushCfg\":{\"pushInterval\":#OPTSELECTEDINT#}}"
 			},
@@ -268,8 +262,8 @@
 			"logicalId": "SetPushCfg"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":0,
+			"abilityneed": "sdCard",
+			"iastate": 0,
 			"name": "Enregistrement SDCARD (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -281,15 +275,15 @@
 			"logicalId": "SetRecordState"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":0,
+			"abilityneed": "sdCard",
+			"iastate": 0,
 			"name": "Enregistrement SDCARD",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetRecordState",
+				"valueFrom": "SetRecordState",
 				"actionapi": "SetRec",
 				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"schedule\":{\"enable\":#OPTSELECTEDINT#}}}"
 			},
@@ -298,8 +292,8 @@
 			"logicalId": "SetRecord"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":1,
+			"abilityneed": "sdCard",
+			"iastate": 1,
 			"name": "Enregistrement SDCARD AI (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -311,25 +305,25 @@
 			"logicalId": "SetRecordStateV20"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":1,
+			"abilityneed": "sdCard",
+			"iastate": 1,
 			"name": "Enregistrement SDCARD AI",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetRecordStateV20",
+				"valueFrom": "SetRecordStateV20",
 				"actionapi": "SetRecV20",
-				"payload": "{\"Rec\":{\"enable\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"scheduleEnable\":#OPTSELECTEDINT#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetRecordV20"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":0,
+			"abilityneed": "sdCard",
+			"iastate": 0,
 			"name": "Enregistrement avant détection (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -341,15 +335,15 @@
 			"logicalId": "SetPreRecordState"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":0,
+			"abilityneed": "sdCard",
+			"iastate": 0,
 			"name": "Enregistrement avant détection",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "0|Désactiver;1|Activer",
-				"valueFrom" : "SetPreRecordState",
+				"valueFrom": "SetPreRecordState",
 				"actionapi": "SetRec",
 				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"preRec\":#OPTSELECTEDINT#}}"
 			},
@@ -357,10 +351,10 @@
 			"isVisible": 1,
 			"logicalId": "SetPreRecord"
 		},
- 		{
-			"abilityneed":"sdCard",
-			"subability":"recPreRecord",
-			"iastate":1,
+		{
+			"abilityneed": "sdCard",
+			"subability": "recPreRecord",
+			"iastate": 1,
 			"name": "Enregistrement avant détection AI (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -372,16 +366,16 @@
 			"logicalId": "SetPreRecordStateV20"
 		},
 		{
-			"abilityneed":"sdCard",
-			"subability":"recPreRecord",
-			"iastate":1,
+			"abilityneed": "sdCard",
+			"subability": "recPreRecord",
+			"iastate": 1,
 			"name": "Enregistrement avant détection AI",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "0|Désactiver;1|Activer",
-				"valueFrom" : "SetPreRecordStateV20",
+				"valueFrom": "SetPreRecordStateV20",
 				"actionapi": "SetRecV20",
 				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"preRec\":#OPTSELECTEDINT#}}"
 			},
@@ -390,8 +384,8 @@
 			"logicalId": "SetPreRecordV20"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":0,
+			"abilityneed": "sdCard",
+			"iastate": 0,
 			"name": "Ecraser les enregistrements (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -403,15 +397,15 @@
 			"logicalId": "SetOverwriteState"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":0,
+			"abilityneed": "sdCard",
+			"iastate": 0,
 			"name": "Ecraser les enregistrements",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "0|Désactiver;1|Activer",
-				"valueFrom" : "SetOverwriteState",
+				"valueFrom": "SetOverwriteState",
 				"actionapi": "SetRec",
 				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"overwrite\":#OPTSELECTEDINT#}}"
 			},
@@ -420,8 +414,8 @@
 			"logicalId": "SetOverwrite"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":1,
+			"abilityneed": "sdCard",
+			"iastate": 1,
 			"name": "Ecraser les enregistrements AI (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -433,15 +427,15 @@
 			"logicalId": "SetOverwriteStateV20"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":1,
+			"abilityneed": "sdCard",
+			"iastate": 1,
 			"name": "Ecraser les enregistrements AI",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "0|Désactiver;1|Activer",
-				"valueFrom" : "SetOverwriteStateV20",
+				"valueFrom": "SetOverwriteStateV20",
 				"actionapi": "SetRecV20",
 				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"overwrite\":#OPTSELECTEDINT#}}"
 			},
@@ -450,8 +444,8 @@
 			"logicalId": "SetOverwriteV20"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":0,
+			"abilityneed": "sdCard",
+			"iastate": 0,
 			"name": "Durée enregistrement après détection (état)",
 			"type": "info",
 			"subtype": "string",
@@ -463,15 +457,15 @@
 			"logicalId": "SetPostRecordState"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":0,
+			"abilityneed": "sdCard",
+			"iastate": 0,
 			"name": "Durée enregistrement après détection",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "15 Seconds|15 Sec;30 Seconds|30 Sec;1 Minute|1 Min;10 Minutes|10 Min",
-				"valueFrom" : "SetPostRecordState",
+				"valueFrom": "SetPostRecordState",
 				"actionapi": "SetRec",
 				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"postRec\":#OPTSELECTEDSTR#}}"
 			},
@@ -480,8 +474,8 @@
 			"logicalId": "SetPostRecord"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":1,
+			"abilityneed": "sdCard",
+			"iastate": 1,
 			"name": "Durée enregistrement après détection AI (état)",
 			"type": "info",
 			"subtype": "string",
@@ -493,15 +487,15 @@
 			"logicalId": "SetPostRecordStateV20"
 		},
 		{
-			"abilityneed":"sdCard",
-			"iastate":1,
+			"abilityneed": "sdCard",
+			"iastate": 1,
 			"name": "Durée enregistrement après détection AI",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "15 Seconds|15 Sec;30 Seconds|30 Sec;1 Minute|1 Min;10 Minutes|10 Min",
-				"valueFrom" : "SetPostRecordStateV20",
+				"valueFrom": "SetPostRecordStateV20",
 				"actionapi": "SetRecV20",
 				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"postRec\":#OPTSELECTEDSTR#}}"
 			},
@@ -510,8 +504,8 @@
 			"logicalId": "SetPostRecordV20"
 		},
 		{
-			"abilityneed":"email",
-			"iastate":0,
+			"abilityneed": "email",
+			"iastate": 0,
 			"name": "Envoi email (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -523,25 +517,25 @@
 			"logicalId": "SetEmailState"
 		},
 		{
-			"abilityneed":"email",
-			"iastate":0,
+			"abilityneed": "email",
+			"iastate": 0,
 			"name": "Envoi email",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetEmailState",
+				"valueFrom": "SetEmailState",
 				"actionapi": "SetEmail",
-				"payload": "{\"Email\":{\"schedule\":{\"enable\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Email\":{\"schedule\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetEmail"
 		},
 		{
-			"abilityneed":"email",
-			"iastate":1,
+			"abilityneed": "email",
+			"iastate": 1,
 			"name": "Envoi email AI (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -553,25 +547,25 @@
 			"logicalId": "SetEmailStateV20"
 		},
 		{
-			"abilityneed":"email",
-			"iastate":1,
+			"abilityneed": "email",
+			"iastate": 1,
 			"name": "Envoi email AI",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetEmailStateV20",
+				"valueFrom": "SetEmailStateV20",
 				"actionapi": "SetEmailV20",
-				"payload": "{\"Email\":{\"enable\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Email\":{\"scheduleEnable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetEmailV20"
 		},
 		{
-			"abilityneed":"ftp",
-			"iastate":0,
+			"abilityneed": "ftp",
+			"iastate": 0,
 			"name": "Envoi FTP (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -583,25 +577,25 @@
 			"logicalId": "SetFTPState"
 		},
 		{
-			"abilityneed":"ftp",
-			"iastate":0,
+			"abilityneed": "ftp",
+			"iastate": 0,
 			"name": "Envoi FTP",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetFTPState",
+				"valueFrom": "SetFTPState",
 				"actionapi": "SetFtp",
-				"payload": "{\"Ftp\":{\"schedule\":{\"enable\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Ftp\":{\"schedule\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetFTP"
 		},
 		{
-			"abilityneed":"ftp",
-			"iastate":1,
+			"abilityneed": "ftp",
+			"iastate": 1,
 			"name": "Envoi FTP AI (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -613,24 +607,24 @@
 			"logicalId": "SetFTPStateV20"
 		},
 		{
-			"abilityneed":"ftp",
-			"iastate":1,
+			"abilityneed": "ftp",
+			"iastate": 1,
 			"name": "Envoi FTP AI",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetFTPStateV20",
+				"valueFrom": "SetFTPStateV20",
 				"actionapi": "SetFtpV20",
-				"payload": "{\"Ftp\":{\"enable\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Ftp\":{\"scheduleEnable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetFTPV20"
 		},
 		{
-			"abilityneed":"ledControl",
+			"abilityneed": "ledControl",
 			"name": "Led infra rouge (état)",
 			"type": "info",
 			"subtype": "string",
@@ -642,23 +636,23 @@
 			"logicalId": "SetIrLightsState"
 		},
 		{
-			"abilityneed":"ledControl",
+			"abilityneed": "ledControl",
 			"name": "Led infra rouge",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "Auto|Auto;Off|Désactiver",
-				"valueFrom" : "SetIrLightsState",
+				"valueFrom": "SetIrLightsState",
 				"actionapi": "SetIrLights",
-				"payload": "{\"IrLights\":{\"state\":#OPTSELECTEDSTR#}}"
+				"payload": "{\"IrLights\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDSTR#}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetIrLights"
 		},
 		{
-			"abilityneed":"supportFLswitch",
+			"abilityneed": "supportFLswitch",
 			"name": "Led blanche (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -670,14 +664,14 @@
 			"logicalId": "SetWhitLedState"
 		},
 		{
-			"abilityneed":"supportFLswitch",
+			"abilityneed": "supportFLswitch",
 			"name": "Led blanche",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetWhitLedState",
+				"valueFrom": "SetWhitLedState",
 				"actionapi": "SetWhiteLed",
 				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDINT#}}"
 			},
@@ -686,7 +680,7 @@
 			"logicalId": "SetWhitLed"
 		},
 		{
-			"abilityneed":"supportFLswitch",
+			"abilityneed": "supportFLswitch",
 			"name": "Led blanche (mode)",
 			"type": "info",
 			"subtype": "binary",
@@ -698,14 +692,14 @@
 			"logicalId": "SetWhiteLedModeState"
 		},
 		{
-			"abilityneed":"supportFLswitch",
+			"abilityneed": "supportFLswitch",
 			"name": "Mode nuit led blanche",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Auto;0|Désactiver",
-				"valueFrom" : "SetWhiteLedModeState",
+				"valueFrom": "SetWhiteLedModeState",
 				"actionapi": "SetWhiteLed",
 				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"mode\":#OPTSELECTEDINT#}}"
 			},
@@ -714,7 +708,7 @@
 			"logicalId": "SetWhiteLedMode"
 		},
 		{
-			"abilityneed":"supportFLBrightness",
+			"abilityneed": "supportFLBrightness",
 			"name": "Intensité Led Blanche (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -726,15 +720,15 @@
 			"logicalId": "SetWhitLedLuxState"
 		},
 		{
-			"abilityneed":"supportFLBrightness",
+			"abilityneed": "supportFLBrightness",
 			"name": "Intensité Led Blanche",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 0,
-				"maxValue" : 100,
-				"valueFrom" : "SetWhitLedLuxState",
+				"maxValue": 100,
+				"valueFrom": "SetWhitLedLuxState",
 				"actionapi": "SetWhiteLed",
 				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"bright\":#OPTSLIDER#}}"
 			},
@@ -743,8 +737,8 @@
 			"logicalId": "SetWhitLedLux"
 		},
 		{
-			"abilityneed":"alarmAudio",
-			"iastate":0,
+			"abilityneed": "alarmAudio",
+			"iastate": 0,
 			"name": "Alarme Audio (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -756,25 +750,25 @@
 			"logicalId": "SetAudioAlarmState"
 		},
 		{
-			"abilityneed":"alarmAudio",
-			"iastate":0,
+			"abilityneed": "alarmAudio",
+			"iastate": 0,
 			"name": "Alarme Audio",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetAudioAlarmState",
+				"valueFrom": "SetAudioAlarmState",
 				"actionapi": "SetAudioAlarm",
-				"payload": "{\"Audio\":{\"schedule\":{\"enable\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Audio\":{\"schedule\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetAudioAlarm"
 		},
 		{
-			"abilityneed":"alarmAudio",
-			"iastate":1,
+			"abilityneed": "alarmAudio",
+			"iastate": 1,
 			"name": "Alarme Audio AI (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -786,24 +780,24 @@
 			"logicalId": "SetAudioAlarmStateV20"
 		},
 		{
-			"abilityneed":"alarmAudio",
-			"iastate":1,
+			"abilityneed": "alarmAudio",
+			"iastate": 1,
 			"name": "Alarme Audio AI",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetAudioAlarmStateV20",
+				"valueFrom": "SetAudioAlarmStateV20",
 				"actionapi": "SetAudioAlarmV20",
-				"payload": "{\"Audio\":{\"enable\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Audio\":{\"enable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetAudioAlarmV20"
 		},
 		{
-			"abilityneed":"powerLed",
+			"abilityneed": "powerLed",
 			"name": "Power LED (état)",
 			"type": "info",
 			"subtype": "string",
@@ -815,14 +809,14 @@
 			"logicalId": "SetPowerLedState"
 		},
 		{
-			"abilityneed":"powerLed",
+			"abilityneed": "powerLed",
 			"name": "Power LED",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "On|Activer;Off|Désactiver",
-				"valueFrom" : "SetPowerLedState",
+				"valueFrom": "SetPowerLedState",
 				"actionapi": "SetPowerLed",
 				"payload": "{\"PowerLed\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDSTR#}}"
 			},
@@ -831,7 +825,7 @@
 			"logicalId": "SetPowerLed"
 		},
 		{
-			"abilityneed":"enc",
+			"abilityneed": "enc",
 			"name": "Microphone (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -843,14 +837,14 @@
 			"logicalId": "SetMicrophoneState"
 		},
 		{
-			"abilityneed":"enc",
+			"abilityneed": "enc",
 			"name": "Microphone",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetMicrophoneState",
+				"valueFrom": "SetMicrophoneState",
 				"actionapi": "SetEnc",
 				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"audio\":#OPTSELECTEDINT#}}"
 			},
@@ -859,7 +853,7 @@
 			"logicalId": "SetMicrophone"
 		},
 		{
-			"abilityneed":"disableAutoFocus",
+			"abilityneed": "disableAutoFocus",
 			"name": "Autofocus (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -871,14 +865,14 @@
 			"logicalId": "SetAutoFocusState"
 		},
 		{
-			"abilityneed":"disableAutoFocus",
+			"abilityneed": "disableAutoFocus",
 			"name": "Autofocus",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "0|Activer;1|Désactiver",
-				"valueFrom" : "SetAutoFocusState",
+				"valueFrom": "SetAutoFocusState",
 				"actionapi": "SetAutoFocus",
 				"payload": "{\"AutoFocus\":{\"channel\":#CHANNEL#,\"disable\":#OPTSELECTEDINT#}}"
 			},
@@ -887,7 +881,7 @@
 			"logicalId": "SetAutoFocus"
 		},
 		{
-			"abilityneed":"autoMaint",
+			"abilityneed": "autoMaint",
 			"name": "Auto reboot (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -899,14 +893,14 @@
 			"logicalId": "SetAutoMaintState"
 		},
 		{
-			"abilityneed":"autoMaint",
+			"abilityneed": "autoMaint",
 			"name": "Auto reboot",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetAutoMaintState",
+				"valueFrom": "SetAutoMaintState",
 				"actionapi": "SetAutoMaint",
 				"payload": "{\"AutoMaint\":{\"enable\":#OPTSELECTEDINT#}}"
 			},
@@ -915,7 +909,7 @@
 			"logicalId": "SetAutoMaint"
 		},
 		{
-			"abilityneed":"ptzPreset",
+			"abilityneed": "ptzPreset",
 			"name": "Récupérer les presets PTZ",
 			"type": "action",
 			"subtype": "other",
@@ -928,7 +922,7 @@
 			"logicalId": "GetPtzPreset"
 		},
 		{
-			"abilityneed":"ptzPreset",
+			"abilityneed": "ptzPreset",
 			"name": "Utiliser un preset PTZ",
 			"type": "action",
 			"subtype": "select",
@@ -943,7 +937,7 @@
 			"logicalId": "SetPtzByPreset"
 		},
 		{
-			"abilityneed":"ptzCtrl",
+			"abilityneed": "ptzCtrl",
 			"name": "Mouvement PTZ",
 			"type": "action",
 			"subtype": "select",
@@ -958,23 +952,23 @@
 			"logicalId": "SetPTZmoove"
 		},
 		{
-			"abilityneed":"ptzCtrl",
+			"abilityneed": "ptzCtrl",
 			"name": "Vitesse",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 1,
-				"maxValue" : 64,
+				"maxValue": 64,
 				"setValue": 32,
-				"speedvalue":32
+				"speedvalue": 32
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetSpeed"
 		},
 		{
-			"abilityneed":"supportZoom",
+			"abilityneed": "supportZoom",
 			"name": "Zoom (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -986,15 +980,15 @@
 			"logicalId": "SetZoomState"
 		},
 		{
-			"abilityneed":"supportZoom",
+			"abilityneed": "supportZoom",
 			"name": "Zoom",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 0,
-				"maxValue" : 249,
-				"valueFrom" : "SetZoomState",
+				"maxValue": 249,
+				"valueFrom": "SetZoomState",
 				"actionapi": "StartZoomFocus",
 				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"ZoomPos\"}}"
 			},
@@ -1003,7 +997,7 @@
 			"logicalId": "SetZoom"
 		},
 		{
-			"abilityneed":"supportFocus",
+			"abilityneed": "supportFocus",
 			"name": "Focus (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1015,15 +1009,15 @@
 			"logicalId": "SetFocusState"
 		},
 		{
-			"abilityneed":"supportFocus",
+			"abilityneed": "supportFocus",
 			"name": "Focus",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": "0",
-				"maxValue" : "32",
-				"valueFrom" : "SetFocusState",
+				"maxValue": "32",
+				"valueFrom": "SetFocusState",
 				"actionapi": "StartZoomFocus",
 				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"FocusPos\"}}"
 			},
@@ -1032,7 +1026,7 @@
 			"logicalId": "SetFocus"
 		},
 		{
-			"abilityneed":"ptzPatrol",
+			"abilityneed": "ptzPatrol",
 			"name": "Récupérer les rondes PTZ",
 			"type": "action",
 			"subtype": "other",
@@ -1045,7 +1039,7 @@
 			"logicalId": "GetPtzPatrol"
 		},
 		{
-			"abilityneed":"ptzPatrol",
+			"abilityneed": "ptzPatrol",
 			"name": "PTZ Patrol (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -1057,7 +1051,7 @@
 			"logicalId": "PtzPatrolState"
 		},
 		{
-			"abilityneed":"ptzPatrol",
+			"abilityneed": "ptzPatrol",
 			"name": "PTZ Patrol (ronde)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1069,7 +1063,7 @@
 			"logicalId": "PtzPatrolId"
 		},
 		{
-			"abilityneed":"ptzPatrol",
+			"abilityneed": "ptzPatrol",
 			"name": "Démarrer PTZ Patrol",
 			"type": "action",
 			"subtype": "select",
@@ -1084,7 +1078,7 @@
 			"logicalId": "StartPtzPatrol"
 		},
 		{
-			"abilityneed":"ptzPatrol",
+			"abilityneed": "ptzPatrol",
 			"name": "Arrêter PTZ Patrol",
 			"type": "action",
 			"subtype": "other",
@@ -1097,7 +1091,7 @@
 			"logicalId": "StopPtzPatrol"
 		},
 		{
-			"abilityneed":"supportPtzCheck",
+			"abilityneed": "supportPtzCheck",
 			"name": "Démarrer la calibration",
 			"type": "action",
 			"subtype": "other",
@@ -1110,7 +1104,7 @@
 			"logicalId": "PtzCheck"
 		},
 		{
-			"abilityneed":"supportPtzCheck",
+			"abilityneed": "supportPtzCheck",
 			"name": "Calibration (état)",
 			"type": "info",
 			"subtype": "string",
@@ -1122,7 +1116,7 @@
 			"logicalId": "SetPtzCheckState"
 		},
 		{
-			"abilityneed":"supportAudioAlarm",
+			"abilityneed": "supportAudioAlarm",
 			"name": "Déclencher la sirène",
 			"type": "action",
 			"subtype": "other",
@@ -1135,7 +1129,7 @@
 			"logicalId": "AudioAlarmPlayTimes"
 		},
 		{
-			"abilityneed":"supportAudioAlarm",
+			"abilityneed": "supportAudioAlarm",
 			"name": "Volume sirène (état)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1147,15 +1141,15 @@
 			"logicalId": "SetSirenVolumeState"
 		},
 		{
-			"abilityneed":"supportAudioAlarm",
+			"abilityneed": "supportAudioAlarm",
 			"name": "Volume sirène",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 0,
-				"maxValue" : 100,
-				"valueFrom" : "SetSirenVolumeState",
+				"maxValue": 100,
+				"valueFrom": "SetSirenVolumeState",
 				"actionapi": "SetAudioCfg",
 				"payload": "{\"AudioCfg\":{\"channel\":#CHANNEL#,\"volume\":#OPTSLIDER#}}"
 			},
@@ -1164,7 +1158,7 @@
 			"logicalId": "SetSirenVolume"
 		},
 		{
-			"abilityneed":"ispMirror",
+			"abilityneed": "ispMirror",
 			"name": "Retourner verticalement (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -1176,7 +1170,7 @@
 			"logicalId": "SetRotationState"
 		},
 		{
-			"abilityneed":"ispFlip",
+			"abilityneed": "ispFlip",
 			"name": "Retourner horizontalement (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -1188,7 +1182,7 @@
 			"logicalId": "SetMirroringState"
 		},
 		{
-			"abilityneed":"ispBackLight",
+			"abilityneed": "ispBackLight",
 			"name": "Rétro éclairage (état)",
 			"type": "info",
 			"subtype": "string",
@@ -1200,7 +1194,7 @@
 			"logicalId": "SetBacklightState"
 		},
 		{
-			"abilityneed":"ispExposureMode",
+			"abilityneed": "ispExposureMode",
 			"name": "Exposition (état)",
 			"type": "info",
 			"subtype": "string",
@@ -1212,7 +1206,7 @@
 			"logicalId": "SetExposureState"
 		},
 		{
-			"abilityneed":"isp",
+			"abilityneed": "isp",
 			"name": "Jour Nuit (état)",
 			"type": "info",
 			"subtype": "string",
@@ -1224,14 +1218,14 @@
 			"logicalId": "SetDayNightState"
 		},
 		{
-			"abilityneed":"isp",
+			"abilityneed": "isp",
 			"name": "Jour Nuit",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "Auto|Auto;Color|Couleur;Black&White|Noir&Blanc",
-				"valueFrom" : "SetDayNightState",
+				"valueFrom": "SetDayNightState",
 				"actionapi": "SetIsp",
 				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"dayNight\":#OPTSELECTEDSTR#}}"
 			},
@@ -1240,7 +1234,7 @@
 			"logicalId": "SetDayNight"
 		},
 		{
-			"abilityneed":"ispAntiFlick",
+			"abilityneed": "ispAntiFlick",
 			"name": "Anti-scintillement (état)",
 			"type": "info",
 			"subtype": "string",
@@ -1252,14 +1246,14 @@
 			"logicalId": "SetAntiFlickerState"
 		},
 		{
-			"abilityneed":"ispAntiFlick",
+			"abilityneed": "ispAntiFlick",
 			"name": "Anti-scintillement",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "Outdoor|Extérieur;50HZ|50Hz;60HZ|60Hz;Off|Désactiver",
-				"valueFrom" : "SetAntiFlickerState",
+				"valueFrom": "SetAntiFlickerState",
 				"actionapi": "SetIsp",
 				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"antiFlicker\":#OPTSELECTEDSTR#}}"
 			},
@@ -1268,7 +1262,7 @@
 			"logicalId": "SetAntiFlicker"
 		},
 		{
-			"abilityneed":"isp3Dnr",
+			"abilityneed": "isp3Dnr",
 			"name": "3D DNR (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -1280,14 +1274,14 @@
 			"logicalId": "SetNr3dState"
 		},
 		{
-			"abilityneed":"isp3Dnr",
+			"abilityneed": "isp3Dnr",
 			"name": "3D DNR",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetNr3dState",
+				"valueFrom": "SetNr3dState",
 				"actionapi": "SetIsp",
 				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"nr3d\":#OPTSELECTEDINT#}}"
 			},
@@ -1296,7 +1290,7 @@
 			"logicalId": "SetNr3d"
 		},
 		{
-			"abilityneed":"upnp",
+			"abilityneed": "upnp",
 			"name": "UPnP (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -1308,14 +1302,14 @@
 			"logicalId": "SetUpnpState"
 		},
 		{
-			"abilityneed":"upnp",
+			"abilityneed": "upnp",
 			"name": "UPnP",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetUpnpState",
+				"valueFrom": "SetUpnpState",
 				"actionapi": "SetUpnp",
 				"payload": "{\"Upnp\":{\"enable\":#OPTSELECTEDINT#}}"
 			},
@@ -1324,7 +1318,7 @@
 			"logicalId": "SetUpnpp"
 		},
 		{
-			"abilityneed":"p2p",
+			"abilityneed": "p2p",
 			"name": "UID P2P (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -1336,14 +1330,14 @@
 			"logicalId": "SetUidP2pState"
 		},
 		{
-			"abilityneed":"p2p",
+			"abilityneed": "p2p",
 			"name": "UID P2P",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetUidP2pState",
+				"valueFrom": "SetUidP2pState",
 				"actionapi": "SetP2p",
 				"payload": "{\"P2p\":{\"enable\":#OPTSELECTEDINT#}}"
 			},
@@ -1352,7 +1346,7 @@
 			"logicalId": "SetUidP2p"
 		},
 		{
-			"abilityneed":"mask",
+			"abilityneed": "mask",
 			"name": "Masque de vie privée (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -1364,14 +1358,14 @@
 			"logicalId": "SetMaskState"
 		},
 		{
-			"abilityneed":"mask",
+			"abilityneed": "mask",
 			"name": "Masque de vie privée",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetMaskState",
+				"valueFrom": "SetMaskState",
 				"actionapi": "SetMask",
 				"payload": "{\"Mask\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}"
 			},
@@ -1380,32 +1374,31 @@
 			"logicalId": "SetMask"
 		},
 		{
-			"abilityneed":"privacyMode",
+			"abilityneed": "privacyMode",
 			"name": "Mode confidentialité (état)",
 			"type": "info",
 			"subtype": "binary",
-			"configuration": {
-			},
+			"configuration": {},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPrivacyModeState"
 		},
 		{
-			"abilityneed":"privacyMode",
+			"abilityneed": "privacyMode",
 			"name": "Mode confidentialité",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetPrivacyModeState"
+				"valueFrom": "SetPrivacyModeState"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetPrivacyMode"
 		},
 		{
-			"abilityneed":"white_balance",
+			"abilityneed": "white_balance",
 			"name": "Balance des blancs (etat)",
 			"type": "info",
 			"subtype": "binary",
@@ -1417,7 +1410,7 @@
 			"logicalId": "SetWhiteBalanceState"
 		},
 		{
-			"abilityneed":"image",
+			"abilityneed": "image",
 			"name": "Luminosité (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1429,15 +1422,15 @@
 			"logicalId": "SetBrightState"
 		},
 		{
-			"abilityneed":"image",
+			"abilityneed": "image",
 			"name": "Luminosité",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 1,
-				"maxValue" : 255,
-				"valueFrom" : "SetBrightState",
+				"maxValue": 255,
+				"valueFrom": "SetBrightState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"bright\":#OPTSLIDER#}}"
 			},
@@ -1446,7 +1439,7 @@
 			"logicalId": "SetBright"
 		},
 		{
-			"abilityneed":"image",
+			"abilityneed": "image",
 			"name": "Contraste (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1458,15 +1451,15 @@
 			"logicalId": "SetContrastState"
 		},
 		{
-			"abilityneed":"image",
+			"abilityneed": "image",
 			"name": "Contraste",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 1,
-				"maxValue" : 255,
-				"valueFrom" : "SetContrastState",
+				"maxValue": 255,
+				"valueFrom": "SetContrastState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"contrast\":#OPTSLIDER#}}"
 			},
@@ -1475,7 +1468,7 @@
 			"logicalId": "SetContrast"
 		},
 		{
-			"abilityneed":"image",
+			"abilityneed": "image",
 			"name": "Saturation (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1487,15 +1480,15 @@
 			"logicalId": "SetSaturationState"
 		},
 		{
-			"abilityneed":"image",
+			"abilityneed": "image",
 			"name": "Saturation",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 1,
-				"maxValue" : 255,
-				"valueFrom" : "SetSaturationState",
+				"maxValue": 255,
+				"valueFrom": "SetSaturationState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"saturation\":#OPTSLIDER#}}"
 			},
@@ -1504,7 +1497,7 @@
 			"logicalId": "SetSaturation"
 		},
 		{
-			"abilityneed":"ispHue",
+			"abilityneed": "ispHue",
 			"name": "Teinte (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1516,15 +1509,15 @@
 			"logicalId": "SetHueState"
 		},
 		{
-			"abilityneed":"ispHue",
+			"abilityneed": "ispHue",
 			"name": "Teinte",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 1,
-				"maxValue" : 255,
-				"valueFrom" : "SetHueState",
+				"maxValue": 255,
+				"valueFrom": "SetHueState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"hue\":#OPTSLIDER#}}"
 			},
@@ -1533,7 +1526,7 @@
 			"logicalId": "SetHue"
 		},
 		{
-			"abilityneed":"ispSharpen",
+			"abilityneed": "ispSharpen",
 			"name": "Netteté (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1545,15 +1538,15 @@
 			"logicalId": "SetSharpenState"
 		},
 		{
-			"abilityneed":"ispSharpen",
+			"abilityneed": "ispSharpen",
 			"name": "Netteté",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 1,
-				"maxValue" : 255,
-				"valueFrom" : "SetSharpenState",
+				"maxValue": 255,
+				"valueFrom": "SetSharpenState",
 				"actionapi": "SetImage",
 				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"sharpen\":#OPTSLIDER#}}"
 			},
@@ -1562,7 +1555,7 @@
 			"logicalId": "SetSharpen"
 		},
 		{
-			"abilityneed":"waterMark",
+			"abilityneed": "waterMark",
 			"name": "OSD Filigrane Reolink (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -1574,14 +1567,14 @@
 			"logicalId": "SetWatermarkState"
 		},
 		{
-			"abilityneed":"waterMark",
+			"abilityneed": "waterMark",
 			"name": "OSD Filigrane Reolink",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Afficher;0|Masquer",
-				"valueFrom" : "SetWatermarkState",
+				"valueFrom": "SetWatermarkState",
 				"actionapi": "SetOsd",
 				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"watermark\":#OPTSELECTEDINT#}}"
 			},
@@ -1590,7 +1583,7 @@
 			"logicalId": "SetWatermark"
 		},
 		{
-			"abilityneed":"osd",
+			"abilityneed": "osd",
 			"name": "OSD Date & Heure (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -1602,14 +1595,14 @@
 			"logicalId": "SetOsdTimeState"
 		},
 		{
-			"abilityneed":"osd",
+			"abilityneed": "osd",
 			"name": "OSD Date & Heure",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Afficher;0|Masquer",
-				"valueFrom" : "SetOsdTimeState",
+				"valueFrom": "SetOsdTimeState",
 				"actionapi": "SetOsd",
 				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdTime\":{\"enable\":#OPTSELECTEDINT#}}}"
 			},
@@ -1618,7 +1611,7 @@
 			"logicalId": "SetOsdTime"
 		},
 		{
-			"abilityneed":"osd",
+			"abilityneed": "osd",
 			"name": "Position OSD Date & Heure (état)",
 			"type": "info",
 			"subtype": "string",
@@ -1630,14 +1623,14 @@
 			"logicalId": "SetPosOsdTimeState"
 		},
 		{
-			"abilityneed":"osd",
+			"abilityneed": "osd",
 			"name": "Position OSD Date & Heure",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "Upper Left|Haut-Gauche;Top Center|Haut-Milieu;Upper Right|Haut-Droit;Lower Left|Bas-Gauche;Bottom Center|Bas-Milieu;Lower Right|Bas-Droite",
-				"valueFrom" : "SetPosOsdTimeState",
+				"valueFrom": "SetPosOsdTimeState",
 				"actionapi": "SetOsd",
 				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdTime\":{\"pos\":#OPTSELECTEDSTR#}}}"
 			},
@@ -1646,7 +1639,7 @@
 			"logicalId": "SetPosOsdTime"
 		},
 		{
-			"abilityneed":"osd",
+			"abilityneed": "osd",
 			"name": "OSD Nom de la caméra (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -1658,14 +1651,14 @@
 			"logicalId": "SetOsdChannelState"
 		},
 		{
-			"abilityneed":"osd",
+			"abilityneed": "osd",
 			"name": "OSD Nom de la caméra",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Afficher;0|Masquer",
-				"valueFrom" : "SetOsdChannelState",
+				"valueFrom": "SetOsdChannelState",
 				"actionapi": "SetOsd",
 				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdChannel\":{\"enable\":#OPTSELECTEDINT#}}}"
 			},
@@ -1674,7 +1667,7 @@
 			"logicalId": "SetOsdChannel"
 		},
 		{
-			"abilityneed":"osd",
+			"abilityneed": "osd",
 			"name": "Position OSD nom de la caméra (état)",
 			"type": "info",
 			"subtype": "string",
@@ -1686,14 +1679,14 @@
 			"logicalId": "SetPosOsdChannelState"
 		},
 		{
-			"abilityneed":"osd",
+			"abilityneed": "osd",
 			"name": "Position OSD nom de la caméra",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "Upper Left|Haut-Gauche;Top Center|Haut-Milieu;Upper Right|Haut-Droit;Lower Left|Bas-Gauche;Bottom Center|Bas-Milieu;Lower Right|Bas-Droite",
-				"valueFrom" : "SetPosOsdChannelState",
+				"valueFrom": "SetPosOsdChannelState",
 				"actionapi": "SetOsd",
 				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdChannel\":{\"pos\":#OPTSELECTEDSTR#}}}"
 			},
@@ -1702,7 +1695,7 @@
 			"logicalId": "SetPosOsdChannel"
 		},
 		{
-			"abilityneed":"enc",
+			"abilityneed": "enc",
 			"name": "Résolution (Stream1)",
 			"type": "info",
 			"subtype": "string",
@@ -1714,7 +1707,7 @@
 			"logicalId": "SetResolutionst1State"
 		},
 		{
-			"abilityneed":"enc",
+			"abilityneed": "enc",
 			"name": "Fréquence image FPS (Stream1)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1726,7 +1719,7 @@
 			"logicalId": "SetFPSst1State"
 		},
 		{
-			"abilityneed":"enc",
+			"abilityneed": "enc",
 			"name": "Débit kbps (Stream1)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1738,7 +1731,7 @@
 			"logicalId": "SetBitratest1State"
 		},
 		{
-			"abilityneed":"enc",
+			"abilityneed": "enc",
 			"name": "Résolution (Stream2)",
 			"type": "info",
 			"subtype": "string",
@@ -1750,7 +1743,7 @@
 			"logicalId": "SetResolutionst2State"
 		},
 		{
-			"abilityneed":"enc",
+			"abilityneed": "enc",
 			"name": "Fréquence image FPS (Stream2)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1762,7 +1755,7 @@
 			"logicalId": "SetFPSst2State"
 		},
 		{
-			"abilityneed":"enc",
+			"abilityneed": "enc",
 			"name": "Débit kbps (Stream2)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1774,7 +1767,7 @@
 			"logicalId": "SetBitratest2State"
 		},
 		{
-			"abilityneed":"sdCard",
+			"abilityneed": "sdCard",
 			"name": "Mémoire disponible",
 			"type": "info",
 			"subtype": "binary",
@@ -1786,7 +1779,7 @@
 			"logicalId": "driveAvailable"
 		},
 		{
-			"abilityneed":"sdCard",
+			"abilityneed": "sdCard",
 			"name": "Espace disponible",
 			"type": "info",
 			"Unite": "%",
@@ -1801,7 +1794,7 @@
 			"logicalId": "driveSpaceAvailable"
 		},
 		{
-			"abilityneed":"sdCard",
+			"abilityneed": "sdCard",
 			"name": "Type de stockage",
 			"type": "info",
 			"subtype": "string",
@@ -1813,7 +1806,7 @@
 			"logicalId": "driveType"
 		},
 		{
-			"abilityneed":"aiTrack",
+			"abilityneed": "aiTrack",
 			"name": "Suivi AI (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -1825,14 +1818,14 @@
 			"logicalId": "SetaiTrackState"
 		},
 		{
-			"abilityneed":"aiTrack",
+			"abilityneed": "aiTrack",
 			"name": "Suivi AI",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetaiTrackState",
+				"valueFrom": "SetaiTrackState",
 				"actionapi": "SetAiCfg",
 				"payload": "{\"channel\":#CHANNEL#,\"aiTrack\":#OPTSELECTEDINT#}"
 			},
@@ -1841,14 +1834,14 @@
 			"logicalId": "SetaiTrack"
 		},
 		{
-			"abilityneed":"alarmMd",
+			"abilityneed": "alarmMd",
 			"name": "Sensibilité par défaut Detection Mouvement (valeur)",
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"revertvalue" : 51,
+				"revertvalue": 51,
 				"minValue": 1,
-				"maxValue" : 50,
+				"maxValue": 50,
 				"payload": "{\"cmd\":\"GetMdAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
 			},
 			"IsHistorized": 0,
@@ -1856,16 +1849,16 @@
 			"logicalId": "SetMdDefaultSensitivityState"
 		},
 		{
-			"abilityneed":"alarmMd",
+			"abilityneed": "alarmMd",
 			"name": "Sensibilité par défaut Detection Mouvement",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 1,
-				"maxValue" : 50,
-				"revertvalue" : 51,
-				"valueFrom" : "SetMdDefaultSensitivityState",
+				"maxValue": 50,
+				"revertvalue": 51,
+				"valueFrom": "SetMdDefaultSensitivityState",
 				"actionapi": "SetMdAlarm",
 				"payload": "{\"MdAlarm\":{\"channel\":#CHANNEL#,\"newSens\":{\"sensDef\":#OPTR_SLIDER#},\"useNewSens\":1}}"
 			},
@@ -1874,9 +1867,9 @@
 			"logicalId": "SetMdDefaultSensitivity"
 		},
 		{
-			"abilityneed":"supportAiSensitivity",
-			"subability":"supportAiPeople",
-			"iastate":1,
+			"abilityneed": "supportAiSensitivity",
+			"subability": "supportAiPeople",
+			"iastate": 1,
 			"name": "Sensibilité Detection Personne (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1888,17 +1881,17 @@
 			"logicalId": "SetSdSensitivityPeopleState"
 		},
 		{
-			"abilityneed":"supportAiSensitivity",
-			"subability":"supportAiPeople",
-			"iastate":1,
+			"abilityneed": "supportAiSensitivity",
+			"subability": "supportAiPeople",
+			"iastate": 1,
 			"name": "Sensibilité Detection Personne",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 0,
-				"maxValue" : 100,
-				"valueFrom" : "SetSdSensitivityPeopleState",
+				"maxValue": 100,
+				"valueFrom": "SetSdSensitivityPeopleState",
 				"actionapi": "SetAiAlarm",
 				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"people\"}}"
 			},
@@ -1907,9 +1900,9 @@
 			"logicalId": "SetSdSensitivityPeople"
 		},
 		{
-			"abilityneed":"supportAiSensitivity",
-			"subability":"supportAiVehicle",
-			"iastate":1,
+			"abilityneed": "supportAiSensitivity",
+			"subability": "supportAiVehicle",
+			"iastate": 1,
 			"name": "Sensibilité Detection Véhicule (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1921,17 +1914,17 @@
 			"logicalId": "SetSdSensitivityVehicleState"
 		},
 		{
-			"abilityneed":"supportAiSensitivity",
-			"subability":"supportAiVehicle",
-			"iastate":1,
+			"abilityneed": "supportAiSensitivity",
+			"subability": "supportAiVehicle",
+			"iastate": 1,
 			"name": "Sensibilité Detection Véhicule",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 0,
-				"maxValue" : 100,
-				"valueFrom" : "SetSdSensitivityVehicleState",
+				"maxValue": 100,
+				"valueFrom": "SetSdSensitivityVehicleState",
 				"actionapi": "SetAiAlarm",
 				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"vehicle\"}}"
 			},
@@ -1940,9 +1933,9 @@
 			"logicalId": "SetSdSensitivityVehicle"
 		},
 		{
-			"abilityneed":"supportAiSensitivity",
-			"subability":"supportAiDogCat",
-			"iastate":1,
+			"abilityneed": "supportAiSensitivity",
+			"subability": "supportAiDogCat",
+			"iastate": 1,
 			"name": "Sensibilité Detection DogCat (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1954,17 +1947,17 @@
 			"logicalId": "SetSdSensitivityDogCatState"
 		},
 		{
-			"abilityneed":"supportAiSensitivity",
-			"subability":"supportAiDogCat",
-			"iastate":1,
+			"abilityneed": "supportAiSensitivity",
+			"subability": "supportAiDogCat",
+			"iastate": 1,
 			"name": "Sensibilité Detection DogCat",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 0,
-				"maxValue" : 100,
-				"valueFrom" : "SetSdSensitivityDogCatState",
+				"maxValue": 100,
+				"valueFrom": "SetSdSensitivityDogCatState",
 				"actionapi": "SetAiAlarm",
 				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"dog_cat\"}}"
 			},
@@ -1973,9 +1966,9 @@
 			"logicalId": "SetSdSensitivityDogCat"
 		},
 		{
-			"abilityneed":"supportAiStayTime",
-			"subability":"supportAiPeople",
-			"iastate":1,
+			"abilityneed": "supportAiStayTime",
+			"subability": "supportAiPeople",
+			"iastate": 1,
 			"name": "Délai Alarme Personne (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -1988,17 +1981,17 @@
 			"logicalId": "SetAlarmDelayPeopleState"
 		},
 		{
-			"abilityneed":"supportAiStayTime",
-			"subability":"supportAiPeople",
-			"iastate":1,
+			"abilityneed": "supportAiStayTime",
+			"subability": "supportAiPeople",
+			"iastate": 1,
 			"name": "Délai Alarme Personne",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 0,
-				"maxValue" : 8,
-				"valueFrom" : "SetAlarmDelayPeopleState",
+				"maxValue": 8,
+				"valueFrom": "SetAlarmDelayPeopleState",
 				"actionapi": "SetAiAlarm",
 				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"people\"}}"
 			},
@@ -2007,9 +2000,9 @@
 			"logicalId": "SetAlarmDelayPeople"
 		},
 		{
-			"abilityneed":"supportAiStayTime",
-			"subability":"supportAiVehicle",
-			"iastate":1,
+			"abilityneed": "supportAiStayTime",
+			"subability": "supportAiVehicle",
+			"iastate": 1,
 			"name": "Délai Alarme Véhicule (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -2022,17 +2015,17 @@
 			"logicalId": "SetAlarmDelayVehicleState"
 		},
 		{
-			"abilityneed":"supportAiStayTime",
-			"subability":"supportAiVehicle",
-			"iastate":1,
+			"abilityneed": "supportAiStayTime",
+			"subability": "supportAiVehicle",
+			"iastate": 1,
 			"name": "Délai Alarme Véhicule",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 0,
-				"maxValue" : 8,
-				"valueFrom" : "SetAlarmDelayVehicleState",
+				"maxValue": 8,
+				"valueFrom": "SetAlarmDelayVehicleState",
 				"actionapi": "SetAiAlarm",
 				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"vehicle\"}}"
 			},
@@ -2041,9 +2034,9 @@
 			"logicalId": "SetAlarmDelayVehicle"
 		},
 		{
-			"abilityneed":"supportAiStayTime",
-			"subability":"supportAiDogCat",
-			"iastate":1,
+			"abilityneed": "supportAiStayTime",
+			"subability": "supportAiDogCat",
+			"iastate": 1,
 			"name": "Délai Alarme DogCat (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -2056,17 +2049,17 @@
 			"logicalId": "SetAlarmDelayDogCatState"
 		},
 		{
-			"abilityneed":"supportAiStayTime",
-			"subability":"supportAiDogCat",
-			"iastate":1,
+			"abilityneed": "supportAiStayTime",
+			"subability": "supportAiDogCat",
+			"iastate": 1,
 			"name": "Délai Alarme DogCat",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 0,
-				"maxValue" : 8,
-				"valueFrom" : "SetAlarmDelayDogCatState",
+				"maxValue": 8,
+				"valueFrom": "SetAlarmDelayDogCatState",
 				"actionapi": "SetAiAlarm",
 				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"dog_cat\"}}"
 			},
@@ -2075,8 +2068,8 @@
 			"logicalId": "SetAlarmDelayDogCat"
 		},
 		{
-			"abilityneed":"ptzPreset",
-			"iastate":1,
+			"abilityneed": "ptzPreset",
+			"iastate": 1,
 			"name": "Point de garde (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -2088,8 +2081,8 @@
 			"logicalId": "CheckIsExistsPtzGuardPoint"
 		},
 		{
-			"abilityneed":"ptzPreset",
-			"iastate":1,
+			"abilityneed": "ptzPreset",
+			"iastate": 1,
 			"name": "Définir/Actualiser le point de garde",
 			"type": "action",
 			"subtype": "other",
@@ -2102,8 +2095,8 @@
 			"logicalId": "SetPtzGuardPoint"
 		},
 		{
-			"abilityneed":"ptzPreset",
-			"iastate":1,
+			"abilityneed": "ptzPreset",
+			"iastate": 1,
 			"name": "Retourner au point de garde",
 			"type": "action",
 			"subtype": "other",
@@ -2116,8 +2109,8 @@
 			"logicalId": "ToPosPtzGuardPoint"
 		},
 		{
-			"abilityneed":"ptzPreset",
-			"iastate":1,
+			"abilityneed": "ptzPreset",
+			"iastate": 1,
 			"name": "Retour automatique au point de garde (état)",
 			"type": "info",
 			"subtype": "binary",
@@ -2130,15 +2123,15 @@
 			"logicalId": "SetAutoReturnPtzGuardPointState"
 		},
 		{
-			"abilityneed":"ptzPreset",
-			"iastate":1,
+			"abilityneed": "ptzPreset",
+			"iastate": 1,
 			"name": "Retour automatique au point de garde",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom" : "SetAutoReturnPtzGuardPointState",
+				"valueFrom": "SetAutoReturnPtzGuardPointState",
 				"actionapi": "SetPtzGuard",
 				"payload": "{\"PtzGuard\":{\"benable\":#OPTSELECTEDINT#,\"channel\":#CHANNEL#,\"cmdStr\":\"setPos\"}}"
 			},
@@ -2147,8 +2140,8 @@
 			"logicalId": "SetAutoReturnPtzGuardPoint"
 		},
 		{
-			"abilityneed":"ptzPreset",
-			"iastate":1,
+			"abilityneed": "ptzPreset",
+			"iastate": 1,
 			"name": "Délai Retour auto. au point de garde (valeur)",
 			"type": "info",
 			"subtype": "numeric",
@@ -2161,16 +2154,16 @@
 			"logicalId": "SetIntervalAutoReturnPtzGuardPointState"
 		},
 		{
-			"abilityneed":"ptzPreset",
-			"iastate":1,
+			"abilityneed": "ptzPreset",
+			"iastate": 1,
 			"name": "Délai Retour auto. au point de garde",
 			"type": "action",
 			"subtype": "slider",
 			"configuration": {
 				"option": "slider",
 				"minValue": 10,
-				"maxValue" : 300,
-				"valueFrom" : "SetIntervalAutoReturnPtzGuardPointState",
+				"maxValue": 300,
+				"valueFrom": "SetIntervalAutoReturnPtzGuardPointState",
 				"actionapi": "SetPtzGuard",
 				"payload": "{\"PtzGuard\":{\"benable\":1,\"channel\":#CHANNEL#,\"timeout\":#OPTSLIDER#,\"cmdStr\":\"setPos\"}}"
 			},

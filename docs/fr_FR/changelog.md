@@ -9,6 +9,7 @@
 - ONVIF : canal `Source`, events IA sans reset motion ; plus de ping ICMP
 - NVR : routage par canal ONVIF ; `onvifPort` dans cron10 ; AI PHP 8 sûr
 - `refreshNFO` : `scheduleEnable` V20, FPS/bitrate, HddInfo vide, `bSmartTrack`, Md/AiAlarm PHP 8
+- Actions `Set*` : V20/`channel`, Reboot, RMW Enc/Isp/Osd/RecV20/AiCfg
 - Mode confidentialité (Privacy Mode) via Baichuan TCP (E1 Zoom…)
 - Fix création/sauvegarde d'équipement : `Unknown column 'cnxByIp'`
 - Sondage / nettoyage automatique des commandes non supportées (V1 vs V20, Zoom/Focus, AI, preRec)
