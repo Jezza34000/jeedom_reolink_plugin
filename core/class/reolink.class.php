@@ -926,27 +926,43 @@ class reolink extends eqLogic {
               $camcmd->checkAndUpdateCmd('SetResolutionst1State', $enc['mainStream']['size']);
               $camcmd->checkAndUpdateCmd('SetFPSst1State', $enc['mainStream']['frameRate']);
               $camcmd->checkAndUpdateCmd('SetBitratest1State', $enc['mainStream']['bitRate']);
+              if (isset($enc['mainStream']['vType'])) {
+                $camcmd->checkAndUpdateCmd('SetEncodingst1State', $enc['mainStream']['vType']);
+              }
             }
             if (isset($enc['subStream'])) {
               $camcmd->checkAndUpdateCmd('SetResolutionst2State', $enc['subStream']['size']);
               $camcmd->checkAndUpdateCmd('SetFPSst2State', $enc['subStream']['frameRate']);
               $camcmd->checkAndUpdateCmd('SetBitratest2State', $enc['subStream']['bitRate']);
+              if (isset($enc['subStream']['vType'])) {
+                $camcmd->checkAndUpdateCmd('SetEncodingst2State', $enc['subStream']['vType']);
+              }
             }
             break;
 
           case reolinkAPI::CAM_GET_ISP:
-            $camcmd->checkAndUpdateCmd('SetRotationState', $json_data['value']['Isp']['rotation']);
-            $camcmd->checkAndUpdateCmd('SetMirroringState', $json_data['value']['Isp']['mirroring']);
-            $camcmd->checkAndUpdateCmd('SetAntiFlickerState', $json_data['value']['Isp']['antiFlicker']);
-            $camcmd->checkAndUpdateCmd('SetBackLightState', $json_data['value']['Isp']['backLight']);
-            $camcmd->checkAndUpdateCmd('SetBlcState', $json_data['value']['Isp']['blc']);
-            $camcmd->checkAndUpdateCmd('SetBlueGainState', $json_data['value']['Isp']['blueGain']); // ???
-            $camcmd->checkAndUpdateCmd('SetDayNightState', $json_data['value']['Isp']['dayNight']);
-            $camcmd->checkAndUpdateCmd('SetDrcState', $json_data['value']['Isp']['drc']);
-            $camcmd->checkAndUpdateCmd('SetNr3dState', $json_data['value']['Isp']['nr3d']);
-            $camcmd->checkAndUpdateCmd('SetRedGainState', $json_data['value']['Isp']['redGain']); // ???
-            $camcmd->checkAndUpdateCmd('SetWhiteBalanceState', $json_data['value']['Isp']['whiteBalance']); // ???
-            $camcmd->checkAndUpdateCmd('SetExposureState', $json_data['value']['Isp']['exposure']); // ???
+            $isp = $json_data['value']['Isp'];
+            $camcmd->checkAndUpdateCmd('SetRotationState', $isp['rotation'] ?? null);
+            $camcmd->checkAndUpdateCmd('SetMirroringState', $isp['mirroring'] ?? null);
+            $camcmd->checkAndUpdateCmd('SetAntiFlickerState', $isp['antiFlicker'] ?? null);
+            $camcmd->checkAndUpdateCmd('SetBackLightState', $isp['backLight'] ?? null);
+            $camcmd->checkAndUpdateCmd('SetBlcState', $isp['blc'] ?? null);
+            $camcmd->checkAndUpdateCmd('SetBlueGainState', $isp['blueGain'] ?? null);
+            $camcmd->checkAndUpdateCmd('SetDayNightState', $isp['dayNight'] ?? null);
+            $camcmd->checkAndUpdateCmd('SetDrcState', $isp['drc'] ?? null);
+            $camcmd->checkAndUpdateCmd('SetNr3dState', $isp['nr3d'] ?? null);
+            $camcmd->checkAndUpdateCmd('SetRedGainState', $isp['redGain'] ?? null);
+            $camcmd->checkAndUpdateCmd('SetWhiteBalanceState', $isp['whiteBalance'] ?? null);
+            $camcmd->checkAndUpdateCmd('SetExposureState', $isp['exposure'] ?? null);
+            if (array_key_exists('dayNightThreshold', $isp)) {
+              $camcmd->checkAndUpdateCmd('SetDayNightThresholdState', $isp['dayNightThreshold']);
+            }
+            if (array_key_exists('binningMode', $isp)) {
+              $camcmd->checkAndUpdateCmd('SetBinningModeState', $isp['binningMode']);
+            }
+            if (array_key_exists('hdr', $isp)) {
+              $camcmd->checkAndUpdateCmd('SetHdrState', $isp['hdr']);
+            }
             break;
 
           case reolinkAPI::CAM_GET_IRLIGHTS:
@@ -1406,6 +1422,7 @@ class reolink extends eqLogic {
       'SetAiCfg' => array('GetAiCfg', null, true),
       'SetAlarm' => array('GetAlarm', 'Alarm', true),
       'SetNtp' => array('GetNtp', 'Ntp', false),
+      'SetWhiteLed' => array('GetWhiteLed', 'WhiteLed', true),
     );
     if (!isset($map[$actionAPI]) || !is_object($camcnx) || !is_array($patchArray)) {
       return null;
@@ -1696,6 +1713,13 @@ class reolink extends eqLogic {
     $unsupportedPayloads = array();
     $cmd_order = 0;
 
+    $ispProbe = $cnx->SendCMD('[{"cmd":"GetIsp","action":0,"param":{"channel":' . intval($channel) . '}}]');
+    $hasHdr = is_array($ispProbe) && array_key_exists('hdr', $ispProbe[0]['value']['Isp'] ?? array());
+    if (!$hasHdr) {
+      $deniedLogical['SetHdrState'] = true;
+      $deniedLogical['SetHdr'] = true;
+    }
+
     foreach ($device['commands'] as $command) {
       $logicalId = $command['logicalId'] ?? null;
       if ($logicalId === null) {
@@ -1785,7 +1809,7 @@ class reolink extends eqLogic {
           continue;
         }
         // Never prune refresh / ChannelOnline / ONVIF event infos without payload
-        if (in_array($lid, array('refresh', 'ChannelOnline', 'EvMotion', 'EvFaceDetect', 'EvPeopleDetect', 'EvVehicleDetect', 'EvDogCatDetect', 'EvMotionAlarm', 'EvVisitor', 'EvLastOnvifFull', 'EvLastOnvifName', 'EvLastOnvifState', 'MdState'), true)) {
+        if (in_array($lid, array('refresh', 'ChannelOnline', 'EvMotion', 'EvFaceDetect', 'EvPeopleDetect', 'EvVehicleDetect', 'EvDogCatDetect', 'EvPackageDetect', 'EvMotionAlarm', 'EvVisitor', 'EvLastOnvifFull', 'EvLastOnvifName', 'EvLastOnvifState', 'MdState'), true)) {
           continue;
         }
         $payloadTpl = $existing->getConfiguration('payload');
@@ -1834,11 +1858,93 @@ class reolink extends eqLogic {
       }
     }
 
+    reolink::applyEncListValues($camera, $cnx, $channel);
+
     $camera->setConfiguration('unsupported_payloads', array_keys(array_merge($unsupportedPayloads, $keptUnsupported)));
     $camera->setConfiguration('unsupported_fail_counts', array());
     $camera->setConfiguration('needs_cmd_resync', 0);
     $camera->save();
     return $cmd_order;
+  }
+
+  public static function applyEncListValues($camera, $cnx, $channel) {
+    if (!is_object($camera) || !is_object($cnx)) {
+      return;
+    }
+    $res = $cnx->SendCMD('[{"cmd":"GetEnc","action":1,"param":{"channel":' . intval($channel) . '}}]');
+    if (!is_array($res) || !isset($res[0]['range']['Enc']) || !is_array($res[0]['range']['Enc'])) {
+      return;
+    }
+    $ranges = $res[0]['range']['Enc'];
+    $cur = $res[0]['value']['Enc'] ?? array();
+    $sizes1 = array();
+    $sizes2 = array();
+    $fps1 = array();
+    $fps2 = array();
+    $br1 = array();
+    $br2 = array();
+    $vt1 = array();
+    $vt2 = array();
+    foreach ($ranges as $profile) {
+      if (!is_array($profile)) {
+        continue;
+      }
+      if (!empty($profile['mainStream']['size'])) {
+        $sizes1[$profile['mainStream']['size']] = true;
+      }
+      if (!empty($profile['subStream']['size'])) {
+        $sizes2[$profile['subStream']['size']] = true;
+      }
+      foreach ((array) ($profile['mainStream']['frameRate'] ?? array()) as $v) { $fps1[$v] = true; }
+      foreach ((array) ($profile['subStream']['frameRate'] ?? array()) as $v) { $fps2[$v] = true; }
+      foreach ((array) ($profile['mainStream']['bitRate'] ?? array()) as $v) { $br1[$v] = true; }
+      foreach ((array) ($profile['subStream']['bitRate'] ?? array()) as $v) { $br2[$v] = true; }
+      foreach ((array) ($profile['mainStream']['vType'] ?? array()) as $v) { $vt1[$v] = true; }
+      foreach ((array) ($profile['subStream']['vType'] ?? array()) as $v) { $vt2[$v] = true; }
+    }
+    // Prefer ranges matching current resolution profile when available
+    $curSize1 = $cur['mainStream']['size'] ?? null;
+    $curSize2 = $cur['subStream']['size'] ?? null;
+    foreach ($ranges as $profile) {
+      if ($curSize1 && ($profile['mainStream']['size'] ?? null) === $curSize1) {
+        $fps1 = array_fill_keys((array) ($profile['mainStream']['frameRate'] ?? array_keys($fps1)), true);
+        $br1 = array_fill_keys((array) ($profile['mainStream']['bitRate'] ?? array_keys($br1)), true);
+        $vt1 = array_fill_keys((array) ($profile['mainStream']['vType'] ?? array_keys($vt1)), true);
+      }
+      if ($curSize2 && ($profile['subStream']['size'] ?? null) === $curSize2) {
+        $fps2 = array_fill_keys((array) ($profile['subStream']['frameRate'] ?? array_keys($fps2)), true);
+        $br2 = array_fill_keys((array) ($profile['subStream']['bitRate'] ?? array_keys($br2)), true);
+        $vt2 = array_fill_keys((array) ($profile['subStream']['vType'] ?? array_keys($vt2)), true);
+      }
+    }
+    $toList = function ($keys) {
+      $out = array();
+      foreach (array_keys($keys) as $k) {
+        $out[] = $k . '|' . $k;
+      }
+      return implode(';', $out);
+    };
+    $map = array(
+      'SetResolutionst1' => $toList($sizes1),
+      'SetFPSst1' => $toList($fps1),
+      'SetBitratest1' => $toList($br1),
+      'SetEncodingst1' => $toList($vt1),
+      'SetResolutionst2' => $toList($sizes2),
+      'SetFPSst2' => $toList($fps2),
+      'SetBitratest2' => $toList($br2),
+      'SetEncodingst2' => $toList($vt2),
+    );
+    foreach ($map as $lid => $list) {
+      if ($list === '') {
+        continue;
+      }
+      $cmd = $camera->getCmd(null, $lid);
+      if (!is_object($cmd)) {
+        continue;
+      }
+      $cmd->setConfiguration('listValue', $list);
+      $cmd->save();
+    }
   }
 
   /*
@@ -1996,8 +2102,17 @@ class reolinkCmd extends cmd {
             $patchJson = str_replace('#CHANNEL#', $channel, $patchJson);
             $patchJson = str_replace('#SPEED#', $speed, $patchJson);
             $patch = json_decode($patchJson, true);
-            $rmwApis = array('SetRecV20', 'SetEnc', 'SetIsp', 'SetOsd', 'SetAiCfg', 'SetAlarm', 'SetNtp');
+            $rmwApis = array('SetRecV20', 'SetEnc', 'SetIsp', 'SetOsd', 'SetAiCfg', 'SetAlarm', 'SetNtp', 'SetWhiteLed');
             if (in_array($actionAPI, $rmwApis, true) && is_array($patch)) {
+              if ($actionAPI === 'SetEnc') {
+                foreach (array('mainStream', 'subStream') as $stream) {
+                  if (!empty($patch['Enc'][$stream]['size']) && strpos($patch['Enc'][$stream]['size'], '*') !== false) {
+                    list($w, $h) = explode('*', $patch['Enc'][$stream]['size'], 2);
+                    $patch['Enc'][$stream]['width'] = intval($w);
+                    $patch['Enc'][$stream]['height'] = intval($h);
+                  }
+                }
+              }
               $merged = reolink::buildRmwPayload($camcnx, $actionAPI, $channel, $patch);
               if ($merged === null) {
                 throw new Exception(__('Echec lecture état courant pour Read-Modify-Write', __FILE__));
