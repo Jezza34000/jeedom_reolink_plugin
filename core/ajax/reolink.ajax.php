@@ -36,6 +36,31 @@ try {
       ajax::success(array('count' => $count));
     }
 
+    if (init('action') == 'webrtcOffer') {
+      $id = intval(init('id', 0));
+      $quality = (init('quality', 'sub') === 'main') ? 'main' : 'sub';
+      $sdp = strval(init('sdp', ''));
+      if ($sdp === '') {
+        throw new Exception(__('SDP manquant', __FILE__));
+      }
+      reolink::ensureGo2rtcStreams($id);
+      $src = 'reolink_' . $id . '_' . $quality;
+      $ch = curl_init('http://127.0.0.1:1984/api/webrtc?src=' . rawurlencode($src));
+      curl_setopt($ch, CURLOPT_POST, true);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $sdp);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/sdp'));
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+      $answer = curl_exec($ch);
+      $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+      curl_close($ch);
+      if ($code < 200 || $code >= 300 || $answer === false || $answer === '') {
+        throw new Exception(__('WebRTC go2rtc indisponible', __FILE__));
+      }
+      ajax::success(array('sdp' => $answer));
+    }
+
     $camera = reolink::byId(init('id'));
     if (!is_object($camera)) {
       throw new Exception(__('Impossible de trouver la caméra : ' . init('id'), __FILE__));

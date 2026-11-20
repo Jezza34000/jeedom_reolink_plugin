@@ -353,6 +353,39 @@ class reolink extends eqLogic {
     return $synced;
   }
 
+  public static function ensureGo2rtcStreams($id) {
+    $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera) || $camera->isNvrParent()) {
+      throw new Exception(__('Équipement Reolink invalide', __FILE__));
+    }
+    if ($camera->getConfiguration('rtspSubUrl') == '' || $camera->getConfiguration('rtspMainUrl') == '') {
+      reolink::GetCamNFO($id);
+      $camera = reolink::byId($id, 'reolink');
+    }
+    $streams = array(
+      'reolink_' . $id . '_sub' => $camera->getConfiguration('rtspSubUrl'),
+      'reolink_' . $id . '_main' => $camera->getConfiguration('rtspMainUrl'),
+    );
+    foreach ($streams as $name => $src) {
+      if ($src === '' || $src === null) {
+        continue;
+      }
+      $url = 'http://127.0.0.1:1984/api/streams?name=' . rawurlencode($name) . '&src=' . rawurlencode($src);
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+      $body = curl_exec($ch);
+      $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+      curl_close($ch);
+      if ($code < 200 || $code >= 300) {
+        log::add('reolink', 'warning', 'go2rtc stream ' . $name . ' HTTP ' . $code . ' ' . strval($body));
+      }
+    }
+    return array_keys($streams);
+  }
+
   public static function GetCamAbility($id) {
     log::add('reolink', 'debug', 'Interrogation de la caméra sur ses capacités hardware/software...');
     $camera = reolink::byId($id, 'reolink');
