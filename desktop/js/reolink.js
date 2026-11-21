@@ -365,7 +365,7 @@ function reolinkCmdHelpData(_cmd) {
     name: String(_cmd.name || ''),
     help: help,
     values: values,
-    title: tipParts.join('. ')
+    title: tipParts.join('\n')
   }
 }
 
@@ -402,7 +402,7 @@ function reolinkShowCmdHelp(data) {
     })
     return
   }
-  $('#div_alert').showAlert({message: (data.help || '') + (data.values ? ('. ' + data.values) : ''), level: 'info'})
+  $('#div_alert').showAlert({message: (data.help || '') + (data.values ? ('<br>' + data.values) : ''), level: 'info'})
 }
 
 /* Fonction permettant l'affichage des commandes dans l'équipement */
