@@ -57,6 +57,14 @@ class reolink extends eqLogic {
     }
   }
 
+  public function decrypt() {
+    $this->setConfiguration('password', utils::decrypt($this->getConfiguration('password')));
+  }
+
+  public function encrypt() {
+    $this->setConfiguration('password', utils::encrypt($this->getConfiguration('password')));
+  }
+
   public function getChannel() {
     return intval($this->getConfiguration('defined_channel', 0));
   }
@@ -103,6 +111,34 @@ class reolink extends eqLogic {
       return 'plugins/reolink/desktop/img/camera' . $this->getId() . '.png?v=' . filemtime($file);
     }
     return parent::getImage();
+  }
+
+  public static function buildRtspTemplate($rawUrl, $channel = 0, $isSub = true) {
+    $rawUrl = trim(strval($rawUrl));
+    if (strpos($rawUrl, 'rtsp://#username#:#password#@#ip#:#port#/') === 0) {
+      return $rawUrl;
+    }
+    if ($rawUrl !== '' && preg_match('~^rtsp://(?:[^/@]+@)?[^/:]+(?::\d+)?(/.*)$~i', $rawUrl, $m)) {
+      return 'rtsp://#username#:#password#@#ip#:#port#' . $m[1];
+    }
+    $chStr = str_pad(strval(intval($channel) + 1), 2, '0', STR_PAD_LEFT);
+    $path = $isSub ? ('/h264Preview_' . $chStr . '_sub') : ('/Preview_' . $chStr . '_main');
+    return 'rtsp://#username#:#password#@#ip#:#port#' . $path;
+  }
+
+  public function resolveRtspUrl($templateOrUrl, $isSub = true) {
+    $tpl = reolink::buildRtspTemplate($templateOrUrl, $this->getChannel(), $isSub);
+    $rtspPort = intval(preg_replace('/\D/', '', strval($this->getConfiguration('rtspPort', '554'))));
+    if ($rtspPort <= 0) {
+      $rtspPort = 554;
+    }
+    $replace = array(
+      '#username#' => rawurlencode(strval($this->getConfiguration('login'))),
+      '#password#' => rawurlencode(strval($this->getConfiguration('password'))),
+      '#ip#' => strval($this->getConfiguration('adresseip')),
+      '#port#' => strval($rtspPort),
+    );
+    return str_replace(array_keys($replace), array_values($replace), $tpl);
   }
 
   public static function downloadCamIcon($id, $model, $camera = null) {
@@ -332,34 +368,17 @@ class reolink extends eqLogic {
       }
     }
 
+    // Build tokenized RTSP templates (never store plaintext credentials in URLs)
     if (!$camera->isNvrParent()) {
-      $rtspPort = intval(preg_replace('/\D/', '', strval($camera->getConfiguration('rtspPort', '554'))));
-      if ($rtspPort <= 0) {
-        $rtspPort = 554;
-      }
-      $userEnc = rawurlencode(strval($camera->getConfiguration('login')));
-      $passEnc = rawurlencode(strval($camera->getConfiguration('password')));
-      $ip = strval($camera->getConfiguration('adresseip'));
-      $chStr = str_pad(strval($channel + 1), 2, '0', STR_PAD_LEFT);
-      $mainUrl = null;
-      $subUrl = null;
+      $rawMain = '';
+      $rawSub = '';
       if (isset($byCmd['GetRtspUrl']['value']['rtspUrl']) && is_array($byCmd['GetRtspUrl']['value']['rtspUrl'])) {
         $rtsp = $byCmd['GetRtspUrl']['value']['rtspUrl'];
-        if (!empty($rtsp['mainStream'])) {
-          $mainUrl = preg_replace('#^rtsp://([^/@]+@)?#', 'rtsp://' . $userEnc . ':' . $passEnc . '@', $rtsp['mainStream'], 1);
-        }
-        if (!empty($rtsp['subStream'])) {
-          $subUrl = preg_replace('#^rtsp://([^/@]+@)?#', 'rtsp://' . $userEnc . ':' . $passEnc . '@', $rtsp['subStream'], 1);
-        }
+        $rawMain = strval($rtsp['mainStream'] ?? '');
+        $rawSub = strval($rtsp['subStream'] ?? '');
       }
-      if ($mainUrl === null) {
-        $mainUrl = 'rtsp://' . $userEnc . ':' . $passEnc . '@' . $ip . ':' . $rtspPort . '/Preview_' . $chStr . '_main';
-      }
-      if ($subUrl === null) {
-        $subUrl = 'rtsp://' . $userEnc . ':' . $passEnc . '@' . $ip . ':' . $rtspPort . '/h264Preview_' . $chStr . '_sub';
-      }
-      $camera->setConfiguration('rtspMainUrl', $mainUrl);
-      $camera->setConfiguration('rtspSubUrl', $subUrl);
+      $camera->setConfiguration('rtspMainUrl', reolink::buildRtspTemplate($rawMain, $channel, false));
+      $camera->setConfiguration('rtspSubUrl', reolink::buildRtspTemplate($rawSub, $channel, true));
     }
 
     $camera->save();
@@ -462,6 +481,13 @@ class reolink extends eqLogic {
         $camEq->setIsVisible(1);
         $camEq->setObject_id($reolinkEq->getObject_id());
       }
+      $subTpl = reolink::buildRtspTemplate($reolinkEq->getConfiguration('rtspSubUrl'), $channel, true);
+      $mainTpl = reolink::buildRtspTemplate($reolinkEq->getConfiguration('rtspMainUrl'), $channel, false);
+      if ($reolinkEq->getConfiguration('rtspSubUrl') !== $subTpl || $reolinkEq->getConfiguration('rtspMainUrl') !== $mainTpl) {
+        $reolinkEq->setConfiguration('rtspSubUrl', $subTpl);
+        $reolinkEq->setConfiguration('rtspMainUrl', $mainTpl);
+        $reolinkEq->save();
+      }
       $model = strval($reolinkEq->getConfiguration('camModel', $reolinkEq->getConfiguration('model', '')));
       $deviceId = reolink::mapModelToCameraDevice($model);
       $camEq->setConfiguration('ip', $ip);
@@ -470,7 +496,7 @@ class reolink extends eqLogic {
       $camEq->setConfiguration('password', $reolinkEq->getConfiguration('password'));
       $camEq->setConfiguration('protocole', 'rtsp');
       $camEq->setConfiguration('urlStream', 'reolink::getSnapshot');
-      $camEq->setConfiguration('cameraStreamAccessUrl', $reolinkEq->getConfiguration('rtspSubUrl'));
+      $camEq->setConfiguration('cameraStreamAccessUrl', $subTpl);
       $camEq->setConfiguration('rtsp_option', '-rtsp_transport tcp');
       $camEq->setConfiguration('reolink_channel', strval($channel));
       $camEq->setConfiguration('reolink_eqLogic_id', intval($reolinkEq->getId()));
@@ -499,8 +525,8 @@ class reolink extends eqLogic {
       $camera = reolink::byId($id, 'reolink');
     }
     $streams = array(
-      'reolink_' . $id . '_sub' => $camera->getConfiguration('rtspSubUrl'),
-      'reolink_' . $id . '_main' => $camera->getConfiguration('rtspMainUrl'),
+      'reolink_' . $id . '_sub' => $camera->resolveRtspUrl($camera->getConfiguration('rtspSubUrl'), true),
+      'reolink_' . $id . '_main' => $camera->resolveRtspUrl($camera->getConfiguration('rtspMainUrl'), false),
     );
     foreach ($streams as $name => $src) {
       if ($src === '' || $src === null) {
