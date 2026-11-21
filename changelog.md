@@ -2,6 +2,7 @@
 
 21/11/2026
 
+- Privacy Mode : sortie propre sur caméra autonome (poll Baichuan 574, réouverture HTTP/HTTPS via cmd 37/36, fenêtre de réveil anti-spam Login HTTPS du widget Caméra) — retour Community / PR #92
 - Live `go2rtc` : dépendances détectent le binaire manquant après MàJ ; téléchargement atomique avant fin d'install ; démon relance `go2rtc` si arrêté ; config inline (plus de `go2rtc.yaml` / RTSP `:8554`) ; erreur explicite si `127.0.0.1:1984` injoignable (issue #118)
 
 20/11/2026

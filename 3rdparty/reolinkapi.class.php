@@ -12,6 +12,7 @@ class reolinkAPI {
   private $authmethod;
   private $skipRetry = false;
   private $loginInProgress = false;
+  private $privacyWakeRetry = false;
 
   public $is_loggedin;
   public $lastResponseData = null;
@@ -238,7 +239,14 @@ class reolinkAPI {
     if ($httpcode == 200) {
       log::add('reolink', 'debug', 'HTTP code 200 OK');
     } else {
-      log::add('reolink', 'error', 'HTTP code ' . $httpcode . ' NOK ' . $curlErr . ' Entête : ' . $header);
+      $wakeupUntil = intval(cache::byKey('reolink::privacy_wakeup_ip::' . $this->ip)->getValue(0));
+      $privacyWake = ($wakeupUntil > time());
+      // During privacy wake-up, HTTP is expected down: debug + mark for slower retry (reolink_aio ~7.5s)
+      $level = ($privacyWake && intval($httpcode) === 0) ? 'debug' : 'error';
+      log::add('reolink', $level, 'HTTP code ' . $httpcode . ' NOK ' . $curlErr . ' Entête : ' . $header);
+      if ($privacyWake && intval($httpcode) === 0) {
+        $this->privacyWakeRetry = true;
+      }
       return false;
     }
 
@@ -368,6 +376,7 @@ class reolinkAPI {
     }
 
     $this->skipRetry = false;
+    $this->privacyWakeRetry = false;
     $this->lastResponseData = null;
     $sentItems = json_decode($POSTparameters, true);
     if (!is_array($sentItems)) {
@@ -391,6 +400,11 @@ class reolinkAPI {
         break;
       }
       $maxRetry++;
+      // reolink_aio: wait ~2s between retries while camera wakes from privacy
+      if (!empty($this->privacyWakeRetry)) {
+        usleep(2000000);
+        $this->privacyWakeRetry = false;
+      }
       log::add('reolink', 'debug', 'Echec de la requête nouvelle tentative...');
     } while ($maxRetry < 3);
 

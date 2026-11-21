@@ -14,6 +14,10 @@ if (!is_object($eq) || $eq->isNvrParent()) {
   http_response_code(404);
   exit;
 }
+if ($eq->isStandalonePrivacyBlocking()) {
+  http_response_code(204);
+  exit;
+}
 $cnx = reolink::getReolinkConnection($id);
 if (!is_object($cnx)) {
   http_response_code(500);
