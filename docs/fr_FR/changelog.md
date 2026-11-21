@@ -6,6 +6,8 @@
 
 # 21/11/2026
 
+- Privacy Mode : sortie de veille Baichuan alignée sur `reolink_aio` (sans modification `NetPort` ni coupure immédiate), sonde CGI HTTP 200 au réveil, purge du cache plugin Caméra et rafraîchissement automatique post-réveil (#122)
+- Rondes PTZ : activation automatique du slot à l'ajout d'étape pour conserver les presets sur la caméra et clarification `Désactiver` vs `Arrêter` (#119)
 - Performances UI : ouverture des équipements et de l'onglet Commandes fluide (rendu différé hors-DOM, préchauffage config async, icônes lazy/async)
 - UI rondes PTZ : Activer/Désactiver en boutons Jeedom verts/oranges (Dark)
 - UI : assistant cron pré-rempli, rondes PTZ lisibles en Dark, aide `?` cliquable et détaillée sur chaque commande, corrections orthographiques FR et i18n EN/ES (issue #119)

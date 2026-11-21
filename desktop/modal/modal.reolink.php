@@ -39,8 +39,8 @@ if (!is_object($camera)) {
   </select>
   <span class="input-group-btn" style="width:auto;white-space:nowrap;">
     <input type="hidden" id="cb_patrolEnable" value="0">
-    <a class="btn btn-default" id="bt_patrolDisable" style="margin-left:2px;"><i class="fas fa-ban"></i> {{Désactiver}}</a>
-    <a class="btn btn-default" id="bt_patrolEnable"><i class="fas fa-check"></i> {{Activer}}</a>
+    <a class="btn btn-default" id="bt_patrolDisable" style="margin-left:2px;" title="{{Désactive et réinitialise cet emplacement de ronde sur la caméra lors de l'enregistrement (utilisez Arrêter pour stopper la ronde sans effacer ses étapes)}}"><i class="fas fa-ban"></i> {{Désactiver}}</a>
+    <a class="btn btn-default" id="bt_patrolEnable" title="{{Active cet emplacement de ronde pour conserver ses étapes sur la caméra}}"><i class="fas fa-check"></i> {{Activer}}</a>
   </span>
 </div>
 <table class="table table-bordered table-condensed" id="table_patrolSteps">
@@ -69,6 +69,10 @@ if (!is_object($camera)) {
 
   function alertMsg(msg, level) {
     $('#div_patrolAlert').showAlert({message: msg, level: level || 'danger'});
+  }
+
+  function clearAlert() {
+    $('#div_patrolAlert').removeClass('alert alert-danger alert-warning alert-success alert-info').empty().hide();
   }
 
   function presetOptions(selected) {
@@ -191,11 +195,31 @@ if (!is_object($camera)) {
     });
   }
 
-  $('#sel_patrolId').on('change', function () { loadPatrol($(this).val()); });
-  $('#bt_patrolEnable').on('click', function (e) { e.preventDefault(); setPatrolEnable(true); });
-  $('#bt_patrolDisable').on('click', function (e) { e.preventDefault(); setPatrolEnable(false); });
-  $('#bt_patrolAddStep').on('click', function () { addStep(); });
-  $('#table_patrolSteps').on('click', '.patrol-del', function () { $(this).closest('tr').remove(); renumber(); });
+  $('#sel_patrolId').on('change', function () { clearAlert(); loadPatrol($(this).val()); });
+  $('#bt_patrolEnable').on('click', function (e) {
+    e.preventDefault();
+    clearAlert();
+    setPatrolEnable(true);
+  });
+  $('#bt_patrolDisable').on('click', function (e) {
+    e.preventDefault();
+    setPatrolEnable(false);
+    if (collectSteps().length > 0) {
+      alertMsg('{{Sur les caméras Reolink, enregistrer une ronde désactivée réinitialise ses étapes. Utilisez Arrêter pour stopper la ronde tout en conservant ses étapes.}}', 'warning');
+    }
+  });
+  $('#bt_patrolAddStep').on('click', function () {
+    clearAlert();
+    setPatrolEnable(true);
+    addStep();
+  });
+  $('#table_patrolSteps').on('click', '.patrol-del', function () {
+    $(this).closest('tr').remove();
+    renumber();
+    if ($('#table_patrolSteps tbody tr').length === 0) {
+      setPatrolEnable(false);
+    }
+  });
   $('#table_patrolSteps').on('change', '.patrol-preset', updateStartButton);
   $('#table_patrolSteps').on('click', '.patrol-up', function () {
     var tr = $(this).closest('tr');
@@ -208,12 +232,15 @@ if (!is_object($camera)) {
     renumber();
   });
   $('#bt_patrolSave').on('click', function () {
+    var enabled = isPatrolEnabled();
+    var steps = collectSteps();
+    var msg = enabled ? '{{Ronde enregistrée}}' : '{{Ronde désactivée et réinitialisée}}';
     ajaxPatrol({
       action: 'SavePatrol',
       patrolId: $('#sel_patrolId').val(),
-      enable: isPatrolEnabled() ? 1 : 0,
-      steps: JSON.stringify(collectSteps())
-    }, '{{Ronde enregistrée}}').done(function () {
+      enable: enabled ? 1 : 0,
+      steps: JSON.stringify(steps)
+    }, msg).done(function () {
       ajaxPatrol({action: 'GetPatrolData'});
     });
   });
