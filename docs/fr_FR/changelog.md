@@ -4,6 +4,10 @@
 >
 >Pour rappel s'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 21/11/2026
+
+- Live `go2rtc` : binaire détecté dans les dépendances ; install atomique ; relance automatique ; plus de `go2rtc.yaml` / port RTSP ouvert ; message clair si le service est down (issue #118)
+
 # 20/11/2026
 
 - NVR/canaux : vrai modèle caméra (`GetChnTypeInfo`), séparation commandes host NVR vs canal, sync Caméra avec device mappé
