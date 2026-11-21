@@ -224,12 +224,14 @@ $renderCard = function ($eqLogic) {
 									</div>
 							</div>
 							<div class="form-group expertModeVisible">
-								<label class="col-sm-3 control-label">{{Auto-actualisation (cron)}}</label>
+								<label class="col-sm-3 control-label">{{Auto-actualisation (cron)}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Actualise les paramètres globaux de la caméra. N'influence pas la remontée de détection de mouvement.}}"></i></sup>
+								</label>
 									<div class="col-sm-3">
 										<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="autorefresh" placeholder="*/15 * * * *"/>
 									</div>
 									<div class="col-sm-1">
-										<i class="fas fa-question-circle cursor floatright" id="bt_cronGenerator"></i>
+										<i class="fas fa-question-circle cursor floatright" id="bt_cronGenerator" title="{{Assistant cron}}"></i>
 									</div>
 							</div>
 							<div class="form-group">

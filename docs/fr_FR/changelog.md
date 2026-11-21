@@ -6,6 +6,7 @@
 
 # 21/11/2026
 
+- UI : assistant cron, rondes PTZ lisibles en Dark, aide `?` sur les commandes, i18n EN/ES (issue #119)
 - Privacy Mode : désactivation fiable (attente réveil HTTP, ports Baichuan, plus d’erreurs Login pendant le reboot caméra)
 - Live `go2rtc` : binaire détecté dans les dépendances ; install atomique ; relance automatique ; plus de `go2rtc.yaml` / port RTSP ouvert ; message clair si le service est down (issue #118)
 

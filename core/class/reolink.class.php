@@ -1941,6 +1941,26 @@ class reolink extends eqLogic {
     return in_array(intval($rsp), array(-1, -4, -9, -12, -17, -24, -26), true);
   }
 
+  /**
+   * Translate listValue labels (value|Label;...) keeping API values intact.
+   */
+  public static function translateCmdListValue($listValue) {
+    $listValue = strval($listValue);
+    if ($listValue === '') {
+      return $listValue;
+    }
+    $out = array();
+    foreach (explode(';', $listValue) as $pair) {
+      $bits = explode('|', $pair, 2);
+      if (count($bits) === 2) {
+        $out[] = $bits[0] . '|' . __($bits[1], __FILE__);
+      } else {
+        $out[] = $pair;
+      }
+    }
+    return implode(';', $out);
+  }
+
   public function loadCmdFromConf($id, $pruneUnsupported = true) {
     $camera = reolink::byId($id, 'reolink');
     if (!is_object($camera)) {
@@ -2191,15 +2211,34 @@ class reolink extends eqLogic {
       }
 
       if (is_object($cmd)) {
+        $dirty = false;
         // Refresh payload from JSON if present
         if ($payloadTpl) {
           $cmd->setConfiguration('payload', $payloadTpl);
+          $dirty = true;
+        }
+        $helpTpl = strval($command['configuration']['help'] ?? '');
+        if ($helpTpl !== '') {
+          $cmd->setConfiguration('help', __($helpTpl, __FILE__));
+          $dirty = true;
+        }
+        if ($dirty) {
           $cmd->save();
         }
         log::add('reolink', 'debug', 'Commande déjà présente : ' . $command['name']);
         continue;
       }
 
+      // Localize name / listValue / help at creation (FR keys → current Jeedom language)
+      $command['name'] = __($command['name'], __FILE__);
+      if (isset($command['configuration']) && is_array($command['configuration'])) {
+        if (!empty($command['configuration']['help'])) {
+          $command['configuration']['help'] = __($command['configuration']['help'], __FILE__);
+        }
+        if (!empty($command['configuration']['listValue'])) {
+          $command['configuration']['listValue'] = reolink::translateCmdListValue($command['configuration']['listValue']);
+        }
+      }
       log::add('reolink', 'info', '-> Ajout de : ' . $command['name']);
       $cmd = new reolinkCmd();
       $cmd->setOrder($cmd_order);

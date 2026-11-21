@@ -81,6 +81,12 @@ function updateNvrParentHint() {
 }
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').on('change keyup', updateNvrParentHint)
 
+$('#bt_cronGenerator').on('click', function () {
+  jeedom.getCronSelectModal({}, function (result) {
+    $('.eqLogicAttr[data-l1key=configuration][data-l2key=autorefresh]').value(result.value)
+  })
+})
+
 function syncCameraPlugin(id) {
   $.ajax({
     type: 'POST',
@@ -206,6 +212,38 @@ $('#btGetCamNFO').on('click', function () {
   })
 })
 
+function reolinkCmdHelpTitle(_cmd) {
+  var cfg = _cmd.configuration || {}
+  var parts = []
+  var help = String(cfg.help || '').trim()
+  if (help !== '') {
+    parts.push(help)
+  }
+  var listValue = String(cfg.listValue || '').trim()
+  if (listValue !== '') {
+    var labels = []
+    listValue.split(';').forEach(function (pair) {
+      var bits = pair.split('|')
+      if (bits.length === 2) {
+        labels.push(bits[1] + ' (' + bits[0] + ')')
+      } else if (pair !== '') {
+        labels.push(pair)
+      }
+    })
+    if (labels.length) {
+      parts.push('{{Valeurs}} : ' + labels.join(', '))
+    }
+  } else if (String(_cmd.subType || '') === 'slider' || (cfg.minValue !== undefined && cfg.minValue !== '' && cfg.maxValue !== undefined && cfg.maxValue !== '')) {
+    var minV = (cfg.minValue !== undefined && cfg.minValue !== '') ? cfg.minValue : '?'
+    var maxV = (cfg.maxValue !== undefined && cfg.maxValue !== '') ? cfg.maxValue : '?'
+    var unit = String(_cmd.unite || '').trim()
+    parts.push('{{Min.}} ' + minV + ' / {{Max.}} ' + maxV + (unit ? (' ' + unit) : ''))
+  } else if (String(_cmd.type || '') === 'info' && String(_cmd.subType || '') === 'binary') {
+    parts.push('{{Valeurs}} : 0 / 1')
+  }
+  return parts.join(' — ')
+}
+
 /* Fonction permettant l'affichage des commandes dans l'équipement */
 function addCmdToTable(_cmd) {
   if (!isset(_cmd)) {
@@ -214,6 +252,7 @@ function addCmdToTable(_cmd) {
   if (!isset(_cmd.configuration)) {
     _cmd.configuration = {}
   }
+  var helpTitle = reolinkCmdHelpTitle(_cmd)
   var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '">'
   tr += '<td class="hidden-xs" style="min-width:50px;width:70px;">'
   tr += '<span class="cmdAttr" data-l1key="id"></span>'
@@ -225,7 +264,11 @@ function addCmdToTable(_cmd) {
   tr += '<a class="cmdAction btn btn-sm btn-default" data-l1key="chooseIcon" title="{{Choisir une icône}}"><i class="fas fa-icons"></i></a>'
   tr += '</span>'
   tr += '<span class="cmdAttr input-group-addon roundedRight" data-l1key="display" data-l2key="icon" style="font-size:19px;padding:0 5px 0 0!important;"></span>'
+  if (helpTitle !== '') {
+    tr += '<span class="input-group-addon" style="padding:0 6px;"><i class="fas fa-question-circle tooltips" title="' + helpTitle.replace(/"/g, '&quot;') + '"></i></span>'
+  }
   tr += '</div>'
+  tr += '<span class="cmdAttr" data-l1key="configuration" data-l2key="help" style="display:none;"></span>'
   tr += '<select class="cmdAttr form-control input-sm" data-l1key="value" style="display:none;margin-top:5px;" title="{{Commande information liée}}">'
   tr += '<option value="">{{Aucune}}</option>'
   tr += '</select>'
