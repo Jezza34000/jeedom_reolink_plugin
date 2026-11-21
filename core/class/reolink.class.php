@@ -103,33 +103,85 @@ class reolink extends eqLogic {
     return ($until > time());
   }
 
-  /** Poll TCP until HTTP/HTTPS accepts connections again (reolink_aio ~7.5s window). */
-  public static function waitHttpPortReady($eqLogic, $timeoutSec = 10) {
+  /**
+   * Poll CGI endpoint until HTTP(S) + FastCGI actually answer HTTP 200 JSON after privacy wake-up.
+   */
+  public static function waitHttpPortReady($eqLogic, $timeoutSec = 20) {
     if (!is_object($eqLogic)) {
       return false;
     }
-    $host = strval($eqLogic->getConfiguration('adresseip'));
+    $host = trim(strval($eqLogic->getConfiguration('adresseip')));
     if ($host === '') {
       return false;
     }
     $cnxtype = strtolower(strval($eqLogic->getConfiguration('cnxtype', 'https')));
+    if ($cnxtype !== 'http' && $cnxtype !== 'https') {
+      $cnxtype = 'https';
+    }
     $port = intval(preg_replace('/\D/', '', strval($eqLogic->getConfiguration('port', ''))));
     if ($port <= 0) {
       $port = ($cnxtype === 'http') ? 80 : 443;
     }
-    $deadline = microtime(true) + max(1, intval($timeoutSec));
+    $url = $cnxtype . '://' . $host . ':' . $port . '/cgi-bin/api.cgi?cmd=GetDevInfo';
+    $probeBody = '[{"cmd":"GetDevInfo","action":0,"param":{}}]';
+    $startedAt = microtime(true);
+    $deadline = $startedAt + max(1, intval($timeoutSec));
     while (microtime(true) < $deadline) {
-      $errno = 0;
-      $errstr = '';
-      $fp = @fsockopen($host, $port, $errno, $errstr, 0.5);
-      if (is_resource($fp)) {
-        @fclose($fp);
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_POST, true);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $probeBody);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+      curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+      $resp = curl_exec($ch);
+      $httpCode = intval(curl_getinfo($ch, CURLINFO_HTTP_CODE));
+      curl_close($ch);
+      if ($httpCode === 200 && is_string($resp) && strpos(ltrim($resp), '[') === 0) {
+        $elapsed = round(microtime(true) - $startedAt, 2);
+        log::add('reolink', 'debug', 'waitHttpPortReady: CGI ' . $cnxtype . '://' . $host . ':' . $port . ' prêt en ' . $elapsed . 's');
         return true;
       }
-      usleep(400000);
+      usleep(500000);
     }
-    log::add('reolink', 'warning', 'waitHttpPortReady: ' . $host . ':' . $port . ' encore injoignable après ' . $timeoutSec . 's');
+    log::add('reolink', 'warning', 'waitHttpPortReady: CGI ' . $cnxtype . '://' . $host . ':' . $port . ' encore indisponible après ' . $timeoutSec . 's');
     return false;
+  }
+
+  public static function resetConnectionCache($eqLogic) {
+    if (!is_object($eqLogic)) {
+      return;
+    }
+    $key = strval($eqLogic->getConfiguration('adresseip')) . '|' . strval($eqLogic->getConfiguration('port'));
+    if (isset(self::$_cnxByIp[$key])) {
+      unset(self::$_cnxByIp[$key]);
+    }
+  }
+
+  public static function clearLinkedCameraCache($reolinkEq) {
+    if (!is_object($reolinkEq) || !class_exists('camera')) {
+      return;
+    }
+    try {
+      $reolinkId = intval($reolinkEq->getId());
+      $ip = strval($reolinkEq->getConfiguration('adresseip'));
+      $channel = strval($reolinkEq->getChannel());
+      foreach (eqLogic::byType('camera') as $camEq) {
+        $linkedId = intval($camEq->getConfiguration('reolink_eqLogic_id', 0));
+        $sameTarget = ($linkedId === $reolinkId)
+          || ($linkedId === 0
+            && strval($camEq->getConfiguration('ip')) === $ip
+            && strval($camEq->getConfiguration('reolink_channel', '')) === $channel);
+        if ($sameTarget) {
+          cache::delete('camera' . $camEq->getId() . 'cache');
+          cache::delete('camera' . $camEq->getId() . 'inprogress');
+        }
+      }
+    } catch (Exception $e) {
+      log::add('reolink', 'debug', 'clearLinkedCameraCache: ' . $e->getMessage());
+    }
   }
 
   /**
@@ -672,8 +724,7 @@ class reolink extends eqLogic {
     $deviceAbility['privacyMode'] = array('permit' => 0, 'ver' => 0);
     $bc = reolinkBaichuan::fromEqLogic($camera);
     if (is_object($bc)) {
-      $isNvr = ($camera->getConfiguration('exactType') === 'NVR'
-        || intval($camera->getConfiguration('channelNum', 1)) > 1);
+      $isNvr = ($camera->isNvrParent() || $camera->isChannelChild());
       $privacy = $bc->probePrivacySupport($channel, $isNvr);
       if ($privacy !== null) {
         $deviceAbility['privacyMode'] = array('permit' => 1, 'ver' => 1);
@@ -1493,13 +1544,8 @@ class reolink extends eqLogic {
       return intval($a->isNvrParent()) - intval($b->isNvrParent());
     });
     foreach ($eqLogics as $camera) {
-      $defCh = $camera->getConfiguration('defined_channel', '');
-      $isNvr = ($camera->getConfiguration('exactType') === 'NVR' || intval($camera->getConfiguration('channelNum', 1)) > 1);
-      if (!$isNvr && $defCh === '') {
-        $privCmd = $camera->getCmd(null, 'SetPrivacyModeState');
-        if (is_object($privCmd) && intval($privCmd->execCmd()) === 1) {
-          continue;
-        }
+      if ($camera->isStandalonePrivacyBlocking()) {
+        continue;
       }
 
       $camera_contact_point = $camera->getConfiguration('adresseip');
@@ -2514,27 +2560,44 @@ class reolinkCmd extends cmd {
           throw new Exception(__('Connexion Baichuan impossible (IP/identifiants manquants)', __FILE__));
         }
         $enable = intval($_options['select'] ?? 0) === 1;
-        $cnxtype = strtolower(strval(is_object($eqLogic) ? $eqLogic->getConfiguration('cnxtype', 'https') : 'https'));
-        if ($cnxtype !== 'http' && $cnxtype !== 'https') {
-          $cnxtype = 'https';
-        }
         $ip = is_object($eqLogic) ? strval($eqLogic->getConfiguration('adresseip')) : '';
         // Keep privacy state ON + wakeup cache so plugin Caméra snapshots skip HTTPS during reboot
         if (!$enable && is_object($eqLogic) && $eqLogic->isStandaloneCamera()) {
-          cache::set('reolink::privacy_wakeup::' . $EqId, time() + 15);
+          cache::set('reolink::privacy_wakeup::' . $EqId, time() + 25);
           if ($ip !== '') {
-            cache::set('reolink::privacy_wakeup_ip::' . $ip, time() + 30);
+            cache::set('reolink::privacy_wakeup_ip::' . $ip, time() + 35);
           }
         }
-        if (!$bc->setPrivacyMode($channel, $enable, (!$enable ? $cnxtype : null))) {
+        if (!$bc->setPrivacyMode($channel, $enable)) {
+          cache::delete('reolink::privacy_wakeup::' . $EqId);
           throw new Exception(__('Échec Mode confidentialité (Baichuan)', __FILE__));
         }
+        $httpReady = true;
         if (!$enable && is_object($eqLogic) && $eqLogic->isStandaloneCamera()) {
-          reolink::waitHttpPortReady($eqLogic, 10);
+          $httpReady = reolink::waitHttpPortReady($eqLogic, 20);
           cache::delete('reolink::privacy_wakeup::' . $EqId);
+          if ($httpReady && $ip !== '') {
+            cache::delete('reolink::privacy_wakeup_ip::' . $ip);
+          }
+          reolink::resetConnectionCache($eqLogic);
         }
         if (is_object($eqLogic)) {
           $eqLogic->checkAndUpdateCmd('SetPrivacyModeState', $enable ? 1 : 0);
+          if (!$enable) {
+            reolink::clearLinkedCameraCache($eqLogic);
+            if ($httpReady && !$eqLogic->isNvrParent()) {
+              $deamonInfo = reolink::deamon_info();
+              if (($deamonInfo['state'] ?? '') === 'ok'
+                && ($eqLogic->getConfiguration('rtspSubUrl') != '' || $eqLogic->getConfiguration('rtspMainUrl') != '')) {
+                try {
+                  reolink::ensureGo2rtcStreams($EqId);
+                } catch (Exception $e) {
+                  log::add('reolink', 'debug', 'Post-privacy go2rtc refresh: ' . $e->getMessage());
+                }
+              }
+              reolink::refreshNFO($EqId);
+            }
+          }
         }
         break;
       case 'CheckFirmware':

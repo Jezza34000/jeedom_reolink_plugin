@@ -2,6 +2,8 @@
 
 21/11/2026
 
+- Privacy Mode : alignement de la sortie de veille Baichuan sur `reolink_aio` (maintien session + drain push `623` sans toucher `NetPort` `cmd 37/36`), vérification CGI HTTP 200 réelle (`waitHttpPortReady`), purge du cache du plugin Caméra et `refreshNFO` post-réveil, gardes NVR/Standalone unifiés (retour #122)
+- Rondes PTZ : activation automatique de l'emplacement (`enable=1`) à l'ajout d'une étape pour éviter la purge firmware (`preset: null`) et clarification de l'action `Désactiver` vs `Arrêter` (issue #119)
 - Performances UI : ouverture équipement et onglet Commandes accélérés (préchauffage async `jeedom.getConfiguration`, rendu différé de `#table_cmd` en `DocumentFragment` hors-DOM, options `info` mises en cache, sauvegarde sans réécriture SQL des commandes non ouvertes, icônes lazy/async et `content-visibility`)
 - UI rondes PTZ : Activer/Désactiver en vrais boutons Jeedom (vert/orange), plus le toggle radio Bootstrap illisible en Dark
 - UI : assistant cron Auto-actualisation branché et pré-rempli ; rondes PTZ Activer/Désactiver lisible en Dark ; aide `?` cliquable et colorée (`--al-info-color`) sur chaque commande (description + valeurs détaillées, sans recréation requise) ; corrections orthographiques FR et i18n `en_US` / `es_ES` (issue #119)

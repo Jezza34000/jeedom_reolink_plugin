@@ -141,9 +141,14 @@ class reolinkBaichuan {
 
     $header = $this->buildHeader($cmdId, $messLen, $fullMessId, $messageClass, $payloadOffset);
     $packet = $header . $encBody;
-    $written = @fwrite($this->fp, $packet);
-    if ($written === false || $written < strlen($packet)) {
-      throw new Exception('Baichuan write failed for cmd_id ' . $cmdId);
+    $total = strlen($packet);
+    $sent = 0;
+    while ($sent < $total) {
+      $written = @fwrite($this->fp, substr($packet, $sent));
+      if ($written === false || $written === 0) {
+        throw new Exception('Baichuan write failed for cmd_id ' . $cmdId);
+      }
+      $sent += $written;
     }
 
     return $this->recvMatching($cmdId, $fullMessId, $encType);
@@ -182,9 +187,46 @@ class reolinkBaichuan {
         }
         return $body;
       }
-      // Unsolicited push: ignore and keep waiting
+      if ($recCmdId === 623 || strpos($body, '<sleep>') !== false) {
+        log::add('reolink', 'debug', 'Baichuan push cmd_id=' . $recCmdId . ' xml=' . preg_replace('/\s+/', ' ', trim($body)));
+      }
     }
     throw new Exception('Baichuan timeout waiting for cmd_id ' . $cmdId);
+  }
+
+  private function drainPushes($durationSec) {
+    if (!is_resource($this->fp)) {
+      return;
+    }
+    $deadline = microtime(true) + max(0.1, floatval($durationSec));
+    while (microtime(true) < $deadline) {
+      $parsed = $this->tryParseOne('aes');
+      if ($parsed !== null) {
+        list($recCmdId, $recMessId, $status, $body) = $parsed;
+        if ($recCmdId === 623 || strpos($body, '<sleep>') !== false) {
+          log::add('reolink', 'debug', 'Baichuan wake push cmd_id=' . $recCmdId . ' xml=' . preg_replace('/\s+/', ' ', trim($body)));
+        }
+        continue;
+      }
+      $left = $deadline - microtime(true);
+      if ($left <= 0) {
+        break;
+      }
+      $read = array($this->fp);
+      $write = null;
+      $except = null;
+      $sec = max(0, intval($left));
+      $usec = max(0, intval(($left - $sec) * 1000000));
+      $n = @stream_select($read, $write, $except, $sec, $usec);
+      if ($n === false || $n === 0) {
+        continue;
+      }
+      $chunk = @fread($this->fp, 8192);
+      if ($chunk === false || $chunk === '') {
+        break;
+      }
+      $this->recvBuf .= $chunk;
+    }
   }
 
   /**
@@ -298,7 +340,7 @@ class reolinkBaichuan {
     return '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
       . '<Extension version="1.1">' . "\n"
       . '<channelId>' . intval($channel) . '</channelId>' . "\n"
-      . '</Extension>';
+      . '</Extension>' . "\n";
   }
 
   private function ensureLogin() {
@@ -524,15 +566,15 @@ class reolinkBaichuan {
 
   /**
    * Set privacy sleep (cmd 575) then poll cmd 574 (like reolink_aio).
-   * On disable, optionally re-open HTTP/HTTPS via cmd 37/36 if still down.
-   * @param string|null $ensureProto 'http'|'https'|null
+   * Do not touch NetPort (cmd 37/36) or close the Baichuan session immediately on wake:
+   * let the camera emit push cmd 623 and start its internal web/RTSP daemons cleanly.
    */
-  public function setPrivacyMode($channel, $enable, $ensureProto = null) {
+  public function setPrivacyMode($channel, $enable) {
     try {
       $this->ensureLogin();
       $enableStr = $enable ? '1' : '0';
-      // Match reolink_aio xmls.SetPrivacyMode (leading newline after XML declaration is OK)
-      $body = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+      // Exact match with reolink_aio xmls.SetPrivacyMode
+      $body = "\n" . '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
         . '<body>' . "\n"
         . '<sleepState version="1.1">' . "\n"
         . '<operate>2</operate>' . "\n"
@@ -549,7 +591,20 @@ class reolinkBaichuan {
         }
         $stateXml = $this->sendRaw(574, $channel, '', $this->channelExtension($channel), 'aes', '1464');
         $state = $this->parseSleep($stateXml);
-        log::add('reolink', 'debug', 'Baichuan cmd 574 poll#' . ($i + 1) . ' sleep=' . ($state === null ? 'null' : ($state ? '1' : '0')));
+        $modeVal = $this->xmlValue($stateXml, 'mode');
+        $opVal = $this->xmlValue($stateXml, 'operate');
+        $panVal = $this->xmlValue($stateXml, 'panPos');
+        $tiltVal = $this->xmlValue($stateXml, 'tiltPos');
+        log::add(
+          'reolink',
+          'debug',
+          'Baichuan cmd 574 poll#' . ($i + 1)
+            . ' sleep=' . ($state === null ? 'null' : ($state ? '1' : '0'))
+            . ' mode=' . ($modeVal ?? '-')
+            . ' operate=' . ($opVal ?? '-')
+            . ' pan=' . ($panVal ?? '-')
+            . ' tilt=' . ($tiltVal ?? '-')
+        );
         if ($state !== null && $state === (bool) $enable) {
           break;
         }
@@ -559,29 +614,8 @@ class reolinkBaichuan {
         return false;
       }
 
-      if (!$enable && $ensureProto !== null && $ensureProto !== '') {
-        $proto = strtolower(strval($ensureProto));
-        if (!in_array($proto, array('http', 'https'), true)) {
-          $proto = 'https';
-        }
-        try {
-          $ports = $this->getPorts();
-          $httpOn = !empty($ports['http']);
-          $httpsOn = !empty($ports['https']);
-          if (!$httpOn && !$httpsOn) {
-            log::add('reolink', 'info', 'Baichuan: HTTP/HTTPS coupés après privacy OFF, réouverture ' . $proto);
-            $this->setPortEnabled($proto, true);
-          } elseif ($proto === 'https' && !$httpsOn && $httpOn) {
-            // Prefer configured HTTPS if only HTTP is up
-            log::add('reolink', 'info', 'Baichuan: HTTPS coupé, réouverture https');
-            $this->setPortEnabled('https', true);
-          } elseif ($proto === 'http' && !$httpOn && $httpsOn) {
-            log::add('reolink', 'info', 'Baichuan: HTTP coupé, réouverture http');
-            $this->setPortEnabled('http', true);
-          }
-        } catch (Exception $e) {
-          log::add('reolink', 'warning', 'Baichuan ensure ports: ' . $e->getMessage());
-        }
+      if (!$enable) {
+        $this->drainPushes(2.2);
       }
       return true;
     } catch (Exception $e) {
