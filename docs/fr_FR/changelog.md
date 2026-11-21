@@ -6,6 +6,7 @@
 
 # 21/11/2026
 
+- Performances UI : ouverture des équipements et de l'onglet Commandes fluide (rendu différé hors-DOM, préchauffage config async, icônes lazy/async)
 - UI rondes PTZ : Activer/Désactiver en boutons Jeedom verts/oranges (Dark)
 - UI : assistant cron pré-rempli, rondes PTZ lisibles en Dark, aide `?` cliquable et détaillée sur chaque commande, corrections orthographiques FR et i18n EN/ES (issue #119)
 - Privacy Mode : désactivation fiable (attente réveil HTTP, ports Baichuan, plus d’erreurs Login pendant le reboot caméra)
