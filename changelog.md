@@ -1,5 +1,9 @@
 # Change log
 
+21/11/2026
+
+- Live `go2rtc` : dépendances détectent le binaire manquant après MàJ ; téléchargement atomique avant fin d'install ; démon relance `go2rtc` si arrêté ; config inline (plus de `go2rtc.yaml` / RTSP `:8554`) ; erreur explicite si `127.0.0.1:1984` injoignable (issue #118)
+
 20/11/2026
 
 - NVR/canaux : modèle caméra via `GetChnTypeInfo` (ex. E1 Outdoor PoE) au lieu du modèle NVR ; commandes host (NTP/firmware/HDD/UPnP…) uniquement sur le parent NVR ; sync plugin Caméra avec `device` mappé

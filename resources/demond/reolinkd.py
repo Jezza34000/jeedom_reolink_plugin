@@ -37,6 +37,14 @@ go2rtc_proc = None
 _GO2RTC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'bin'))
 _GO2RTC_BIN = os.path.join(_GO2RTC_DIR, 'go2rtc')
 _GO2RTC_CFG = os.path.join(_GO2RTC_DIR, 'go2rtc.yaml')
+# Inline config: no go2rtc.yaml on disk (avoids RTSP passwords + :8554 LAN expose)
+_GO2RTC_INLINE_CFG = (
+    '{"api":{"listen":"127.0.0.1:1984"},'
+    '"rtsp":{"listen":""},'
+    '"webrtc":{"listen":":8555"},'
+    '"log":{"level":"warn"}}'
+)
+_go2rtc_check_at = 0.0
 
 
 def read_socket():
@@ -101,11 +109,16 @@ async def subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd):
 
 
 def listen():
+    global _go2rtc_check_at
     socket_server.open()
     try:
         while True:
             time.sleep(0.5)
             read_socket()
+            now = time.time()
+            if now >= _go2rtc_check_at:
+                _go2rtc_check_at = now + 10.0
+                ensure_go2rtc()
     except KeyboardInterrupt:
         shutdown()
 
@@ -155,21 +168,38 @@ def start_go2rtc():
     if not os.path.isfile(_GO2RTC_BIN) or not os.access(_GO2RTC_BIN, os.X_OK):
         logging.warning("go2rtc binary missing at %s", _GO2RTC_BIN)
         return
-    if not os.path.isfile(_GO2RTC_CFG):
-        os.makedirs(_GO2RTC_DIR, exist_ok=True)
-        with open(_GO2RTC_CFG, 'w', encoding='utf-8') as fh:
-            fh.write('api:\n  listen: "127.0.0.1:1984"\nwebrtc:\n  listen: ":8555"\n')
+    # Drop legacy yaml from older plugin versions (passwords / :8554)
+    try:
+        if os.path.isfile(_GO2RTC_CFG):
+            os.remove(_GO2RTC_CFG)
+    except OSError as e:
+        logging.warning("Unable to remove legacy go2rtc.yaml: %s", e)
     try:
         go2rtc_proc = subprocess.Popen(
-            [_GO2RTC_BIN, '-config', _GO2RTC_CFG],
+            [_GO2RTC_BIN, '-c', _GO2RTC_INLINE_CFG],
             cwd=_GO2RTC_DIR,
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stderr=None,
         )
         logging.info("go2rtc started pid=%s", go2rtc_proc.pid)
     except Exception as e:
         logging.error("Unable to start go2rtc: %s", e)
         go2rtc_proc = None
+
+
+def ensure_go2rtc():
+    global go2rtc_proc
+    if not os.path.isfile(_GO2RTC_BIN) or not os.access(_GO2RTC_BIN, os.X_OK):
+        return
+    if go2rtc_proc is not None and go2rtc_proc.poll() is None:
+        return
+    if go2rtc_proc is not None:
+        logging.warning(
+            "go2rtc exited with code %s, restarting",
+            go2rtc_proc.returncode,
+        )
+        go2rtc_proc = None
+    start_go2rtc()
 
 
 def stop_go2rtc():

@@ -528,22 +528,33 @@ class reolink extends eqLogic {
       'reolink_' . $id . '_sub' => $camera->resolveRtspUrl($camera->getConfiguration('rtspSubUrl'), true),
       'reolink_' . $id . '_main' => $camera->resolveRtspUrl($camera->getConfiguration('rtspMainUrl'), false),
     );
+    $registered = 0;
     foreach ($streams as $name => $src) {
       if ($src === '' || $src === null) {
         continue;
       }
+      // PATCH = in-memory update/create without rewriting go2rtc.yaml
       $url = 'http://127.0.0.1:1984/api/streams?name=' . rawurlencode($name) . '&src=' . rawurlencode($src);
       $ch = curl_init($url);
-      curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+      curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
       curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
       curl_setopt($ch, CURLOPT_TIMEOUT, 5);
       $body = curl_exec($ch);
-      $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+      $code = intval(curl_getinfo($ch, CURLINFO_HTTP_CODE));
+      $err = curl_error($ch);
       curl_close($ch);
       if ($code < 200 || $code >= 300) {
-        log::add('reolink', 'warning', 'go2rtc stream ' . $name . ' HTTP ' . $code . ' ' . strval($body));
+        log::add('reolink', 'warning', 'go2rtc stream ' . $name . ' HTTP ' . $code . ' ' . strval($body) . ' ' . $err);
+        if ($code === 0) {
+          throw new Exception(__('Service go2rtc injoignable (127.0.0.1:1984) : vérifiez que les dépendances sont à jour et que le démon Reolink est démarré', __FILE__));
+        }
+        throw new Exception(__('Échec enregistrement flux go2rtc', __FILE__) . ' (' . $name . ' HTTP ' . $code . ')');
       }
+      $registered++;
+    }
+    if ($registered === 0) {
+      throw new Exception(__('Aucune URL RTSP disponible pour cette caméra', __FILE__));
     }
     return array_keys($streams);
   }
@@ -1541,9 +1552,14 @@ class reolink extends eqLogic {
     $pid_file = jeedom::getTmpFolder(__CLASS__) . '/deamon.pid';
     if (file_exists($pid_file)) {
       $pid = intval(trim(file_get_contents($pid_file)));
-      system::kill($pid);
+      if ($pid > 0) {
+        system::kill($pid, false);
+        usleep(300000);
+        system::kill($pid);
+      }
     }
     system::kill('reolinkd.py');
+    system::kill('resources/bin/go2rtc');
     sleep(1);
   }
 
@@ -1589,9 +1605,12 @@ class reolink extends eqLogic {
     $return['log'] = log::getPathToLog(__CLASS__ . '_update');
     $return['progress_file'] = jeedom::getTmpFolder(__CLASS__) . '/dependance';
     $return['state'] = 'ok';
+    $go2rtcBin = __DIR__ . '/../../resources/bin/go2rtc';
     if (file_exists(jeedom::getTmpFolder(__CLASS__) . '/dependance')) {
       $return['state'] = 'in_progress';
     } elseif (!file_exists(self::PYTHON_PATH)) {
+      $return['state'] = 'nok';
+    } elseif (!is_executable($go2rtcBin)) {
       $return['state'] = 'nok';
     } elseif (exec(self::PYTHON_PATH . ' -m pip list | grep -Ewc "aiosignal|aiohttp|uvicorn|fastapi|urllib3|requests|charset-normalizer"') < 7) {
       $return['state'] = 'nok';
