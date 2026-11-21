@@ -17,6 +17,7 @@ class reolinkAPI {
   public $is_loggedin;
   public $lastResponseData = null;
   public $probeMode = false;
+  public $batteryChannelMode = false;
 
   const CAM_GET_ABILITY = 'GetAbility';
   const CAM_GET_DEVINFO = 'GetDevInfo';
@@ -154,6 +155,8 @@ class reolinkAPI {
   const CAM_GET_AICFG = 'GetAiCfg';
   const CAM_SET_AICFG = 'SetAiCfg';
   const CAM_GET_AISTATE = 'GetAiState';
+  const CAM_GET_BATTERYINFO = 'GetBatteryInfo';
+  const CAM_GET_PIRINFO = 'GetPirInfo';
   const CAM_GET_SYSCFG = 'GetSysCfg';
   const CAM_SET_SYSCFG = 'SetSysCfg';
 
@@ -407,6 +410,49 @@ class reolinkAPI {
       }
       log::add('reolink', 'debug', 'Echec de la requête nouvelle tentative...');
     } while ($maxRetry < 3);
+
+    // Battery camera waking from sleep (reolink_aio: retry -12/-13/-17 once after 1.0s)
+    if ($this->batteryChannelMode && is_array($sentItems)) {
+      $resData = is_array($checkedresponse) ? $checkedresponse : $this->lastResponseData;
+      if (is_array($resData)) {
+        $retryCmds = array();
+        $retryIdxs = array();
+        foreach ($resData as $idx => $item) {
+          $rsp = intval($item['error']['rspCode'] ?? 0);
+          if (in_array($rsp, array(-12, -13, -17), true) && isset($sentItems[$idx])) {
+            $retryCmds[] = $sentItems[$idx];
+            $retryIdxs[] = $idx;
+          }
+        }
+        if (!empty($retryCmds)) {
+          log::add('reolink', 'debug', 'Caméra batterie en réveil : nouvelle tentative après 1s (' . count($retryCmds) . ' cmd)');
+          usleep(1000000);
+          $prevMode = $this->batteryChannelMode;
+          $this->batteryChannelMode = false;
+          $retryResp = $this->SendCMD(json_encode($retryCmds));
+          $retryData = is_array($retryResp) ? $retryResp : $this->lastResponseData;
+          $this->batteryChannelMode = $prevMode;
+          if (is_array($retryData)) {
+            foreach ($retryIdxs as $pos => $origIdx) {
+              if (isset($retryData[$pos])) {
+                $resData[$origIdx] = $retryData[$pos];
+              }
+            }
+            $this->lastResponseData = $resData;
+            $anyOk = false;
+            foreach ($resData as $it) {
+              if (!isset($it['error']['rspCode'])) {
+                $anyOk = true;
+                break;
+              }
+            }
+            if ($anyOk) {
+              $checkedresponse = $resData;
+            }
+          }
+        }
+      }
+    }
 
     return $checkedresponse;
   }

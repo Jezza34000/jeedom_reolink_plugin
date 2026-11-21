@@ -88,7 +88,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [x] Monitoring de la caméra : Utilisation CPU, Débit codec et Débit réseau
 - [x] Buzzer NVR / Home Hub (activation/désactivation)
 - [ ] Scènes / Modes Reolink (Home, Away, Night…)
-- [ ] Caméras sur batterie via NVR / Home Hub (niveau batterie, charge, mode veille)
+- [x] Caméras sur batterie via NVR / Home Hub (niveau batterie, charge, mode veille)
 
 #### PTZ
 - [x] Zoom/Focus

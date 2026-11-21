@@ -626,6 +626,118 @@ class reolinkBaichuan {
     }
   }
 
+  public static function parseBatteryXml($xml, $channel = 0) {
+    if ($xml === null || $xml === '') {
+      return null;
+    }
+    $sx = @simplexml_load_string($xml);
+    if ($sx === false) {
+      return null;
+    }
+    $nodes = $sx->xpath('.//BatteryInfo');
+    if (!$nodes || empty($nodes)) {
+      return null;
+    }
+    $target = null;
+    foreach ($nodes as $node) {
+      if (isset($node->channelId)) {
+        if (intval($node->channelId) === intval($channel)) {
+          $target = $node;
+          break;
+        }
+      } elseif ($target === null) {
+        $target = $node;
+      }
+    }
+    if ($target === null) {
+      return null;
+    }
+    if (!isset($target->batteryPercent)) {
+      return null;
+    }
+    $chargeRaw = isset($target->chargeStatus) ? strtolower(trim(strval($target->chargeStatus))) : 'discharging';
+    if ($chargeRaw === 'none' || $chargeRaw === '0' || $chargeRaw === 'discharging') {
+      $chargeStatus = 0;
+    } elseif ($chargeRaw === '1' || $chargeRaw === 'charging') {
+      $chargeStatus = 1;
+    } elseif ($chargeRaw === '2' || $chargeRaw === 'chargecomplete') {
+      $chargeStatus = 2;
+    } else {
+      $chargeStatus = 0;
+    }
+    $out = array(
+      'batteryPercent' => max(0, min(100, intval($target->batteryPercent))),
+      'chargeStatus' => $chargeStatus,
+    );
+    if (isset($target->temperature) && trim(strval($target->temperature)) !== '') {
+      $out['temperature'] = intval($target->temperature);
+    }
+    if (isset($target->adapterStatus)) {
+      $out['adapterStatus'] = strval($target->adapterStatus);
+    }
+    if (isset($target->lowPower)) {
+      $out['lowPower'] = intval($target->lowPower);
+    }
+    return $out;
+  }
+
+  public static function parseChannelSleepXml($xml, $channel = 0) {
+    if ($xml === null || $xml === '') {
+      return null;
+    }
+    $sx = @simplexml_load_string($xml);
+    if ($sx === false) {
+      return null;
+    }
+    $nodes = $sx->xpath('.//ChannelInfo');
+    if (!$nodes || empty($nodes)) {
+      return null;
+    }
+    foreach ($nodes as $node) {
+      if (isset($node->channelId) && intval($node->channelId) !== intval($channel)) {
+        continue;
+      }
+      if (isset($node->loginState)) {
+        return strtolower(trim(strval($node->loginState))) === 'standby';
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Read battery info via Baichuan cmd 253 (fallback when HTTP GetBatteryInfo is unavailable).
+   * @return array<string,mixed>|null
+   */
+  public function getBatteryInfo($channel) {
+    try {
+      $this->ensureLogin();
+      $xml = $this->sendRaw(253, $channel, '', $this->channelExtension($channel), 'aes', '1464');
+      return self::parseBatteryXml($xml, $channel);
+    } catch (Exception $e) {
+      log::add('reolink', 'debug', 'Baichuan getBatteryInfo: ' . $e->getMessage());
+      return null;
+    } finally {
+      $this->logout();
+    }
+  }
+
+  /**
+   * Read channel standby/sleep state via Baichuan cmd 145 (ChannelInfoList).
+   * @return bool|null
+   */
+  public function getChannelSleepState($channel) {
+    try {
+      $this->ensureLogin();
+      $xml = $this->sendRaw(145, null, '', '', 'aes', '1464');
+      return self::parseChannelSleepXml($xml, $channel);
+    } catch (Exception $e) {
+      log::add('reolink', 'debug', 'Baichuan getChannelSleepState: ' . $e->getMessage());
+      return null;
+    } finally {
+      $this->logout();
+    }
+  }
+
   public static function fromEqLogic($eqLogic) {
     if (!is_object($eqLogic)) {
       return null;
