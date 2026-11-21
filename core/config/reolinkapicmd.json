@@ -1110,7 +1110,7 @@
 				"valueFrom": "SetAutoFocusState",
 				"actionapi": "SetAutoFocus",
 				"payload": "{\"AutoFocus\":{\"channel\":#CHANNEL#,\"disable\":#OPTSELECTEDINT#}}",
-				"help": "Mise au point automatique. Attention : selon firmware, 0 peut signifier Activer.",
+				"help": "Mise au point automatique. Attention : selon firmware, 0 peut signifier Activer (certaines révisions matérielles verrouillent l'autofocus actif et renvoient rspCode -13).",
 				"valuesHelp": "0 = Autofocus activé, 1 = Autofocus désactivé (sens API Reolink : disable)"
 			},
 			"IsHistorized": 0,

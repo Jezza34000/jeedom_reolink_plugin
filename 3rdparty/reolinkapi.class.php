@@ -464,7 +464,7 @@ class reolinkAPI {
     $data = json_decode($response, true);
     $this->skipRetry = false;
     $this->lastResponseData = (is_array($data) && isset($data[0])) ? $data : null;
-    $noRetryCodes = array(-1, -4, -5, -9, -12, -17, -24, -26, -99);
+    $noRetryCodes = array(-1, -4, -5, -9, -12, -13, -17, -23, -24, -26, -99);
 
     // General Case
     if (!$data || !isset($data[0])) {
@@ -517,17 +517,33 @@ class reolinkAPI {
     return $data;
   }
 
-  private function formatApiError($item) {
+  public function formatApiError($item) {
     $rsp = intval($item['error']['rspCode'] ?? 0);
     $detail = trim(strval($item['error']['detail'] ?? ''));
     $errorNFO = $this->GetErrorNFO($rsp);
     if (!is_array($errorNFO)) {
       $errorNFO = array('unknown', 'Unknown error');
     }
+    $codeSuffix = ($rsp !== 0) ? ', rspCode ' . $rsp : '';
     if ($detail !== '') {
-      return $detail . ' (' . $errorNFO[1] . ')';
+      return $detail . ' (' . $errorNFO[1] . $codeSuffix . ')';
     }
-    return $errorNFO[0] . '/' . $errorNFO[1];
+    return $errorNFO[0] . '/' . $errorNFO[1] . ($rsp !== 0 ? ' (rspCode ' . $rsp . ')' : '');
+  }
+
+  public function getLastApiError() {
+    if (!is_array($this->lastResponseData)) {
+      return '';
+    }
+    foreach ($this->lastResponseData as $item) {
+      if (isset($item['error']['rspCode'])) {
+        return $this->formatApiError($item);
+      }
+      if (isset($item['value']['rspCode']) && intval($item['value']['rspCode']) !== 200) {
+        return 'rspCode ' . intval($item['value']['rspCode']);
+      }
+    }
+    return '';
   }
 
   private function GetErrorNFO($errorCode) {

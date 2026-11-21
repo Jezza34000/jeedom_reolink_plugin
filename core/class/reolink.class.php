@@ -1134,7 +1134,8 @@ class reolink extends eqLogic {
     ));
     $res = $cnx->SendCMD(json_encode($payload));
     if (!is_array($res) || !isset($res[0]) || (intval($res[0]['code'] ?? 1) != 0 && intval($res[0]['value']['rspCode'] ?? 0) != 200)) {
-      throw new Exception(__('Échec SetPtzPatrol', __FILE__));
+      $apiErr = $cnx->getLastApiError();
+      throw new Exception(__('Échec SetPtzPatrol', __FILE__) . ($apiErr !== '' ? ' : ' . $apiErr : ''));
     }
     $refresh = $cnx->SendCMD('[{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
     if (is_array($refresh) && isset($refresh[0])) {
@@ -1165,7 +1166,8 @@ class reolink extends eqLogic {
     $payload = '[{"cmd":"PtzCtrl","action":0,"param":{"channel":' . $channel . ',"op":"' . $op . '","id":' . $patrolId . '}}]';
     $res = $cnx->SendCMD($payload);
     if (!is_array($res) || !isset($res[0]) || (intval($res[0]['code'] ?? 1) != 0 && intval($res[0]['value']['rspCode'] ?? 0) != 200)) {
-      throw new Exception(__('Échec PtzCtrl ' . $op, __FILE__));
+      $apiErr = $cnx->getLastApiError();
+      throw new Exception(__('Échec PtzCtrl ' . $op, __FILE__) . ($apiErr !== '' ? ' : ' . $apiErr : ''));
     }
     $startCmd = $camera->getCmd(null, 'StartPtzPatrol');
     if (is_object($startCmd)) {
@@ -2953,7 +2955,8 @@ class reolinkCmd extends cmd {
         $val['Time']['sec'] = intval($now->format('s'));
         $camresp = $camcnx->SendCMD(json_encode(array(array('cmd' => 'SetTime', 'action' => 0, 'param' => $val))));
         if (!(is_array($camresp) && intval($camresp[0]['code'] ?? -1) === 0)) {
-          throw new Exception(__('Echec SyncTime', __FILE__));
+          $apiErr = is_object($camcnx) ? $camcnx->getLastApiError() : '';
+          throw new Exception(__('Echec SyncTime', __FILE__) . ($apiErr !== '' ? ' : ' . $apiErr : ''));
         }
         break;
       default:
@@ -3112,6 +3115,24 @@ class reolinkCmd extends cmd {
               reolink::applyEncListValues($eqLogic, $camcnx, $channel);
             }
           } else {
+            $apiErr = is_object($camcnx) ? $camcnx->getLastApiError() : '';
+            $rspCode = intval($camcnx->lastResponseData[0]['error']['rspCode'] ?? 0);
+            if ($rspCode === -13) {
+              $ctx = ($actionAPI !== '' && $apiErr !== '')
+                ? $actionAPI . ' — ' . $apiErr
+                : ($apiErr !== '' ? $apiErr : $actionAPI);
+              throw new Exception(
+                __('Réglage refusé par le firmware de la caméra / NVR', __FILE__)
+                . ($ctx !== '' ? ' (' . $ctx . ')' : '')
+              );
+            }
+            if ($apiErr !== '') {
+              throw new Exception(
+                __('Échec d\'exécution de la commande', __FILE__)
+                . ($actionAPI !== '' ? ' ' . $actionAPI : '')
+                . ' : ' . $apiErr
+              );
+            }
             throw new Exception(__('Echec d\'execution de la commande (consultez le log pour plus de détails)', __FILE__));
           }
         }
