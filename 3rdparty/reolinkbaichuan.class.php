@@ -467,10 +467,71 @@ class reolinkBaichuan {
     }
   }
 
-  public function setPrivacyMode($channel, $enable) {
+  /**
+   * Read NetPort enables (cmd 37). Keys: http|https|rtsp|rtmp|onvif|server => bool.
+   * @return array<string,bool>
+   */
+  public function getPorts() {
+    $out = array();
+    $xml = $this->sendRaw(37, null, '', '', 'aes', '1464');
+    if ($xml === null || $xml === '') {
+      return $out;
+    }
+    $sx = @simplexml_load_string($xml);
+    if ($sx === false) {
+      return $out;
+    }
+    foreach ($sx->children() as $protoNode) {
+      $tag = strtolower(strval($protoNode->getName()));
+      $proto = preg_replace('/port$/', '', $tag);
+      if ($proto === '') {
+        continue;
+      }
+      $enable = null;
+      if (isset($protoNode->enable)) {
+        $enable = intval($protoNode->enable) === 1;
+      }
+      if ($enable !== null) {
+        $out[$proto] = $enable;
+      }
+    }
+    return $out;
+  }
+
+  /** Enable/disable a NetPort via cmd 36 (HttpPort|HttpsPort|RtspPort|RtmpPort|OnvifPort). */
+  public function setPortEnabled($proto, $enable) {
+    $proto = strtolower(strval($proto));
+    $map = array(
+      'http' => 'HttpPort',
+      'https' => 'HttpsPort',
+      'rtsp' => 'RtspPort',
+      'rtmp' => 'RtmpPort',
+      'onvif' => 'OnvifPort',
+    );
+    if (!isset($map[$proto])) {
+      throw new Exception('Baichuan setPortEnabled: proto inconnu ' . $proto);
+    }
+    $tag = $map[$proto];
+    $enableStr = $enable ? '1' : '0';
+    $body = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+      . '<body>' . "\n"
+      . '<' . $tag . ' version="1.1">' . "\n"
+      . '<enable>' . $enableStr . '</enable>' . "\n"
+      . '</' . $tag . '>' . "\n"
+      . '</body>';
+    $this->sendRaw(36, null, $body, '', 'aes', '1464');
+  }
+
+  /**
+   * Set privacy sleep (cmd 575) then poll cmd 574 (like reolink_aio).
+   * On disable, optionally re-open HTTP/HTTPS via cmd 37/36 if still down.
+   * @param string|null $ensureProto 'http'|'https'|null
+   */
+  public function setPrivacyMode($channel, $enable, $ensureProto = null) {
     try {
       $this->ensureLogin();
       $enableStr = $enable ? '1' : '0';
+      // Match reolink_aio xmls.SetPrivacyMode (leading newline after XML declaration is OK)
       $body = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
         . '<body>' . "\n"
         . '<sleepState version="1.1">' . "\n"
@@ -479,9 +540,50 @@ class reolinkBaichuan {
         . '</sleepState>' . "\n"
         . '</body>';
       $this->sendRaw(575, $channel, $body, $this->channelExtension($channel), 'aes', '1464');
-      $stateXml = $this->sendRaw(574, $channel, '', $this->channelExtension($channel), 'aes', '1464');
-      $state = $this->parseSleep($stateXml);
-      return $state !== null && $state === (bool) $enable;
+      log::add('reolink', 'debug', 'Baichuan cmd 575 sleep=' . $enableStr . ' canal=' . intval($channel));
+
+      $state = null;
+      for ($i = 0; $i < 4; $i++) {
+        if ($i > 0) {
+          usleep(400000);
+        }
+        $stateXml = $this->sendRaw(574, $channel, '', $this->channelExtension($channel), 'aes', '1464');
+        $state = $this->parseSleep($stateXml);
+        log::add('reolink', 'debug', 'Baichuan cmd 574 poll#' . ($i + 1) . ' sleep=' . ($state === null ? 'null' : ($state ? '1' : '0')));
+        if ($state !== null && $state === (bool) $enable) {
+          break;
+        }
+      }
+      if ($state === null || $state !== (bool) $enable) {
+        log::add('reolink', 'error', 'Baichuan setPrivacyMode: état 574 non aligné (attendu ' . $enableStr . ')');
+        return false;
+      }
+
+      if (!$enable && $ensureProto !== null && $ensureProto !== '') {
+        $proto = strtolower(strval($ensureProto));
+        if (!in_array($proto, array('http', 'https'), true)) {
+          $proto = 'https';
+        }
+        try {
+          $ports = $this->getPorts();
+          $httpOn = !empty($ports['http']);
+          $httpsOn = !empty($ports['https']);
+          if (!$httpOn && !$httpsOn) {
+            log::add('reolink', 'info', 'Baichuan: HTTP/HTTPS coupés après privacy OFF, réouverture ' . $proto);
+            $this->setPortEnabled($proto, true);
+          } elseif ($proto === 'https' && !$httpsOn && $httpOn) {
+            // Prefer configured HTTPS if only HTTP is up
+            log::add('reolink', 'info', 'Baichuan: HTTPS coupé, réouverture https');
+            $this->setPortEnabled('https', true);
+          } elseif ($proto === 'http' && !$httpOn && $httpsOn) {
+            log::add('reolink', 'info', 'Baichuan: HTTP coupé, réouverture http');
+            $this->setPortEnabled('http', true);
+          }
+        } catch (Exception $e) {
+          log::add('reolink', 'warning', 'Baichuan ensure ports: ' . $e->getMessage());
+        }
+      }
+      return true;
     } catch (Exception $e) {
       log::add('reolink', 'error', 'Baichuan setPrivacyMode: ' . $e->getMessage());
       return false;

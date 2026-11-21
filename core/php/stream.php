@@ -16,6 +16,11 @@ if (!is_object($camera) || $camera->isNvrParent()) {
   echo 'Camera not found';
   exit;
 }
+if ($camera->isStandalonePrivacyBlocking()) {
+  http_response_code(409);
+  echo 'Mode confidentialité actif';
+  exit;
+}
 
 try {
   reolink::ensureGo2rtcStreams($id);

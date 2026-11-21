@@ -88,6 +88,51 @@ class reolink extends eqLogic {
   }
 
   /**
+   * Standalone camera with Privacy ON or still waking HTTP after disable.
+   * Blocks concurrent HTTPS Login/Snap storms (plugin Caméra widget).
+   */
+  public function isStandalonePrivacyBlocking() {
+    if (!$this->isStandaloneCamera()) {
+      return false;
+    }
+    $priv = $this->getCmd(null, 'SetPrivacyModeState');
+    if (is_object($priv) && intval($priv->execCmd()) === 1) {
+      return true;
+    }
+    $until = intval(cache::byKey('reolink::privacy_wakeup::' . $this->getId())->getValue(0));
+    return ($until > time());
+  }
+
+  /** Poll TCP until HTTP/HTTPS accepts connections again (reolink_aio ~7.5s window). */
+  public static function waitHttpPortReady($eqLogic, $timeoutSec = 10) {
+    if (!is_object($eqLogic)) {
+      return false;
+    }
+    $host = strval($eqLogic->getConfiguration('adresseip'));
+    if ($host === '') {
+      return false;
+    }
+    $cnxtype = strtolower(strval($eqLogic->getConfiguration('cnxtype', 'https')));
+    $port = intval(preg_replace('/\D/', '', strval($eqLogic->getConfiguration('port', ''))));
+    if ($port <= 0) {
+      $port = ($cnxtype === 'http') ? 80 : 443;
+    }
+    $deadline = microtime(true) + max(1, intval($timeoutSec));
+    while (microtime(true) < $deadline) {
+      $errno = 0;
+      $errstr = '';
+      $fp = @fsockopen($host, $port, $errno, $errstr, 0.5);
+      if (is_resource($fp)) {
+        @fclose($fp);
+        return true;
+      }
+      usleep(400000);
+    }
+    log::add('reolink', 'warning', 'waitHttpPortReady: ' . $host . ':' . $port . ' encore injoignable après ' . $timeoutSec . 's');
+    return false;
+  }
+
+  /**
    * Command scope: host = NVR parent or standalone device; channel = channel child or standalone.
    */
   public function allowsCommandScope($scope) {
@@ -253,6 +298,10 @@ class reolink extends eqLogic {
     if (!is_object($camera)) {
       return false;
     }
+    if ($camera->isStandalonePrivacyBlocking()) {
+      log::add('reolink', 'debug', 'GetCamNFO ignoré : mode confidentialité / réveil HTTP');
+      return false;
+    }
     $channel = $camera->getChannel();
     $isChannel = $camera->isChannelChild();
 
@@ -411,8 +460,7 @@ class reolink extends eqLogic {
     if (!is_object($reolinkEq) || $reolinkEq->isNvrParent()) {
       return '';
     }
-    $priv = $reolinkEq->getCmd(null, 'SetPrivacyModeState');
-    if (is_object($priv) && intval($priv->execCmd()) === 1) {
+    if ($reolinkEq->isStandalonePrivacyBlocking()) {
       return '';
     }
     $cnx = reolink::getReolinkConnection($reolinkEq->getId());
@@ -567,6 +615,10 @@ class reolink extends eqLogic {
     }
     if ($camera->isNvrParent()) {
       log::add('reolink', 'info', 'GetCamAbility ignoré : équipement NVR parent');
+      return false;
+    }
+    if ($camera->isStandalonePrivacyBlocking()) {
+      log::add('reolink', 'debug', 'GetCamAbility ignoré : mode confidentialité / réveil HTTP');
       return false;
     }
     $reolinkConn = reolink::getReolinkConnection($id);
@@ -912,6 +964,10 @@ class reolink extends eqLogic {
           }
         }
       }
+    }
+    if ($camcmd->isStandalonePrivacyBlocking()) {
+      log::add('reolink', 'debug', 'refreshNFO ignoré : réveil HTTP après Mode confidentialité');
+      return;
     }
 
     $camcnx = reolink::getReolinkConnection($id);
@@ -2411,15 +2467,27 @@ class reolinkCmd extends cmd {
           throw new Exception(__('Connexion Baichuan impossible (IP/identifiants manquants)', __FILE__));
         }
         $enable = intval($_options['select'] ?? 0) === 1;
-        if (!$bc->setPrivacyMode($channel, $enable)) {
+        $cnxtype = strtolower(strval(is_object($eqLogic) ? $eqLogic->getConfiguration('cnxtype', 'https') : 'https'));
+        if ($cnxtype !== 'http' && $cnxtype !== 'https') {
+          $cnxtype = 'https';
+        }
+        $ip = is_object($eqLogic) ? strval($eqLogic->getConfiguration('adresseip')) : '';
+        // Keep privacy state ON + wakeup cache so plugin Caméra snapshots skip HTTPS during reboot
+        if (!$enable && is_object($eqLogic) && $eqLogic->isStandaloneCamera()) {
+          cache::set('reolink::privacy_wakeup::' . $EqId, time() + 15);
+          if ($ip !== '') {
+            cache::set('reolink::privacy_wakeup_ip::' . $ip, time() + 30);
+          }
+        }
+        if (!$bc->setPrivacyMode($channel, $enable, (!$enable ? $cnxtype : null))) {
           throw new Exception(__('Échec Mode confidentialité (Baichuan)', __FILE__));
+        }
+        if (!$enable && is_object($eqLogic) && $eqLogic->isStandaloneCamera()) {
+          reolink::waitHttpPortReady($eqLogic, 10);
+          cache::delete('reolink::privacy_wakeup::' . $EqId);
         }
         if (is_object($eqLogic)) {
           $eqLogic->checkAndUpdateCmd('SetPrivacyModeState', $enable ? 1 : 0);
-        }
-        if (!$enable) {
-          // HTTP comes back a few seconds after disabling privacy (reolink_aio waits ~7.5s)
-          usleep(2500000);
         }
         break;
       case 'CheckFirmware':
