@@ -365,7 +365,7 @@ function reolinkCmdHelpData(_cmd) {
     name: String(_cmd.name || ''),
     help: help,
     values: values,
-    title: tipParts.join(' — ')
+    title: tipParts.join('. ')
   }
 }
 
@@ -402,7 +402,7 @@ function reolinkShowCmdHelp(data) {
     })
     return
   }
-  $('#div_alert').showAlert({message: (data.help || '') + (data.values ? (' — ' + data.values) : ''), level: 'info'})
+  $('#div_alert').showAlert({message: (data.help || '') + (data.values ? ('. ' + data.values) : ''), level: 'info'})
 }
 
 /* Fonction permettant l'affichage des commandes dans l'équipement */
@@ -427,8 +427,8 @@ function addCmdToTable(_cmd) {
   tr += '<span class="cmdAttr input-group-addon roundedRight" data-l1key="display" data-l2key="icon" style="font-size:19px;padding:0 5px 0 0!important;"></span>'
   if (helpData.title !== '') {
     tr += '<span class="input-group-addon" style="padding:0 6px;">'
-    tr += '<a href="#" class="cmdHelpBtn" title="' + reolinkEscapeHtml(helpData.title) + '">'
-    tr += '<i class="fas fa-question-circle tooltips" title="' + reolinkEscapeHtml(helpData.title) + '"></i>'
+    tr += '<a href="#" class="cmdHelpBtn" title="' + reolinkEscapeHtml(helpData.title) + '" style="color:#5bc0de;">'
+    tr += '<i class="fas fa-question-circle tooltips" title="' + reolinkEscapeHtml(helpData.title) + '" style="color:#5bc0de;"></i>'
     tr += '</a></span>'
   }
   tr += '</div>'
