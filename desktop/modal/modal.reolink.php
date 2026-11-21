@@ -37,12 +37,10 @@ if (!is_object($camera)) {
   <select class="form-control" id="sel_patrolId">
     <?php for ($i = 0; $i <= 5; $i++) { echo '<option value="'.$i.'">{{Ronde}} '.$i.'</option>'; } ?>
   </select>
-  <span class="input-group-addon" style="min-width:220px;">
+  <span class="input-group-btn" style="width:auto;white-space:nowrap;">
     <input type="hidden" id="cb_patrolEnable" value="0">
-    <div class="btn-group btn-group-sm" id="btg_patrolEnable" data-toggle="buttons" style="margin:0;">
-      <label class="btn btn-default active" id="bt_patrolDisable"><input type="radio" name="patrolEnable" value="0" autocomplete="off" checked> {{Désactiver}}</label>
-      <label class="btn btn-default" id="bt_patrolEnable"><input type="radio" name="patrolEnable" value="1" autocomplete="off"> {{Activer}}</label>
-    </div>
+    <a class="btn btn-default" id="bt_patrolDisable" style="margin-left:2px;"><i class="fas fa-ban"></i> {{Désactiver}}</a>
+    <a class="btn btn-default" id="bt_patrolEnable"><i class="fas fa-check"></i> {{Activer}}</a>
   </span>
 </div>
 <table class="table table-bordered table-condensed" id="table_patrolSteps">
@@ -142,10 +140,13 @@ if (!is_object($camera)) {
 
   function setPatrolEnable(on) {
     $('#cb_patrolEnable').val(on ? '1' : '0');
-    $('#bt_patrolEnable').toggleClass('active btn-success', !!on).toggleClass('btn-default', !on);
-    $('#bt_patrolDisable').toggleClass('active btn-warning', !on).toggleClass('btn-default', !!on);
-    $('#bt_patrolEnable input').prop('checked', !!on);
-    $('#bt_patrolDisable input').prop('checked', !on);
+    // Plain Jeedom buttons (no Bootstrap radio toggle): green = ON, orange = OFF
+    $('#bt_patrolEnable')
+      .toggleClass('btn-success', !!on)
+      .toggleClass('btn-default', !on);
+    $('#bt_patrolDisable')
+      .toggleClass('btn-warning', !on)
+      .toggleClass('btn-default', !!on);
   }
 
   function isPatrolEnabled() {
@@ -191,8 +192,8 @@ if (!is_object($camera)) {
   }
 
   $('#sel_patrolId').on('change', function () { loadPatrol($(this).val()); });
-  $('#bt_patrolEnable').on('click', function () { setPatrolEnable(true); });
-  $('#bt_patrolDisable').on('click', function () { setPatrolEnable(false); });
+  $('#bt_patrolEnable').on('click', function (e) { e.preventDefault(); setPatrolEnable(true); });
+  $('#bt_patrolDisable').on('click', function (e) { e.preventDefault(); setPatrolEnable(false); });
   $('#bt_patrolAddStep').on('click', function () { addStep(); });
   $('#table_patrolSteps').on('click', '.patrol-del', function () { $(this).closest('tr').remove(); renumber(); });
   $('#table_patrolSteps').on('change', '.patrol-preset', updateStartButton);
