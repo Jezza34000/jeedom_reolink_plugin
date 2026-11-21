@@ -16,8 +16,7 @@
  */
 
 var reolinkCmdQueue = []
-var reolinkCmdRendered = true
-var reolinkBatching = false
+var reolinkLoadingEqLogic = false
 var reolinkInfoOptionsHtml = ''
 
 if (typeof jeedom !== 'undefined' && typeof jeedom.getConfiguration === 'function' && (!jeedom.cache || jeedom.cache.getConfiguration == null)) {
@@ -32,16 +31,15 @@ if (typeof jeedom !== 'undefined' && typeof jeedom.getConfiguration === 'functio
 
 function prePrintEqLogic(_eqlogicId) {
   reolinkCmdQueue = []
-  reolinkCmdRendered = false
-  reolinkBatching = true
+  reolinkLoadingEqLogic = true
   reolinkInfoOptionsHtml = ''
   var tbody = document.querySelector('#table_cmd tbody')
   if (tbody) tbody.empty()
 }
 
 function saveEqLogic(_eqLogic) {
-  // shortcut: omit cmd when #commandtab was never opened so eqLogic.ajax.php skips 130+ SQL cmd->save() while keeping all DB cmds intact; upgrade if cmds are ever edited outside #commandtab
-  if (!reolinkCmdRendered && _eqLogic) {
+  // shortcut: omit cmd while eqLogic is still loading or queued cmds have not been flushed to #table_cmd yet; prevents wiping DB cmds and skips 130+ SQL cmd->save() when #commandtab stayed closed
+  if ((reolinkLoadingEqLogic || reolinkCmdQueue.length > 0) && _eqLogic) {
     delete _eqLogic.cmd
   }
   return _eqLogic
@@ -82,7 +80,7 @@ function printEqLogic(_eqLogic) {
   }
   updateEqLogicRoleUi(_eqLogic)
   setTimeout(function () {
-    reolinkBatching = false
+    reolinkLoadingEqLogic = false
     if (reolinkIsCommandTabActive()) {
       reolinkFlushCmdQueue()
     }
@@ -622,17 +620,17 @@ function reolinkBindLiveCmdStates(container) {
 }
 
 function reolinkFlushCmdQueue() {
-  if (reolinkCmdRendered) return
+  if (reolinkLoadingEqLogic || reolinkCmdQueue.length === 0) return
   var tbody = document.querySelector('#table_cmd tbody')
   if (!tbody) return
   var prevMod = (typeof jeeFrontEnd !== 'undefined') ? jeeFrontEnd.modifyWithoutSave : false
   var frag = document.createDocumentFragment()
-  for (var i = 0; i < reolinkCmdQueue.length; i++) {
-    frag.appendChild(reolinkBuildCmdRow(reolinkCmdQueue[i]))
-  }
+  var items = reolinkCmdQueue
   reolinkCmdQueue = []
+  for (var i = 0; i < items.length; i++) {
+    frag.appendChild(reolinkBuildCmdRow(items[i]))
+  }
   tbody.appendChild(frag)
-  reolinkCmdRendered = true
   reolinkBindLiveCmdStates(tbody)
   if (typeof jeedomUtils !== 'undefined' && typeof jeedomUtils.initTooltips === 'function') {
     jeedomUtils.initTooltips(tbody)
@@ -642,11 +640,11 @@ function reolinkFlushCmdQueue() {
 }
 
 function addCmdToTable(_cmd) {
-  if (reolinkBatching) {
+  if (reolinkLoadingEqLogic) {
     reolinkCmdQueue.push(_cmd)
     return
   }
-  if (!reolinkCmdRendered) {
+  if (reolinkCmdQueue.length > 0) {
     reolinkFlushCmdQueue()
   }
   var tbody = document.querySelector('#table_cmd tbody')
@@ -684,7 +682,7 @@ $('#table_cmd').on('click', '.cmdHelpBtn', function (e) {
 })
 
 $('body').on('shown.bs.tab click', '.nav-tabs a[data-target="#commandtab"], .nav-tabs a[href="#commandtab"]', function () {
-  if (!reolinkCmdRendered) {
+  if (!reolinkLoadingEqLogic && reolinkCmdQueue.length > 0) {
     requestAnimationFrame(reolinkFlushCmdQueue)
   }
 })
