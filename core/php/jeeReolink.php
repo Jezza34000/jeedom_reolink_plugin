@@ -37,8 +37,8 @@ try {
             }
 
             $defCh = $eqLogic->getConfiguration('defined_channel', '');
-            $isNvr = ($eqLogic->getConfiguration('exactType') === 'NVR' || intval($eqLogic->getConfiguration('channelNum', 1)) > 1);
-            $multiChannel = ($defCh !== '' || $isNvr);
+            $isNvr = $eqLogic->isNvrParent();
+            $multiChannel = ($defCh !== '' || $isNvr || $eqLogic->isChannelChild());
             if ($isNvr && $defCh === '') {
               continue;
             }
@@ -56,6 +56,16 @@ try {
               $eqLogic->checkAndUpdateCmd('EvMotion', $result['motionstate']);
             } elseif (strpos($result['message'], 'Ev') !== false) {
               $eqLogic->checkAndUpdateCmd($result['message'], $result['motionstate']);
+            }
+
+            if ($eqLogic->hasBattery()) {
+              $eqLogic->checkAndUpdateCmd('BatterySleepState', 0);
+              if (intval($result['motionstate'] ?? 0) === 1) {
+                $lastWake = intval(cache::byKey('reolink::battery_last_wake::' . $eqLogic->getId())->getValue(0));
+                if ((time() - $lastWake) > reolink::BATTERY_PASSIVE_WAKE_INTERVAL) {
+                  reolink::refreshNFO($eqLogic->getId(), true);
+                }
+              }
             }
 
             $needAiPoll = ($camera_AI == "Oui" && $result['message'] == "motion");

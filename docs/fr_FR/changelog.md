@@ -6,6 +6,7 @@
 
 # 21/11/2026
 
+- Caméras sur batterie via NVR / Home Hub : niveau de batterie (intégré à la jauge native Jeedom), état de charge, température batterie et mode veille, avec polling économe sans réveil inutile (`NONE_WAKING_COMMANDS`), cache snapshot en veille, réveil passif ONVIF et fallback Baichuan
 - Privacy Mode : sortie de veille Baichuan alignée sur `reolink_aio` (sans modification `NetPort` ni coupure immédiate), sonde CGI HTTP 200 au réveil, purge du cache plugin Caméra et rafraîchissement automatique post-réveil (#122)
 - Rondes PTZ : activation automatique du slot à l'ajout d'étape pour conserver les presets sur la caméra et clarification `Désactiver` vs `Arrêter` (#119)
 - Performances UI : ouverture des équipements et de l'onglet Commandes fluide (rendu différé hors-DOM, préchauffage config async, icônes lazy/async)

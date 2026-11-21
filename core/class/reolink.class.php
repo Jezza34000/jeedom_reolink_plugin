@@ -25,6 +25,41 @@ const CMD_SEND_QTY = 8;
 class reolink extends eqLogic {
 
   const PYTHON_PATH = __DIR__ . '/../../resources/venv/bin/python3';
+  const BATTERY_PASSIVE_WAKE_INTERVAL = 3600;
+  const BATTERY_WAKE_INTERVAL = 21600;
+  const MULTI_HOST_TYPES = array('NVR', 'WIFI_NVR', 'HOMEHUB');
+  const NONE_WAKING_COMMANDS = array(
+    'GetIsp',
+    'GetEvents',
+    'GetMdState',
+    'GetAiState',
+    'GetIrLights',
+    'GetBatteryInfo',
+    'GetPirInfo',
+    'GetPowerLed',
+    'GetAutoFocus',
+    'GetDeviceAudioCfg',
+    'GetManualRec',
+    'GetImage',
+    'GetBuzzerAlarmV20',
+    'GetEmailV20',
+    'GetEmail',
+    'GetPushV20',
+    'GetPush',
+    'GetFtpV20',
+    'GetFtp',
+    'GetRecV20',
+    'GetRec',
+    'GetAudioAlarmV20',
+    'GetMdAlarm',
+    'GetAlarm',
+    'GetStateLight',
+    'GetHddInfo',
+    'GetChannelstatus',
+    'GetChannelStatus',
+    'GetPushCfg',
+    'GetScene',
+  );
 
   /************* Static methods ************/
   // Leading underscore required: Jeedom utils::o2a() persists non-_ properties into eqLogic INSERT/UPDATE
@@ -78,13 +113,112 @@ class reolink extends eqLogic {
     if ($this->isChannelChild()) {
       return false;
     }
-    $hostType = strval($this->getConfiguration('hostExactType', $this->getConfiguration('exactType', '')));
+    $hostType = strtoupper(strval($this->getConfiguration('hostExactType', $this->getConfiguration('exactType', ''))));
+    $devType = strtoupper(strval($this->getConfiguration('type', '')));
     $hostChannels = intval($this->getConfiguration('hostChannelNum', $this->getConfiguration('channelNum', 1)));
-    return ($hostType === 'NVR' || $hostChannels > 1);
+    return (in_array($hostType, self::MULTI_HOST_TYPES, true)
+      || in_array($devType, self::MULTI_HOST_TYPES, true)
+      || $hostChannels > 1);
   }
 
   public function isStandaloneCamera() {
     return !$this->isNvrParent() && !$this->isChannelChild();
+  }
+
+  public function hasBattery() {
+    if ($this->isNvrParent()) {
+      return false;
+    }
+    if (intval($this->getConfiguration('hasBattery', 0)) === 1) {
+      return true;
+    }
+    return is_object($this->getCmd(null, 'BatteryPercent'));
+  }
+
+  public function isBatterySleeping() {
+    if (!$this->hasBattery()) {
+      return false;
+    }
+    $sleepCmd = $this->getCmd(null, 'BatterySleepState');
+    if (is_object($sleepCmd)) {
+      return (intval($sleepCmd->execCmd()) === 1);
+    }
+    return false;
+  }
+
+  public static function normalizeChargeStatus($raw) {
+    if (is_int($raw) || (is_string($raw) && is_numeric($raw))) {
+      $val = intval($raw);
+      return in_array($val, array(0, 1, 2), true) ? $val : 0;
+    }
+    $str = strtolower(trim(strval($raw)));
+    if ($str === 'charging') {
+      return 1;
+    }
+    if ($str === 'chargecomplete') {
+      return 2;
+    }
+    return 0;
+  }
+
+  public static function formatChargeStatus($chargeStatus) {
+    switch (intval($chargeStatus)) {
+      case 1:
+        return __('En charge', __FILE__);
+      case 2:
+        return __('Charge terminée', __FILE__);
+      default:
+        return __('Décharge', __FILE__);
+    }
+  }
+
+  public function applyBatteryInfo($bat) {
+    if (!is_array($bat)) {
+      return false;
+    }
+    if (isset($bat['batteryPercent']) && is_numeric($bat['batteryPercent'])) {
+      $pct = max(0, min(100, intval($bat['batteryPercent'])));
+      $this->checkAndUpdateCmd('BatteryPercent', $pct);
+      $this->batteryStatus($pct);
+    }
+    if (array_key_exists('chargeStatus', $bat)) {
+      $cs = self::normalizeChargeStatus($bat['chargeStatus']);
+      $this->checkAndUpdateCmd('BatteryCharging', ($cs === 1) ? 1 : 0);
+      $this->checkAndUpdateCmd('BatteryChargeStatus', self::formatChargeStatus($cs));
+    }
+    if (isset($bat['temperature']) && is_numeric($bat['temperature'])) {
+      $this->checkAndUpdateCmd('BatteryTemperature', intval($bat['temperature']));
+    }
+    if (array_key_exists('sleeping', $bat) && $bat['sleeping'] !== null && $bat['sleeping'] !== '') {
+      $this->checkAndUpdateCmd('BatterySleepState', intval($bat['sleeping']) === 1 ? 1 : 0);
+    }
+    return true;
+  }
+
+  public static function shouldWakeBatteryChannel($camera, $forceWake = false, $isSleeping = true) {
+    if ($forceWake) {
+      return true;
+    }
+    if (!is_object($camera)) {
+      return false;
+    }
+    $lastWake = intval(cache::byKey('reolink::battery_last_wake::' . $camera->getId())->getValue(0));
+    $now = time();
+    if (!$isSleeping && ($now - $lastWake) > self::BATTERY_PASSIVE_WAKE_INTERVAL) {
+      return true;
+    }
+    if (($now - $lastWake) > self::BATTERY_WAKE_INTERVAL) {
+      return true;
+    }
+    return false;
+  }
+
+  public static function isNonWakingPayload($payloadJson) {
+    $decoded = json_decode(strval($payloadJson), true);
+    if (!is_array($decoded) || empty($decoded['cmd'])) {
+      return false;
+    }
+    return in_array(strval($decoded['cmd']), self::NONE_WAKING_COMMANDS, true);
   }
 
   /**
@@ -465,6 +599,9 @@ class reolink extends eqLogic {
           $camera->setConfiguration('camModel', $st['typeInfo']);
           reolink::downloadCamIcon($id, $st['typeInfo'], $camera);
         }
+        if (array_key_exists('sleep', $st) && is_object($camera->getCmd(null, 'BatterySleepState'))) {
+          $camera->checkAndUpdateCmd('BatterySleepState', intval($st['sleep']) === 1 ? 1 : 0);
+        }
         break;
       }
     }
@@ -512,15 +649,40 @@ class reolink extends eqLogic {
     if (!is_object($reolinkEq) || $reolinkEq->isNvrParent()) {
       return '';
     }
+    return reolink::captureSnapshotSafe($reolinkEq, 'sub');
+  }
+
+  public static function captureSnapshotSafe($reolinkEq, $quality = 'sub') {
+    if (!is_object($reolinkEq) || $reolinkEq->isNvrParent()) {
+      return '';
+    }
     if ($reolinkEq->isStandalonePrivacyBlocking()) {
+      return '';
+    }
+    $quality = ($quality === 'main') ? 'main' : 'sub';
+    $snapCacheKey = 'reolink::last_snap::' . $reolinkEq->getId() . '::' . $quality;
+    if ($reolinkEq->hasBattery() && $reolinkEq->isBatterySleeping()) {
+      $cachedB64 = strval(cache::byKey($snapCacheKey)->getValue(''));
+      if ($cachedB64 !== '') {
+        $decoded = base64_decode($cachedB64, true);
+        if ($decoded !== false && $decoded !== '') {
+          return $decoded;
+        }
+      }
       return '';
     }
     $cnx = reolink::getReolinkConnection($reolinkEq->getId());
     if (!is_object($cnx)) {
       return '';
     }
-    $jpeg = $cnx->SendSnap($reolinkEq->getChannel(), 'sub');
-    return ($jpeg === false) ? '' : $jpeg;
+    $jpeg = $cnx->SendSnap($reolinkEq->getChannel(), $quality);
+    if ($jpeg === false || $jpeg === '') {
+      return '';
+    }
+    if ($reolinkEq->hasBattery()) {
+      cache::set($snapCacheKey, base64_encode($jpeg));
+    }
+    return $jpeg;
   }
 
   public static function syncCameraPlugin($id = null) {
@@ -730,6 +892,48 @@ class reolink extends eqLogic {
         $deviceAbility['privacyMode'] = array('permit' => 1, 'ver' => 1);
         log::add('reolink', 'info', 'privacyMode détecté via Baichuan (canal ' . $channel . ', sleep=' . ($privacy ? '1' : '0') . ')');
       }
+    }
+
+    // Battery cameras behind NVR / Home Hub (reolink_aio: battery + sleep + temperature)
+    $batVer = intval($deviceAbility['battery']['ver'] ?? 0);
+    $batPermit = intval($deviceAbility['battery']['permit'] ?? 0);
+    $hasBat = ($batVer > 0 && $batPermit > 0);
+    $batData = null;
+    if ($hasBat) {
+      $batResp = $reolinkConn->SendCMD('[{"cmd":"GetBatteryInfo","action":0,"param":{"channel":' . intval($channel) . '}}]');
+      if (is_array($batResp) && isset($batResp[0]['value']['Battery']) && is_array($batResp[0]['value']['Battery'])) {
+        $batData = $batResp[0]['value']['Battery'];
+      } elseif (is_object($bc)) {
+        $batData = $bc->getBatteryInfo($channel);
+      }
+    }
+    $deviceAbility['battery'] = array('permit' => $hasBat ? 4 : 0, 'ver' => $hasBat ? max(1, $batVer) : 0);
+    $hasTemp = ($hasBat && is_array($batData) && array_key_exists('temperature', $batData) && $batData['temperature'] !== null && $batData['temperature'] !== '');
+    $deviceAbility['batteryTemp'] = array('permit' => $hasTemp ? 4 : 0, 'ver' => $hasTemp ? 1 : 0);
+    $hasSleep = false;
+    if ($hasBat) {
+      $stResp = $reolinkConn->SendCMD('[{"cmd":"GetChannelstatus","action":0,"param":{}}]');
+      $stList = $stResp[0]['value']['status'] ?? array();
+      if (is_array($stList)) {
+        foreach ($stList as $stEntry) {
+          if (is_array($stEntry) && intval($stEntry['channel'] ?? -1) === intval($channel) && array_key_exists('sleep', $stEntry)) {
+            $hasSleep = true;
+            break;
+          }
+        }
+      }
+      if (!$hasSleep && is_array($batData) && array_key_exists('sleeping', $batData)) {
+        $hasSleep = true;
+      }
+      if (!$hasSleep && is_object($bc) && $bc->getChannelSleepState($channel) !== null) {
+        $hasSleep = true;
+      }
+      log::add('reolink', 'info', 'Caméra sur batterie détectée sur canal ' . $channel . ' (sleep=' . ($hasSleep ? '1' : '0') . ', temp=' . ($hasTemp ? '1' : '0') . ')');
+    }
+    $deviceAbility['batterySleep'] = array('permit' => $hasSleep ? 4 : 0, 'ver' => $hasSleep ? 1 : 0);
+    if (intval($camera->getConfiguration('hasBattery', -1)) !== ($hasBat ? 1 : 0)) {
+      $camera->setConfiguration('hasBattery', $hasBat ? 1 : 0);
+      $camera->save(true);
     }
 
     // Cross-check AI type support with GetAiState (more accurate than GetAbility alone)
@@ -994,7 +1198,7 @@ class reolink extends eqLogic {
     return true;
   }
 
-  public static function refreshNFO($id) {
+  public static function refreshNFO($id, $forceWake = false) {
     $camcmd = reolink::byId($id, 'reolink');
     if (!is_object($camcmd)) {
       log::add('reolink', 'debug', 'refreshNFO ignoré : équipement introuvable');
@@ -1041,6 +1245,77 @@ class reolink extends eqLogic {
     log::add('reolink', 'debug', 'Rafraichissement des informations de la caméra...');
 
     $channel = $camcmd->getChannel();
+    $isBatteryCam = $camcmd->hasBattery();
+    $shouldWakeBattery = true;
+
+    // Battery camera behind NVR / Home Hub: read non-waking battery & sleep status first
+    if ($isBatteryCam) {
+      $batSleeping = $camcmd->isBatterySleeping();
+      $batOnline = true;
+      $sleepUpdated = false;
+      $batUpdated = false;
+      $preBatch = '[{"cmd":"GetChannelstatus","action":0,"param":{}},{"cmd":"GetBatteryInfo","action":0,"param":{"channel":' . intval($channel) . '}}]';
+      $preRes = $camcnx->SendCMD($preBatch);
+      $preData = is_array($preRes) ? $preRes : $camcnx->lastResponseData;
+      if (is_array($preData)) {
+        foreach ($preData as $pItem) {
+          $pCmd = $pItem['cmd'] ?? '';
+          if (($pCmd === 'GetChannelstatus' || $pCmd === 'GetChannelStatus') && isset($pItem['value']['status']) && is_array($pItem['value']['status'])) {
+            foreach ($pItem['value']['status'] as $stEntry) {
+              if (!is_array($stEntry) || intval($stEntry['channel'] ?? -1) !== intval($channel)) {
+                continue;
+              }
+              $batOnline = (intval($stEntry['online'] ?? 1) === 1);
+              $camcmd->checkAndUpdateCmd('ChannelOnline', $batOnline ? 1 : 0);
+              if ($batOnline && array_key_exists('sleep', $stEntry)) {
+                $batSleeping = (intval($stEntry['sleep']) === 1);
+                $camcmd->checkAndUpdateCmd('BatterySleepState', $batSleeping ? 1 : 0);
+                $sleepUpdated = true;
+              }
+              break;
+            }
+          } elseif ($pCmd === reolinkAPI::CAM_GET_BATTERYINFO && isset($pItem['value']['Battery']) && is_array($pItem['value']['Battery'])) {
+            $camcmd->applyBatteryInfo($pItem['value']['Battery']);
+            $batUpdated = true;
+            if (array_key_exists('sleeping', $pItem['value']['Battery'])) {
+              $batSleeping = (intval($pItem['value']['Battery']['sleeping']) === 1);
+              $sleepUpdated = true;
+            }
+          }
+        }
+      }
+      if (!$batOnline) {
+        log::add('reolink', 'debug', 'Canal batterie ' . $channel . ' hors ligne, rafraîchissement ignoré');
+        return;
+      }
+      if (!$batUpdated || (!$sleepUpdated && is_object($camcmd->getCmd(null, 'BatterySleepState')))) {
+        $bcFallback = reolinkBaichuan::fromEqLogic($camcmd);
+        if (is_object($bcFallback)) {
+          if (!$batUpdated) {
+            $bcBat = $bcFallback->getBatteryInfo($channel);
+            if (is_array($bcBat)) {
+              $camcmd->applyBatteryInfo($bcBat);
+            }
+          }
+          if (!$sleepUpdated && is_object($camcmd->getCmd(null, 'BatterySleepState'))) {
+            $bcSleep = $bcFallback->getChannelSleepState($channel);
+            if ($bcSleep !== null) {
+              $batSleeping = (bool) $bcSleep;
+              $camcmd->checkAndUpdateCmd('BatterySleepState', $batSleeping ? 1 : 0);
+            }
+          }
+        }
+      }
+      $shouldWakeBattery = reolink::shouldWakeBatteryChannel($camcmd, $forceWake, $batSleeping);
+      if ($shouldWakeBattery) {
+        cache::set('reolink::battery_last_wake::' . $id, time());
+        $camcnx->batteryChannelMode = true;
+        log::add('reolink', 'debug', 'Caméra batterie canal ' . $channel . ' : rafraîchissement complet autorisé (force=' . ($forceWake ? '1' : '0') . ', sleep=' . ($batSleeping ? '1' : '0') . ')');
+      } else {
+        log::add('reolink', 'debug', 'Caméra batterie canal ' . $channel . ' : économie batterie (NONE_WAKING_COMMANDS uniquement)');
+      }
+    }
+
     $unsupported = $camcmd->getConfiguration('unsupported_payloads', array());
     if (!is_array($unsupported)) {
       $unsupported = array();
@@ -1069,12 +1344,22 @@ class reolink extends eqLogic {
         if ($skipCheckFirmware && strpos($payload, '"cmd":"CheckFirmware"') !== false) {
           continue;
         }
+        if ($isBatteryCam) {
+          // Already polled in preBatch above
+          if (strpos($payload, '"cmd":"GetBatteryInfo"') !== false || strpos($payload, '"cmd":"GetChannelstatus"') !== false) {
+            continue;
+          }
+          if (!$shouldWakeBattery && !reolink::isNonWakingPayload($payload)) {
+            continue;
+          }
+        }
         if (!in_array($payload, $cmdarr)) {
           $cmdarr[] = $payload;
         }
       }
     }
     if (empty($cmdarr)) {
+      $camcnx->batteryChannelMode = false;
       return;
     }
     $cmd_block = array_chunk($cmdarr, config::byKey('cmdblock', __CLASS__, CMD_SEND_QTY));
@@ -1127,6 +1412,9 @@ class reolink extends eqLogic {
         }
         $rsp = intval($item['error']['rspCode']);
         if (in_array($rsp, $transient, true) || !$channelAlive) {
+          continue;
+        }
+        if ($isBatteryCam && in_array($rsp, array(-12, -13, -17), true)) {
           continue;
         }
         if (in_array($rsp, $immediate, true)) {
@@ -1488,6 +1776,28 @@ class reolink extends eqLogic {
             }
             break;
 
+          case reolinkAPI::CAM_GET_BATTERYINFO:
+            if (isset($json_data['value']['Battery']) && is_array($json_data['value']['Battery'])) {
+              $camcmd->applyBatteryInfo($json_data['value']['Battery']);
+            }
+            break;
+
+          case 'GetChannelstatus':
+          case 'GetChannelStatus':
+            $stItems = $json_data['value']['status'] ?? array();
+            if (is_array($stItems)) {
+              foreach ($stItems as $stEntry) {
+                if (is_array($stEntry) && intval($stEntry['channel'] ?? -1) === intval($channel)) {
+                  $camcmd->checkAndUpdateCmd('ChannelOnline', intval($stEntry['online'] ?? 1) === 1 ? 1 : 0);
+                  if (array_key_exists('sleep', $stEntry)) {
+                    $camcmd->checkAndUpdateCmd('BatterySleepState', intval($stEntry['sleep']) === 1 ? 1 : 0);
+                  }
+                  break;
+                }
+              }
+            }
+            break;
+
           default:
             log::add('reolink', 'debug', 'Switch command not found : ' . print_r($json_data, true));
             $res = false;
@@ -1497,6 +1807,8 @@ class reolink extends eqLogic {
         $camcmd->checkAndUpdateCmd('ChannelOnline', $mdOk ? 1 : 0);
       }
     } #END foreach
+
+    $camcnx->batteryChannelMode = false;
 
     if ($dirtyUnsupported) {
       $camcmd->setConfiguration('unsupported_payloads', array_keys($unsupportedMap));
@@ -1983,8 +2295,12 @@ class reolink extends eqLogic {
     return $results;
   }
 
-  public static function isPermanentUnsupportedRsp($rsp) {
-    return in_array(intval($rsp), array(-1, -4, -9, -12, -17, -24, -26), true);
+  public static function isPermanentUnsupportedRsp($rsp, $isBatteryCam = false) {
+    $code = intval($rsp);
+    if ($isBatteryCam && in_array($code, array(-12, -13, -17), true)) {
+      return false;
+    }
+    return in_array($code, array(-1, -4, -9, -12, -17, -24, -26), true);
   }
 
   /**
@@ -2124,6 +2440,8 @@ class reolink extends eqLogic {
       $payload = str_replace('\\', '', $payload);
       $probeList[] = $payload;
     }
+    $isBatChannel = (!$camera->isNvrParent() && (reolink::isAbilityOk($devAbilityReturn, 'battery') || $camera->hasBattery()));
+    $cnx->batteryChannelMode = $isBatChannel;
     $probeList = array_values(array_unique($probeList));
     $probeResults = reolink::probePayloads($cnx, $probeList);
 
@@ -2233,7 +2551,9 @@ class reolink extends eqLogic {
       if (($command['type'] ?? '') === 'info' && $payloadTpl) {
         $payload = str_replace('#CHANNEL#', $channel, str_replace('\\', '', $payloadTpl));
         if (isset($probeResults[$payload]) && !$probeResults[$payload]['ok']) {
-          if (reolink::isPermanentUnsupportedRsp($probeResults[$payload]['rsp'])) {
+          // Battery info / channel sleep have Baichuan fallbacks when HTTP CGI is unsupported
+          $isBatteryCmd = in_array($command['abilityneed'] ?? '', array('battery', 'batterySleep'), true);
+          if (!$isBatteryCmd && reolink::isPermanentUnsupportedRsp($probeResults[$payload]['rsp'], $isBatChannel)) {
             $unsupportedPayloads[$payload] = true;
             $deniedLogical[$logicalId] = true;
             continue;
@@ -2330,8 +2650,9 @@ class reolink extends eqLogic {
         }
         $payloadTpl = $existing->getConfiguration('payload');
         $payload = $payloadTpl ? str_replace('#CHANNEL#', $channel, str_replace('\\', '', $payloadTpl)) : null;
-        $probeFailed = ($payload !== null && isset($probeResults[$payload]) && !$probeResults[$payload]['ok']
-          && reolink::isPermanentUnsupportedRsp($probeResults[$payload]['rsp']));
+        $isBatteryExisting = in_array($lid, array('BatteryPercent', 'BatteryCharging', 'BatteryChargeStatus', 'BatteryTemperature', 'BatterySleepState'), true);
+        $probeFailed = (!$isBatteryExisting && $payload !== null && isset($probeResults[$payload]) && !$probeResults[$payload]['ok']
+          && reolink::isPermanentUnsupportedRsp($probeResults[$payload]['rsp'], $isBatChannel));
 
         $shouldRemove = isset($deniedLogical[$lid]) || $probeFailed;
         // Also remove if ability/subability/scope from JSON would deny
@@ -2385,6 +2706,7 @@ class reolink extends eqLogic {
     if (!$camera->isNvrParent()) {
       reolink::applyEncListValues($camera, $cnx, $channel);
     }
+    $cnx->batteryChannelMode = false;
 
     $camera->setConfiguration('unsupported_payloads', array_keys(array_merge($unsupportedPayloads, $keptUnsupported)));
     $camera->setConfiguration('unsupported_fail_counts', array());
@@ -2523,7 +2845,7 @@ class reolinkCmd extends cmd {
 
     switch ($this->getLogicalId()) {
       case 'refresh':
-        reolink::refreshNFO($EqId);
+        reolink::refreshNFO($EqId, true);
         break;
       case 'GetPtzPreset':
         $camcnx = reolink::getReolinkConnection($EqId);
@@ -2636,6 +2958,9 @@ class reolinkCmd extends cmd {
         break;
       default:
         $camcnx = reolink::getReolinkConnection($EqId);
+        if (is_object($camcnx) && is_object($eqLogic) && $eqLogic->hasBattery()) {
+          $camcnx->batteryChannelMode = true;
+        }
         // Speed NFO
         $cmd = reolinkCmd::byEqLogicIdAndLogicalId($EqId, "SetSpeed");
         if (is_object($cmd)) {
@@ -2762,7 +3087,13 @@ class reolinkCmd extends cmd {
 
           log::add('reolink', 'debug', 'Payload avec paramètre utilisateur demandé = ' . $payload);
 
-          $camresp = $camcnx->SendCMD($payload);
+          try {
+            $camresp = $camcnx->SendCMD($payload);
+          } finally {
+            if (is_object($camcnx)) {
+              $camcnx->batteryChannelMode = false;
+            }
+          }
           $ok = is_array($camresp) && intval($camresp[0]['code'] ?? -1) === 0;
           if ($ok && array_key_exists('rspCode', $camresp[0]['value'] ?? array())) {
             $ok = intval($camresp[0]['value']['rspCode']) === 200;

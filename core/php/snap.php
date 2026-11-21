@@ -18,14 +18,9 @@ if ($eq->isStandalonePrivacyBlocking()) {
   http_response_code(204);
   exit;
 }
-$cnx = reolink::getReolinkConnection($id);
-if (!is_object($cnx)) {
-  http_response_code(500);
-  exit;
-}
-$jpeg = $cnx->SendSnap($eq->getChannel(), $quality);
-if ($jpeg === false) {
-  http_response_code(502);
+$jpeg = reolink::captureSnapshotSafe($eq, $quality);
+if ($jpeg === '') {
+  http_response_code(($eq->hasBattery() && $eq->isBatterySleeping()) ? 204 : 502);
   exit;
 }
 header('Content-Type: image/jpeg');
