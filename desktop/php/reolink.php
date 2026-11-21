@@ -25,7 +25,7 @@ $renderCard = function ($eqLogic) {
 		$info = trim($ip . ' · Canal ' . $channel);
 	}
 	echo '<div class="eqLogicDisplayCard cursor ' . $opacity . '" data-eqLogic_id="' . $eqLogic->getId() . '">';
-	echo '<img src="' . $eqLogic->getImage() . '"/>';
+	echo '<img src="' . $eqLogic->getImage() . '" loading="lazy" decoding="async"/>';
 	echo '<br>';
 	echo '<span class="name">' . $eqLogic->getHumanName(true, true) . '</span>';
 	echo '<span class="hiddenAsCard displayTableRight hidden">';
@@ -247,7 +247,7 @@ $renderCard = function ($eqLogic) {
 							<legend><i class="fas fa-info"></i> {{Informations}}</legend>
 							<div class="form-group">
 								<div class="text-center">
-									<img name="icon_visu" id="img_device" src="<?php echo $plugin->getPathImgIcon(); ?>" style="max-height:140px;max-width:160px;"/>
+									<img name="icon_visu" id="img_device" src="<?php echo $plugin->getPathImgIcon(); ?>" decoding="async" style="max-height:140px;max-width:160px;"/>
 								</div>
 							</div>
 
@@ -460,6 +460,12 @@ if (is_readable($reolinkCmdConf)) {
 	}
 }
 ?>
+<style>
+#table_cmd tbody tr.cmd {
+	content-visibility: auto;
+	contain-intrinsic-size: auto 42px;
+}
+</style>
 <script>
 window.REOLINK_CMD_HELP = <?php echo json_encode($reolinkCmdHelp, JSON_UNESCAPED_UNICODE); ?>;
 </script>

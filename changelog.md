@@ -2,6 +2,7 @@
 
 21/11/2026
 
+- Performances UI : ouverture équipement et onglet Commandes accélérés (préchauffage async `jeedom.getConfiguration`, rendu différé de `#table_cmd` en `DocumentFragment` hors-DOM, options `info` mises en cache, sauvegarde sans réécriture SQL des commandes non ouvertes, icônes lazy/async et `content-visibility`)
 - UI rondes PTZ : Activer/Désactiver en vrais boutons Jeedom (vert/orange), plus le toggle radio Bootstrap illisible en Dark
 - UI : assistant cron Auto-actualisation branché et pré-rempli ; rondes PTZ Activer/Désactiver lisible en Dark ; aide `?` cliquable et colorée (`--al-info-color`) sur chaque commande (description + valeurs détaillées, sans recréation requise) ; corrections orthographiques FR et i18n `en_US` / `es_ES` (issue #119)
 - Privacy Mode : sortie propre sur caméra autonome (poll Baichuan 574, réouverture HTTP/HTTPS via cmd 37/36, fenêtre de réveil anti-spam Login HTTPS du widget Caméra) — retour Community / PR #92
