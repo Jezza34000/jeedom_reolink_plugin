@@ -25,8 +25,8 @@ if (!isConnect()) {
 <form class="form-horizontal">
   <fieldset>
     <div class="form-group">
-      <label class="col-md-4 control-label">{{Methode d'authentification GET}}
-        <sup><i class="fas fa-question-circle tooltips" title="{{Methode par laquelle le plugin va envoyer les commandes API (ne pas modifier ce paramètre sauf si vous savez ce que vous faites)}}"></i></sup>
+      <label class="col-md-4 control-label">{{Méthode d'authentification GET}}
+        <sup><i class="fas fa-question-circle tooltips" title="{{Méthode par laquelle le plugin envoie les commandes API (ne modifiez ce paramètre que si vous savez ce que vous faites)}}"></i></sup>
       </label>
       <div class="col-md-4">
         <select class="configKey form-control" data-l1key="authmethod">
@@ -36,8 +36,8 @@ if (!isConnect()) {
       </div>
     </div>
     <div class="form-group">
-      <label class="col-md-4 control-label">{{Taille des block commandes}}
-        <sup><i class="fas fa-question-circle tooltips" title="{{Taille des blocks de commandes envoyés en simultanée à la caméra (+ grand, + rapide, mais plus de risque de plantage, + petit, + lent, mais plus stable)}}"></i></sup>
+      <label class="col-md-4 control-label">{{Taille des blocs de commandes}}
+        <sup><i class="fas fa-question-circle tooltips" title="{{Taille des blocs de commandes envoyés simultanément à la caméra (plus grand = plus rapide mais plus de risque de plantage ; plus petit = plus lent mais plus stable)}}"></i></sup>
       </label>
       <div class="col-md-4">
         <select class="configKey form-control" data-l1key="cmdblock">
@@ -51,7 +51,7 @@ if (!isConnect()) {
     </div>
     <div class="form-group">
       <label class="col-md-4 control-label">{{IP de callback du webhook}}
-        <sup><i class="fas fa-question-circle tooltips" title="{{IP vers laquelle les caméras vont renvoyer les évènement détections de mouvement. (IP permettant d'accéder au webhook du daemon du plugin)}}"></i></sup>
+        <sup><i class="fas fa-question-circle tooltips" title="{{Adresse IP vers laquelle les caméras renvoient les événements de détection de mouvement (IP permettant d'atteindre le webhook du démon du plugin)}}"></i></sup>
       </label>
       <div class="col-md-4">
         <select class="configKey form-control" data-l1key="ipwebhook">
@@ -64,7 +64,7 @@ if (!isConnect()) {
     </div>
     <div class="form-group">
       <label class="col-md-4 control-label">{{IP personnalisée}}
-        <sup><i class="fas fa-question-circle tooltips" title="{{IP utilisée pour le rappel du daemon, lorsque vous sélectionner l'option : 'Personnalisée'}}"></i></sup>
+        <sup><i class="fas fa-question-circle tooltips" title="{{IP utilisée pour le rappel du démon lorsque vous sélectionnez l'option Personnalisée}}"></i></sup>
       </label>
       <div class="col-md-4">
         <input class="configKey form-control" data-l1key="webhookdefinedip" />
@@ -72,7 +72,7 @@ if (!isConnect()) {
     </div>
     <div class="form-group">
       <label class="col-md-4 control-label">{{Port du webhook}}
-        <sup><i class="fas fa-question-circle tooltips" title="{{Port du webhook du daemon utilisé par les caméras lors de la détection des mouvements}}"></i></sup>
+        <sup><i class="fas fa-question-circle tooltips" title="{{Port du webhook du démon utilisé par les caméras lors de la détection des mouvements}}"></i></sup>
       </label>
       <div class="col-md-4">
         <input class="configKey form-control" data-l1key="webhookport" value="44010" />

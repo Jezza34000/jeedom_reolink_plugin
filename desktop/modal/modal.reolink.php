@@ -37,8 +37,12 @@ if (!is_object($camera)) {
   <select class="form-control" id="sel_patrolId">
     <?php for ($i = 0; $i <= 5; $i++) { echo '<option value="'.$i.'">{{Ronde}} '.$i.'</option>'; } ?>
   </select>
-  <span class="input-group-addon">
-    <label style="margin:0;font-weight:normal;"><input type="checkbox" id="cb_patrolEnable"> {{Activer cette ronde}}</label>
+  <span class="input-group-addon" style="min-width:220px;">
+    <input type="hidden" id="cb_patrolEnable" value="0">
+    <div class="btn-group btn-group-sm" id="btg_patrolEnable" data-toggle="buttons" style="margin:0;">
+      <label class="btn btn-default active" id="bt_patrolDisable"><input type="radio" name="patrolEnable" value="0" autocomplete="off" checked> {{Désactiver}}</label>
+      <label class="btn btn-default" id="bt_patrolEnable"><input type="radio" name="patrolEnable" value="1" autocomplete="off"> {{Activer}}</label>
+    </div>
   </span>
 </div>
 <table class="table table-bordered table-condensed" id="table_patrolSteps">
@@ -129,11 +133,23 @@ if (!is_object($camera)) {
     $('#table_patrolSteps tbody').empty();
     var p = null;
     patrols.forEach(function (x) { if (String(x.id) === String(id)) { p = x; } });
-    $('#cb_patrolEnable').prop('checked', !!(p && parseInt(p.enable || 0) === 1));
+    setPatrolEnable(!!(p && parseInt(p.enable || 0) === 1));
     if (p && Array.isArray(p.preset)) {
       p.preset.forEach(function (s) { addStep(s); });
     }
     updateStartButton();
+  }
+
+  function setPatrolEnable(on) {
+    $('#cb_patrolEnable').val(on ? '1' : '0');
+    $('#bt_patrolEnable').toggleClass('active btn-success', !!on).toggleClass('btn-default', !on);
+    $('#bt_patrolDisable').toggleClass('active btn-warning', !on).toggleClass('btn-default', !!on);
+    $('#bt_patrolEnable input').prop('checked', !!on);
+    $('#bt_patrolDisable input').prop('checked', !on);
+  }
+
+  function isPatrolEnabled() {
+    return String($('#cb_patrolEnable').val()) === '1';
   }
 
   function collectSteps() {
@@ -175,6 +191,8 @@ if (!is_object($camera)) {
   }
 
   $('#sel_patrolId').on('change', function () { loadPatrol($(this).val()); });
+  $('#bt_patrolEnable').on('click', function () { setPatrolEnable(true); });
+  $('#bt_patrolDisable').on('click', function () { setPatrolEnable(false); });
   $('#bt_patrolAddStep').on('click', function () { addStep(); });
   $('#table_patrolSteps').on('click', '.patrol-del', function () { $(this).closest('tr').remove(); renumber(); });
   $('#table_patrolSteps').on('change', '.patrol-preset', updateStartButton);
@@ -192,7 +210,7 @@ if (!is_object($camera)) {
     ajaxPatrol({
       action: 'SavePatrol',
       patrolId: $('#sel_patrolId').val(),
-      enable: $('#cb_patrolEnable').is(':checked') ? 1 : 0,
+      enable: isPatrolEnabled() ? 1 : 0,
       steps: JSON.stringify(collectSteps())
     }, '{{Ronde enregistrée}}').done(function () {
       ajaxPatrol({action: 'GetPatrolData'});

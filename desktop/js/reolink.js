@@ -81,6 +81,127 @@ function updateNvrParentHint() {
 }
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').on('change keyup', updateNvrParentHint)
 
+function reolinkFireChange(el) {
+  if (!el) return
+  if (typeof el.triggerEvent === 'function') {
+    el.triggerEvent('change')
+  } else {
+    el.dispatchEvent(new Event('change', { bubbles: true }))
+  }
+}
+
+function reolinkPrefillCronModal(cronExpr) {
+  var tries = 0
+  var timer = setInterval(function () {
+    tries++
+    var root = document.querySelector('#mod_insertCronValue #mod_insertCron')
+    var resultSpan = root && root.querySelector('#mod_cron_span_cronResult')
+    if (!root || !resultSpan) {
+      if (tries > 60) {
+        clearInterval(timer)
+      }
+      return
+    }
+    clearInterval(timer)
+    var parts = String(cronExpr || '').trim().split(/\s+/)
+    var mode = root.querySelector('#mod_cron_sel_scheduleMode')
+    if (!mode) return
+    if (parts.length === 6) {
+      mode.value = 'once'
+      reolinkFireChange(mode)
+      var minute = parts[0], hour = parts[1], day = parts[2], month = parts[3], year = parts[5]
+      var pad = function (v) { return (String(v).length === 1 ? '0' : '') + v }
+      var dateInput = root.querySelector('#mod_cron_in_dateScenarioTrigger')
+      if (dateInput) {
+        dateInput.value = year + '-' + pad(month) + '-' + pad(day) + ' ' + pad(hour) + ':' + pad(minute) + ':00'
+        reolinkFireChange(dateInput)
+      }
+      var resOnce = root.querySelector('#mod_cron_span_cronResult')
+      if (resOnce) resOnce.textContent = parts.join(' ')
+      return
+    }
+    if (parts.length !== 5) return
+    mode.value = 'repete'
+    reolinkFireChange(mode)
+    var period = root.querySelector('select[name="cron-period"]')
+    if (!period) return
+    var presets = {
+      '* * * * *': 'minute',
+      '*/5 * * * *': '*/5 * * * *',
+      '*/10 * * * *': '*/10 * * * *',
+      '*/15 * * * *': '*/15 * * * *',
+      '*/20 * * * *': '*/20 * * * *',
+      '*/30 * * * *': '*/30 * * * *'
+    }
+    var expr = parts.join(' ')
+    var setSel = function (sel, val) {
+      var s = root.querySelector(sel)
+      if (s) {
+        s.value = String(parseInt(val, 10))
+        reolinkFireChange(s)
+      }
+    }
+    var hasOpt = function (val) {
+      return Array.prototype.some.call(period.options, function (o) { return o.value === val })
+    }
+    if (presets[expr] && hasOpt(presets[expr])) {
+      period.value = presets[expr]
+      reolinkFireChange(period)
+    } else if (/^\d{1,2}\s\*\s\*\s\*\s\*$/.test(expr)) {
+      period.value = 'hour'
+      reolinkFireChange(period)
+      setSel('select[name="cron-mins"]', parts[0])
+    } else if (/^\d{1,2}\s\d{1,2}\s\*\s\*\s\*$/.test(expr)) {
+      period.value = 'day'
+      reolinkFireChange(period)
+      setSel('select.cron-time-min', parts[0])
+      setSel('select.cron-time-hour', parts[1])
+    } else if (/^\d{1,2}\s\d{1,2}\s\*\s\*\s\d{1,2}$/.test(expr)) {
+      period.value = 'week'
+      reolinkFireChange(period)
+      setSel('select.cron-time-min', parts[0])
+      setSel('select.cron-time-hour', parts[1])
+      setSel('select[name="cron-dow"]', parts[4])
+    } else if (/^\d{1,2}\s\d{1,2}\s\d{1,2}\s\*\s\*$/.test(expr)) {
+      period.value = 'month'
+      reolinkFireChange(period)
+      setSel('select.cron-time-min', parts[0])
+      setSel('select.cron-time-hour', parts[1])
+      setSel('select[name="cron-dom"]', parts[2])
+    } else if (/^\d{1,2}\s\d{1,2}\s\d{1,2}\s\d{1,2}\s\*$/.test(expr)) {
+      period.value = 'year'
+      reolinkFireChange(period)
+      setSel('select.cron-time-min', parts[0])
+      setSel('select.cron-time-hour', parts[1])
+      setSel('select[name="cron-dom"]', parts[2])
+      setSel('select[name="cron-month"]', parts[3])
+    } else {
+      if (!hasOpt(expr)) {
+        var opt = document.createElement('option')
+        opt.value = expr
+        opt.textContent = '{{Valeur actuelle}} (' + expr + ')'
+        period.insertBefore(opt, period.firstChild)
+      }
+      period.value = expr
+      reolinkFireChange(period)
+    }
+    var res = root.querySelector('#mod_cron_span_cronResult')
+    if (res) res.textContent = expr
+  }, 50)
+}
+
+$('#bt_cronGenerator').on('click', function () {
+  var $field = $('.eqLogicAttr[data-l1key=configuration][data-l2key=autorefresh]')
+  var cronExpr = String($field.value() || '').trim()
+  if (cronExpr === '') {
+    cronExpr = String($field.attr('placeholder') || '*/15 * * * *').trim()
+  }
+  jeedom.getCronSelectModal({}, function (result) {
+    $field.value(result.value)
+  })
+  reolinkPrefillCronModal(cronExpr)
+})
+
 function syncCameraPlugin(id) {
   $.ajax({
     type: 'POST',
@@ -155,7 +276,7 @@ $('#btGetCMD').on('click', function () {
         $('#div_alert').showAlert({message: data.result, level: 'danger'})
         return
       }
-      $('#div_alert').showAlert({message: '{{Commandes créer avec succès}}', level: 'success'})
+      $('#div_alert').showAlert({message: '{{Commandes créées avec succès}}', level: 'success'})
       window.location.reload()
     }
   })
@@ -200,11 +321,116 @@ $('#btGetCamNFO').on('click', function () {
         $('#div_alert').showAlert({message: data.result, level: 'danger'})
         return
       }
-      $('#div_alert').showAlert({message: '{{Information récupérer avec succès}}', level: 'success'})
+      $('#div_alert').showAlert({message: '{{Informations récupérées avec succès}}', level: 'success'})
       window.location.reload()
     }
   })
 })
+
+function reolinkEscapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function reolinkCmdCatalog(logicalId) {
+  var map = window.REOLINK_CMD_HELP || {}
+  return map[String(logicalId || '')] || {}
+}
+
+function reolinkCmdValuesText(_cmd, catalog) {
+  var cfg = _cmd.configuration || {}
+  var listValue = String(cfg.listValue || '').trim()
+  if (listValue !== '') {
+    var labels = []
+    listValue.split(';').forEach(function (pair) {
+      var bits = pair.split('|')
+      if (bits.length === 2) {
+        labels.push(bits[0] + ' = ' + bits[1])
+      } else if (pair !== '') {
+        labels.push(pair)
+      }
+    })
+    if (labels.length) {
+      return labels.join(', ')
+    }
+  }
+  var valuesHelp = String((catalog && catalog.valuesHelp) || cfg.valuesHelp || '').trim()
+  if (valuesHelp !== '') {
+    return valuesHelp
+  }
+  if (String(_cmd.subType || '') === 'slider' || (cfg.minValue !== undefined && cfg.minValue !== '' && cfg.maxValue !== undefined && cfg.maxValue !== '')) {
+    var minV = (cfg.minValue !== undefined && cfg.minValue !== '') ? cfg.minValue : '?'
+    var maxV = (cfg.maxValue !== undefined && cfg.maxValue !== '') ? cfg.maxValue : '?'
+    var unit = String(_cmd.unite || '').trim()
+    return '{{Curseur de}} ' + minV + ' {{à}} ' + maxV + (unit ? (' ' + unit) : '')
+  }
+  if (String(_cmd.type || '') === 'info' && String(_cmd.subType || '') === 'binary') {
+    return '0 = {{Inactif}} / {{Non}}, 1 = {{Actif}} / {{Oui}}'
+  }
+  return ''
+}
+
+function reolinkCmdHelpData(_cmd) {
+  var cfg = _cmd.configuration || {}
+  var logicalId = String(_cmd.logicalId || '')
+  var catalog = reolinkCmdCatalog(logicalId)
+  var help = String(cfg.help || catalog.help || '').trim()
+  var values = reolinkCmdValuesText(_cmd, catalog)
+  var tipParts = []
+  if (help !== '') {
+    tipParts.push(help)
+  }
+  if (values !== '') {
+    tipParts.push('{{Valeurs}} : ' + values)
+  }
+  return {
+    logicalId: logicalId,
+    name: String(_cmd.name || ''),
+    help: help,
+    values: values,
+    title: tipParts.map(reolinkEscapeHtml).join('<br>')
+  }
+}
+
+function reolinkShowCmdHelp(data) {
+  var html = ''
+  html += '<div style="text-align:left;">'
+  if (data.name) {
+    html += '<p><strong>' + reolinkEscapeHtml(data.name) + '</strong></p>'
+  }
+  if (data.logicalId) {
+    html += '<p><code>' + reolinkEscapeHtml(data.logicalId) + '</code></p>'
+  }
+  if (data.help) {
+    html += '<p>' + reolinkEscapeHtml(data.help) + '</p>'
+  }
+  if (data.values) {
+    html += '<p><strong>{{Valeurs}}</strong> : ' + reolinkEscapeHtml(data.values) + '</p>'
+  }
+  if (!data.help && !data.values) {
+    html += '<p>{{Aucune aide disponible pour cette commande}}</p>'
+  }
+  html += '</div>'
+  if (typeof jeeDialog !== 'undefined' && typeof jeeDialog.alert === 'function') {
+    jeeDialog.alert({
+      title: '{{Aide commande}}',
+      message: html
+    })
+    return
+  }
+  if (typeof bootbox !== 'undefined' && typeof bootbox.alert === 'function') {
+    bootbox.alert({
+      title: '{{Aide commande}}',
+      message: html
+    })
+    return
+  }
+  $('#div_alert').showAlert({message: (data.help || '') + (data.values ? ('<br>' + data.values) : ''), level: 'info'})
+}
 
 /* Fonction permettant l'affichage des commandes dans l'équipement */
 function addCmdToTable(_cmd) {
@@ -214,6 +440,7 @@ function addCmdToTable(_cmd) {
   if (!isset(_cmd.configuration)) {
     _cmd.configuration = {}
   }
+  var helpData = reolinkCmdHelpData(_cmd)
   var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '">'
   tr += '<td class="hidden-xs" style="min-width:50px;width:70px;">'
   tr += '<span class="cmdAttr" data-l1key="id"></span>'
@@ -225,7 +452,14 @@ function addCmdToTable(_cmd) {
   tr += '<a class="cmdAction btn btn-sm btn-default" data-l1key="chooseIcon" title="{{Choisir une icône}}"><i class="fas fa-icons"></i></a>'
   tr += '</span>'
   tr += '<span class="cmdAttr input-group-addon roundedRight" data-l1key="display" data-l2key="icon" style="font-size:19px;padding:0 5px 0 0!important;"></span>'
+  if (helpData.title !== '') {
+    tr += '<span class="input-group-addon" style="padding:0 6px;">'
+    tr += '<a href="#" class="cmdHelpBtn" title="' + helpData.title + '" style="color:var(--al-info-color);">'
+    tr += '<i class="fas fa-question-circle tooltips" title="' + helpData.title + '" style="color:var(--al-info-color);"></i>'
+    tr += '</a></span>'
+  }
   tr += '</div>'
+  tr += '<span class="cmdAttr" data-l1key="configuration" data-l2key="help" style="display:none;"></span>'
   tr += '<select class="cmdAttr form-control input-sm" data-l1key="value" style="display:none;margin-top:5px;" title="{{Commande information liée}}">'
   tr += '<option value="">{{Aucune}}</option>'
   tr += '</select>'
@@ -259,6 +493,12 @@ function addCmdToTable(_cmd) {
   tr += '</tr>'
   $('#table_cmd tbody').append(tr)
   var tr = $('#table_cmd tbody tr').last()
+  tr.data('reolinkHelp', helpData)
+  tr.find('.cmdHelpBtn').on('click', function (e) {
+    e.preventDefault()
+    e.stopPropagation()
+    reolinkShowCmdHelp($(this).closest('tr').data('reolinkHelp') || helpData)
+  })
   jeedom.eqLogic.buildSelectCmd({
     id: $('.eqLogicAttr[data-l1key=id]').value(),
     filter: {type: 'info'},
@@ -269,6 +509,9 @@ function addCmdToTable(_cmd) {
       tr.find('.cmdAttr[data-l1key=value]').append(result)
       tr.setValues(_cmd, '.cmdAttr')
       jeedom.cmd.changeType(tr, init(_cmd.subType))
+      if (typeof jeedomUtils !== 'undefined' && typeof jeedomUtils.initTooltips === 'function') {
+        jeedomUtils.initTooltips(tr[0])
+      }
     }
   })
 }

@@ -8,7 +8,11 @@
 			"subtype": "other",
 			"isVisible": 1,
 			"logicalId": "refresh",
-			"scope": "any"
+			"scope": "any",
+			"configuration": {
+				"help": "Rafraîchit toutes les informations et états de l'équipement depuis la caméra.",
+				"valuesHelp": "Action immédiate : relance la lecture des états depuis la caméra (pas de valeur)"
+			}
 		},
 		{
 			"abilityneed": "reboot",
@@ -17,7 +21,9 @@
 			"subtype": "other",
 			"configuration": {
 				"actionapi": "Reboot",
-				"payload": "{}"
+				"payload": "{}",
+				"help": "Redémarre la caméra ou le NVR à distance.",
+				"valuesHelp": "Action immédiate : redémarre la caméra ou le NVR (pas de valeur)"
 			},
 			"isVisible": 0,
 			"logicalId": "reboot",
@@ -29,7 +35,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetMdState\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetMdState\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "État de détection de mouvement (polling API). 1 = mouvement détecté.",
+				"valuesHelp": "0 = Aucun mouvement, 1 = Mouvement détecté"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -44,7 +52,11 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "ChannelOnline",
-			"scope": "channel"
+			"scope": "channel",
+			"configuration": {
+				"help": "Indique si le canal caméra est joignable derrière le NVR.",
+				"valuesHelp": "0 = Canal hors ligne / injoignable, 1 = Canal en ligne"
+			}
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -54,7 +66,11 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvMotion",
-			"scope": "channel"
+			"scope": "channel",
+			"configuration": {
+				"help": "Événement ONVIF : mouvement détecté (temps réel via le démon).",
+				"valuesHelp": "0 = Pas de mouvement, 1 = Mouvement détecté (événement ONVIF temps réel)"
+			}
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -65,7 +81,11 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvFaceDetect",
-			"scope": "channel"
+			"scope": "channel",
+			"configuration": {
+				"help": "Événement ONVIF / IA : visage détecté.",
+				"valuesHelp": "0 = Aucun visage, 1 = Visage détecté"
+			}
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -76,7 +96,11 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvPeopleDetect",
-			"scope": "channel"
+			"scope": "channel",
+			"configuration": {
+				"help": "Événement ONVIF / IA : personne détectée.",
+				"valuesHelp": "0 = Aucune personne, 1 = Personne détectée"
+			}
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -87,7 +111,11 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvVehicleDetect",
-			"scope": "channel"
+			"scope": "channel",
+			"configuration": {
+				"help": "Événement ONVIF / IA : véhicule détecté.",
+				"valuesHelp": "0 = Aucun véhicule, 1 = Véhicule détecté"
+			}
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -98,7 +126,11 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvDogCatDetect",
-			"scope": "channel"
+			"scope": "channel",
+			"configuration": {
+				"help": "Événement ONVIF / IA : animal (chien/chat) détecté.",
+				"valuesHelp": "0 = Aucun animal, 1 = Animal (chien/chat) détecté"
+			}
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -109,7 +141,11 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvPackageDetect",
-			"scope": "channel"
+			"scope": "channel",
+			"configuration": {
+				"help": "Événement ONVIF / IA : colis détecté.",
+				"valuesHelp": "0 = Aucun colis, 1 = Colis détecté"
+			}
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -119,7 +155,11 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvMotionAlarm",
-			"scope": "channel"
+			"scope": "channel",
+			"configuration": {
+				"help": "Événement ONVIF : alarme mouvement.",
+				"valuesHelp": "0 = Alarme mouvement inactive, 1 = Alarme mouvement active"
+			}
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -129,7 +169,11 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvVisitor",
-			"scope": "channel"
+			"scope": "channel",
+			"configuration": {
+				"help": "Événement ONVIF : visiteur (sonnette / visitor).",
+				"valuesHelp": "0 = Pas de visiteur, 1 = Visiteur / sonnette"
+			}
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -139,7 +183,11 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvLastOnvifFull",
-			"scope": "channel"
+			"scope": "channel",
+			"configuration": {
+				"help": "Dernier message ONVIF reçu (détail brut).",
+				"valuesHelp": "Texte libre : détail brut du dernier message ONVIF"
+			}
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -149,7 +197,11 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvLastOnvifName",
-			"scope": "channel"
+			"scope": "channel",
+			"configuration": {
+				"help": "Nom du dernier événement ONVIF reçu.",
+				"valuesHelp": "Texte libre : nom du dernier événement ONVIF reçu"
+			}
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -159,7 +211,11 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "EvLastOnvifState",
-			"scope": "channel"
+			"scope": "channel",
+			"configuration": {
+				"help": "État du dernier événement ONVIF (actif/inactif).",
+				"valuesHelp": "0 = Dernier événement inactif, 1 = Dernier événement actif"
+			}
 		},
 		{
 			"abilityneed": "performance",
@@ -167,7 +223,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPerformance\"}"
+				"payload": "{\"cmd\":\"GetPerformance\"}",
+				"help": "Débit codec vidéo mesuré (info). Commande d'état (lecture seule).",
+				"valuesHelp": "Débit codec mesuré en Kbps (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -183,7 +241,9 @@
 			"configuration": {
 				"minValue": 0,
 				"maxValue": 100,
-				"payload": "{\"cmd\":\"GetPerformance\"}"
+				"payload": "{\"cmd\":\"GetPerformance\"}",
+				"help": "Utilisation CPU de la caméra (info). Commande d'état (lecture seule).",
+				"valuesHelp": "Utilisation CPU en % (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -196,7 +256,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPerformance\"}"
+				"payload": "{\"cmd\":\"GetPerformance\"}",
+				"help": "Débit réseau de la caméra (info). Commande d'état (lecture seule).",
+				"valuesHelp": "Débit réseau mesuré en Kbps (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -211,7 +273,9 @@
 			"subtype": "binary",
 			"configuration": {
 				"actionapi": "GetPush",
-				"payload": "{\"cmd\":\"GetPush\"}"
+				"payload": "{\"cmd\":\"GetPush\"}",
+				"help": "Notifications push (application Reolink). Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -229,7 +293,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetPushState",
 				"actionapi": "SetPush",
-				"payload": "{\"Push\":{\"schedule\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Push\":{\"schedule\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}}",
+				"help": "Notifications push (application Reolink). Variante API V1 (firmwares plus anciens).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -244,7 +310,9 @@
 			"subtype": "binary",
 			"configuration": {
 				"actionapi": "GetPushV20",
-				"payload": "{\"cmd\":\"GetPushV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPushV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Notifications push (application Reolink). Commande d'état (lecture seule). Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -262,7 +330,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetPushStateV20",
 				"actionapi": "SetPushV20",
-				"payload": "{\"Push\":{\"scheduleEnable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}"
+				"payload": "{\"Push\":{\"scheduleEnable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}",
+				"help": "Notifications push (application Reolink). Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -275,7 +345,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPushCfg\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPushCfg\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Notifications push (application Reolink). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -292,7 +364,9 @@
 				"listValue": "20|20 Sec;30|30 Sec;60|1 Min;120|2 Min",
 				"valueFrom": "SetPushCfgState",
 				"actionapi": "SetPushCfg",
-				"payload": "{\"PushCfg\":{\"pushInterval\":#OPTSELECTEDINT#}}"
+				"payload": "{\"PushCfg\":{\"pushInterval\":#OPTSELECTEDINT#}}",
+				"help": "Notifications push (application Reolink). Variante API V1 (firmwares plus anciens).",
+				"valuesHelp": "20 = 20 Sec, 30 = 30 Sec, 60 = 1 Min, 120 = 2 Min"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -306,7 +380,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Enregistrement sur stockage local. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -324,7 +400,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetRecordState",
 				"actionapi": "SetRec",
-				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"schedule\":{\"enable\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"schedule\":{\"enable\":#OPTSELECTEDINT#}}}",
+				"help": "Enregistrement sur stockage local. Variante API V1 (firmwares plus anciens).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -338,7 +416,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Enregistrement sur stockage local. Commande d'état (lecture seule). Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -356,7 +436,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetRecordStateV20",
 				"actionapi": "SetRecV20",
-				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"scheduleEnable\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"scheduleEnable\":#OPTSELECTEDINT#}}",
+				"help": "Enregistrement sur stockage local. Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -370,7 +452,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Pré-enregistrement avant événement. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -388,7 +472,9 @@
 				"listValue": "0|Désactiver;1|Activer",
 				"valueFrom": "SetPreRecordState",
 				"actionapi": "SetRec",
-				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"preRec\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"preRec\":#OPTSELECTEDINT#}}",
+				"help": "Pré-enregistrement avant événement. Variante API V1 (firmwares plus anciens).",
+				"valuesHelp": "0 = Désactiver, 1 = Activer"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -403,7 +489,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Pré-enregistrement avant événement. Commande d'état (lecture seule). Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -422,7 +510,9 @@
 				"listValue": "0|Désactiver;1|Activer",
 				"valueFrom": "SetPreRecordStateV20",
 				"actionapi": "SetRecV20",
-				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"preRec\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"preRec\":#OPTSELECTEDINT#}}",
+				"help": "Pré-enregistrement avant événement. Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "0 = Désactiver, 1 = Activer"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -436,7 +526,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Écrasement automatique quand le stockage est plein. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -454,7 +546,9 @@
 				"listValue": "0|Désactiver;1|Activer",
 				"valueFrom": "SetOverwriteState",
 				"actionapi": "SetRec",
-				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"overwrite\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"overwrite\":#OPTSELECTEDINT#}}",
+				"help": "Écrasement automatique quand le stockage est plein. Variante API V1 (firmwares plus anciens).",
+				"valuesHelp": "0 = Désactiver, 1 = Activer"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -468,7 +562,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Écrasement automatique quand le stockage est plein. Commande d'état (lecture seule). Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -486,7 +582,9 @@
 				"listValue": "0|Désactiver;1|Activer",
 				"valueFrom": "SetOverwriteStateV20",
 				"actionapi": "SetRecV20",
-				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"overwrite\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"overwrite\":#OPTSELECTEDINT#}}",
+				"help": "Écrasement automatique quand le stockage est plein. Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "0 = Désactiver, 1 = Activer"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -500,7 +598,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Durée d'enregistrement après événement. Commande d'état (lecture seule).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -518,7 +618,9 @@
 				"listValue": "15 Seconds|15 Sec;30 Seconds|30 Sec;1 Minute|1 Min;10 Minutes|10 Min",
 				"valueFrom": "SetPostRecordState",
 				"actionapi": "SetRec",
-				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"postRec\":#OPTSELECTEDSTR#}}"
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"postRec\":#OPTSELECTEDSTR#}}",
+				"help": "Durée d'enregistrement après événement. Variante API V1 (firmwares plus anciens).",
+				"valuesHelp": "15 Seconds = 15 Sec, 30 Seconds = 30 Sec, 1 Minute = 1 Min, 10 Minutes = 10 Min"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -532,7 +634,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetRecV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Durée d'enregistrement après événement. Commande d'état (lecture seule). Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -550,7 +654,9 @@
 				"listValue": "15 Seconds|15 Sec;30 Seconds|30 Sec;1 Minute|1 Min;10 Minutes|10 Min",
 				"valueFrom": "SetPostRecordStateV20",
 				"actionapi": "SetRecV20",
-				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"postRec\":#OPTSELECTEDSTR#}}"
+				"payload": "{\"Rec\":{\"channel\":#CHANNEL#,\"postRec\":#OPTSELECTEDSTR#}}",
+				"help": "Durée d'enregistrement après événement. Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "15 Seconds = 15 Sec, 30 Seconds = 30 Sec, 1 Minute = 1 Min, 10 Minutes = 10 Min"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -564,7 +670,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEmail\",\"action\":1}"
+				"payload": "{\"cmd\":\"GetEmail\",\"action\":1}",
+				"help": "Envoi d'e-mail sur événement. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -582,7 +690,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetEmailState",
 				"actionapi": "SetEmail",
-				"payload": "{\"Email\":{\"schedule\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Email\":{\"schedule\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}}",
+				"help": "Envoi d'e-mail sur événement. Variante API V1 (firmwares plus anciens).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -596,7 +706,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEmailV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEmailV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Envoi d'e-mail sur événement. Commande d'état (lecture seule). Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -614,7 +726,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetEmailStateV20",
 				"actionapi": "SetEmailV20",
-				"payload": "{\"Email\":{\"scheduleEnable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}"
+				"payload": "{\"Email\":{\"scheduleEnable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}",
+				"help": "Envoi d'e-mail sur événement. Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -628,7 +742,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetFtp\",\"action\":1}"
+				"payload": "{\"cmd\":\"GetFtp\",\"action\":1}",
+				"help": "Envoi FTP sur événement. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -646,7 +762,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetFTPState",
 				"actionapi": "SetFtp",
-				"payload": "{\"Ftp\":{\"schedule\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Ftp\":{\"schedule\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}}",
+				"help": "Envoi FTP sur événement. Variante API V1 (firmwares plus anciens).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -660,7 +778,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetFtpV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetFtpV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Envoi FTP sur événement. Commande d'état (lecture seule). Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -678,7 +798,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetFTPStateV20",
 				"actionapi": "SetFtpV20",
-				"payload": "{\"Ftp\":{\"scheduleEnable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}"
+				"payload": "{\"Ftp\":{\"scheduleEnable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}",
+				"help": "Envoi FTP sur événement. Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -691,7 +813,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIrLights\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIrLights\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Projecteur infrarouge (IR) : Auto ou Off. Commande d'état (lecture seule).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -708,7 +832,9 @@
 				"listValue": "Auto|Auto;Off|Désactiver",
 				"valueFrom": "SetIrLightsState",
 				"actionapi": "SetIrLights",
-				"payload": "{\"IrLights\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDSTR#}}"
+				"payload": "{\"IrLights\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDSTR#}}",
+				"help": "Projecteur infrarouge (IR) : Auto ou Off.",
+				"valuesHelp": "Auto = Auto, Off = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -721,7 +847,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetWhiteLed\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetWhiteLed\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Projecteur LED blanche (éclairage). Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -738,7 +866,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetWhitLedState",
 				"actionapi": "SetWhiteLed",
-				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDINT#}}"
+				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDINT#}}",
+				"help": "Projecteur LED blanche (éclairage).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -751,7 +881,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetWhiteLed\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetWhiteLed\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Mode du projecteur LED blanche (Auto / désactivé). Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Non, 1 = Oui"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -768,7 +900,9 @@
 				"listValue": "1|Auto;0|Désactiver",
 				"valueFrom": "SetWhiteLedModeState",
 				"actionapi": "SetWhiteLed",
-				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"mode\":#OPTSELECTEDINT#}}"
+				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"mode\":#OPTSELECTEDINT#}}",
+				"help": "Mode du projecteur LED blanche (Auto / désactivé).",
+				"valuesHelp": "1 = Auto, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -781,7 +915,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetWhiteLed\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetWhiteLed\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Projecteur LED blanche (éclairage). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -799,7 +935,9 @@
 				"maxValue": 100,
 				"valueFrom": "SetWhitLedLuxState",
 				"actionapi": "SetWhiteLed",
-				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"bright\":#OPTSLIDER#}}"
+				"payload": "{\"WhiteLed\":{\"channel\":#CHANNEL#,\"bright\":#OPTSLIDER#}}",
+				"help": "Projecteur LED blanche (éclairage).",
+				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -813,7 +951,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAudioAlarm\"}"
+				"payload": "{\"cmd\":\"GetAudioAlarm\"}",
+				"help": "Active ou désactive l'alarme sonore (sirène). Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -831,7 +971,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetAudioAlarmState",
 				"actionapi": "SetAudioAlarm",
-				"payload": "{\"Audio\":{\"schedule\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Audio\":{\"schedule\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}}",
+				"help": "Active ou désactive l'alarme sonore (sirène). Variante API V1 (firmwares plus anciens).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -845,7 +987,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAudioAlarmV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetAudioAlarmV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Active ou désactive l'alarme sonore (sirène). Commande d'état (lecture seule). Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -863,7 +1007,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetAudioAlarmStateV20",
 				"actionapi": "SetAudioAlarmV20",
-				"payload": "{\"Audio\":{\"enable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}"
+				"payload": "{\"Audio\":{\"enable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}",
+				"help": "Active ou désactive l'alarme sonore (sirène). Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -876,7 +1022,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPowerLed\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPowerLed\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "LED d'état (power LED) de la caméra. Commande d'état (lecture seule).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -893,7 +1041,9 @@
 				"listValue": "On|Activer;Off|Désactiver",
 				"valueFrom": "SetPowerLedState",
 				"actionapi": "SetPowerLed",
-				"payload": "{\"PowerLed\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDSTR#}}"
+				"payload": "{\"PowerLed\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDSTR#}}",
+				"help": "LED d'état (power LED) de la caméra.",
+				"valuesHelp": "On = Activer, Off = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -906,7 +1056,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Active ou coupe le microphone. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -923,7 +1075,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetMicrophoneState",
 				"actionapi": "SetEnc",
-				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"audio\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"audio\":#OPTSELECTEDINT#}}",
+				"help": "Active ou coupe le microphone.",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -936,7 +1090,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAutoFocus\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetAutoFocus\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Mise au point automatique. Attention : selon firmware, 0 peut signifier Activer. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Autofocus activé, 1 = Autofocus désactivé (valeur API disable)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -953,7 +1109,9 @@
 				"listValue": "0|Activer;1|Désactiver",
 				"valueFrom": "SetAutoFocusState",
 				"actionapi": "SetAutoFocus",
-				"payload": "{\"AutoFocus\":{\"channel\":#CHANNEL#,\"disable\":#OPTSELECTEDINT#}}"
+				"payload": "{\"AutoFocus\":{\"channel\":#CHANNEL#,\"disable\":#OPTSELECTEDINT#}}",
+				"help": "Mise au point automatique. Attention : selon firmware, 0 peut signifier Activer.",
+				"valuesHelp": "0 = Autofocus activé, 1 = Autofocus désactivé (sens API Reolink : disable)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -966,7 +1124,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAutoMaint\",\"action\":0}"
+				"payload": "{\"cmd\":\"GetAutoMaint\",\"action\":0}",
+				"help": "Maintenance automatique (redémarrage planifié). Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -983,7 +1143,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetAutoMaintState",
 				"actionapi": "SetAutoMaint",
-				"payload": "{\"AutoMaint\":{\"enable\":#OPTSELECTEDINT#}}"
+				"payload": "{\"AutoMaint\":{\"enable\":#OPTSELECTEDINT#}}",
+				"help": "Maintenance automatique (redémarrage planifié).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -997,7 +1159,9 @@
 			"subtype": "other",
 			"configuration": {
 				"actionapi": "GetPtzPreset",
-				"payload": "{\"channel\":#CHANNEL#}"
+				"payload": "{\"channel\":#CHANNEL#}",
+				"help": "Rafraîchit la liste des presets PTZ depuis la caméra.",
+				"valuesHelp": "Action immédiate : rafraîchit la liste des presets PTZ (pas de valeur)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1013,7 +1177,9 @@
 				"option": "select",
 				"listValue": "0|(Cliquez sur Récupérer les presets PTZ pour obtenir la liste)",
 				"actionapi": "PtzCtrl",
-				"payload": "{\"channel\":#CHANNEL#,\"op\":\"ToPos\",\"id\":#OPTSELECTEDINT#,\"speed\":#SPEED#}"
+				"payload": "{\"channel\":#CHANNEL#,\"op\":\"ToPos\",\"id\":#OPTSELECTEDINT#,\"speed\":#SPEED#}",
+				"help": "Déplace la caméra vers un preset PTZ.",
+				"valuesHelp": "0 = (Cliquez sur Récupérer les presets PTZ pour obtenir la liste)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1029,7 +1195,9 @@
 				"option": "select",
 				"listValue": "Stop|Stop;Left|Gauche;Right|Droite;Up|Haut;Down|Bas",
 				"actionapi": "PtzCtrl",
-				"payload": "{\"channel\":#CHANNEL#,\"op\":#OPTSELECTEDSTR#,\"speed\":#SPEED#}"
+				"payload": "{\"channel\":#CHANNEL#,\"op\":#OPTSELECTEDSTR#,\"speed\":#SPEED#}",
+				"help": "Déplacement PTZ manuel (haut/bas/gauche/droite/stop).",
+				"valuesHelp": "Stop = Stop, Left = Gauche, Right = Droite, Up = Haut, Down = Bas"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1046,7 +1214,9 @@
 				"minValue": 1,
 				"maxValue": 64,
 				"setValue": 32,
-				"speedvalue": 32
+				"speedvalue": 32,
+				"help": "Vitesse de déplacement PTZ.",
+				"valuesHelp": "Curseur de 1 à 64"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1059,7 +1229,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetZoomFocus\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetZoomFocus\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Niveau de zoom optique / numérique. Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1077,7 +1249,9 @@
 				"maxValue": 249,
 				"valueFrom": "SetZoomState",
 				"actionapi": "StartZoomFocus",
-				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"ZoomPos\"}}"
+				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"ZoomPos\"}}",
+				"help": "Niveau de zoom optique / numérique.",
+				"valuesHelp": "Curseur de 0 à 249"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1090,7 +1264,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetZoomFocus\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetZoomFocus\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Mise au point manuelle. Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1108,7 +1284,9 @@
 				"maxValue": "32",
 				"valueFrom": "SetFocusState",
 				"actionapi": "StartZoomFocus",
-				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"FocusPos\"}}"
+				"payload": "{\"ZoomFocus\":{\"channel\":#CHANNEL#,\"pos\":#OPTSLIDER#,\"op\":\"FocusPos\"}}",
+				"help": "Mise au point manuelle.",
+				"valuesHelp": "Curseur de 0 à 32"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1122,7 +1300,9 @@
 			"subtype": "other",
 			"configuration": {
 				"actionapi": "GetPtzPatrol",
-				"payload": "{\"channel\":#CHANNEL#}"
+				"payload": "{\"channel\":#CHANNEL#}",
+				"help": "Rafraîchit la configuration des rondes PTZ.",
+				"valuesHelp": "Action immédiate : rafraîchit la configuration des rondes PTZ (pas de valeur)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1135,7 +1315,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPtzPatrol\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPtzPatrol\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Indique si une ronde PTZ est en cours. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Aucune ronde en cours, 1 = Ronde PTZ active"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1148,7 +1330,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPtzPatrol\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPtzPatrol\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Identifiant de la ronde PTZ active.",
+				"valuesHelp": "Identifiant numérique de la ronde active (0 à 5 en général)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1164,7 +1348,9 @@
 				"option": "select",
 				"listValue": "0|Ronde 0",
 				"actionapi": "PtzCtrl",
-				"payload": "{\"channel\":#CHANNEL#,\"op\":\"StartPatrol\",\"id\":#OPTSELECTEDINT#}"
+				"payload": "{\"channel\":#CHANNEL#,\"op\":\"StartPatrol\",\"id\":#OPTSELECTEDINT#}",
+				"help": "Démarre une ronde PTZ.",
+				"valuesHelp": "0 = Ronde 0"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1178,7 +1364,9 @@
 			"subtype": "other",
 			"configuration": {
 				"actionapi": "PtzCtrl",
-				"payload": "{\"channel\":#CHANNEL#,\"op\":\"StopPatrol\",\"id\":0}"
+				"payload": "{\"channel\":#CHANNEL#,\"op\":\"StopPatrol\",\"id\":0}",
+				"help": "Arrête la ronde PTZ en cours.",
+				"valuesHelp": "Action immédiate : arrête la ronde PTZ en cours (pas de valeur)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1192,7 +1380,9 @@
 			"subtype": "other",
 			"configuration": {
 				"actionapi": "PtzCheck",
-				"payload": "{\"channel\":#CHANNEL#}"
+				"payload": "{\"channel\":#CHANNEL#}",
+				"help": "Lance la calibration / check PTZ.",
+				"valuesHelp": "Action immédiate : lance la calibration PTZ (pas de valeur)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1205,7 +1395,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPtzCheckState\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPtzCheckState\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "État de la calibration PTZ. Commande d'état (lecture seule).",
+				"valuesHelp": "REQUISE = Calibration nécessaire, EN COURS = Calibration en cours, TERMINEE = Calibration terminée"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1219,7 +1411,9 @@
 			"subtype": "other",
 			"configuration": {
 				"actionapi": "AudioAlarmPlay",
-				"payload": "{\"channel\":#CHANNEL#,\"alarm_mode\":\"times\",\"times\":1}"
+				"payload": "{\"channel\":#CHANNEL#,\"alarm_mode\":\"times\",\"times\":1}",
+				"help": "Déclenche la sirène (nombre de lectures).",
+				"valuesHelp": "Action immédiate : déclenche la sirène (nombre de lectures selon firmware)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1232,7 +1426,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAudioCfg\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetAudioCfg\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Volume de la sirène. Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1250,7 +1446,9 @@
 				"maxValue": 100,
 				"valueFrom": "SetSirenVolumeState",
 				"actionapi": "SetAudioCfg",
-				"payload": "{\"AudioCfg\":{\"channel\":#CHANNEL#,\"volume\":#OPTSLIDER#}}"
+				"payload": "{\"AudioCfg\":{\"channel\":#CHANNEL#,\"volume\":#OPTSLIDER#}}",
+				"help": "Volume de la sirène.",
+				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1263,7 +1461,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Image tournée (rotation). Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1276,7 +1476,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Image en miroir. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1289,7 +1491,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Compensation de contre-jour. Commande d'état (lecture seule).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1302,7 +1506,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Mode / valeur d'exposition. Commande d'état (lecture seule).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1315,7 +1521,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Mode jour/nuit (Auto, couleur, N&B). Commande d'état (lecture seule).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1332,7 +1540,9 @@
 				"listValue": "Auto|Auto;Color|Couleur;Black&White|Noir&Blanc",
 				"valueFrom": "SetDayNightState",
 				"actionapi": "SetIsp",
-				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"dayNight\":#OPTSELECTEDSTR#}}"
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"dayNight\":#OPTSELECTEDSTR#}}",
+				"help": "Mode jour/nuit (Auto, couleur, N&B).",
+				"valuesHelp": "Auto = Auto, Color = Couleur, Black&White = Noir&Blanc"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1345,7 +1555,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Anti-scintillement secteur (50/60 Hz). Commande d'état (lecture seule).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1362,7 +1574,9 @@
 				"listValue": "Outdoor|Extérieur;50HZ|50Hz;60HZ|60Hz;Off|Désactiver",
 				"valueFrom": "SetAntiFlickerState",
 				"actionapi": "SetIsp",
-				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"antiFlicker\":#OPTSELECTEDSTR#}}"
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"antiFlicker\":#OPTSELECTEDSTR#}}",
+				"help": "Anti-scintillement secteur (50/60 Hz).",
+				"valuesHelp": "Outdoor = Extérieur, 50HZ = 50Hz, 60HZ = 60Hz, Off = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1375,7 +1589,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Réduction de bruit 3D. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1392,7 +1608,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetNr3dState",
 				"actionapi": "SetIsp",
-				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"nr3d\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"nr3d\":#OPTSELECTEDINT#}}",
+				"help": "Réduction de bruit 3D.",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1405,7 +1623,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetUpnp\",\"action\":0}"
+				"payload": "{\"cmd\":\"GetUpnp\",\"action\":0}",
+				"help": "Active UPnP sur l'appareil. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1422,7 +1642,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetUpnpState",
 				"actionapi": "SetUpnp",
-				"payload": "{\"Upnp\":{\"enable\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Upnp\":{\"enable\":#OPTSELECTEDINT#}}",
+				"help": "Active UPnP sur l'appareil.",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1435,7 +1657,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetP2p\",\"action\":0}"
+				"payload": "{\"cmd\":\"GetP2p\",\"action\":0}",
+				"help": "Active le service P2P / UID Reolink. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1452,7 +1676,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetUidP2pState",
 				"actionapi": "SetP2p",
-				"payload": "{\"P2p\":{\"enable\":#OPTSELECTEDINT#}}"
+				"payload": "{\"P2p\":{\"enable\":#OPTSELECTEDINT#}}",
+				"help": "Active le service P2P / UID Reolink.",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1465,7 +1691,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetMask\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetMask\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Masque de confidentialité logiciel (zones masquées dans l'image). Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1482,7 +1710,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetMaskState",
 				"actionapi": "SetMask",
-				"payload": "{\"Mask\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Mask\":{\"channel\":#CHANNEL#,\"enable\":#OPTSELECTEDINT#}}",
+				"help": "Masque de confidentialité logiciel (zones masquées dans l'image).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1494,7 +1724,10 @@
 			"name": "Mode confidentialité (état)",
 			"type": "info",
 			"subtype": "binary",
-			"configuration": {},
+			"configuration": {
+				"help": "Mode confidentialité (Privacy Mode via Baichuan) : masque la caméra. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
+			},
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPrivacyModeState",
@@ -1508,7 +1741,9 @@
 			"configuration": {
 				"option": "select",
 				"listValue": "1|Activer;0|Désactiver",
-				"valueFrom": "SetPrivacyModeState"
+				"valueFrom": "SetPrivacyModeState",
+				"help": "Mode confidentialité (Privacy Mode via Baichuan) : masque la caméra.",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1521,7 +1756,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Balance des blancs. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1534,7 +1771,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Luminosité de l'image. Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1552,7 +1791,9 @@
 				"maxValue": 255,
 				"valueFrom": "SetBrightState",
 				"actionapi": "SetImage",
-				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"bright\":#OPTSLIDER#}}"
+				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"bright\":#OPTSLIDER#}}",
+				"help": "Luminosité de l'image.",
+				"valuesHelp": "Curseur de 1 à 255"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1565,7 +1806,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Contraste de l'image. Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1583,7 +1826,9 @@
 				"maxValue": 255,
 				"valueFrom": "SetContrastState",
 				"actionapi": "SetImage",
-				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"contrast\":#OPTSLIDER#}}"
+				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"contrast\":#OPTSLIDER#}}",
+				"help": "Contraste de l'image.",
+				"valuesHelp": "Curseur de 1 à 255"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1596,7 +1841,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Saturation des couleurs. Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1614,7 +1861,9 @@
 				"maxValue": 255,
 				"valueFrom": "SetSaturationState",
 				"actionapi": "SetImage",
-				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"saturation\":#OPTSLIDER#}}"
+				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"saturation\":#OPTSLIDER#}}",
+				"help": "Saturation des couleurs.",
+				"valuesHelp": "Curseur de 1 à 255"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1627,7 +1876,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Teinte (hue) de l'image. Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1645,7 +1896,9 @@
 				"maxValue": 255,
 				"valueFrom": "SetHueState",
 				"actionapi": "SetImage",
-				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"hue\":#OPTSLIDER#}}"
+				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"hue\":#OPTSLIDER#}}",
+				"help": "Teinte (hue) de l'image.",
+				"valuesHelp": "Curseur de 1 à 255"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1658,7 +1911,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetImage\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Netteté (sharpen) de l'image. Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1676,7 +1931,9 @@
 				"maxValue": 255,
 				"valueFrom": "SetSharpenState",
 				"actionapi": "SetImage",
-				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"sharpen\":#OPTSLIDER#}}"
+				"payload": "{\"Image\":{\"channel\":#CHANNEL#,\"sharpen\":#OPTSLIDER#}}",
+				"help": "Netteté (sharpen) de l'image.",
+				"valuesHelp": "Curseur de 1 à 255"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1689,7 +1946,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Filigrane / watermark sur la vidéo. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1706,7 +1965,9 @@
 				"listValue": "1|Afficher;0|Masquer",
 				"valueFrom": "SetWatermarkState",
 				"actionapi": "SetOsd",
-				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"watermark\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"watermark\":#OPTSELECTEDINT#}}",
+				"help": "Filigrane / watermark sur la vidéo.",
+				"valuesHelp": "1 = Afficher, 0 = Masquer"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1719,7 +1980,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Affiche l'heure en OSD sur la vidéo. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1736,7 +1999,9 @@
 				"listValue": "1|Afficher;0|Masquer",
 				"valueFrom": "SetOsdTimeState",
 				"actionapi": "SetOsd",
-				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdTime\":{\"enable\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdTime\":{\"enable\":#OPTSELECTEDINT#}}}",
+				"help": "Affiche l'heure en OSD sur la vidéo.",
+				"valuesHelp": "1 = Afficher, 0 = Masquer"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1749,7 +2014,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Position OSD de l'heure. Commande d'état (lecture seule).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1766,7 +2033,9 @@
 				"listValue": "Upper Left|Haut-Gauche;Top Center|Haut-Milieu;Upper Right|Haut-Droit;Lower Left|Bas-Gauche;Bottom Center|Bas-Milieu;Lower Right|Bas-Droite",
 				"valueFrom": "SetPosOsdTimeState",
 				"actionapi": "SetOsd",
-				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdTime\":{\"pos\":#OPTSELECTEDSTR#}}}"
+				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdTime\":{\"pos\":#OPTSELECTEDSTR#}}}",
+				"help": "Position OSD de l'heure.",
+				"valuesHelp": "Upper Left = Haut-Gauche, Top Center = Haut-Milieu, Upper Right = Haut-Droit, Lower Left = Bas-Gauche, Bottom Center = Bas-Milieu, Lower Right = Bas-Droite"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1779,7 +2048,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Affiche le nom du canal en OSD. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1796,7 +2067,9 @@
 				"listValue": "1|Afficher;0|Masquer",
 				"valueFrom": "SetOsdChannelState",
 				"actionapi": "SetOsd",
-				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdChannel\":{\"enable\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdChannel\":{\"enable\":#OPTSELECTEDINT#}}}",
+				"help": "Affiche le nom du canal en OSD.",
+				"valuesHelp": "1 = Afficher, 0 = Masquer"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1809,7 +2082,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetOsd\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Position OSD du nom de canal. Commande d'état (lecture seule).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1826,7 +2101,9 @@
 				"listValue": "Upper Left|Haut-Gauche;Top Center|Haut-Milieu;Upper Right|Haut-Droit;Lower Left|Bas-Gauche;Bottom Center|Bas-Milieu;Lower Right|Bas-Droite",
 				"valueFrom": "SetPosOsdChannelState",
 				"actionapi": "SetOsd",
-				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdChannel\":{\"pos\":#OPTSELECTEDSTR#}}}"
+				"payload": "{\"Osd\":{\"channel\":#CHANNEL#,\"osdChannel\":{\"pos\":#OPTSELECTEDSTR#}}}",
+				"help": "Position OSD du nom de canal.",
+				"valuesHelp": "Upper Left = Haut-Gauche, Top Center = Haut-Milieu, Upper Right = Haut-Droit, Lower Left = Bas-Gauche, Bottom Center = Bas-Milieu, Lower Right = Bas-Droite"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1839,7 +2116,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub). Commande d'état (lecture seule).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1852,7 +2131,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1865,7 +2146,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1878,7 +2161,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub). Commande d'état (lecture seule).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1891,7 +2176,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1904,7 +2191,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1917,7 +2206,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetHddInfo\"}"
+				"payload": "{\"cmd\":\"GetHddInfo\"}",
+				"help": "Information : Mémoire disponible.",
+				"valuesHelp": "0 = Non, 1 = Oui"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1933,7 +2224,9 @@
 			"configuration": {
 				"minValue": 0,
 				"maxValue": 100,
-				"payload": "{\"cmd\":\"GetHddInfo\"}"
+				"payload": "{\"cmd\":\"GetHddInfo\"}",
+				"help": "Information : Espace disponible.",
+				"valuesHelp": "Curseur de 0 à 100 %"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1946,7 +2239,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetHddInfo\"}"
+				"payload": "{\"cmd\":\"GetHddInfo\"}",
+				"help": "Information : Type de stockage.",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1959,7 +2254,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAiCfg\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetAiCfg\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Suivi automatique IA (auto-tracking). Commande d'état (lecture seule). Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -1976,7 +2273,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetaiTrackState",
 				"actionapi": "SetAiCfg",
-				"payload": "{\"channel\":#CHANNEL#,\"aiTrack\":#OPTSELECTEDINT#}"
+				"payload": "{\"channel\":#CHANNEL#,\"aiTrack\":#OPTSELECTEDINT#}",
+				"help": "Suivi automatique IA (auto-tracking). Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1992,7 +2291,9 @@
 				"revertvalue": 51,
 				"minValue": 1,
 				"maxValue": 50,
-				"payload": "{\"cmd\":\"GetMdAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetMdAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Information : Sensibilité par défaut Detection Mouvement (valeur). Commande d'état (lecture seule).",
+				"valuesHelp": "Curseur de 1 à 50"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2011,7 +2312,9 @@
 				"revertvalue": 51,
 				"valueFrom": "SetMdDefaultSensitivityState",
 				"actionapi": "SetMdAlarm",
-				"payload": "{\"MdAlarm\":{\"channel\":#CHANNEL#,\"newSens\":{\"sensDef\":#OPTR_SLIDER#},\"useNewSens\":1}}"
+				"payload": "{\"MdAlarm\":{\"channel\":#CHANNEL#,\"newSens\":{\"sensDef\":#OPTR_SLIDER#},\"useNewSens\":1}}",
+				"help": "Action : Sensibilité par défaut Detection Mouvement.",
+				"valuesHelp": "Curseur de 1 à 50"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2026,7 +2329,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"people\"}}"
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"people\"}}",
+				"help": "Information : Sensibilité Detection Personne (valeur). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2046,7 +2351,9 @@
 				"maxValue": 100,
 				"valueFrom": "SetSdSensitivityPeopleState",
 				"actionapi": "SetAiAlarm",
-				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"people\"}}"
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"people\"}}",
+				"help": "Action : Sensibilité Detection Personne.",
+				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2061,7 +2368,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"vehicle\"}}"
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"vehicle\"}}",
+				"help": "Information : Sensibilité Detection Véhicule (valeur). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2081,7 +2390,9 @@
 				"maxValue": 100,
 				"valueFrom": "SetSdSensitivityVehicleState",
 				"actionapi": "SetAiAlarm",
-				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"vehicle\"}}"
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"vehicle\"}}",
+				"help": "Action : Sensibilité Detection Véhicule.",
+				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2096,7 +2407,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"dog_cat\"}}"
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"dog_cat\"}}",
+				"help": "Information : Sensibilité Detection DogCat (valeur). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2116,7 +2429,9 @@
 				"maxValue": 100,
 				"valueFrom": "SetSdSensitivityDogCatState",
 				"actionapi": "SetAiAlarm",
-				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"dog_cat\"}}"
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"dog_cat\"}}",
+				"help": "Action : Sensibilité Detection DogCat.",
+				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2132,7 +2447,9 @@
 			"subtype": "numeric",
 			"Unite": "s",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"people\"}}"
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"people\"}}",
+				"help": "Information : Délai Alarme Personne (valeur). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (s) (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2152,7 +2469,9 @@
 				"maxValue": 8,
 				"valueFrom": "SetAlarmDelayPeopleState",
 				"actionapi": "SetAiAlarm",
-				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"people\"}}"
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"people\"}}",
+				"help": "Action : Délai Alarme Personne.",
+				"valuesHelp": "Curseur de 0 à 8"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2168,7 +2487,9 @@
 			"subtype": "numeric",
 			"Unite": "s",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"vehicle\"}}"
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"vehicle\"}}",
+				"help": "Information : Délai Alarme Véhicule (valeur). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (s) (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2188,7 +2509,9 @@
 				"maxValue": 8,
 				"valueFrom": "SetAlarmDelayVehicleState",
 				"actionapi": "SetAiAlarm",
-				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"vehicle\"}}"
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"vehicle\"}}",
+				"help": "Action : Délai Alarme Véhicule.",
+				"valuesHelp": "Curseur de 0 à 8"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2204,7 +2527,9 @@
 			"subtype": "numeric",
 			"Unite": "s",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"dog_cat\"}}"
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"dog_cat\"}}",
+				"help": "Information : Délai Alarme DogCat (valeur). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (s) (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2224,7 +2549,9 @@
 				"maxValue": 8,
 				"valueFrom": "SetAlarmDelayDogCatState",
 				"actionapi": "SetAiAlarm",
-				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"dog_cat\"}}"
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"dog_cat\"}}",
+				"help": "Action : Délai Alarme DogCat.",
+				"valuesHelp": "Curseur de 0 à 8"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2238,7 +2565,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPtzGuard\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPtzGuard\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Information : Point de garde (état). Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2253,7 +2582,9 @@
 			"subtype": "other",
 			"configuration": {
 				"actionapi": "SetPtzGuard",
-				"payload": "{\"PtzGuard\":{\"channel\":#CHANNEL#,\"bSaveCurrentPos\":1,\"cmdStr\":\"setPos\"}}"
+				"payload": "{\"PtzGuard\":{\"channel\":#CHANNEL#,\"bSaveCurrentPos\":1,\"cmdStr\":\"setPos\"}}",
+				"help": "Action : Définir/Actualiser le point de garde.",
+				"valuesHelp": "Action immédiate (pas de valeur)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2268,7 +2599,9 @@
 			"subtype": "other",
 			"configuration": {
 				"actionapi": "SetPtzGuard",
-				"payload": "{\"PtzGuard\":{\"channel\":#CHANNEL#,\"cmdStr\":\"toPos\"}}"
+				"payload": "{\"PtzGuard\":{\"channel\":#CHANNEL#,\"cmdStr\":\"toPos\"}}",
+				"help": "Action : Retourner au point de garde.",
+				"valuesHelp": "Action immédiate (pas de valeur)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2283,7 +2616,9 @@
 			"subtype": "binary",
 			"Unite": "s",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPtzGuard\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPtzGuard\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Information : Retour automatique au point de garde (état). Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2301,7 +2636,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetAutoReturnPtzGuardPointState",
 				"actionapi": "SetPtzGuard",
-				"payload": "{\"PtzGuard\":{\"benable\":#OPTSELECTEDINT#,\"channel\":#CHANNEL#,\"cmdStr\":\"setPos\"}}"
+				"payload": "{\"PtzGuard\":{\"benable\":#OPTSELECTEDINT#,\"channel\":#CHANNEL#,\"cmdStr\":\"setPos\"}}",
+				"help": "Action : Retour automatique au point de garde.",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2316,7 +2653,9 @@
 			"subtype": "numeric",
 			"Unite": "s",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetPtzGuard\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetPtzGuard\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Information : Délai Retour auto. au point de garde (valeur). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (s) (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2335,7 +2674,9 @@
 				"maxValue": 300,
 				"valueFrom": "SetIntervalAutoReturnPtzGuardPointState",
 				"actionapi": "SetPtzGuard",
-				"payload": "{\"PtzGuard\":{\"benable\":1,\"channel\":#CHANNEL#,\"timeout\":#OPTSLIDER#,\"cmdStr\":\"setPos\"}}"
+				"payload": "{\"PtzGuard\":{\"benable\":1,\"channel\":#CHANNEL#,\"timeout\":#OPTSLIDER#,\"cmdStr\":\"setPos\"}}",
+				"help": "Action : Délai Retour auto. au point de garde.",
+				"valuesHelp": "Curseur de 10 à 300"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2349,7 +2690,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetBuzzerAlarmV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetBuzzerAlarmV20\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Buzzer / alarme sonore NVR ou canal. Commande d'état (lecture seule). Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2367,7 +2710,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetBuzzerStateV20",
 				"actionapi": "SetBuzzerAlarmV20",
-				"payload": "{\"Buzzer\":{\"scheduleEnable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}"
+				"payload": "{\"Buzzer\":{\"scheduleEnable\":#OPTSELECTEDINT#,\"schedule\":{\"channel\":#CHANNEL#}}}",
+				"help": "Buzzer / alarme sonore NVR ou canal. Variante API V20 / AI (firmwares récents).",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2381,7 +2726,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetBuzzerAlarmV20\",\"action\":0,\"param\":{\"channel\":0}}"
+				"payload": "{\"cmd\":\"GetBuzzerAlarmV20\",\"action\":0,\"param\":{\"channel\":0}}",
+				"help": "Buzzer / alarme sonore NVR ou canal. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2399,7 +2746,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetNvrBuzzerState",
 				"actionapi": "SetBuzzerAlarmV20",
-				"payload": "{\"Buzzer\":{\"enable\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Buzzer\":{\"enable\":#OPTSELECTEDINT#}}",
+				"help": "Buzzer / alarme sonore NVR ou canal.",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2412,7 +2761,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetManualRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetManualRec\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Information : Enregistrement manuel (état). Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2429,7 +2780,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetManualRecordState",
 				"actionapi": "SetManualRec",
-				"payload": "{\"Rec\":{\"enable\":#OPTSELECTEDINT#,\"channel\":#CHANNEL#}}"
+				"payload": "{\"Rec\":{\"enable\":#OPTSELECTEDINT#,\"channel\":#CHANNEL#}}",
+				"help": "Action : Enregistrement manuel.",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2443,7 +2796,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Information : Détection mouvement V1 (état). Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2461,7 +2816,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetMdEnableState",
 				"actionapi": "SetAlarm",
-				"payload": "{\"Alarm\":{\"enable\":#OPTSELECTEDINT#,\"channel\":#CHANNEL#}}"
+				"payload": "{\"Alarm\":{\"enable\":#OPTSELECTEDINT#,\"channel\":#CHANNEL#}}",
+				"help": "Action : Détection mouvement V1.",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2475,7 +2832,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"face\"}}"
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"face\"}}",
+				"help": "Information : Sensibilité Detection Visage (valeur). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2494,7 +2853,9 @@
 				"maxValue": 100,
 				"valueFrom": "SetSdSensitivityFaceState",
 				"actionapi": "SetAiAlarm",
-				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"face\"}}"
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"face\"}}",
+				"help": "Action : Sensibilité Detection Visage.",
+				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2509,7 +2870,9 @@
 			"subtype": "numeric",
 			"Unite": "s",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"face\"}}"
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"face\"}}",
+				"help": "Information : Délai Alarme Visage (valeur). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (s) (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2528,7 +2891,9 @@
 				"maxValue": 8,
 				"valueFrom": "SetAlarmDelayFaceState",
 				"actionapi": "SetAiAlarm",
-				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"face\"}}"
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"face\"}}",
+				"help": "Action : Délai Alarme Visage.",
+				"valuesHelp": "Curseur de 0 à 8"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2542,7 +2907,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"package\"}}"
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"package\"}}",
+				"help": "Information : Sensibilité Detection Colis (valeur). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2561,7 +2928,9 @@
 				"maxValue": 100,
 				"valueFrom": "SetSdSensitivityPackageState",
 				"actionapi": "SetAiAlarm",
-				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"package\"}}"
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"sensitivity\":#OPTSLIDER#,\"ai_type\":\"package\"}}",
+				"help": "Action : Sensibilité Detection Colis.",
+				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2576,7 +2945,9 @@
 			"subtype": "numeric",
 			"Unite": "s",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"package\"}}"
+				"payload": "{\"cmd\":\"GetAiAlarm\",\"action\":0,\"param\":{\"channel\":#CHANNEL#,\"ai_type\":\"package\"}}",
+				"help": "Information : Délai Alarme Colis (valeur). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (s) (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2595,7 +2966,9 @@
 				"maxValue": 8,
 				"valueFrom": "SetAlarmDelayPackageState",
 				"actionapi": "SetAiAlarm",
-				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"package\"}}"
+				"payload": "{\"AiAlarm\":{\"channel\":#CHANNEL#,\"stay_time\":#OPTSLIDER#,\"ai_type\":\"package\"}}",
+				"help": "Action : Délai Alarme Colis.",
+				"valuesHelp": "Curseur de 0 à 8"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2608,7 +2981,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"CheckFirmware\"}"
+				"payload": "{\"cmd\":\"CheckFirmware\"}",
+				"help": "Vérification ou mise à jour firmware. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2622,7 +2997,11 @@
 			"subtype": "other",
 			"isVisible": 1,
 			"logicalId": "CheckFirmware",
-			"scope": "host"
+			"scope": "host",
+			"configuration": {
+				"help": "Vérification ou mise à jour firmware.",
+				"valuesHelp": "Action immédiate (pas de valeur)"
+			}
 		},
 		{
 			"abilityneed": "upgrade",
@@ -2631,7 +3010,11 @@
 			"subtype": "other",
 			"isVisible": 0,
 			"logicalId": "UpgradeFirmware",
-			"scope": "host"
+			"scope": "host",
+			"configuration": {
+				"help": "Vérification ou mise à jour firmware.",
+				"valuesHelp": "Action immédiate (pas de valeur)"
+			}
 		},
 		{
 			"abilityneed": "ntp",
@@ -2639,7 +3022,9 @@
 			"type": "info",
 			"subtype": "binary",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetNtp\"}"
+				"payload": "{\"cmd\":\"GetNtp\"}",
+				"help": "Synchronisation horaire / NTP. Commande d'état (lecture seule).",
+				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2656,7 +3041,9 @@
 				"listValue": "1|Activer;0|Désactiver",
 				"valueFrom": "SetNtpEnableState",
 				"actionapi": "SetNtp",
-				"payload": "{\"Ntp\":{\"enable\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Ntp\":{\"enable\":#OPTSELECTEDINT#}}",
+				"help": "Synchronisation horaire / NTP.",
+				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2670,7 +3057,11 @@
 			"subtype": "other",
 			"isVisible": 1,
 			"logicalId": "SyncTime",
-			"scope": "host"
+			"scope": "host",
+			"configuration": {
+				"help": "Synchronisation horaire / NTP.",
+				"valuesHelp": "Action immédiate (pas de valeur)"
+			}
 		},
 		{
 			"abilityneed": "enc",
@@ -2678,7 +3069,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub). Commande d'état (lecture seule).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2691,7 +3084,9 @@
 			"type": "info",
 			"subtype": "string",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub). Commande d'état (lecture seule).",
+				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2708,7 +3103,9 @@
 				"listValue": "",
 				"valueFrom": "SetResolutionst1State",
 				"actionapi": "SetEnc",
-				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"mainStream\":{\"size\":#OPTSELECTEDSTR#}}}"
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"mainStream\":{\"size\":#OPTSELECTEDSTR#}}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub).",
+				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2725,7 +3122,9 @@
 				"listValue": "",
 				"valueFrom": "SetFPSst1State",
 				"actionapi": "SetEnc",
-				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"mainStream\":{\"frameRate\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"mainStream\":{\"frameRate\":#OPTSELECTEDINT#}}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub).",
+				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2742,7 +3141,9 @@
 				"listValue": "",
 				"valueFrom": "SetBitratest1State",
 				"actionapi": "SetEnc",
-				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"mainStream\":{\"bitRate\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"mainStream\":{\"bitRate\":#OPTSELECTEDINT#}}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub).",
+				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2759,7 +3160,9 @@
 				"listValue": "",
 				"valueFrom": "SetEncodingst1State",
 				"actionapi": "SetEnc",
-				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"mainStream\":{\"vType\":#OPTSELECTEDSTR#}}}"
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"mainStream\":{\"vType\":#OPTSELECTEDSTR#}}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub).",
+				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2776,7 +3179,9 @@
 				"listValue": "",
 				"valueFrom": "SetResolutionst2State",
 				"actionapi": "SetEnc",
-				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"subStream\":{\"size\":#OPTSELECTEDSTR#}}}"
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"subStream\":{\"size\":#OPTSELECTEDSTR#}}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub).",
+				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2793,7 +3198,9 @@
 				"listValue": "",
 				"valueFrom": "SetFPSst2State",
 				"actionapi": "SetEnc",
-				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"subStream\":{\"frameRate\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"subStream\":{\"frameRate\":#OPTSELECTEDINT#}}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub).",
+				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2810,7 +3217,9 @@
 				"listValue": "",
 				"valueFrom": "SetBitratest2State",
 				"actionapi": "SetEnc",
-				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"subStream\":{\"bitRate\":#OPTSELECTEDINT#}}}"
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"subStream\":{\"bitRate\":#OPTSELECTEDINT#}}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub).",
+				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2827,7 +3236,9 @@
 				"listValue": "",
 				"valueFrom": "SetEncodingst2State",
 				"actionapi": "SetEnc",
-				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"subStream\":{\"vType\":#OPTSELECTEDSTR#}}}"
+				"payload": "{\"Enc\":{\"channel\":#CHANNEL#,\"subStream\":{\"vType\":#OPTSELECTEDSTR#}}}",
+				"help": "Paramètre d'encodage vidéo (flux main/sub).",
+				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2840,7 +3251,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Mode jour/nuit (Auto, couleur, N&B). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2858,7 +3271,9 @@
 				"maxValue": 100,
 				"valueFrom": "SetDayNightThresholdState",
 				"actionapi": "SetIsp",
-				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"dayNightThreshold\":#OPTSLIDER#}}"
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"dayNightThreshold\":#OPTSLIDER#}}",
+				"help": "Mode jour/nuit (Auto, couleur, N&B).",
+				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2871,7 +3286,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Binning du capteur. Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2888,7 +3305,9 @@
 				"listValue": "0|Off;1|Auto",
 				"valueFrom": "SetBinningModeState",
 				"actionapi": "SetIsp",
-				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"binningMode\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"binningMode\":#OPTSELECTEDINT#}}",
+				"help": "Binning du capteur.",
+				"valuesHelp": "0 = Off, 1 = Auto"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2901,7 +3320,9 @@
 			"type": "info",
 			"subtype": "numeric",
 			"configuration": {
-				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}"
+				"payload": "{\"cmd\":\"GetIsp\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "HDR (High Dynamic Range). Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique (lecture seule)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -2918,7 +3339,9 @@
 				"listValue": "0|Off;1|Auto;2|On",
 				"valueFrom": "SetHdrState",
 				"actionapi": "SetIsp",
-				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"hdr\":#OPTSELECTEDINT#}}"
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"hdr\":#OPTSELECTEDINT#}}",
+				"help": "HDR (High Dynamic Range).",
+				"valuesHelp": "0 = Off, 1 = Auto, 2 = On"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2935,7 +3358,9 @@
 				"listValue": "Auto|Auto;LowNoise|Faible bruit;AntiSmear|Anti-smear;Manual|Manuel",
 				"valueFrom": "SetExposureState",
 				"actionapi": "SetIsp",
-				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"exposure\":#OPTSELECTEDSTR#}}"
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"exposure\":#OPTSELECTEDSTR#}}",
+				"help": "Mode / valeur d'exposition.",
+				"valuesHelp": "Auto = Auto, LowNoise = Faible bruit, AntiSmear = Anti-smear, Manual = Manuel"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2952,7 +3377,9 @@
 				"listValue": "Off|Off;On|On;Auto|Auto",
 				"valueFrom": "SetBackLightState",
 				"actionapi": "SetIsp",
-				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"backLight\":#OPTSELECTEDSTR#}}"
+				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"backLight\":#OPTSELECTEDSTR#}}",
+				"help": "Compensation de contre-jour.",
+				"valuesHelp": "Off = Off, On = On, Auto = Auto"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
