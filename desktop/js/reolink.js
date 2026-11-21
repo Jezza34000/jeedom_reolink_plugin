@@ -81,85 +81,112 @@ function updateNvrParentHint() {
 }
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').on('change keyup', updateNvrParentHint)
 
+function reolinkFireChange(el) {
+  if (!el) return
+  if (typeof el.triggerEvent === 'function') {
+    el.triggerEvent('change')
+  } else {
+    el.dispatchEvent(new Event('change', { bubbles: true }))
+  }
+}
+
 function reolinkPrefillCronModal(cronExpr) {
   var tries = 0
   var timer = setInterval(function () {
     tries++
-    var $root = $('#mod_insertCronValue #mod_insertCron')
-    if (!$root.length) {
-      if (tries > 40) {
+    var root = document.querySelector('#mod_insertCronValue #mod_insertCron')
+    var resultSpan = root && root.querySelector('#mod_cron_span_cronResult')
+    if (!root || !resultSpan) {
+      if (tries > 60) {
         clearInterval(timer)
       }
       return
     }
     clearInterval(timer)
     var parts = String(cronExpr || '').trim().split(/\s+/)
-    var $mode = $root.find('#mod_cron_sel_scheduleMode')
+    var mode = root.querySelector('#mod_cron_sel_scheduleMode')
+    if (!mode) return
     if (parts.length === 6) {
-      $mode.val('once').trigger('change')
-      setTimeout(function () {
-        var minute = parts[0], hour = parts[1], day = parts[2], month = parts[3], year = parts[5]
-        var pad = function (v) { return (String(v).length === 1 ? '0' : '') + v }
-        var dateStr = year + '-' + pad(month) + '-' + pad(day) + ' ' + pad(hour) + ':' + pad(minute) + ':00'
-        var $date = $root.find('#mod_cron_in_dateScenarioTrigger')
-        if ($date.length) {
-          $date.val(dateStr).trigger('change')
-        }
-        $root.find('#mod_cron_span_cronResult').text(cronExpr)
-      }, 50)
+      mode.value = 'once'
+      reolinkFireChange(mode)
+      var minute = parts[0], hour = parts[1], day = parts[2], month = parts[3], year = parts[5]
+      var pad = function (v) { return (String(v).length === 1 ? '0' : '') + v }
+      var dateInput = root.querySelector('#mod_cron_in_dateScenarioTrigger')
+      if (dateInput) {
+        dateInput.value = year + '-' + pad(month) + '-' + pad(day) + ' ' + pad(hour) + ':' + pad(minute) + ':00'
+        reolinkFireChange(dateInput)
+      }
+      var resOnce = root.querySelector('#mod_cron_span_cronResult')
+      if (resOnce) resOnce.textContent = parts.join(' ')
       return
     }
-    if (parts.length !== 5) {
-      return
+    if (parts.length !== 5) return
+    mode.value = 'repete'
+    reolinkFireChange(mode)
+    var period = root.querySelector('select[name="cron-period"]')
+    if (!period) return
+    var presets = {
+      '* * * * *': 'minute',
+      '*/5 * * * *': '*/5 * * * *',
+      '*/10 * * * *': '*/10 * * * *',
+      '*/15 * * * *': '*/15 * * * *',
+      '*/20 * * * *': '*/20 * * * *',
+      '*/30 * * * *': '*/30 * * * *'
     }
-    $mode.val('repete').trigger('change')
-    setTimeout(function () {
-      var $period = $root.find('select[name="cron-period"]')
-      if (!$period.length) {
-        return
+    var expr = parts.join(' ')
+    var setSel = function (sel, val) {
+      var s = root.querySelector(sel)
+      if (s) {
+        s.value = String(parseInt(val, 10))
+        reolinkFireChange(s)
       }
-      var presets = {
-        '* * * * *': 'minute',
-        '*/5 * * * *': '*/5 * * * *',
-        '*/10 * * * *': '*/10 * * * *',
-        '*/15 * * * *': '*/15 * * * *',
-        '*/20 * * * *': '*/20 * * * *',
-        '*/30 * * * *': '*/30 * * * *'
+    }
+    var hasOpt = function (val) {
+      return Array.prototype.some.call(period.options, function (o) { return o.value === val })
+    }
+    if (presets[expr] && hasOpt(presets[expr])) {
+      period.value = presets[expr]
+      reolinkFireChange(period)
+    } else if (/^\d{1,2}\s\*\s\*\s\*\s\*$/.test(expr)) {
+      period.value = 'hour'
+      reolinkFireChange(period)
+      setSel('select[name="cron-mins"]', parts[0])
+    } else if (/^\d{1,2}\s\d{1,2}\s\*\s\*\s\*$/.test(expr)) {
+      period.value = 'day'
+      reolinkFireChange(period)
+      setSel('select.cron-time-min', parts[0])
+      setSel('select.cron-time-hour', parts[1])
+    } else if (/^\d{1,2}\s\d{1,2}\s\*\s\*\s\d{1,2}$/.test(expr)) {
+      period.value = 'week'
+      reolinkFireChange(period)
+      setSel('select.cron-time-min', parts[0])
+      setSel('select.cron-time-hour', parts[1])
+      setSel('select[name="cron-dow"]', parts[4])
+    } else if (/^\d{1,2}\s\d{1,2}\s\d{1,2}\s\*\s\*$/.test(expr)) {
+      period.value = 'month'
+      reolinkFireChange(period)
+      setSel('select.cron-time-min', parts[0])
+      setSel('select.cron-time-hour', parts[1])
+      setSel('select[name="cron-dom"]', parts[2])
+    } else if (/^\d{1,2}\s\d{1,2}\s\d{1,2}\s\d{1,2}\s\*$/.test(expr)) {
+      period.value = 'year'
+      reolinkFireChange(period)
+      setSel('select.cron-time-min', parts[0])
+      setSel('select.cron-time-hour', parts[1])
+      setSel('select[name="cron-dom"]', parts[2])
+      setSel('select[name="cron-month"]', parts[3])
+    } else {
+      if (!hasOpt(expr)) {
+        var opt = document.createElement('option')
+        opt.value = expr
+        opt.textContent = '{{Valeur actuelle}} (' + expr + ')'
+        period.insertBefore(opt, period.firstChild)
       }
-      var expr = parts.join(' ')
-      if (presets[expr] && $period.find('option[value="' + presets[expr].replace(/"/g, '\\"') + '"]').length) {
-        $period.val(presets[expr]).trigger('change')
-      } else if (/^\d{1,2}\s\*\s\*\s\*\s\*$/.test(expr)) {
-        $period.val('hour').trigger('change')
-        $root.find('select[name="cron-mins"]').val(parts[0]).trigger('change')
-      } else if (/^\d{1,2}\s\d{1,2}\s\*\s\*\s\*$/.test(expr)) {
-        $period.val('day').trigger('change')
-        $root.find('select.cron-time-min').val(parts[0]).trigger('change')
-        $root.find('select.cron-time-hour').val(parts[1]).trigger('change')
-      } else if (/^\d{1,2}\s\d{1,2}\s\*\s\*\s\d{1,2}$/.test(expr)) {
-        $period.val('week').trigger('change')
-        $root.find('select.cron-time-min').val(parts[0]).trigger('change')
-        $root.find('select.cron-time-hour').val(parts[1]).trigger('change')
-        $root.find('select[name="cron-dow"]').val(parts[4]).trigger('change')
-      } else if (/^\d{1,2}\s\d{1,2}\s\d{1,2}\s\*\s\*$/.test(expr)) {
-        $period.val('month').trigger('change')
-        $root.find('select.cron-time-min').val(parts[0]).trigger('change')
-        $root.find('select.cron-time-hour').val(parts[1]).trigger('change')
-        $root.find('select[name="cron-dom"]').val(parts[2]).trigger('change')
-      } else if (/^\d{1,2}\s\d{1,2}\s\d{1,2}\s\d{1,2}\s\*$/.test(expr)) {
-        $period.val('year').trigger('change')
-        $root.find('select.cron-time-min').val(parts[0]).trigger('change')
-        $root.find('select.cron-time-hour').val(parts[1]).trigger('change')
-        $root.find('select[name="cron-dom"]').val(parts[2]).trigger('change')
-        $root.find('select[name="cron-month"]').val(parts[3]).trigger('change')
-      } else {
-        if (!$period.find('option[value="' + expr.replace(/"/g, '\\"') + '"]').length) {
-          $period.append($('<option/>').attr('value', expr).text('{{Valeur actuelle}} (' + expr + ')'))
-        }
-        $period.val(expr).trigger('change')
-      }
-      $root.find('#mod_cron_span_cronResult').text(expr)
-    }, 80)
+      period.value = expr
+      reolinkFireChange(period)
+    }
+    var res = root.querySelector('#mod_cron_span_cronResult')
+    if (res) res.textContent = expr
   }, 50)
 }
 
