@@ -2222,6 +2222,11 @@ class reolink extends eqLogic {
           $cmd->setConfiguration('help', __($helpTpl, __FILE__));
           $dirty = true;
         }
+        $valuesHelpTpl = strval($command['configuration']['valuesHelp'] ?? '');
+        if ($valuesHelpTpl !== '') {
+          $cmd->setConfiguration('valuesHelp', __($valuesHelpTpl, __FILE__));
+          $dirty = true;
+        }
         if ($dirty) {
           $cmd->save();
         }
@@ -2234,6 +2239,9 @@ class reolink extends eqLogic {
       if (isset($command['configuration']) && is_array($command['configuration'])) {
         if (!empty($command['configuration']['help'])) {
           $command['configuration']['help'] = __($command['configuration']['help'], __FILE__);
+        }
+        if (!empty($command['configuration']['valuesHelp'])) {
+          $command['configuration']['valuesHelp'] = __($command['configuration']['valuesHelp'], __FILE__);
         }
         if (!empty($command['configuration']['listValue'])) {
           $command['configuration']['listValue'] = reolink::translateCmdListValue($command['configuration']['listValue']);

@@ -35,7 +35,7 @@ $renderCard = function ($eqLogic) {
 	if ($info !== '') {
 		echo '<span class="label label-info">' . htmlspecialchars($info, ENT_QUOTES, 'UTF-8') . '</span> ';
 	}
-	echo ($eqLogic->getIsVisible() == 1) ? '<i class="fas fa-eye" title="{{Equipement visible}}"></i>' : '<i class="fas fa-eye-slash" title="{{Equipement non visible}}"></i>';
+	echo ($eqLogic->getIsVisible() == 1) ? '<i class="fas fa-eye" title="{{Équipement visible}}"></i>' : '<i class="fas fa-eye-slash" title="{{Équipement non visible}}"></i>';
 	echo '</span>';
 	echo '</div>';
 };
@@ -65,7 +65,7 @@ $renderCard = function ($eqLogic) {
 		</div>
 		<?php
 		if (count($eqLogics) == 0) {
-			echo '<br/><div class="text-center" style="font-size:1.2em;font-weight:bold;">{{Aucune caméra Reolink n\'est paramétré, cliquer sur "Ajouter" pour commencer}}</div>';
+			echo '<br/><div class="text-center" style="font-size:1.2em;font-weight:bold;">{{Aucune caméra Reolink n\'est paramétrée, cliquez sur "Ajouter" pour commencer}}</div>';
 		} else {
 			echo '<div class="input-group" style="margin:5px;">';
 			echo '<input class="form-control roundedLeft" placeholder="{{Rechercher}}" id="in_searchEqlogic"/>';
@@ -110,7 +110,7 @@ $renderCard = function ($eqLogic) {
 		<!-- Onglets -->
 		<ul class="nav nav-tabs" role="tablist">
 			<li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fas fa-arrow-circle-left"></i></a></li>
-			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i> {{Equipement}}</a></li>
+			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i> {{Équipement}}</a></li>
 			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i> {{Commandes}}</a></li>
 		</ul>
 		<div class="tab-content">
@@ -172,7 +172,7 @@ $renderCard = function ($eqLogic) {
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Port HTTP/HTTPS}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port de l'interface web de la caméra uniquement si vous l'avez modifier. Sinon laisser ce champ vide}}"></i></sup>
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port de l'interface web de la caméra uniquement si vous l'avez modifié. Sinon, laissez ce champ vide}}"></i></sup>
 								</label>
 								<div class="col-sm-7">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" placeholder="{{(facultatif)}}"/>
@@ -180,7 +180,7 @@ $renderCard = function ($eqLogic) {
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Port ONVIF}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port du protocole ONVIF uniquement si vous l'avez modifier. Sinon laisser ce champ vide}}"></i></sup>
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port du protocole ONVIF uniquement si vous l'avez modifié. Sinon, laissez ce champ vide}}"></i></sup>
 								</label>
 								<div class="col-sm-7">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port_onvif" placeholder="{{8000}}"/>
@@ -188,7 +188,7 @@ $renderCard = function ($eqLogic) {
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Canal NVR}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Numéro de canal si la caméra est derrière un NVR (0 = premier canal). Laisser vide pour un NVR parent ou une caméra autonome.}}"></i></sup>
+									<sup><i class="fas fa-question-circle tooltips" title="{{Numéro de canal si la caméra est derrière un NVR (0 = premier canal). Laissez vide pour un NVR parent ou une caméra autonome.}}"></i></sup>
 								</label>
 								<div class="col-sm-7">
 									<input type="number" min="0" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="defined_channel" placeholder="{{Vide = NVR ou autonome, 0..N = canal}}"/>
@@ -199,7 +199,7 @@ $renderCard = function ($eqLogic) {
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Login}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le login de la caméras, celui utiliser pour accéder à l'interface web}}"></i></sup>
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez l'identifiant utilisé pour accéder à l'interface web de la caméra}}"></i></sup>
 								</label>
 								<div class="col-sm-7">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="login"/>
@@ -225,7 +225,7 @@ $renderCard = function ($eqLogic) {
 							</div>
 							<div class="form-group expertModeVisible">
 								<label class="col-sm-3 control-label">{{Auto-actualisation (cron)}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Actualise les paramètres globaux de la caméra. N'influence pas la remontée de détection de mouvement.}}"></i></sup>
+									<sup><i class="fas fa-question-circle tooltips" title="{{Actualise les paramètres globaux de la caméra. N'influence pas la remontée de détection de mouvement}}"></i></sup>
 								</label>
 									<div class="col-sm-3">
 										<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="autorefresh" placeholder="*/15 * * * *"/>
@@ -422,7 +422,7 @@ $renderCard = function ($eqLogic) {
 								<th style="min-width:100px;width:150px;">{{Logical ID}}</th>
 								<th style="min-width:150px;width:250px;">{{Paramètres}}</th>
 								<th style="min-width:150px;width:250px;">{{Options}}</th>
-								<th style="min-width:80px;width:120px;">{{Etat}}</th>
+								<th style="min-width:80px;width:120px;">{{État}}</th>
 								<th style="min-width:80px;width:140px;">{{Action}}</th>
 							</tr>
 						</thead>
@@ -436,5 +436,32 @@ $renderCard = function ($eqLogic) {
 	</div><!-- /.eqLogic -->
 </div><!-- /.row row-overflow -->
 
+<?php
+$reolinkCmdHelp = array();
+$reolinkCmdConf = dirname(__FILE__) . '/../../core/config/reolinkapicmd.json';
+if (is_readable($reolinkCmdConf)) {
+	$raw = file_get_contents($reolinkCmdConf);
+	$decoded = json_decode($raw, true);
+	if (is_array($decoded) && isset($decoded['commands']) && is_array($decoded['commands'])) {
+		$i18nFile = 'plugins/reolink/core/class/reolink.class.php';
+		foreach ($decoded['commands'] as $command) {
+			$lid = strval($command['logicalId'] ?? '');
+			if ($lid === '') {
+				continue;
+			}
+			$cfg = (isset($command['configuration']) && is_array($command['configuration'])) ? $command['configuration'] : array();
+			$help = strval($cfg['help'] ?? '');
+			$valuesHelp = strval($cfg['valuesHelp'] ?? '');
+			$reolinkCmdHelp[$lid] = array(
+				'help' => ($help !== '') ? __($help, $i18nFile) : '',
+				'valuesHelp' => ($valuesHelp !== '') ? __($valuesHelp, $i18nFile) : '',
+			);
+		}
+	}
+}
+?>
+<script>
+window.REOLINK_CMD_HELP = <?php echo json_encode($reolinkCmdHelp, JSON_UNESCAPED_UNICODE); ?>;
+</script>
 <?php include_file('desktop', 'reolink', 'js', 'reolink');?>
 <?php include_file('core', 'plugin.template', 'js');?>
