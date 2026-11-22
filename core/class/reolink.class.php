@@ -1586,7 +1586,7 @@ class reolink extends eqLogic {
 
           case reolinkAPI::CAM_GET_RECV20:
             $v = $json_data['value']['Rec'];
-            $camcmd->checkAndUpdateCmd('SetRecordStateV20', $v['scheduleEnable'] ?? ($v['enable'] ?? 0));
+            $camcmd->checkAndUpdateCmd('SetRecordStateV20', reolink::resolveV20SwitchState($camcmd, $v));
             if (isset($v['preRec'])) {
               $camcmd->checkAndUpdateCmd('SetPreRecordStateV20', $v['preRec']);
             }
@@ -1629,7 +1629,7 @@ class reolink extends eqLogic {
 
           case reolinkAPI::CAM_GET_FTPV20:
             $v = $json_data['value']['Ftp'];
-            $camcmd->checkAndUpdateCmd('SetFTPStateV20', $v['scheduleEnable'] ?? ($v['enable'] ?? 0));
+            $camcmd->checkAndUpdateCmd('SetFTPStateV20', reolink::resolveV20SwitchState($camcmd, $v));
             break;
 
           case reolinkAPI::CAM_GET_PUSH:
@@ -1638,7 +1638,7 @@ class reolink extends eqLogic {
 
           case reolinkAPI::CAM_GET_PUSHV20:
             $v = $json_data['value']['Push'];
-            $camcmd->checkAndUpdateCmd('SetPushStateV20', $v['scheduleEnable'] ?? ($v['enable'] ?? 0));
+            $camcmd->checkAndUpdateCmd('SetPushStateV20', reolink::resolveV20SwitchState($camcmd, $v));
             break;
 
           case reolinkAPI::CAM_GET_PUSHCFG:
@@ -1651,7 +1651,7 @@ class reolink extends eqLogic {
 
           case reolinkAPI::CAM_GET_EMAILV20:
             $v = $json_data['value']['Email'];
-            $camcmd->checkAndUpdateCmd('SetEmailStateV20', $v['scheduleEnable'] ?? ($v['enable'] ?? 0));
+            $camcmd->checkAndUpdateCmd('SetEmailStateV20', reolink::resolveV20SwitchState($camcmd, $v));
             break;
 
           case reolinkAPI::CAM_GET_ENC:
@@ -1779,8 +1779,8 @@ class reolink extends eqLogic {
 
           case reolinkAPI::CAM_GET_BUZZERALARMV20:
             $buzzer = $json_data['value']['Buzzer'] ?? array();
-            if (array_key_exists('scheduleEnable', $buzzer)) {
-              $camcmd->checkAndUpdateCmd('SetBuzzerStateV20', $buzzer['scheduleEnable']);
+            if (array_key_exists('scheduleEnable', $buzzer) || array_key_exists('enable', $buzzer)) {
+              $camcmd->checkAndUpdateCmd('SetBuzzerStateV20', reolink::resolveV20SwitchState($camcmd, $buzzer));
             }
             if (array_key_exists('enable', $buzzer)) {
               $camcmd->checkAndUpdateCmd('SetNvrBuzzerState', $buzzer['enable']);
@@ -2225,6 +2225,55 @@ class reolink extends eqLogic {
         log::add('reolink', 'info', 'Liste des options mise à jour : ' . $logicalId);
       }
     }
+  }
+
+  /**
+   * Read the effective V20 switch state matching reolink_aio:
+   * - On an NVR channel child, per-channel toggles use `scheduleEnable`.
+   * - On a standalone camera (or NVR host), the master toggle is `enable`.
+   */
+  public static function resolveV20SwitchState($eqLogic, $node) {
+    if (!is_array($node)) {
+      return 0;
+    }
+    if (is_object($eqLogic) && $eqLogic->isChannelChild()) {
+      return intval($node['scheduleEnable'] ?? ($node['enable'] ?? 0));
+    }
+    return intval($node['enable'] ?? ($node['scheduleEnable'] ?? 0));
+  }
+
+  /**
+   * Adapt V20 switch write payloads (`SetEmailV20`, `SetFtpV20`, `SetPushV20`, `SetRecV20`, `SetBuzzerAlarmV20`)
+   * for standalone cameras (`enable`) vs NVR channel children (`scheduleEnable`), matching reolink_aio.
+   *
+   * @return array{0: mixed, 1: bool} [$normalizedPatch, $skipRmw]
+   */
+  public static function normalizeStandaloneV20SwitchPatch($eqLogic, $actionAPI, $patch) {
+    if (!is_object($eqLogic) || $eqLogic->isChannelChild() || !is_array($patch)) {
+      return array($patch, false);
+    }
+    $v20RootByApi = array(
+      'SetEmailV20' => 'Email',
+      'SetFtpV20' => 'Ftp',
+      'SetPushV20' => 'Push',
+      'SetRecV20' => 'Rec',
+      'SetBuzzerAlarmV20' => 'Buzzer',
+    );
+    if (!isset($v20RootByApi[$actionAPI])) {
+      return array($patch, false);
+    }
+    $rootKey = $v20RootByApi[$actionAPI];
+    if (!isset($patch[$rootKey]) || !is_array($patch[$rootKey])) {
+      return array($patch, false);
+    }
+    if (array_key_exists('scheduleEnable', $patch[$rootKey])) {
+      $onOff = intval($patch[$rootKey]['scheduleEnable']);
+      return array(array($rootKey => array('enable' => $onOff)), true);
+    }
+    if (array_key_exists('enable', $patch[$rootKey]) && count($patch[$rootKey]) === 1) {
+      return array($patch, true);
+    }
+    return array($patch, false);
   }
 
   public static function buildRmwPayload($camcnx, $actionAPI, $channel, $patchArray) {
@@ -3271,8 +3320,12 @@ class reolinkCmd extends cmd {
             $patchJson = str_replace('#CHANNEL#', $channel, $patchJson);
             $patchJson = str_replace('#SPEED#', $speed, $patchJson);
             $patch = json_decode($patchJson, true);
+            list($patch, $skipRmw) = reolink::normalizeStandaloneV20SwitchPatch($eqLogic, $actionAPI, $patch);
+            if ($skipRmw && is_array($patch)) {
+              $patchJson = json_encode($patch);
+            }
             $rmwApis = array('SetRecV20', 'SetEnc', 'SetIsp', 'SetOsd', 'SetAiCfg', 'SetAlarm', 'SetNtp', 'SetWhiteLed', 'SetBuzzerAlarmV20', 'SetAiAlarm');
-            if (in_array($actionAPI, $rmwApis, true) && is_array($patch)) {
+            if (!$skipRmw && in_array($actionAPI, $rmwApis, true) && is_array($patch)) {
               if ($actionAPI === 'SetEnc') {
                 foreach (array('mainStream', 'subStream') as $stream) {
                   if (!empty($patch['Enc'][$stream]['size']) && strpos($patch['Enc'][$stream]['size'], '*') !== false) {
