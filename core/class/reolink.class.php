@@ -742,7 +742,20 @@ class reolink extends eqLogic {
         $camEq->setIsEnable(1);
         $camEq->setIsVisible(1);
         $camEq->setObject_id($reolinkEq->getObject_id());
+      } else if (intval($reolinkEq->getObject_id()) > 0) {
+        $camEq->setObject_id($reolinkEq->getObject_id());
       }
+      $cnxType = strtolower(trim(strval($reolinkEq->getConfiguration('cnxtype', ''))));
+      $proto = ($cnxType === 'https') ? 'https' : 'http';
+      $configuredPort = preg_replace('/\D/', '', strval($reolinkEq->getConfiguration('port', '')));
+      if ($configuredPort !== '') {
+        $webPort = $configuredPort;
+      } else if ($proto === 'https') {
+        $webPort = preg_replace('/\D/', '', strval($reolinkEq->getConfiguration('httpsPort', '443'))) ?: '443';
+      } else {
+        $webPort = preg_replace('/\D/', '', strval($reolinkEq->getConfiguration('httpPort', '80'))) ?: '80';
+      }
+      $rtspPort = preg_replace('/\D/', '', strval($reolinkEq->getConfiguration('rtspPort', '554'))) ?: '554';
       $subTpl = reolink::buildRtspTemplate($reolinkEq->getConfiguration('rtspSubUrl'), $channel, true);
       $mainTpl = reolink::buildRtspTemplate($reolinkEq->getConfiguration('rtspMainUrl'), $channel, false);
       if ($reolinkEq->getConfiguration('rtspSubUrl') !== $subTpl || $reolinkEq->getConfiguration('rtspMainUrl') !== $mainTpl) {
@@ -750,15 +763,16 @@ class reolink extends eqLogic {
         $reolinkEq->setConfiguration('rtspMainUrl', $mainTpl);
         $reolinkEq->save();
       }
+      $camStreamUrl = ($cnxType === 'baichuan') ? '' : str_replace('#port#', $rtspPort, $subTpl);
       $model = strval($reolinkEq->getConfiguration('camModel', $reolinkEq->getConfiguration('model', '')));
       $deviceId = reolink::mapModelToCameraDevice($model);
       $camEq->setConfiguration('ip', $ip);
-      $camEq->setConfiguration('port', preg_replace('/\D/', '', strval($reolinkEq->getConfiguration('rtspPort', '554'))) ?: '554');
+      $camEq->setConfiguration('port', $webPort);
       $camEq->setConfiguration('username', $reolinkEq->getConfiguration('login'));
       $camEq->setConfiguration('password', $reolinkEq->getConfiguration('password'));
-      $camEq->setConfiguration('protocole', 'rtsp');
+      $camEq->setConfiguration('protocole', $proto);
       $camEq->setConfiguration('urlStream', 'reolink::getSnapshot');
-      $camEq->setConfiguration('cameraStreamAccessUrl', $subTpl);
+      $camEq->setConfiguration('cameraStreamAccessUrl', $camStreamUrl);
       $camEq->setConfiguration('rtsp_option', '-rtsp_transport tcp');
       $camEq->setConfiguration('reolink_channel', strval($channel));
       $camEq->setConfiguration('reolink_eqLogic_id', intval($reolinkEq->getId()));

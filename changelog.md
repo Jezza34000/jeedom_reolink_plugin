@@ -2,6 +2,7 @@
 
 22/11/2026
 
+- Synchronisation plugin Caméra : renseigne `protocole` (`http`/`https`) et `port` web (`80`/`443` ou personnalisé) conformes au sélecteur du plugin officiel `camera`, inscrit explicitement le port RTSP (`:554`) dans `cameraStreamAccessUrl`, et resynchronise l'objet parent lorsqu'il est défini (retour #117)
 - Privacy Mode : ignore le poll HTTP `GetAiState`/`GetMdState` du callback ONVIF `jeeReolink.php` pendant le Mode confidentialité ou la fenêtre de réveil HTTP `waitHttpPortReady`, évitant l'erreur transitoire « Réponse vide » lorsque ONVIF redémarre 1 s avant nginx/HTTPS (retour #122)
 
 21/11/2026
