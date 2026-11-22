@@ -1,7 +1,10 @@
 <?php
 /**
- * Minimal Reolink Baichuan TCP client (port 9000) for Privacy Mode only.
- * Protocol mirrored from starkillerOG/reolink_aio (cmd 1/2/199/574/575).
+ * Reolink Baichuan TCP client (port 9000).
+ * Supports Privacy Mode (cmd 574/575), Battery/Sleep queries (cmd 253/145),
+ * JPEG Snapshot binary streaming (cmd 109), generic XML command transport,
+ * and read-only anonymized XML diagnostic export for port-9000-only cameras (e.g. E321).
+ * Protocol mirrored from starkillerOG/reolink_aio.
  */
 class reolinkBaichuan {
   const HEADER_MAGIC = 'f0debc0a';
@@ -22,15 +25,51 @@ class reolinkBaichuan {
   private $connectTimeout;
   private $readTimeout;
   public $loginSleep = null;
+  public $loginXml = '';
   private $accountDevice = false;
+  private $pushEvents = array();
 
-  public function __construct($host, $username, $password, $port = self::DEFAULT_PORT, $connectTimeout = 3, $readTimeout = 5) {
-    $this->host = $host;
+  public function __construct($host, $username, $password, $port = self::DEFAULT_PORT, $connectTimeout = 3, $readTimeout = 6) {
+    $this->host = trim(strval($host));
     $this->port = intval($port) > 0 ? intval($port) : self::DEFAULT_PORT;
-    $this->username = $username;
-    $this->password = $password;
+    $this->username = trim(strval($username));
+    $this->password = strval($password);
     $this->connectTimeout = max(1, intval($connectTimeout));
     $this->readTimeout = max(1, intval($readTimeout));
+  }
+
+  public function __destruct() {
+    if ($this->loggedIn && is_resource($this->fp)) {
+      $this->logout();
+    } else {
+      $this->closeSocket();
+    }
+  }
+
+  public function getHost() {
+    return $this->host;
+  }
+
+  public function getPort() {
+    return $this->port;
+  }
+
+  public function getUsername() {
+    return $this->username;
+  }
+
+  public function isLoggedIn() {
+    return $this->loggedIn && is_resource($this->fp);
+  }
+
+  public function isAccountDevice() {
+    return $this->accountDevice;
+  }
+
+  public function popPushEvents() {
+    $ev = $this->pushEvents;
+    $this->pushEvents = array();
+    return $ev;
   }
 
   public static function md5Modern($string) {
@@ -116,7 +155,7 @@ class reolinkBaichuan {
     return $magic . $cmd . $len . $mid . hex2bin('00001464') . pack('V', $payloadOffset);
   }
 
-  private function sendRaw($cmdId, $channel, $bodyXml, $extXml, $encType, $messageClass) {
+  private function writePacket($cmdId, $channel, $bodyXml, $extXml, $encType, $messageClass) {
     $this->connect();
     if ($channel === null) {
       $chId = 250;
@@ -150,8 +189,98 @@ class reolinkBaichuan {
       }
       $sent += $written;
     }
+    return $fullMessId;
+  }
 
+  private function sendRaw($cmdId, $channel, $bodyXml, $extXml, $encType, $messageClass) {
+    $fullMessId = $this->writePacket($cmdId, $channel, $bodyXml, $extXml, $encType, $messageClass);
     return $this->recvMatching($cmdId, $fullMessId, $encType);
+  }
+
+  /**
+   * Send a command that streams a binary payload (e.g. cmd 109 JPEG Snapshot).
+   * @return array{xml:string,payload:string}
+   */
+  public function sendPayload($cmdId, $channel, $bodyXml = '', $extXml = '') {
+    $this->ensureLogin();
+    if ($extXml === '' && $channel !== null) {
+      $extXml = $this->channelExtension($channel);
+    }
+    $fullMessId = $this->writePacket($cmdId, $channel, $bodyXml, $extXml, 'aes', '1464');
+    $deadline = microtime(true) + max(8, $this->readTimeout);
+    $xmlResp = '';
+    $expectedSize = null;
+    $chunks = '';
+
+    while (microtime(true) < $deadline) {
+      $parsed = $this->tryParseOne('aes');
+      if ($parsed === null) {
+        $left = $deadline - microtime(true);
+        if ($left <= 0) {
+          break;
+        }
+        $read = array($this->fp);
+        $write = null;
+        $except = null;
+        $sec = max(0, intval($left));
+        $usec = max(0, intval(($left - $sec) * 1000000));
+        $n = @stream_select($read, $write, $except, $sec, $usec);
+        if ($n === false || $n === 0) {
+          continue;
+        }
+        $chunk = @fread($this->fp, 32768);
+        if ($chunk === false || $chunk === '') {
+          throw new Exception('Baichuan connection closed during payload cmd_id ' . $cmdId);
+        }
+        $this->recvBuf .= $chunk;
+        continue;
+      }
+
+      list($recCmdId, $recMessId, $status, $body, $payloadBin) = $parsed;
+      if ($recCmdId === intval($cmdId) && $recMessId === intval($fullMessId)) {
+        if ($status !== null && !in_array($status, array(200, 201, 300), true)) {
+          throw new Exception('Baichuan status ' . $status . ' for cmd_id ' . $cmdId);
+        }
+        if ($body !== '' && $xmlResp === '') {
+          $xmlResp = $body;
+          $picSize = $this->xmlValue($xmlResp, 'pictureSize');
+          if ($picSize !== null && is_numeric($picSize) && intval($picSize) > 0) {
+            $expectedSize = intval($picSize);
+          }
+        }
+        if ($payloadBin !== '') {
+          $chunks .= $payloadBin;
+          if ($expectedSize !== null && strlen($chunks) >= $expectedSize) {
+            // Drain trailing 0-byte end-of-payload marker if already buffered
+            $peek = $this->tryParseOne('aes');
+            if ($peek !== null && ($peek[0] !== intval($cmdId) || $peek[1] !== intval($fullMessId))) {
+              $this->recordPushIfRelevant($peek[0], $peek[3]);
+            }
+            return array('xml' => $xmlResp, 'payload' => substr($chunks, 0, $expectedSize));
+          }
+        } elseif ($xmlResp !== '' && strlen($chunks) > 0) {
+          return array('xml' => $xmlResp, 'payload' => $chunks);
+        }
+        continue;
+      }
+      $this->recordPushIfRelevant($recCmdId, $body);
+    }
+
+    if ($chunks !== '') {
+      return array('xml' => $xmlResp, 'payload' => $chunks);
+    }
+    throw new Exception('Baichuan timeout waiting for binary payload cmd_id ' . $cmdId);
+  }
+
+  private function recordPushIfRelevant($recCmdId, $body) {
+    if ($body !== '') {
+      if ($recCmdId === 33) {
+        $this->pushEvents[] = array('cmdId' => 33, 'xml' => $body, 'ts' => time());
+      }
+      if ($recCmdId === 623 || strpos($body, '<sleep>') !== false) {
+        log::add('reolink', 'debug', 'Baichuan push cmd_id=' . $recCmdId . ' xml=' . preg_replace('/\s+/', ' ', trim($body)));
+      }
+    }
   }
 
   private function recvMatching($cmdId, $fullMessId, $encType) {
@@ -172,7 +301,7 @@ class reolinkBaichuan {
         if ($n === false || $n === 0) {
           continue;
         }
-        $chunk = @fread($this->fp, 8192);
+        $chunk = @fread($this->fp, 16384);
         if ($chunk === false || $chunk === '') {
           throw new Exception('Baichuan connection closed while waiting for cmd_id ' . $cmdId);
         }
@@ -187,25 +316,21 @@ class reolinkBaichuan {
         }
         return $body;
       }
-      if ($recCmdId === 623 || strpos($body, '<sleep>') !== false) {
-        log::add('reolink', 'debug', 'Baichuan push cmd_id=' . $recCmdId . ' xml=' . preg_replace('/\s+/', ' ', trim($body)));
-      }
+      $this->recordPushIfRelevant($recCmdId, $body);
     }
     throw new Exception('Baichuan timeout waiting for cmd_id ' . $cmdId);
   }
 
-  private function drainPushes($durationSec) {
+  public function drainPushes($durationSec) {
     if (!is_resource($this->fp)) {
       return;
     }
-    $deadline = microtime(true) + max(0.1, floatval($durationSec));
+    $deadline = microtime(true) + max(0.05, floatval($durationSec));
     while (microtime(true) < $deadline) {
       $parsed = $this->tryParseOne('aes');
       if ($parsed !== null) {
         list($recCmdId, $recMessId, $status, $body) = $parsed;
-        if ($recCmdId === 623 || strpos($body, '<sleep>') !== false) {
-          log::add('reolink', 'debug', 'Baichuan wake push cmd_id=' . $recCmdId . ' xml=' . preg_replace('/\s+/', ' ', trim($body)));
-        }
+        $this->recordPushIfRelevant($recCmdId, $body);
         continue;
       }
       $left = $deadline - microtime(true);
@@ -230,7 +355,7 @@ class reolinkBaichuan {
   }
 
   /**
-   * @return array{0:int,1:int,2:?int,3:string}|null
+   * @return array{0:int,1:int,2:?int,3:string,4:string}|null
    */
   private function tryParseOne($encTypeHint) {
     $buf = $this->recvBuf;
@@ -258,7 +383,8 @@ class reolinkBaichuan {
     $messClass = bin2hex(substr($buf, 18, 2));
     $lenHeader = 20;
     $status = null;
-    $recPayloadOffset = $recLenBody;
+    $hasOffsetField = false;
+    $rawPayloadOffset = 0;
 
     if ($messClass === '1464' || $messClass === '0000') {
       $lenHeader = 24;
@@ -266,13 +392,9 @@ class reolinkBaichuan {
         return null;
       }
       $status = unpack('v', substr($buf, 16, 2))[1];
-      $recPayloadOffset = unpack('V', substr($buf, 20, 4))[1];
-      if ($recPayloadOffset === 0) {
-        $recPayloadOffset = $recLenBody;
-      }
-    } elseif ($messClass === '1465') {
-      $lenHeader = 20;
-    } elseif ($messClass === '1466') {
+      $rawPayloadOffset = unpack('V', substr($buf, 20, 4))[1];
+      $hasOffsetField = true;
+    } elseif ($messClass === '1465' || $messClass === '1466') {
       $lenHeader = 20;
     } else {
       $this->recvBuf = substr($buf, 4);
@@ -284,16 +406,44 @@ class reolinkBaichuan {
       return null;
     }
 
-    $chunk = substr($buf, 0, $lenHeader + $recPayloadOffset);
+    // Determine XML body vs attached binary payload (e.g. cmd 109 JPEG snapshot chunks):
+    // - XML-only response: rawPayloadOffset == 0 (or >= recLenBody) and starts with encrypted XML
+    // - XML + binary in single frame: 0 < rawPayloadOffset < recLenBody
+    // - Pure binary continuation frame: status==200, rawPayloadOffset==0, body is raw binary (not <?xml)
+    $fullFrame = substr($buf, 0, $lenChunk);
     $this->recvBuf = substr($buf, $lenChunk);
 
     if ($status !== null && !in_array($status, array(200, 201, 300), true)) {
-      return array($recCmdId, $recMessId, $status, '');
+      return array($recCmdId, $recMessId, $status, '', '');
     }
 
-    $encBody = substr($chunk, $lenHeader);
-    $body = $this->decryptBody($encBody, $chunk, $lenHeader, $recCmdId, $encTypeHint);
-    return array($recCmdId, $recMessId, $status, $body);
+    if ($recLenBody === 0) {
+      return array($recCmdId, $recMessId, $status, '', '');
+    }
+
+    $headerChunk = substr($fullFrame, 0, $lenHeader);
+    $allData = substr($fullFrame, $lenHeader);
+
+    if ($hasOffsetField && $rawPayloadOffset > 0 && $rawPayloadOffset < $recLenBody) {
+      $encXml = substr($allData, 0, $rawPayloadOffset);
+      $payloadBin = substr($allData, $rawPayloadOffset);
+      $body = $this->decryptBody($encXml, $headerChunk, $lenHeader, $recCmdId, $encTypeHint);
+      if ($payloadBin !== '' && $body !== '' && preg_match('/<encryptLen>(\d+)<\/encryptLen>/i', $body, $m)) {
+        $encLen = intval($m[1]);
+        if ($encLen > 0 && $encLen <= strlen($payloadBin)) {
+          $payloadBin = $this->aesCrypt(substr($payloadBin, 0, $encLen), false) . substr($payloadBin, $encLen);
+        }
+      }
+      return array($recCmdId, $recMessId, $status, $body, $payloadBin);
+    }
+
+    $body = $this->decryptBody($allData, $headerChunk, $lenHeader, $recCmdId, $encTypeHint);
+    // Pure binary stream chunk (e.g. cmd 109 JPEG data packet where rawPayloadOffset == 0)
+    if ($recCmdId === 109 && strpos($body, '<?xml') !== 0) {
+      return array($recCmdId, $recMessId, $status, '', $allData);
+    }
+
+    return array($recCmdId, $recMessId, $status, $body, '');
   }
 
   private function decryptBody($encBody, $headerChunk, $lenHeader, $cmdId, $encTypeHint) {
@@ -336,17 +486,66 @@ class reolinkBaichuan {
     return $recBody;
   }
 
-  private function channelExtension($channel) {
+  public function channelExtension($channel) {
     return '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
       . '<Extension version="1.1">' . "\n"
       . '<channelId>' . intval($channel) . '</channelId>' . "\n"
       . '</Extension>' . "\n";
   }
 
+  public function openSession() {
+    $this->ensureLogin();
+    return $this->loggedIn;
+  }
+
+  public function requestXml($cmdId, $channel = null, $bodyXml = '', $extXml = '') {
+    $this->ensureLogin();
+    if ($extXml === '' && $channel !== null) {
+      $extXml = $this->channelExtension($channel);
+    }
+    return $this->sendRaw($cmdId, $channel, $bodyXml, $extXml, 'aes', '1464');
+  }
+
+  /**
+   * Capture a JPEG image via Baichuan cmd 109 (works when HTTP/RTSP are disabled or absent).
+   */
+  public function snapshot($channel = 0, $quality = 'sub') {
+    $ch = intval($channel);
+    $streams = ($quality === 'main') ? array('main', 'sub') : array('sub', 'main');
+    $lastErr = '';
+    foreach ($streams as $st) {
+      try {
+        $body = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+          . '<body>' . "\n"
+          . '<Snap version="1.1">' . "\n"
+          . '<channelId>' . $ch . '</channelId>' . "\n"
+          . '<logicChannel>0</logicChannel>' . "\n"
+          . '<time>0</time>' . "\n"
+          . '<fullFrame>0</fullFrame>' . "\n"
+          . '<streamType>' . $st . '</streamType>' . "\n"
+          . '</Snap>' . "\n"
+          . '</body>';
+        $res = $this->sendPayload(109, $ch, $body, $this->channelExtension($ch));
+        $img = $res['payload'] ?? '';
+        if (strlen($img) > 128 && substr($img, 0, 2) === "\xFF\xD8") {
+          return $img;
+        }
+        $lastErr = 'Invalid JPEG header (' . strlen($img) . ' bytes)';
+      } catch (Exception $e) {
+        $lastErr = $e->getMessage();
+      }
+    }
+    if ($lastErr !== '') {
+      log::add('reolink', 'debug', 'Baichuan snapshot ch=' . $ch . ' failed: ' . $lastErr);
+    }
+    return '';
+  }
+
   private function ensureLogin() {
-    if ($this->loggedIn) {
+    if ($this->loggedIn && is_resource($this->fp)) {
       return;
     }
+    $this->loggedIn = false;
     $this->connect();
 
     $nonceXml = $this->sendRaw(1, null, '', '', 'bc', '1465');
@@ -388,6 +587,7 @@ class reolinkBaichuan {
       throw $e;
     }
     $this->loggedIn = true;
+    $this->loginXml = $mess;
     $sleep = $this->xmlValue($mess, 'sleep');
     $this->loginSleep = ($sleep === null || $sleep === '') ? null : $sleep;
   }
@@ -411,7 +611,7 @@ class reolinkBaichuan {
     }
   }
 
-  private function xmlValue($xml, $key) {
+  public function xmlValue($xml, $key) {
     if ($xml === null || $xml === '') {
       return null;
     }
@@ -566,14 +766,11 @@ class reolinkBaichuan {
 
   /**
    * Set privacy sleep (cmd 575) then poll cmd 574 (like reolink_aio).
-   * Do not touch NetPort (cmd 37/36) or close the Baichuan session immediately on wake:
-   * let the camera emit push cmd 623 and start its internal web/RTSP daemons cleanly.
    */
   public function setPrivacyMode($channel, $enable) {
     try {
       $this->ensureLogin();
       $enableStr = $enable ? '1' : '0';
-      // Exact match with reolink_aio xmls.SetPrivacyMode
       $body = "\n" . '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
         . '<body>' . "\n"
         . '<sleepState version="1.1">' . "\n"
@@ -649,10 +846,7 @@ class reolinkBaichuan {
         $target = $node;
       }
     }
-    if ($target === null) {
-      return null;
-    }
-    if (!isset($target->batteryPercent)) {
+    if ($target === null || !isset($target->batteryPercent)) {
       return null;
     }
     $chargeRaw = isset($target->chargeStatus) ? strtolower(trim(strval($target->chargeStatus))) : 'discharging';
@@ -738,6 +932,240 @@ class reolinkBaichuan {
     }
   }
 
+  /**
+   * Redact sensitive tags from Baichuan XML prior to diagnostic export.
+   */
+  public static function redactSensitiveXml($xml) {
+    $xml = strval($xml);
+    if ($xml === '') {
+      return '';
+    }
+    $tags = array(
+      'password', 'pwd', 'passwd', 'uid', 'serialNumber', 'nonce',
+      'userName', 'mac', 'key', 'psk', 'url', 'token',
+    );
+    $pattern = '/<(' . implode('|', $tags) . ')([^>]*)>([^<]+)<\/\1>/i';
+    return preg_replace($pattern, '<$1$2>***REDACTED***</$1>', $xml);
+  }
+
+  /**
+   * Run a read-only Baichuan audit across all standard host & channel cmd_ids + cmd 109 JPEG snapshot.
+   * Safe to share publicly on GitHub issues/PRs (sensitive tags redacted).
+   */
+  public function runDiagnosticReport($channel = 0, $isChannelChild = false) {
+    $ch = intval($channel);
+    $t0 = microtime(true);
+    $report = array(
+      'generatedAt' => gmdate('Y-m-d\TH:i:s\Z'),
+      'port' => $this->port,
+      'channel' => $ch,
+      'isChannelChild' => (bool) $isChannelChild,
+      'loginOk' => false,
+      'loginMs' => 0,
+      'loginSleep' => null,
+      'accountDevice' => false,
+      'error' => '',
+      'summary' => array(),
+      'snapshot' => array('ok' => false, 'bytes' => 0, 'validJpeg' => false, 'error' => ''),
+      'commands' => array(),
+      'xmlReport' => '',
+    );
+
+    try {
+      $this->ensureLogin();
+      $report['loginOk'] = true;
+      $report['loginMs'] = intval(round((microtime(true) - $t0) * 1000));
+      $report['loginSleep'] = $this->loginSleep;
+      $report['accountDevice'] = $this->accountDevice;
+
+      $abilityBody = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+        . '<body>' . "\n"
+        . '<AbilityInfo version="1.1">' . "\n"
+        . '<userName>' . htmlspecialchars($this->username, ENT_XML1) . '</userName>' . "\n"
+        . '<module>image, video</module>' . "\n"
+        . '</AbilityInfo>' . "\n"
+        . '</body>';
+
+      $probes = array(
+        array(80, null, 'GetDevInfo (VersionInfo)', ''),
+        array(199, null, 'GetAbility (Support)', ''),
+        array(151, null, 'GetAbilityInfo (image/video)', $abilityBody),
+        array(146, null, 'GetStreamInfoList (Enc ranges)', ''),
+        array(37, null, 'GetNetPort', ''),
+        array(114, null, 'GetP2p (UID)', ''),
+        array(76, null, 'GetLocalLink (NetInfo)', ''),
+        array(93, null, 'GetLinkType', ''),
+        array(102, null, 'GetHddInfo', ''),
+        array(145, null, 'GetChannelInfoList', ''),
+        array(318, $ch, 'GetChnTypeInfo', ''),
+        array(56, $ch, 'GetEnc (Compression)', ''),
+        array(26, $ch, 'GetImage / GetIsp (VideoInput)', ''),
+        array(296, $ch, 'GetDayNightThreshold', ''),
+        array(44, $ch, 'GetOsd', ''),
+        array(208, $ch, 'GetIrLights / GetPowerLed (LedState)', ''),
+        array(289, $ch, 'GetWhiteLed (FloodlightTask)', ''),
+        array(190, $ch, 'GetPtzPreset', ''),
+        array(332, $ch, 'GetPtzGuard', ''),
+        array(64, $ch, 'GetPtzPatrol (PtzCruise)', ''),
+        array(294, $ch, 'GetZoomFocus', ''),
+        array(433, $ch, 'GetPtzCurPos', ''),
+        array(224, $ch, 'GetAutoFocus', ''),
+        array(46, $ch, 'GetMdAlarm (MD)', ''),
+        array(299, $ch, 'GetAiCfg', ''),
+        array(264, $ch, 'GetAudioCfg', ''),
+        array(212, $ch, 'GetPirInfo', ''),
+        array(81, $ch, 'GetRec (Record)', ''),
+        array(54, $ch, 'GetRecordCfg (postRec/packTime)', ''),
+        array(217, $ch, 'GetEmail (EmailTask)', ''),
+        array(219, $ch, 'GetPush (PushTask)', ''),
+        array(70, $ch, 'GetFtp (FtpTask)', ''),
+        array(232, $ch, 'GetAudioAlarm (AudioTask)', ''),
+        array(253, $ch, 'GetBatteryInfo', ''),
+        array(574, $ch, 'GetPrivacyMode (sleepState)', ''),
+      );
+
+      // Include login response first (contains initial DevInfo/StreamInfo on standalone cams)
+      $report['commands'][] = array(
+        'cmdId' => 1,
+        'scope' => 'host',
+        'name' => 'Login Response',
+        'ok' => true,
+        'status' => 200,
+        'bytes' => strlen($this->loginXml),
+        'xml' => self::redactSensitiveXml($this->loginXml),
+      );
+
+      $okCount = 1;
+      $failCount = 0;
+      foreach ($probes as $p) {
+        list($cid, $targetCh, $label, $bodyXml) = $p;
+        $ext = ($targetCh !== null) ? $this->channelExtension($targetCh) : '';
+        try {
+          $xml = $this->sendRaw($cid, $targetCh, $bodyXml, $ext, 'aes', '1464');
+          $clean = self::redactSensitiveXml($xml);
+          $report['commands'][] = array(
+            'cmdId' => $cid,
+            'scope' => ($targetCh === null) ? 'host' : ('ch:' . $targetCh),
+            'name' => $label,
+            'ok' => true,
+            'status' => 200,
+            'bytes' => strlen($xml),
+            'xml' => $clean,
+          );
+          $okCount++;
+        } catch (Exception $e) {
+          $st = 0;
+          if (preg_match('/status\s+(\d+)/i', $e->getMessage(), $m)) {
+            $st = intval($m[1]);
+          }
+          $report['commands'][] = array(
+            'cmdId' => $cid,
+            'scope' => ($targetCh === null) ? 'host' : ('ch:' . $targetCh),
+            'name' => $label,
+            'ok' => false,
+            'status' => $st,
+            'bytes' => 0,
+            'error' => $e->getMessage(),
+            'xml' => '',
+          );
+          $failCount++;
+        }
+      }
+
+      // Test binary snapshot cmd 109 (read-only)
+      try {
+        $jpeg = $this->snapshot($ch, 'sub');
+        $len = strlen($jpeg);
+        $valid = ($len > 128 && substr($jpeg, 0, 2) === "\xFF\xD8" && substr($jpeg, -2) === "\xFF\xD9");
+        $report['snapshot'] = array(
+          'ok' => $valid,
+          'bytes' => $len,
+          'validJpeg' => $valid,
+          'headHex' => bin2hex(substr($jpeg, 0, 4)),
+          'tailHex' => bin2hex(substr($jpeg, -2)),
+          'error' => $valid ? '' : 'Empty or incomplete JPEG',
+        );
+      } catch (Exception $e) {
+        $report['snapshot'] = array(
+          'ok' => false,
+          'bytes' => 0,
+          'validJpeg' => false,
+          'error' => $e->getMessage(),
+        );
+      }
+
+      // Drain 150ms for any spontaneous push (e.g. cmd 33)
+      $this->drainPushes(0.15);
+      $pushes = $this->popPushEvents();
+
+      $devXml = '';
+      $chnXml = '';
+      foreach ($report['commands'] as $entry) {
+        if ($entry['cmdId'] === 80 && $entry['ok']) {
+          $devXml = $entry['xml'];
+        }
+        if ($entry['cmdId'] === 318 && $entry['ok']) {
+          $chnXml = $entry['xml'];
+        }
+      }
+      $report['summary'] = array(
+        'hostModel' => $this->xmlValue($devXml, 'type') ?? '',
+        'hostFirmVer' => $this->xmlValue($devXml, 'firmwareVersion') ?? '',
+        'hostHardVer' => $this->xmlValue($devXml, 'hardwareVersion') ?? '',
+        'channelModel' => $this->xmlValue($chnXml, 'type') ?? '',
+        'channelFirmVer' => $this->xmlValue($chnXml, 'firmwareVersion') ?? '',
+        'commandsOk' => $okCount,
+        'commandsRejected' => $failCount,
+        'snapshotOk' => $report['snapshot']['ok'],
+        'snapshotBytes' => $report['snapshot']['bytes'],
+        'pushCount' => count($pushes),
+      );
+
+      // Build consolidated XML export
+      $xmlLines = array();
+      $xmlLines[] = '<?xml version="1.0" encoding="UTF-8"?>';
+      $xmlLines[] = '<ReolinkBaichuanDiagnostic generatedAt="' . $report['generatedAt'] . '" port="' . $this->port . '" channel="' . $ch . '" loginMs="' . $report['loginMs'] . '" loginSleep="' . htmlspecialchars(strval($this->loginSleep ?? ''), ENT_XML1) . '">';
+      $xmlLines[] = '  <Summary hostModel="' . htmlspecialchars($report['summary']['hostModel'], ENT_XML1) . '" hostFirmVer="' . htmlspecialchars($report['summary']['hostFirmVer'], ENT_XML1) . '" channelModel="' . htmlspecialchars($report['summary']['channelModel'], ENT_XML1) . '" channelFirmVer="' . htmlspecialchars($report['summary']['channelFirmVer'], ENT_XML1) . '" commandsOk="' . $okCount . '" commandsRejected="' . $failCount . '" snapshotOk="' . ($report['snapshot']['ok'] ? '1' : '0') . '" snapshotBytes="' . $report['snapshot']['bytes'] . '" />';
+      foreach ($report['commands'] as $entry) {
+        $attrs = 'cmdId="' . $entry['cmdId'] . '" scope="' . htmlspecialchars($entry['scope'], ENT_XML1) . '" name="' . htmlspecialchars($entry['name'], ENT_XML1) . '" ok="' . ($entry['ok'] ? '1' : '0') . '" status="' . intval($entry['status']) . '" bytes="' . intval($entry['bytes']) . '"';
+        if (!$entry['ok'] || trim($entry['xml']) === '') {
+          $errAttr = !empty($entry['error']) ? ' error="' . htmlspecialchars($entry['error'], ENT_XML1) . '"' : '';
+          $xmlLines[] = '  <Command ' . $attrs . $errAttr . ' />';
+        } else {
+          $inner = preg_replace('/^\s*<\?xml[^>]*\?>\s*/i', '', trim($entry['xml']));
+          $xmlLines[] = '  <Command ' . $attrs . '>';
+          $xmlLines[] = $inner;
+          $xmlLines[] = '  </Command>';
+        }
+      }
+      $xmlLines[] = '</ReolinkBaichuanDiagnostic>';
+      $report['xmlReport'] = implode("\n", $xmlLines) . "\n";
+    } catch (Exception $e) {
+      $report['error'] = $e->getMessage();
+    } finally {
+      $this->logout();
+    }
+    return $report;
+  }
+
+  public static function resolvePort($eqLogic) {
+    if (!is_object($eqLogic)) {
+      return self::DEFAULT_PORT;
+    }
+    $bcPort = intval(preg_replace('/\D/', '', strval($eqLogic->getConfiguration('baichuan_port', ''))));
+    if ($bcPort > 0) {
+      return $bcPort;
+    }
+    $cnxType = strtolower(trim(strval($eqLogic->getConfiguration('cnxtype', ''))));
+    if ($cnxType === 'baichuan') {
+      $cfgPort = intval(preg_replace('/\D/', '', strval($eqLogic->getConfiguration('port', ''))));
+      if ($cfgPort > 0 && $cfgPort !== 80 && $cfgPort !== 443) {
+        return $cfgPort;
+      }
+    }
+    return self::DEFAULT_PORT;
+  }
+
   public static function fromEqLogic($eqLogic) {
     if (!is_object($eqLogic)) {
       return null;
@@ -748,7 +1176,8 @@ class reolinkBaichuan {
     if (empty($host) || empty($user) || empty($pass)) {
       return null;
     }
-    $port = $eqLogic->getConfiguration('baichuan_port', self::DEFAULT_PORT);
-    return new self($host, $user, $pass, $port);
+    return new self($host, $user, $pass, self::resolvePort($eqLogic));
   }
 }
+
+require_once __DIR__ . '/reolinkbaichuanadapter.class.php';
