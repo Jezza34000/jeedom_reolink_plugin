@@ -4,6 +4,10 @@
 >
 >Pour rappel s'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 22/11/2026
+
+- Privacy Mode : suppression de l'erreur transitoire « Réponse vide » dans `jeeReolink.php` lorsqu'un événement ONVIF survient pendant le réveil HTTP de la caméra (#122)
+
 # 21/11/2026
 
 - Caméras sur batterie via NVR / Home Hub : niveau de batterie (intégré à la jauge native Jeedom), état de charge, température batterie et mode veille, avec polling économe sans réveil inutile (`NONE_WAKING_COMMANDS`), cache snapshot en veille, réveil passif ONVIF et fallback Baichuan
