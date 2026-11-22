@@ -76,6 +76,10 @@ try {
               }
               continue;
             }
+            if ($eqLogic->isStandalonePrivacyBlocking()) {
+              log::add('reolink', 'debug', 'jeeReolink : poll HTTP ignoré pendant Mode confidentialité / réveil HTTP (' . $eqLogic->getHumanName() . ')');
+              continue;
+            }
 
             if (!isset($cnxByIp[$camera_ip])) {
               $cnxByIp[$camera_ip] = reolink::getReolinkConnection($eqLogic->getId());

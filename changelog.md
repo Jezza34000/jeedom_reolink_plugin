@@ -1,5 +1,9 @@
 # Change log
 
+22/11/2026
+
+- Privacy Mode : ignore le poll HTTP `GetAiState`/`GetMdState` du callback ONVIF `jeeReolink.php` pendant le Mode confidentialité ou la fenêtre de réveil HTTP `waitHttpPortReady`, évitant l'erreur transitoire « Réponse vide » lorsque ONVIF redémarre 1 s avant nginx/HTTPS (retour #122)
+
 21/11/2026
 
 - Caméras sur batterie via NVR / Home Hub : commandes `Batterie` (+ jauge native Jeedom), `Batterie en charge`, `État de charge`, `Température batterie` et `Mode veille (état)` (`GetBatteryInfo` / `GetChannelstatus` + fallback Baichuan `cmd 253` / `145`), support `HOMEHUB` / `WIFI_NVR`, polling économe `NONE_WAKING_COMMANDS` aligné sur Home Assistant (`reolink_aio`), cache snapshot en veille et réveil passif sur événement ONVIF
