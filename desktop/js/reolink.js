@@ -124,6 +124,18 @@ function updateEqLogicRoleUi(_eqLogic) {
 
   reolinkSetVisible(document.getElementById('fg_hostChannelNum'), !!isNvrParent)
   reolinkSetVisible(document.getElementById('fg_supportAi'), !isNvrParent)
+  var cnxType = String((typeof cfg.cnxtype !== 'undefined' ? cfg.cnxtype : $('.eqLogicAttr[data-l1key=configuration][data-l2key=cnxtype]').value()) || '').trim().toLowerCase()
+  var isBaichuanOnly = (cnxType === 'baichuan')
+  reolinkSetVisible(document.getElementById('fg_portOnvif'), !isBaichuanOnly)
+  reolinkSetVisible(document.getElementById('div_baichuanHint'), isBaichuanOnly)
+  var lblPort = document.getElementById('lbl_accessPort')
+  if (lblPort) {
+    lblPort.textContent = isBaichuanOnly ? '{{Port Baichuan (TCP)}}' : '{{Port HTTP/HTTPS}}'
+  }
+  var inpPort = document.getElementById('inp_accessPort')
+  if (inpPort) {
+    inpPort.setAttribute('placeholder', isBaichuanOnly ? '9000' : '{{(facultatif)}}')
+  }
   document.querySelectorAll('.cameraOnlyAction').forEach(function (el) {
     reolinkSetVisible(el, !isNvrParent)
   })
@@ -146,6 +158,7 @@ function updateNvrParentHint() {
   updateEqLogicRoleUi(null)
 }
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').on('change keyup', updateNvrParentHint)
+$('.eqLogicAttr[data-l1key=configuration][data-l2key=cnxtype]').on('change', updateNvrParentHint)
 
 function reolinkFireChange(el) {
   if (!el) return
@@ -366,6 +379,112 @@ $('#btCheckConnexion').on('click', function () {
         return
       }
       $('#div_alert').showAlert({message: '{{Connexion à la caméra réussie}}', level: 'success'})
+    }
+  })
+})
+
+function reolinkOpenDiagModal(report) {
+  var sum = (report && report.summary) ? report.summary : {}
+  var snap = (report && report.snapshot) ? report.snapshot : {}
+  var xmlText = String((report && report.xmlReport) || '')
+  var modelLabel = sum.channelModel || sum.hostModel || '-'
+  var fwLabel = sum.channelFirmVer || sum.hostFirmVer || '-'
+  var snapBadge = snap.ok
+    ? ('<span class="label label-success">OK (' + snap.bytes + ' octets JPEG)</span>')
+    : ('<span class="label label-warning">' + reolinkEscapeHtml(snap.error || 'Indisponible') + '</span>')
+
+  var html = '<div style="text-align:left;">'
+  html += '<p><strong>{{Modèle}} :</strong> ' + reolinkEscapeHtml(modelLabel)
+    + ' &nbsp;|&nbsp; <strong>{{Firmware}} :</strong> ' + reolinkEscapeHtml(fwLabel)
+    + ' &nbsp;|&nbsp; <strong>{{Commandes OK}} :</strong> ' + parseInt(sum.commandsOk || 0, 10)
+    + ' / ' + (parseInt(sum.commandsOk || 0, 10) + parseInt(sum.commandsRejected || 0, 10))
+    + ' &nbsp;|&nbsp; <strong>{{Snapshot cmd 109}} :</strong> ' + snapBadge + '</p>'
+  html += '<p class="text-muted" style="font-size:12px;">{{Les mots de passe, UID, numéros de série et adresses MAC sont automatiquement masqués (***REDACTED***).}}</p>'
+  html += '<div style="margin-bottom:8px;">'
+  html += '<a class="btn btn-sm btn-primary" id="btCopyBaichuanXml"><i class="fas fa-copy"></i> {{Copier le XML}}</a> '
+  html += '<a class="btn btn-sm btn-success" id="btDownloadBaichuanXml"><i class="fas fa-file-download"></i> {{Télécharger (.xml)}}</a>'
+  html += '</div>'
+  html += '<textarea id="taBaichuanDiagXml" class="form-control" rows="16" readonly style="font-family:monospace;font-size:11px;white-space:pre;"></textarea>'
+  html += '</div>'
+
+  var bindActions = function () {
+    var ta = document.getElementById('taBaichuanDiagXml')
+    if (ta) ta.value = xmlText
+    var btCopy = document.getElementById('btCopyBaichuanXml')
+    if (btCopy) {
+      btCopy.onclick = function (ev) {
+        ev.preventDefault()
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(xmlText)
+        } else if (ta) {
+          ta.select()
+          document.execCommand('copy')
+        }
+        $('#div_alert').showAlert({message: '{{Rapport XML copié dans le presse-papiers}}', level: 'success'})
+      }
+    }
+    var btDl = document.getElementById('btDownloadBaichuanXml')
+    if (btDl) {
+      btDl.onclick = function (ev) {
+        ev.preventDefault()
+        var blob = new Blob([xmlText], {type: 'application/xml;charset=utf-8'})
+        var url = URL.createObjectURL(blob)
+        var a = document.createElement('a')
+        var safeModel = String(modelLabel || 'reolink').replace(/[^a-zA-Z0-9_-]+/g, '_')
+        a.href = url
+        a.download = 'reolink_baichuan_diag_' + safeModel + '.xml'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        setTimeout(function () { URL.revokeObjectURL(url) }, 1000)
+      }
+    }
+  }
+
+  if (typeof jeeDialog !== 'undefined' && typeof jeeDialog.alert === 'function') {
+    jeeDialog.alert({
+      title: '{{Diagnostic Baichuan (port 9000)}}',
+      message: html,
+      width: '80vw'
+    })
+    setTimeout(bindActions, 50)
+    return
+  }
+  if (typeof bootbox !== 'undefined' && typeof bootbox.alert === 'function') {
+    bootbox.alert({
+      title: '{{Diagnostic Baichuan (port 9000)}}',
+      size: 'large',
+      message: html
+    })
+    setTimeout(bindActions, 50)
+  }
+}
+
+$('#btBaichuanDiag').on('click', function () {
+  var id = $('.eqLogicAttr[data-l1key=id]').value()
+  if (id == '') {
+    $('#div_alert').showAlert({message: '{{Veuillez d\'abord sauvegarder l\'équipement}}', level: 'danger'})
+    return
+  }
+  $('#div_alert').showAlert({message: '{{Diagnostic Baichuan en cours (lecture seule sur port 9000)...}}', level: 'info'})
+  $.ajax({
+    type: 'POST',
+    url: 'plugins/reolink/core/ajax/reolink.ajax.php',
+    data: {
+      action: 'BaichuanDiagnostic',
+      id: id
+    },
+    dataType: 'json',
+    error: function (request, status, error) {
+      handleAjaxError(request, status, error)
+    },
+    success: function (data) {
+      if (data.state != 'ok') {
+        $('#div_alert').showAlert({message: data.result, level: 'danger'})
+        return
+      }
+      $('#div_alert').showAlert({message: '{{Diagnostic Baichuan terminé}}', level: 'success'})
+      reolinkOpenDiagModal(data.result)
     }
   })
 })

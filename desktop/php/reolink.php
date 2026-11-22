@@ -171,14 +171,14 @@ $renderCard = function ($eqLogic) {
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">{{Port HTTP/HTTPS}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port de l'interface web de la caméra uniquement si vous l'avez modifié. Sinon, laissez ce champ vide}}"></i></sup>
+								<label class="col-sm-3 control-label"><span id="lbl_accessPort">{{Port HTTP/HTTPS}}</span>
+									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port de l'interface web de la caméra uniquement si vous l'avez modifié. Sinon, laissez ce champ vide (en mode Baichuan : port TCP 9000 par défaut)}}"></i></sup>
 								</label>
 								<div class="col-sm-7">
-									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" placeholder="{{(facultatif)}}"/>
+									<input type="text" class="eqLogicAttr form-control" id="inp_accessPort" data-l1key="configuration" data-l2key="port" placeholder="{{(facultatif)}}"/>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group" id="fg_portOnvif">
 								<label class="col-sm-3 control-label">{{Port ONVIF}}
 									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le port du protocole ONVIF uniquement si vous l'avez modifié. Sinon, laissez ce champ vide}}"></i></sup>
 								</label>
@@ -215,12 +215,16 @@ $renderCard = function ($eqLogic) {
 							</div>
 							<div class="form-group">
 									<label class="col-sm-3 control-label">{{Type de connexion}}
-										<sup><i class="fas fa-question-circle tooltips" title="{{Type de connexion pour se connecter à la caméra, attention HTTPS doit être activé sur la caméra pour fonctionner}}"></i></sup></label>
-									<div class="col-sm-3">
+										<sup><i class="fas fa-question-circle tooltips" title="{{Type de connexion pour se connecter à la caméra (HTTP, HTTPS, ou Baichuan TCP port 9000 pour les caméras sans interface web comme Reolink E321)}}"></i></sup></label>
+									<div class="col-sm-7">
 											<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="cnxtype">
 													<option value="http">{{HTTP}}</option>
 													<option value="https">{{HTTPS}}</option>
+													<option value="baichuan">{{Baichuan (port 9000 uniquement)}}</option>
 											</select>
+											<div id="div_baichuanHint" class="alert alert-info" style="display:none;margin-top:8px;">
+												{{Mode Baichuan TCP (port 9000 par défaut) pour les caméras dépourvues de serveur HTTP/HTTPS/RTSP/ONVIF (ex. Reolink E321). Les réglages et captures JPEG (cmd 109) passent directement par le port 9000.}}
+											</div>
 									</div>
 							</div>
 							<div class="form-group expertModeVisible">
@@ -236,8 +240,9 @@ $renderCard = function ($eqLogic) {
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{}}</label>
-								<div class="col-sm-3">
+								<div class="col-sm-7">
 									<a class="btn btn-default" id="btCheckConnexion"><i class="fas fa-sync-alt"></i> {{Tester la connexion}}</a>
+									<a class="btn btn-default expertModeVisible" id="btBaichuanDiag" style="margin-left:6px;" title="{{Sonde les commandes Baichuan (port 9000) en lecture seule et génère un export XML anonymisé}}"><i class="fas fa-stethoscope"></i> {{Diagnostic Baichuan (XML)}}</a>
 								</div>
 							</div>
 						</div>
