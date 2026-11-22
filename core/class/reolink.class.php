@@ -877,13 +877,17 @@ class reolink extends eqLogic {
     }
     $deviceAbility = array_merge($ab1, $ab2);
 
-    // NVR E1 Outdoor: GetAbility may report ptzPatrol.permit=0 while Get/SetPtzPatrol work
+    // NVR E1 Outdoor / TrackMix: GetAbility may report ptzPatrol.permit=0 or ver=0 while Get/SetPtzPatrol work
     $ptzPatrolPermit = intval($deviceAbility['ptzPatrol']['permit'] ?? 0);
+    $ptzPatrolVer = intval($deviceAbility['ptzPatrol']['ver'] ?? 0);
     $ptzPresetPermit = intval($deviceAbility['ptzPreset']['permit'] ?? 0);
-    if ($ptzPatrolPermit == 0 && $ptzPresetPermit != 0) {
+    if (($ptzPatrolPermit == 0 || $ptzPatrolVer <= 0) && $ptzPresetPermit != 0) {
       $patrol = $reolinkConn->SendCMD('[{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
       if (is_array($patrol) && isset($patrol[0]['value']['PtzPatrol']) && is_array($patrol[0]['value']['PtzPatrol'])) {
-        $deviceAbility['ptzPatrol'] = array('permit' => 1, 'ver' => intval($deviceAbility['ptzPatrol']['ver'] ?? 1));
+        $deviceAbility['ptzPatrol'] = array(
+          'permit' => max(1, $ptzPatrolPermit),
+          'ver' => max(1, $ptzPatrolVer),
+        );
         log::add('reolink', 'info', 'ptzPatrol activé via GetPtzPatrol (canal ' . $channel . ')');
       }
     }
@@ -1015,14 +1019,95 @@ class reolink extends eqLogic {
     return true;
   }
 
+  /**
+   * Strip cumulative preset prefix leaked across patrol slots 0..5 by Reolink C++ firmwares
+   * (E1 Zoom, E1 Outdoor, TrackMix, RLC-823S2, NVR RLN8/RLN16).
+   */
+  public static function normalizePatrols($patrols) {
+    if (!is_array($patrols) || count($patrols) < 2) {
+      return is_array($patrols) ? $patrols : array();
+    }
+    $stepSig = function ($s) {
+      if (!is_array($s)) {
+        return '';
+      }
+      return intval($s['id'] ?? -1) . ':' . intval($s['speed'] ?? 0) . ':' . intval($s['dwellTime'] ?? 0);
+    };
+    $isCumulative = false;
+    $prevRaw = null;
+    foreach ($patrols as $idx => $p) {
+      $cur = (is_array($p) && isset($p['preset']) && is_array($p['preset'])) ? array_values($p['preset']) : array();
+      if ($idx > 0 && is_array($prevRaw) && count($prevRaw) > 0 && count($cur) >= count($prevRaw)) {
+        $prefixMatch = true;
+        for ($k = 0; $k < count($prevRaw); $k++) {
+          if ($stepSig($cur[$k]) !== $stepSig($prevRaw[$k])) {
+            $prefixMatch = false;
+            break;
+          }
+        }
+        if ($prefixMatch && (empty($p['enable']) || count($cur) > count($prevRaw))) {
+          $isCumulative = true;
+          break;
+        }
+      }
+      if (count($cur) > 0) {
+        $prevRaw = $cur;
+      }
+    }
+    if (!$isCumulative) {
+      return $patrols;
+    }
+
+    $acc = array();
+    $out = array();
+    foreach ($patrols as $p) {
+      if (!is_array($p)) {
+        $out[] = $p;
+        continue;
+      }
+      $raw = (isset($p['preset']) && is_array($p['preset'])) ? array_values($p['preset']) : array();
+      $accLen = count($acc);
+      $hasPrefix = ($accLen > 0 && count($raw) >= $accLen);
+      if ($hasPrefix) {
+        for ($k = 0; $k < $accLen; $k++) {
+          if ($stepSig($raw[$k]) !== $stepSig($acc[$k])) {
+            $hasPrefix = false;
+            break;
+          }
+        }
+      }
+      if ($hasPrefix) {
+        $own = array_slice($raw, $accLen);
+        if (count($own) === 0 && !empty($p['enable'])) {
+          $own = $raw;
+        } else {
+          $acc = $raw;
+        }
+      } else {
+        $own = $raw;
+        if (count($raw) > 0) {
+          $acc = $raw;
+        }
+      }
+      if (empty($p['enable']) && count($own) === 0) {
+        $p['preset'] = null;
+      } else {
+        $p['preset'] = count($own) > 0 ? array_values($own) : null;
+      }
+      $out[] = $p;
+    }
+    return $out;
+  }
+
   public static function applyPtzPatrolState($camera, $data) {
     if (!is_object($camera) || !is_array($data) || !isset($data['value']['PtzPatrol'])) {
       return;
     }
+    $normalized = reolink::normalizePatrols($data['value']['PtzPatrol']);
     $list = '';
     $running = 0;
     $activeId = null;
-    foreach ($data['value']['PtzPatrol'] as $patrol) {
+    foreach ($normalized as $patrol) {
       if (!is_array($patrol)) {
         continue;
       }
@@ -1091,7 +1176,7 @@ class reolink extends eqLogic {
         }
       }
       if (($item['cmd'] ?? '') === 'GetPtzPatrol' && isset($item['value']['PtzPatrol'])) {
-        $patrols = $item['value']['PtzPatrol'];
+        $patrols = reolink::normalizePatrols($item['value']['PtzPatrol']);
         reolink::applyPtzPatrolState($camera, $item);
       }
     }
@@ -1152,6 +1237,33 @@ class reolink extends eqLogic {
       throw new Exception(__('Échec SetPtzPatrol', __FILE__) . ($apiErr !== '' ? ' : ' . $apiErr : ''));
     }
     $refresh = $cnx->SendCMD('[{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
+    // TrackMix PoE firmware ignores SetPtzPatrol with enable=0, keeping slot enabled; sending enable=1 + empty preset clears and disables it
+    if (!intval($enable) && is_array($refresh) && isset($refresh[0]['value']['PtzPatrol']) && is_array($refresh[0]['value']['PtzPatrol'])) {
+      $stillEnabled = false;
+      foreach ($refresh[0]['value']['PtzPatrol'] as $slot) {
+        if (is_array($slot) && intval($slot['id'] ?? -1) === $patrolId && !empty($slot['enable'])) {
+          $stillEnabled = true;
+          break;
+        }
+      }
+      if ($stillEnabled) {
+        $clearPayload = array(array(
+          'cmd' => 'SetPtzPatrol',
+          'action' => 0,
+          'param' => array(
+            'channel' => $channel,
+            'PtzPatrol' => array(
+              'channel' => $channel,
+              'id' => $patrolId,
+              'enable' => 1,
+              'preset' => array(),
+            ),
+          ),
+        ));
+        $cnx->SendCMD(json_encode($clearPayload));
+        $refresh = $cnx->SendCMD('[{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
+      }
+    }
     if (is_array($refresh) && isset($refresh[0])) {
       reolink::applyPtzPatrolState($camera, $refresh[0]);
     }
@@ -2096,6 +2208,23 @@ class reolink extends eqLogic {
       $cmd->save();
       log::add('reolink', 'info', 'Payload legacy mis à jour : ' . $logicalId);
     }
+
+    $staticListUpdates = array(
+      'SetPTZmoove' => 'Stop|Stop;Left|Gauche;Right|Droite;Up|Haut;Down|Bas;LeftUp|Haut gauche;RightUp|Haut droite;LeftDown|Bas gauche;RightDown|Bas droite',
+      'SetIrLights' => 'Auto|Auto;On|Activer;Off|Désactiver',
+    );
+    foreach ($staticListUpdates as $logicalId => $rawList) {
+      $cmd = $this->getCmd(null, $logicalId);
+      if (!is_object($cmd)) {
+        continue;
+      }
+      $translated = reolink::translateCmdListValue($rawList);
+      if (strval($cmd->getConfiguration('listValue', '')) !== $translated) {
+        $cmd->setConfiguration('listValue', $translated);
+        $cmd->save();
+        log::add('reolink', 'info', 'Liste des options mise à jour : ' . $logicalId);
+      }
+    }
   }
 
   public static function buildRmwPayload($camcnx, $actionAPI, $channel, $patchArray) {
@@ -2304,6 +2433,7 @@ class reolink extends eqLogic {
           'ok' => $ok,
           'rsp' => $rsp,
           'value' => $ok ? ($item['value'] ?? null) : null,
+          'range' => $ok ? ($item['range'] ?? null) : null,
         );
       }
     }
@@ -2609,6 +2739,19 @@ class reolink extends eqLogic {
           $cmd->setConfiguration('valuesHelp', __($valuesHelpTpl, __FILE__));
           $dirty = true;
         }
+        $dynamicSelects = array(
+          'SetPtzByPreset', 'StartPtzPatrol', 'SetPTZpatrol',
+          'SetResolutionst1', 'SetFPSst1', 'SetBitratest1', 'SetEncodingst1',
+          'SetResolutionst2', 'SetFPSst2', 'SetBitratest2', 'SetEncodingst2',
+        );
+        $listTpl = strval($command['configuration']['listValue'] ?? '');
+        if ($listTpl !== '' && !in_array($logicalId, $dynamicSelects, true)) {
+          $localizedList = reolink::translateCmdListValue($listTpl);
+          if (strval($cmd->getConfiguration('listValue', '')) !== $localizedList) {
+            $cmd->setConfiguration('listValue', $localizedList);
+            $dirty = true;
+          }
+        }
         if ($dirty) {
           $cmd->save();
         }
@@ -2721,6 +2864,7 @@ class reolink extends eqLogic {
 
     if (!$camera->isNvrParent()) {
       reolink::applyEncListValues($camera, $cnx, $channel);
+      reolink::applyZoomFocusRanges($camera, $cnx, $channel);
     }
     $cnx->batteryChannelMode = false;
 
@@ -2809,6 +2953,71 @@ class reolink extends eqLogic {
       $cmd->setConfiguration('listValue', $list);
       $cmd->save();
     }
+  }
+
+  public static function applyZoomFocusRanges($camera, $cnx, $channel) {
+    if (!is_object($camera) || !is_object($cnx)) {
+      return;
+    }
+    $zoomCmd = $camera->getCmd(null, 'SetZoom');
+    $zoomInfo = $camera->getCmd(null, 'SetZoomState');
+    $focusCmd = $camera->getCmd(null, 'SetFocus');
+    $focusInfo = $camera->getCmd(null, 'SetFocusState');
+    if (!is_object($zoomCmd) && !is_object($zoomInfo) && !is_object($focusCmd) && !is_object($focusInfo)) {
+      return;
+    }
+    $res = $cnx->SendCMD('[{"cmd":"GetZoomFocus","action":1,"param":{"channel":' . intval($channel) . '}}]');
+    if (!is_array($res) || !isset($res[0]['range']['ZoomFocus']) || !is_array($res[0]['range']['ZoomFocus'])) {
+      return;
+    }
+    $zfRange = $res[0]['range']['ZoomFocus'];
+    $zfCur = $res[0]['value']['ZoomFocus'] ?? array();
+    $applyPair = function ($actionCmd, $infoCmd, $bounds, $curVal) {
+      if (!is_array($bounds) || !isset($bounds['min']) || !isset($bounds['max'])) {
+        return;
+      }
+      $min = intval($bounds['min']);
+      $max = intval($bounds['max']);
+      if ($max <= $min) {
+        return;
+      }
+      if (is_object($actionCmd)) {
+        $newValuesHelp = __('Curseur de', __FILE__) . ' ' . $min . ' ' . __('à', __FILE__) . ' ' . $max;
+        $changed = (strval($actionCmd->getConfiguration('minValue', '')) !== strval($min))
+          || (strval($actionCmd->getConfiguration('maxValue', '')) !== strval($max))
+          || (strval($actionCmd->getConfiguration('valuesHelp', '')) !== $newValuesHelp);
+        $actionCmd->setConfiguration('minValue', $min);
+        $actionCmd->setConfiguration('maxValue', $max);
+        $actionCmd->setConfiguration('valuesHelp', $newValuesHelp);
+        if ($changed) {
+          $actionCmd->save();
+        }
+      }
+      if (is_object($infoCmd)) {
+        $changedInfo = (strval($infoCmd->getConfiguration('minValue', '')) !== strval($min))
+          || (strval($infoCmd->getConfiguration('maxValue', '')) !== strval($max));
+        $infoCmd->setConfiguration('minValue', $min);
+        $infoCmd->setConfiguration('maxValue', $max);
+        if ($changedInfo) {
+          $infoCmd->save();
+        }
+        if ($curVal !== null) {
+          $infoCmd->event(intval($curVal));
+        }
+      }
+    };
+    $applyPair(
+      $zoomCmd,
+      $zoomInfo,
+      $zfRange['zoom']['pos'] ?? null,
+      $zfCur['zoom']['pos'] ?? null
+    );
+    $applyPair(
+      $focusCmd,
+      $focusInfo,
+      $zfRange['focus']['pos'] ?? null,
+      $zfCur['focus']['pos'] ?? null
+    );
   }
 
   /*

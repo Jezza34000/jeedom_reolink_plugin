@@ -814,7 +814,7 @@
 			"subtype": "string",
 			"configuration": {
 				"payload": "{\"cmd\":\"GetIrLights\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
-				"help": "Projecteur infrarouge (IR) : Auto ou Off. Commande d'état (lecture seule).",
+				"help": "Projecteur infrarouge (IR) : Auto, On ou Off. Commande d'état (lecture seule).",
 				"valuesHelp": "Texte libre (lecture seule)"
 			},
 			"IsHistorized": 0,
@@ -829,12 +829,12 @@
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "Auto|Auto;Off|Désactiver",
+				"listValue": "Auto|Auto;On|Activer;Off|Désactiver",
 				"valueFrom": "SetIrLightsState",
 				"actionapi": "SetIrLights",
 				"payload": "{\"IrLights\":{\"channel\":#CHANNEL#,\"state\":#OPTSELECTEDSTR#}}",
-				"help": "Projecteur infrarouge (IR) : Auto ou Off.",
-				"valuesHelp": "Auto = Auto, Off = Désactiver"
+				"help": "Projecteur infrarouge (IR) : Auto, On ou Off.",
+				"valuesHelp": "Auto = Auto, On = Activer, Off = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -1193,11 +1193,11 @@
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "Stop|Stop;Left|Gauche;Right|Droite;Up|Haut;Down|Bas",
+				"listValue": "Stop|Stop;Left|Gauche;Right|Droite;Up|Haut;Down|Bas;LeftUp|Haut gauche;RightUp|Haut droite;LeftDown|Bas gauche;RightDown|Bas droite",
 				"actionapi": "PtzCtrl",
 				"payload": "{\"channel\":#CHANNEL#,\"op\":#OPTSELECTEDSTR#,\"speed\":#SPEED#}",
-				"help": "Déplacement PTZ manuel (haut/bas/gauche/droite/stop).",
-				"valuesHelp": "Stop = Stop, Left = Gauche, Right = Droite, Up = Haut, Down = Bas"
+				"help": "Déplacement PTZ manuel (haut/bas/gauche/droite/diagonales/stop).",
+				"valuesHelp": "Stop = Stop, Left = Gauche, Right = Droite, Up = Haut, Down = Bas, LeftUp = Haut gauche, RightUp = Haut droite, LeftDown = Bas gauche, RightDown = Bas droite"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,

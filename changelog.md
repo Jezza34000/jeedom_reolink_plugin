@@ -2,6 +2,7 @@
 
 22/11/2026
 
+- Rondes PTZ, Zoom/Focus, Diagonales PTZ & IR (#119, #129) : dé-cumul automatique des étapes `GetPtzPatrol` inter-slots (`normalizePatrols`), activation de `ptzPatrol` sur `TrackMix` (`ver=0`) et vidage/désactivation de slot compatible `TrackMix`, calibrage dynamique des bornes `minValue`/`maxValue` de `SetZoom` et `SetFocus` via `GetZoomFocus` (`1000..6000` sur `TrackMix`, `0..1050` sur `RLC-823S2`), ajout des 4 diagonales PTZ (`LeftUp`, `RightUp`, `LeftDown`, `RightDown`), option `On|Activer` sur `SetIrLights` et synchronisation automatique des `listValue` statiques existantes
 - Synchronisation plugin Caméra : renseigne `protocole` (`http`/`https`) et `port` web (`80`/`443` ou personnalisé) conformes au sélecteur du plugin officiel `camera`, inscrit explicitement le port RTSP (`:554`) dans `cameraStreamAccessUrl`, et resynchronise l'objet parent lorsqu'il est défini (retour #117)
 - Privacy Mode : ignore le poll HTTP `GetAiState`/`GetMdState` du callback ONVIF `jeeReolink.php` pendant le Mode confidentialité ou la fenêtre de réveil HTTP `waitHttpPortReady`, évitant l'erreur transitoire « Réponse vide » lorsque ONVIF redémarre 1 s avant nginx/HTTPS (retour #122)
 

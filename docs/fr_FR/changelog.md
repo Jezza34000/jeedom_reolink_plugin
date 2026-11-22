@@ -6,6 +6,7 @@
 
 # 22/11/2026
 
+- Rondes PTZ, Zoom/Focus, Diagonales PTZ & IR : dé-cumul automatique des rondes PTZ (`E1 Zoom`, `E1 Outdoor`, `TrackMix`, `RLC-823S2`), support `ptzPatrol` et bornes dynamiques `Zoom`/`Focus` sur `TrackMix` & `RLC-823S2`, ajout des diagonales PTZ, mode `On` sur `SetIrLights` et mise à jour automatique des listes existantes (#119, #129)
 - Synchronisation plugin Caméra : protocole `http`/`https` + port web cohérents dans l'interface du plugin `camera`, port RTSP explicite dans l'URL de flux et propagation de l'objet parent lors des resynchronisations (#117)
 - Privacy Mode : suppression de l'erreur transitoire « Réponse vide » dans `jeeReolink.php` lorsqu'un événement ONVIF survient pendant le réveil HTTP de la caméra (#122)
 
