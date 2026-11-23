@@ -6,6 +6,7 @@
 
 # 23/11/2026
 
+- Directions PTZ dynamiques (#136) : adaptation automatique de `SetPTZmoove` (`Mouvement PTZ`) et des flèches de la modale Live sur 2, 4 (ex. `E1 Zoom`, `E1 Outdoor`, `E321`, `TrackMix`) ou 8 directions avec diagonales (ex. `RLC-823S2`) selon `ptzDirection` et `ptzCtrl` (`GetAbility` / Baichuan `cmd 199`)
 - Documentation & Compatibilité : mise à jour des modèles supportés (`HTTP/HTTPS`, `Baichuan port 9000`, `via NVR / Home Hub`) et explication technique des limites matérielles (4G `Go`, batterie sans Hub/NVR, `Bxxx`/`Dxxx` sans NVR)
 - Mode Baichuan E321 (#130, #134) : filtrage de `WhiteLed` selon `ledCtrl`/`lightType`, exclusion de `PtzPatrol` sur `<cruiseList />` vide, détection `aiTrack` via `cmd 299` (`smartTrack`) et détection `sdCard` depuis `DeviceInfo` au login
 - Ergonomie, Unités & Rondes PTZ (#136) : suppression de l'unité erronée sur `SetAutoReturnPtzGuardPointState`, ajout des unités `Kbps` et harmonisation `Débit Stream1/2`, numérotation d'affichage `Ronde 1` à `Ronde 6` (clés `0..5` préservées), ajout de l'état `SetSpeedState` lié au curseur `SetSpeed` et clarification de l'aide `SetAutoFocus`
