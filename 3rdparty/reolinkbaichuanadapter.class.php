@@ -180,6 +180,38 @@ class reolinkBaichuanAdapter {
     return $this->abilityXmlCache;
   }
 
+  /**
+   * Parse host and channel Support tags from cached cmd 199 XML.
+   * @return array{0: array<string,string>, 1: array<string,string>}
+   */
+  private function parseSupportTags($ch) {
+    $hostTags = array();
+    $chTags = array();
+    try {
+      $xml = $this->getAbilitiesXml();
+      $sx = @simplexml_load_string($xml);
+      if ($sx !== false && isset($sx->Support)) {
+        foreach ($sx->Support->children() as $node) {
+          $name = $node->getName();
+          if ($name === 'item') {
+            $cid = intval($node->chnID ?? -1);
+            if ($cid === $ch || ($cid === 0 && empty($chTags))) {
+              foreach ($node->children() as $cnode) {
+                if ($cnode->getName() !== 'subItem') {
+                  $chTags[$cnode->getName()] = strval($cnode);
+                }
+              }
+            }
+          } else {
+            $hostTags[$name] = strval($node);
+          }
+        }
+      }
+    } catch (Exception $e) {
+    }
+    return array($hostTags, $chTags);
+  }
+
   private static function extractChannel($param) {
     if (isset($param['channel'])) {
       return intval($param['channel']);
@@ -625,30 +657,7 @@ class reolinkBaichuanAdapter {
   }
 
   private function handleGetAbility($ch) {
-    $hostTags = array();
-    $chTags = array();
-    try {
-      $xml = $this->getAbilitiesXml();
-      $sx = @simplexml_load_string($xml);
-      if ($sx !== false && isset($sx->Support)) {
-        foreach ($sx->Support->children() as $node) {
-          $name = $node->getName();
-          if ($name === 'item') {
-            $cid = intval($node->chnID ?? -1);
-            if ($cid === $ch || ($cid === 0 && empty($chTags))) {
-              foreach ($node->children() as $cnode) {
-                if ($cnode->getName() !== 'subItem') {
-                  $chTags[$cnode->getName()] = strval($cnode);
-                }
-              }
-            }
-          } else {
-            $hostTags[$name] = strval($node);
-          }
-        }
-      }
-    } catch (Exception $e) {
-    }
+    list($hostTags, $chTags) = $this->parseSupportTags($ch);
     $v = function ($key, $default = 0) use ($chTags, $hostTags) {
       if (isset($chTags[$key])) {
         return intval($chTags[$key]);
@@ -657,6 +666,9 @@ class reolinkBaichuanAdapter {
         return intval($hostTags[$key]);
       }
       return $default;
+    };
+    $hasTag = function ($key) use ($chTags, $hostTags) {
+      return isset($chTags[$key]) || isset($hostTags[$key]);
     };
     $permit = function ($cond, $ver = 1) {
       return $cond ? array('permit' => 7, 'ver' => max(1, intval($ver))) : array('permit' => 0, 'ver' => 0);
@@ -670,6 +682,38 @@ class reolinkBaichuanAdapter {
     $aiBits = $v('aitype', 0);
     $audioVer = $v('audioVersion', 0);
 
+    // Floodlight / spotlight: bit 1 of ledCtrl (or lightType > 0) indicates physical WhiteLed hardware
+    // (E321 without spotlight: ledCtrl=1, lightType=0 -> false; E1 Outdoor PoE with spotlight: ledCtrl=3 -> true)
+    $hasFloodlight = ((($ledCtrl >> 1) & 1) === 1) || ($v('lightType', 0) > 0);
+
+    // AI auto-tracking: E321 reports autoPt=0 in Support while exposing smartTrack/smartTrackPt in cmd 299
+    $hasAiTrack = ($v('autoPt', 0) > 0 || (($aiBits >> 7) & 1) === 1 || (($aiBits >> 13) & 1) === 1);
+    if (!$hasAiTrack && $hasPtz && $aiBits > 0) {
+      try {
+        $aiCfgXml = $this->bc->requestXml(299, $ch);
+        if ($this->bc->xmlValue($aiCfgXml, 'smartTrack') !== null || $this->bc->xmlValue($aiCfgXml, 'smartTrackPt') !== null) {
+          $hasAiTrack = true;
+        }
+      } catch (Exception $e) {
+      }
+    }
+
+    // SD card & pre-record: standalone Wi-Fi cameras (e.g. E321) report diskNum=0 in Support,
+    // while Login DeviceInfo has <sdCard>1</sdCard> and Support has storagemode bit 1 (value 2 / 6)
+    $loginSdCard = ($this->bc->loginXml !== '') ? intval($this->bc->xmlValue($this->bc->loginXml, 'sdCard') ?? 0) : 0;
+    $hasSdCard = ($v('diskNum', 0) > 0 || $v('newRecordType', 0) > 0 || ($v('storagemode', 0) & 2) !== 0 || $loginSdCard > 0);
+    $hasPreRec = false;
+    if ($hasSdCard) {
+      try {
+        $rec54 = $this->bc->requestXml(54, $ch);
+        $preSec = $this->bc->xmlValue($rec54, 'preRecordTime');
+        if ($preSec !== null && intval($preSec) > 0) {
+          $hasPreRec = true;
+        }
+      } catch (Exception $e) {
+      }
+    }
+
     $abCh = array(
       'ptzCtrl' => $permit($hasPtz),
       'ptzType' => $permit($hasPtz, max(1, $ptzType)),
@@ -680,8 +724,9 @@ class reolinkBaichuanAdapter {
       'supportFocus' => $permit($hasZoom),
       'ledControl' => $permit(true),
       'powerLed' => $permit((($ledCtrl >> 0) & 1) === 1 || $ledCtrl > 0),
-      'supportFLswitch' => $permit((($ledCtrl >> 1) & 1) === 1 && (($ledCtrl >> 2) & 1) === 1),
-      'supportFLBrightness' => $permit((($ledCtrl >> 1) & 1) === 1 && (($ledCtrl >> 2) & 1) === 1),
+      'supportFLswitch' => $permit($hasFloodlight),
+      'supportFLBrightness' => $permit($hasFloodlight),
+      'floodLight' => $permit($hasFloodlight),
       'osd' => $permit($v('osdCfg', 1) > 0),
       'enc' => $permit($v('encCtrl', 1) > 0),
       'image' => $permit(true),
@@ -694,24 +739,27 @@ class reolinkBaichuanAdapter {
       'ispDayNight' => $permit(true),
       'ispAntiFlick' => $permit(true),
       'ispExposureMode' => $permit(true),
-      'ispBackLight' => $permit(true),
+      'ispBackLight' => $permit($v('newIspCfg', 0) === 0 && $v('ispBackLight', 0) > 0),
       'ispMirror' => $permit(true),
       'ispFlip' => $permit(true),
       'ispHdr' => $permit($v('newIspCfg', 0) > 0),
       'ispBinningMode' => $permit($v('newIspCfg', 0) > 0),
       'md' => $permit(true),
       'alarmMd' => $permit(true),
-      'alarmAudio' => $permit($audioVer > 0 || $v('ipcAudioTalk', 0) > 0),
-      'supportAudioCfg' => $permit($audioVer > 0 || $v('ipcAudioTalk', 0) > 0),
+      'alarmAudio' => $permit($audioVer > 0 || $v('ipcAudioTalk', 0) > 0 || $v('audioAlarm', 0) > 0),
+      'supportAudioCfg' => $permit($audioVer > 0 || $v('ipcAudioTalk', 0) > 0 || $v('audioCfg', 0) > 0),
       'supportAi' => $permit($aiBits > 0),
       'supportAiPeople' => $permit((($aiBits >> 1) & 1) === 1),
       'supportAiVehicle' => $permit((($aiBits >> 2) & 1) === 1),
       'supportAiFace' => $permit((($aiBits >> 3) & 1) === 1),
       'supportAiDogCat' => $permit((($aiBits >> 4) & 1) === 1),
       'supportAiPackage' => $permit((($aiBits >> 17) & 1) === 1 || (($aiBits >> 23) & 1) === 1),
-      'supportAiTrack' => $permit($v('autoPt', 0) > 0 || (($aiBits >> 7) & 1) === 1 || (($aiBits >> 13) & 1) === 1),
+      'aiTrack' => $permit($hasAiTrack),
+      'supportAiTrack' => $permit($hasAiTrack),
+      'doorbellVersion' => $permit($v('doorbellVersion', 0) > 0, $v('doorbellVersion', 0)),
       'battery' => $permit($v('battery', 0) > 0),
-      'sdCard' => $permit($v('diskNum', 1) > 0 || $v('newRecordType', 0) > 0),
+      'sdCard' => $permit($hasSdCard),
+      'recPreRecord' => $permit($hasPreRec),
       'push' => $permit($v('pushAlarm', 0) > 0 || $v('pushVersion', 0) > 0),
       'email' => $permit($v('email', 0) > 0 || $v('emailVersion', 0) > 0),
       'ftp' => $permit($v('ftp', 0) > 0),
@@ -775,16 +823,22 @@ class reolinkBaichuanAdapter {
               if ($stType !== 'mainStream' && $stType !== 'subStream') {
                 continue;
               }
-              $w = intval($et->width ?? 0);
-              $h = intval($et->height ?? 0);
+              $w = intval($et->width ?? ($et->resolution->width ?? 0));
+              $h = intval($et->height ?? ($et->resolution->height ?? 0));
               $fpsArr = array_values(array_filter(array_map('intval', explode(',', strval($et->framerateTable ?? '')))));
               $brArr = array_values(array_filter(array_map('intval', explode(',', strval($et->bitrateTable ?? '')))));
-              $prof[$stType] = array(
-                'size' => ($w > 0 && $h > 0) ? ($w . '*' . $h) : '',
-                'frameRate' => $fpsArr,
-                'bitRate' => $brArr,
-                'vType' => array('h264', 'h265'),
-              );
+              $vtName = (isset($et->videoEncType) && intval($et->videoEncType) === 1) ? 'h265' : 'h264';
+              $sizeStr = ($w > 0 && $h > 0) ? ($w . '*' . $h) : '';
+              if (!isset($prof[$stType])) {
+                $prof[$stType] = array(
+                  'size' => $sizeStr,
+                  'frameRate' => $fpsArr,
+                  'bitRate' => $brArr,
+                  'vType' => isset($et->videoEncType) ? array($vtName) : array('h264', 'h265'),
+                );
+              } elseif (!in_array($vtName, $prof[$stType]['vType'], true)) {
+                $prof[$stType]['vType'][] = $vtName;
+              }
             }
             if (!empty($prof)) {
               $profiles[] = $prof;
@@ -912,7 +966,7 @@ class reolinkBaichuanAdapter {
     } elseif (strpos($afMode, '50') !== false) {
       $antiFlicker = '50HZ';
     } else {
-      $antiFlicker = 'Outdoor';
+      $antiFlicker = 'Other';
     }
     $expRaw = strtolower(strval($adv->Exposure->mode ?? 'auto'));
     $expMap = array('auto' => 'Auto', 'lownoise' => 'LowNoise', 'antismearing' => 'Anti-Smearing', 'manual' => 'Manual');
@@ -1172,6 +1226,12 @@ class reolinkBaichuanAdapter {
   }
 
   private function handleGetWhiteLed($ch) {
+    list($hostTags, $chTags) = $this->parseSupportTags($ch);
+    $ledCtrl = intval($chTags['ledCtrl'] ?? ($hostTags['ledCtrl'] ?? 1));
+    $lightType = intval($chTags['lightType'] ?? ($hostTags['lightType'] ?? 0));
+    if ((($ledCtrl >> 1) & 1) === 0 && $lightType <= 0) {
+      throw new Exception('Baichuan status 400: WhiteLed not supported (ledCtrl=' . $ledCtrl . ', lightType=' . $lightType . ')');
+    }
     $xml = $this->bc->requestXml(289, $ch);
     $sx = @simplexml_load_string($xml);
     if ($sx === false) {
@@ -1295,6 +1355,13 @@ class reolinkBaichuanAdapter {
           'preset' => !empty($steps) ? $steps : null,
         );
         $idx++;
+      }
+    }
+    if (empty($patrols)) {
+      list($hostTags, $chTags) = $this->parseSupportTags($ch);
+      $ptzPatrolSup = $chTags['ptzPatrol'] ?? ($hostTags['ptzPatrol'] ?? null);
+      if ($ptzPatrolSup !== null && intval($ptzPatrolSup) === 0) {
+        throw new Exception('Baichuan status 400: PtzPatrol not supported');
       }
     }
     return self::ok('GetPtzPatrol', array('PtzPatrol' => $patrols));
@@ -1539,8 +1606,12 @@ class reolinkBaichuanAdapter {
 
   private function handleGetAiCfg($ch) {
     $xml = $this->bc->requestXml(299, $ch);
-    $st = intval($this->bc->xmlValue($xml, 'smartTrack') ?? 0);
-    return self::ok('GetAiCfg', array('channel' => $ch, 'bSmartTrack' => $st));
+    $raw = $this->bc->xmlValue($xml, 'smartTrack');
+    if ($raw === null) {
+      $raw = $this->bc->xmlValue($xml, 'smartTrackPt');
+    }
+    $st = intval($raw ?? 0);
+    return self::ok('GetAiCfg', array('channel' => $ch, 'aiTrack' => $st, 'bSmartTrack' => $st));
   }
 
   private function handleSetAiCfg($ch, $param) {
@@ -1549,10 +1620,14 @@ class reolinkBaichuanAdapter {
     if ($sx === false) {
       throw new Exception('Invalid AiCfg XML');
     }
-    if (isset($param['bSmartTrack'])) {
-      $nodes = $sx->xpath('.//smartTrack');
-      if ($nodes && isset($nodes[0])) {
-        $nodes[0][0] = intval($param['bSmartTrack']);
+    $val = $param['bSmartTrack'] ?? ($param['aiTrack'] ?? null);
+    if ($val !== null) {
+      $vInt = intval($val);
+      foreach (array('smartTrack', 'smartTrackPt') as $tag) {
+        $nodes = $sx->xpath('.//' . $tag);
+        if ($nodes && isset($nodes[0])) {
+          $nodes[0][0] = $vInt;
+        }
       }
     }
     $this->bc->requestXml(300, $ch, $sx->asXML());
@@ -1615,27 +1690,37 @@ class reolinkBaichuanAdapter {
     $enable = intval($this->bc->xmlValue($xml81, 'enable') ?? 0);
     $postRec = '30 Seconds';
     $overwrite = 1;
+    $preRec = null;
     try {
       $xml54 = $this->bc->requestXml(54, $ch);
       $delaySec = intval($this->bc->xmlValue($xml54, 'recordDelayTime') ?? 30);
       $secMap = array(15 => '15 Seconds', 30 => '30 Seconds', 60 => '1 Minute', 120 => '2 Minutes', 300 => '5 Minutes');
       $postRec = $secMap[$delaySec] ?? '30 Seconds';
       $ow = $this->bc->xmlValue($xml54, 'cycleRecord');
+      if ($ow === null) {
+        $ow = $this->bc->xmlValue($xml54, 'cycle');
+      }
       if ($ow !== null) {
         $overwrite = intval($ow);
       }
+      $preSec = $this->bc->xmlValue($xml54, 'preRecordTime');
+      if ($preSec !== null) {
+        $preRec = (intval($preSec) > 0) ? 1 : 0;
+      }
     } catch (Exception $e) {
     }
-    return self::ok($cmd, array(
-      'Rec' => array(
-        'channel' => $ch,
-        'enable' => $enable,
-        'scheduleEnable' => $enable,
-        'schedule' => array('channel' => $ch, 'enable' => $enable),
-        'overwrite' => $overwrite,
-        'postRec' => $postRec,
-      ),
-    ));
+    $recOut = array(
+      'channel' => $ch,
+      'enable' => $enable,
+      'scheduleEnable' => $enable,
+      'schedule' => array('channel' => $ch, 'enable' => $enable),
+      'overwrite' => $overwrite,
+      'postRec' => $postRec,
+    );
+    if ($preRec !== null) {
+      $recOut['preRec'] = $preRec;
+    }
+    return self::ok($cmd, array('Rec' => $recOut));
   }
 
   private function handleSetRec($cmd, $ch, $param) {
@@ -1651,12 +1736,15 @@ class reolinkBaichuanAdapter {
         . '</body>';
       $this->bc->requestXml(82, $ch, $body);
     }
-    if (isset($rec['overwrite']) || isset($rec['postRec'])) {
+    if (isset($rec['overwrite']) || isset($rec['postRec']) || isset($rec['preRec'])) {
       $xml54 = $this->bc->requestXml(54, $ch);
       $sx54 = @simplexml_load_string($xml54);
       if ($sx54 !== false) {
         if (isset($rec['overwrite'])) {
           $nodes = $sx54->xpath('.//cycleRecord');
+          if (!$nodes || !isset($nodes[0])) {
+            $nodes = $sx54->xpath('.//cycle');
+          }
           if ($nodes && isset($nodes[0])) {
             $nodes[0][0] = intval($rec['overwrite']);
           }
@@ -1668,6 +1756,12 @@ class reolinkBaichuanAdapter {
             if ($nodes && isset($nodes[0])) {
               $nodes[0][0] = $strMap[$rec['postRec']];
             }
+          }
+        }
+        if (isset($rec['preRec'])) {
+          $nodes = $sx54->xpath('.//preRecordTime');
+          if ($nodes && isset($nodes[0])) {
+            $nodes[0][0] = intval($rec['preRec']) ? 10 : 0;
           }
         }
         $this->bc->requestXml(55, $ch, $sx54->asXML());
