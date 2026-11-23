@@ -5,14 +5,14 @@
 		"fr_FR": "Plugin permettant le paramétrage, les captures, le flux Live (go2rtc) et le contrôle des caméras et NVR Reolink sous Jeedom. Supporte en direct HTTP/HTTPS (RLC, RLN, Home Hub, DUO, E1 Zoom, E1 Outdoor, TrackMix, CX, Doorbell, Fisheye...), en direct Baichuan TCP port 9000 pour les modèles secteur sans interface web (E1, E1 Pro, E320/E321, Lumus...), ainsi que les caméras sur batterie (Argus, Altas, Keen...) et kits Bxxx/Dxxx lorsqu'elles sont rattachées à un NVR ou Home Hub Reolink. Non supportés en direct : caméras 4G (série Go), caméras batterie autonomes sans Hub/NVR et caméras Bxxx/Dxxx sans NVR."
 	},
 	"licence": "AGPL",
-	"author": "Jezza34",
+	"author": "Jezza34, Maël Chouteau",
 	"require": "4.2",
 	"category": "security",
 	"hasDependency": true,
 	"hasOwnDeamon": true,
 	"maxDependancyInstallTime": 30,
-	"changelog": "https://github.com/Jezza34000/reolink/blob/master/changelog.md",
-	"documentation": "https://github.com/Jezza34000/reolink/blob/master/README.md",
+	"changelog": "https://github.com/Jezza34000/jeedom_reolink_plugin/blob/master/changelog.md",
+	"documentation": "https://github.com/Jezza34000/jeedom_reolink_plugin/blob/master/README.md",
 	"compatibility": [
 		"smart",
 		"rpi",
