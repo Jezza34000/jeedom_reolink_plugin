@@ -1159,13 +1159,13 @@ class reolink extends eqLogic {
       }
       $name = trim(strval($patrol['name'] ?? ''));
       if ($name === '') {
-        $name = 'Ronde ' . $id;
+        $name = __('Ronde', __FILE__) . ' ' . ($id + 1);
       }
       $list .= $id . '|' . $name . ';';
     }
     $list = rtrim($list, ';');
     if ($list === '') {
-      $list = '0|Ronde 0';
+      $list = '0|' . __('Ronde', __FILE__) . ' 1';
     }
     $cmd = $camera->getCmd(null, 'StartPtzPatrol');
     if (!is_object($cmd)) {
@@ -2267,6 +2267,54 @@ class reolink extends eqLogic {
         log::add('reolink', 'info', 'Liste des options mise à jour : ' . $logicalId);
       }
     }
+
+    $legacyNames = array(
+      'SetBitratest1' => array('from' => array('Bitrate Stream1'), 'to' => __('Débit Stream1', __FILE__)),
+      'SetBitratest2' => array('from' => array('Bitrate Stream2'), 'to' => __('Débit Stream2', __FILE__)),
+      'SetBitratest1State' => array('from' => array('Débit kbps (Stream1)', 'Bitrate kbps (Stream1)'), 'to' => __('Débit (Stream1)', __FILE__)),
+      'SetBitratest2State' => array('from' => array('Débit kbps (Stream2)', 'Bitrate kbps (Stream2)'), 'to' => __('Débit (Stream2)', __FILE__)),
+      'SetCodecRateState' => array('from' => array('Débit codec (Kbps)', 'Codec bitrate (Kbps)'), 'to' => __('Débit codec', __FILE__)),
+      'SetNetThroughputState' => array('from' => array('Débit réseau (Kbps)', 'Network throughput (Kbps)'), 'to' => __('Débit réseau', __FILE__)),
+    );
+    foreach ($legacyNames as $logicalId => $spec) {
+      $cmd = $this->getCmd(null, $logicalId);
+      if (!is_object($cmd) || !in_array($cmd->getName(), $spec['from'], true)) {
+        continue;
+      }
+      $collision = false;
+      foreach ($this->getCmd() as $other) {
+        if ($other->getId() !== $cmd->getId() && $other->getName() === $spec['to']) {
+          $collision = true;
+          break;
+        }
+      }
+      if (!$collision) {
+        $cmd->setName($spec['to']);
+        $cmd->save();
+      }
+    }
+
+    $patrolCmd = $this->getCmd(null, 'StartPtzPatrol');
+    if (is_object($patrolCmd)) {
+      $curPatrolList = strval($patrolCmd->getConfiguration('listValue', ''));
+      if ($curPatrolList !== '') {
+        $rewritten = array();
+        $changedPatrol = false;
+        foreach (explode(';', $curPatrolList) as $pair) {
+          $bits = explode('|', $pair, 2);
+          if (count($bits) === 2 && preg_match('/^(Ronde|Patrol|Ronda)\s+(\d+)$/', trim($bits[1]), $m) && intval($m[2]) === intval($bits[0])) {
+            $rewritten[] = $bits[0] . '|' . __('Ronde', __FILE__) . ' ' . (intval($bits[0]) + 1);
+            $changedPatrol = true;
+          } else {
+            $rewritten[] = $pair;
+          }
+        }
+        if ($changedPatrol) {
+          $patrolCmd->setConfiguration('listValue', implode(';', $rewritten));
+          $patrolCmd->save();
+        }
+      }
+    }
   }
 
   /**
@@ -2861,6 +2909,18 @@ class reolink extends eqLogic {
             $dirty = true;
           }
         }
+        $expectedUnite = strval($command['Unite'] ?? ($command['unite'] ?? ''));
+        if (strval($cmd->getUnite()) !== $expectedUnite) {
+          $cmd->setUnite($expectedUnite);
+          $dirty = true;
+        }
+        if ($valueFrom !== '' && strval($cmd->getValue()) === '') {
+          $cmdlogic = reolinkCmd::byEqLogicIdAndLogicalId($camera->getId(), $valueFrom);
+          if (is_object($cmdlogic)) {
+            $cmd->setValue($cmdlogic->getId());
+            $dirty = true;
+          }
+        }
         if ($dirty) {
           $cmd->save();
         }
@@ -2978,6 +3038,21 @@ class reolink extends eqLogic {
       reolink::applyEncListValues($camera, $cnx, $channel, $pruneUnsupported);
       reolink::applyIspRanges($camera, $ispProbe, $cnx, $channel);
       reolink::applyZoomFocusRanges($camera, $cnx, $channel);
+      $speedInfo = $camera->getCmd(null, 'SetSpeedState');
+      if (is_object($speedInfo) && strval($speedInfo->execCmd()) === '') {
+        $speedAct = $camera->getCmd(null, 'SetSpeed');
+        $initSpeed = is_object($speedAct) ? intval($speedAct->getConfiguration('speedvalue', 32)) : 32;
+        if ($initSpeed < 1 || $initSpeed > 64) {
+          $initSpeed = 32;
+        }
+        $camera->checkAndUpdateCmd('SetSpeedState', $initSpeed);
+      }
+      if (is_object($camera->getCmd(null, 'StartPtzPatrol'))) {
+        $patrolRefresh = $cnx->SendCMD('[{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . intval($channel) . '}}]');
+        if (is_array($patrolRefresh) && isset($patrolRefresh[0])) {
+          reolink::applyPtzPatrolState($camera, $patrolRefresh[0]);
+        }
+      }
     }
     $cnx->batteryChannelMode = false;
 
@@ -3302,8 +3377,12 @@ class reolinkCmd extends cmd {
         reolink::runPatrol($EqId, $op === 'StopPatrol' ? 'StopPatrol' : 'StartPatrol', 0);
         break;
       case 'SetSpeed':
-        $this->setConfiguration('speedvalue', $_options['slider']);
+        $val = max(1, min(64, intval($_options['slider'] ?? 32)));
+        $this->setConfiguration('speedvalue', $val);
         $this->save();
+        if (is_object($eqLogic)) {
+          $eqLogic->checkAndUpdateCmd('SetSpeedState', $val);
+        }
         break;
       case 'SetPrivacyMode':
         $bc = reolinkBaichuan::fromEqLogic($eqLogic);
