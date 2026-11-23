@@ -6,6 +6,8 @@
 
 # 23/11/2026
 
+- Documentation & Compatibilité : mise à jour des modèles supportés (`HTTP/HTTPS`, `Baichuan port 9000`, `via NVR / Home Hub`) et explication technique des limites matérielles (4G `Go`, batterie sans Hub/NVR, `Bxxx`/`Dxxx` sans NVR)
+- Mode Baichuan E321 (#130, #134) : filtrage de `WhiteLed` selon `ledCtrl`/`lightType`, exclusion de `PtzPatrol` sur `<cruiseList />` vide, détection `aiTrack` via `cmd 299` (`smartTrack`) et détection `sdCard` depuis `DeviceInfo` au login
 - Ergonomie, Unités & Rondes PTZ (#136) : suppression de l'unité erronée sur `SetAutoReturnPtzGuardPointState`, ajout des unités `Kbps` et harmonisation `Débit Stream1/2`, numérotation d'affichage `Ronde 1` à `Ronde 6` (clés `0..5` préservées), ajout de l'état `SetSpeedState` lié au curseur `SetSpeed` et clarification de l'aide `SetAutoFocus`
 - Commandes ISP, Encodage & ONVIF (#136) : correction des valeurs API `SetAntiFlicker` (`Other`), `SetExposure` (`Anti-Smearing`) et `SetBackLight` (`ispBackLight`) avec filtrage dynamique via `GetIsp` (`action=1`), remontée cron des codecs H.264 fixes (`SetEncodingst1State`/`SetEncodingst2State`) et retrait des sélecteurs de codec fixes/vides, suppression de la commande morte `EvMotionAlarm` et restriction de `EvVisitor` aux sonnettes (`Doorbell`)
 - UID caméra autonome (#137) : correction de la requête `GetP2p`, prise en charge des caméras autonomes avec canal `0` renseigné et fallback Baichuan `cmd 114`
@@ -13,6 +15,7 @@
 # 22/11/2026
 
 - Actions V20 sur caméras autonomes vs NVR : envoie et lit automatiquement `enable` (`0`/`1`) sur les caméras autonomes (`SetEmailV20`, `SetFtpV20`, `SetPushV20`, `SetRecV20`, `SetBuzzerAlarmV20`) tout en conservant `scheduleEnable` par canal derrière un NVR, sans recréation de commandes requise (retours Community)
+- Mode Baichuan (port 9000 uniquement) : prise en charge native des caméras Reolink n'ouvrant que le port TCP 9000 (ex. `E321`), captures JPEG via `cmd 109` et outil Expert **Diagnostic Baichuan (XML)** avec export anonymisé (#130)
 - Rondes PTZ, Zoom/Focus, Diagonales PTZ & IR : dé-cumul automatique des rondes PTZ (`E1 Zoom`, `E1 Outdoor`, `TrackMix`, `RLC-823S2`), support `ptzPatrol` et bornes dynamiques `Zoom`/`Focus` sur `TrackMix` & `RLC-823S2`, ajout des diagonales PTZ, mode `On` sur `SetIrLights` et mise à jour automatique des listes existantes (#119, #129)
 - Synchronisation plugin Caméra : protocole `http`/`https` + port web cohérents dans l'interface du plugin `camera`, port RTSP explicite dans l'URL de flux et propagation de l'objet parent lors des resynchronisations (#117)
 - Privacy Mode : suppression de l'erreur transitoire « Réponse vide » dans `jeeReolink.php` lorsqu'un événement ONVIF survient pendant le réveil HTTP de la caméra (#122)

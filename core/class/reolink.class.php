@@ -78,7 +78,19 @@ class reolink extends eqLogic {
     $cnxtype = $camera->getConfiguration('cnxtype');
 
     if (!empty($adresseIP) && !empty($username) && !empty($password)) {
-      $cacheKey = $adresseIP . '|' . strval($port);
+      $normType = strtolower(trim(strval($cnxtype)));
+      if ($normType === 'baichuan') {
+        $bcPort = reolinkBaichuan::resolvePort($camera);
+        $cacheKey = 'baichuan|' . $adresseIP . '|' . strval($bcPort);
+        if (isset(self::$_cnxByIp[$cacheKey]) && is_object(self::$_cnxByIp[$cacheKey])) {
+          return self::$_cnxByIp[$cacheKey];
+        }
+        $cnxinfo = array("adresseIP" => $adresseIP, "port" => $bcPort, "username" => $username, "password" => $password, "cnxtype" => 'baichuan');
+        $camcnx = new reolinkBaichuanAdapter($cnxinfo);
+        self::$_cnxByIp[$cacheKey] = $camcnx;
+        return $camcnx;
+      }
+      $cacheKey = $normType . '|' . $adresseIP . '|' . strval($port);
       if (isset(self::$_cnxByIp[$cacheKey]) && is_object(self::$_cnxByIp[$cacheKey])) {
         return self::$_cnxByIp[$cacheKey];
       }
@@ -815,6 +827,9 @@ class reolink extends eqLogic {
     $camera = reolink::byId($id, 'reolink');
     if (!is_object($camera) || $camera->isNvrParent()) {
       throw new Exception(__('Équipement Reolink invalide', __FILE__));
+    }
+    if (strtolower(trim(strval($camera->getConfiguration('cnxtype', '')))) === 'baichuan') {
+      throw new Exception(__('Flux vidéo RTSP/Live indisponible en mode Baichuan seul (port 9000 uniquement). Utilisez les captures JPEG (plugin Caméra ou snap.php via cmd 109).', __FILE__));
     }
     if ($camera->getConfiguration('rtspSubUrl') == '' || $camera->getConfiguration('rtspMainUrl') == '') {
       reolink::GetCamNFO($id);
@@ -2026,6 +2041,9 @@ class reolink extends eqLogic {
       if ($camera->isStandalonePrivacyBlocking()) {
         continue;
       }
+      if (strtolower(trim(strval($camera->getConfiguration('cnxtype', '')))) === 'baichuan') {
+        continue;
+      }
 
       $camera_contact_point = $camera->getConfiguration('adresseip');
       if (filter_var($camera_contact_point, FILTER_VALIDATE_IP)) {
@@ -3163,6 +3181,22 @@ class reolink extends eqLogic {
       $cmd->setConfiguration('listValue', $list);
       $cmd->save();
     }
+  }
+
+  public static function runBaichuanDiagnostic($id) {
+    $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera)) {
+      throw new Exception(__('Caméra introuvable', __FILE__));
+    }
+    $bc = reolinkBaichuan::fromEqLogic($camera);
+    if (!is_object($bc)) {
+      throw new Exception(__('Renseignez et sauvegardez l\'adresse IP, le login et le mot de passe avant de lancer le diagnostic Baichuan', __FILE__));
+    }
+    $report = $bc->runDiagnosticReport($camera->getChannel(), $camera->isChannelChild());
+    if (!empty($report['error'])) {
+      throw new Exception(__('Échec diagnostic Baichuan', __FILE__) . ' : ' . $report['error']);
+    }
+    return $report;
   }
 
   public static function applyIspRanges($camera, $ispProbe = null, $cnx = null, $channel = 0) {

@@ -116,6 +116,10 @@ try {
       ajax::success();
     }
 
+    if (init('action') == 'BaichuanDiagnostic') {
+      ajax::success(reolink::runBaichuanDiagnostic(init('id')));
+    }
+
     throw new Exception(__('Aucune méthode correspondante à : ', __FILE__) . init('action'));
     /*     * *********Catch exeption*************** */
 } catch (Exception $e) {
