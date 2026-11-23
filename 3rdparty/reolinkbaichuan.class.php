@@ -321,6 +321,13 @@ class reolinkBaichuan {
     throw new Exception('Baichuan timeout waiting for cmd_id ' . $cmdId);
   }
 
+  public function subscribeEvents($drainSec = 0.2) {
+    $this->ensureLogin();
+    // channel = 250 maps to wire chId = 251 (START_ALARM_REPORT / cmd 31)
+    $this->sendRaw(31, 250, '', '', 'aes', '1464');
+    $this->drainPushes($drainSec);
+  }
+
   public function drainPushes($durationSec) {
     if (!is_resource($this->fp)) {
       return;

@@ -13,8 +13,10 @@ class reolinkBaichuanAdapter {
   private $bc;
   private $lastError = '';
   private $abilityXmlCache = null;
+  private $eventsSubscribed = false;
   private $motionByCh = array();
-  private $aiByCh = array();
+  private $aiAlarmByCh = array();
+  private $aiSupportByCh = array();
 
   public function __construct($cnxinfo) {
     $ip = trim(strval($cnxinfo['adresseIP'] ?? ''));
@@ -49,6 +51,19 @@ class reolinkBaichuanAdapter {
     return $this->bc->snapshot(intval($channel), $quality);
   }
 
+  private function ensureEventSnapshot() {
+    if ($this->eventsSubscribed || !$this->is_loggedin) {
+      return;
+    }
+    $this->eventsSubscribed = true;
+    try {
+      $this->bc->subscribeEvents(0.15);
+      $this->ingestPushes();
+    } catch (Exception $e) {
+      log::add('reolink', 'debug', 'Baichuan subscribeEvents fallback: ' . $e->getMessage());
+    }
+  }
+
   private function ingestPushes() {
     $this->bc->drainPushes(0.05);
     foreach ($this->bc->popPushEvents() as $ev) {
@@ -63,15 +78,56 @@ class reolinkBaichuanAdapter {
         $ch = isset($ae->channelId) ? intval($ae->channelId) : (isset($ae->chnID) ? intval($ae->chnID) : 0);
         $statusStr = isset($ae->status) ? strval($ae->status) : '';
         $aiStr = isset($ae->AItype) ? strval($ae->AItype) : '';
-        $md = (strpos($statusStr, 'MD') !== false) || (strpos($aiStr, 'other') !== false);
+        $tokens = array_filter(array_map('trim', explode(',', strtolower($aiStr))));
+        $md = (strpos($statusStr, 'MD') !== false) || in_array('other', $tokens, true);
         $this->motionByCh[$ch] = $md ? 1 : 0;
-        $aiState = array();
+        $aiAlarms = array();
         foreach (array('people', 'vehicle', 'dog_cat', 'face', 'package') as $k) {
-          $aiState[$k] = array('alarm_state' => (strpos($aiStr, $k) !== false) ? 1 : 0, 'support' => 1);
+          $aiAlarms[$k] = in_array($k, $tokens, true) ? 1 : 0;
         }
-        $this->aiByCh[$ch] = $aiState;
+        $this->aiAlarmByCh[$ch] = $aiAlarms;
       }
     }
+  }
+
+  private function getAiSupportMap($ch) {
+    if (isset($this->aiSupportByCh[$ch])) {
+      return $this->aiSupportByCh[$ch];
+    }
+    $support = array(
+      'people' => 0,
+      'vehicle' => 0,
+      'dog_cat' => 0,
+      'face' => 0,
+      'package' => 0,
+    );
+    try {
+      list($hostTags, $chTags) = $this->parseSupportTags($ch);
+      $aiBits = isset($chTags['aitype']) ? intval($chTags['aitype']) : intval($hostTags['aitype'] ?? 0);
+      if ($aiBits > 0) {
+        $support['people'] = (($aiBits >> 1) & 1);
+        $support['vehicle'] = (($aiBits >> 2) & 1);
+        $support['face'] = (($aiBits >> 3) & 1);
+        $support['dog_cat'] = (($aiBits >> 4) & 1);
+        $support['package'] = ((($aiBits >> 17) & 1) || (($aiBits >> 23) & 1)) ? 1 : 0;
+        try {
+          $aiCfgXml = $this->bc->requestXml(299, $ch);
+          $detStr = strtolower(trim(strval($this->bc->xmlValue($aiCfgXml, 'detectType') ?? '')));
+          if ($detStr !== '') {
+            $tokens = array_map('trim', explode(',', $detStr));
+            foreach (array('people', 'vehicle', 'dog_cat', 'face', 'package') as $k) {
+              if (in_array($k, $tokens, true)) {
+                $support[$k] = 1;
+              }
+            }
+          }
+        } catch (Exception $e) {
+        }
+      }
+    } catch (Exception $e) {
+    }
+    $this->aiSupportByCh[$ch] = $support;
+    return $support;
   }
 
   private static function ok($cmd, $value, $range = null) {
@@ -347,6 +403,7 @@ class reolinkBaichuanAdapter {
         return $this->handleSetAudioCfg($ch, $param);
 
       case 'GetMdState':
+        $this->ensureEventSnapshot();
         return self::ok('GetMdState', array('state' => intval($this->motionByCh[$ch] ?? 0)));
 
       case 'GetAiState':
@@ -727,6 +784,8 @@ class reolinkBaichuanAdapter {
       'ptzCtrl' => $permit($hasPtz, $ptzCtrlBits > 0 ? $ptzCtrlBits : 1),
       'ptzType' => $permit($hasPtz, max(1, $ptzType)),
       'ptzDirection' => ($hasPtz && $ptzDirVer > 0) ? array('permit' => 6, 'ver' => $ptzDirVer) : array('permit' => 0, 'ver' => 0),
+      'supportPtzSpeed' => $permit($hasPtz && (($ptzCtrlBits >> 6) & 1) === 1, 1),
+      'supportPtzCheck' => $permit($hasPtz && ((($ptzCtrlBits >> 3) & 1) === 1 || $v('ptzCheck', 0) > 0), 1),
       'ptzPreset' => $permit($v('ptzPreset', 0) > 0 || $hasPtz),
       'ptzPatrol' => $permit($v('ptzPatrol', 0) > 0),
       'ptzGuard' => $permit((($ptzCtrlBits >> 2) & 1) === 1),
@@ -757,6 +816,7 @@ class reolinkBaichuanAdapter {
       'md' => $permit(true),
       'alarmMd' => $permit(true),
       'alarmAudio' => $permit($audioVer > 0 || $v('ipcAudioTalk', 0) > 0 || $v('audioAlarm', 0) > 0),
+      'supportAudioAlarm' => $permit($v('audioAlarm', 0) > 0 || (($audioVer >> 1) & 1) === 1),
       'supportAudioCfg' => $permit($audioVer > 0 || $v('ipcAudioTalk', 0) > 0 || $v('audioCfg', 0) > 0),
       'supportAi' => $permit($aiBits > 0),
       'supportAiPeople' => $permit((($aiBits >> 1) & 1) === 1),
@@ -1309,13 +1369,25 @@ class reolinkBaichuanAdapter {
       $this->bc->requestXml(19, $ch, $body);
       return self::okWrite('PtzCtrl');
     }
-    $speedTag = isset($param['speed']) ? ('<speed>' . max(1, min(64, intval($param['speed']))) . '</speed>' . "\n") : '';
+    $bcCmd = lcfirst($op);
+    if ($bcCmd === 'stop') {
+      $speedTag = '<speed>0</speed>' . "\n";
+    } elseif (isset($param['speed'])) {
+      $speedTag = '<speed>' . max(1, min(64, intval($param['speed']))) . '</speed>' . "\n";
+    } else {
+      $speedTag = '';
+    }
+    $extraTags = '';
+    if ($bcCmd === 'startPatrol' || $bcCmd === 'stopPatrol') {
+      $extraTags = '<patrolId>' . intval($param['id'] ?? 0) . '</patrolId>' . "\n";
+    }
     $body = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
       . '<body>' . "\n"
       . '<PtzControl version="1.1">' . "\n"
       . '<channelId>' . $ch . '</channelId>' . "\n"
-      . '<command>' . htmlspecialchars($op, ENT_XML1) . '</command>' . "\n"
       . $speedTag
+      . '<command>' . htmlspecialchars($bcCmd, ENT_XML1) . '</command>' . "\n"
+      . $extraTags
       . '</PtzControl>' . "\n"
       . '</body>';
     $this->bc->requestXml(18, $ch, $body);
@@ -1546,13 +1618,16 @@ class reolinkBaichuanAdapter {
   }
 
   private function handleGetAiState($ch) {
-    $cur = $this->aiByCh[$ch] ?? array(
-      'people' => array('alarm_state' => 0, 'support' => 1),
-      'vehicle' => array('alarm_state' => 0, 'support' => 1),
-      'dog_cat' => array('alarm_state' => 0, 'support' => 1),
-      'face' => array('alarm_state' => 0, 'support' => 0),
-      'package' => array('alarm_state' => 0, 'support' => 0),
-    );
+    $this->ensureEventSnapshot();
+    $support = $this->getAiSupportMap($ch);
+    $alarms = $this->aiAlarmByCh[$ch] ?? array();
+    $cur = array();
+    foreach (array('people', 'vehicle', 'dog_cat', 'face', 'package') as $k) {
+      $cur[$k] = array(
+        'alarm_state' => intval($alarms[$k] ?? 0),
+        'support' => intval($support[$k] ?? 0),
+      );
+    }
     $cur['channel'] = $ch;
     return self::ok('GetAiState', $cur);
   }
