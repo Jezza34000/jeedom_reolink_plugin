@@ -27,6 +27,7 @@ from multiprocessing import Process
 
 import subscription_manager
 import uvicorn
+from baichuan_push import BaichuanPushManager
 from jeedom.jeedom import JEEDOM_SOCKET_MESSAGE, jeedom_com, jeedom_socket, jeedom_utils
 
 _ENV_CALLBACK = 'REOLINK_JEEDOM_CALLBACK'
@@ -34,6 +35,7 @@ _ENV_APIKEY = 'REOLINK_JEEDOM_APIKEY'
 
 proc = None
 go2rtc_proc = None
+bc_push_manager = None
 _GO2RTC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'bin'))
 _GO2RTC_BIN = os.path.join(_GO2RTC_DIR, 'go2rtc')
 _GO2RTC_CFG = os.path.join(_GO2RTC_DIR, 'go2rtc.yaml')
@@ -48,48 +50,53 @@ _go2rtc_check_at = 0.0
 
 
 def read_socket():
-    if JEEDOM_SOCKET_MESSAGE.empty():
-        return
-    logging.debug("Message received in socket JEEDOM_SOCKET_MESSAGE")
-    message = json.loads(JEEDOM_SOCKET_MESSAGE.get().decode('utf-8'))
-    if message['apikey'] != _apikey:
-        logging.error("Invalid apikey from socket: %s", message)
-        return
-    try:
-        if message['action'] != "sethook":
-            logging.debug("Message received is not supported")
-            return
+    while not JEEDOM_SOCKET_MESSAGE.empty():
+        logging.debug("Message received in socket JEEDOM_SOCKET_MESSAGE")
+        message = json.loads(JEEDOM_SOCKET_MESSAGE.get().decode('utf-8'))
+        if message.get('apikey') != _apikey:
+            logging.error("Invalid apikey from socket: %s", message)
+            continue
+        try:
+            action = message.get('action')
+            if action == "syncbaichuan":
+                if bc_push_manager is not None:
+                    bc_push_manager.sync_cameras(message.get('cameras') or [])
+                continue
 
-        cam_ip = message['cam_ip']
-        cam_onvif_port = message['cam_onvif_port']
-        cam_user = message['cam_user']
-        cam_pwd = message['cam_pwd']
-        logging.debug("Requested to set the webhook inside CAM IP=%s", cam_ip)
+            if action != "sethook":
+                logging.debug("Message received is not supported: %s", action)
+                continue
 
-        result_resp = {
-            "message": "subscription",
-            "ip": cam_ip,
-        }
+            cam_ip = message['cam_ip']
+            cam_onvif_port = message['cam_onvif_port']
+            cam_user = message['cam_user']
+            cam_pwd = message['cam_pwd']
+            logging.debug("Requested to set the webhook inside CAM IP=%s", cam_ip)
 
-        if check_onvif(cam_ip, int(cam_onvif_port)) is False:
-            logging.error(
-                "CAM IP=%s ONVIF port %s unreachable",
-                cam_ip,
-                cam_onvif_port,
-            )
-            result_resp['state'] = 0
-            result_resp['details'] = "Camera ONVIF port unreachable"
-        elif asyncio.run(subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd)):
-            logging.debug("Subscribe OK")
-            result_resp['state'] = 1
-        else:
-            logging.info("Unable to subscribe ONVIF event")
-            result_resp['state'] = 0
-            result_resp['details'] = "Unable to subscribe ONVIF event"
+            result_resp = {
+                "message": "subscription",
+                "ip": cam_ip,
+            }
 
-        jeedom_cnx.send_change_immediate(result_resp)
-    except Exception as e:
-        logging.error('Send command to demon error: %s', e)
+            if check_onvif(cam_ip, int(cam_onvif_port)) is False:
+                logging.error(
+                    "CAM IP=%s ONVIF port %s unreachable",
+                    cam_ip,
+                    cam_onvif_port,
+                )
+                result_resp['state'] = 0
+                result_resp['details'] = "Camera ONVIF port unreachable"
+            elif asyncio.run(subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd)):
+                logging.debug("Subscribe OK")
+                result_resp['state'] = 1
+            else:
+                logging.info("Unable to subscribe ONVIF event")
+                result_resp['state'] = 0
+                result_resp['details'] = "Unable to subscribe ONVIF event"
+
+            jeedom_cnx.send_change_immediate(result_resp)
+        except Exception as e:
+            logging.error('Send command to demon error: %s', e)
 
 
 async def subscribe_onvif(cam_ip, cam_onvif_port, cam_user, cam_pwd):
@@ -233,6 +240,11 @@ def shutdown():
         socket_server.close()
     except Exception:
         pass
+    if bc_push_manager is not None:
+        try:
+            bc_push_manager.stop_all()
+        except Exception:
+            pass
     stop_uvicorn()
     stop_go2rtc()
     logging.debug("Exit 0")
@@ -298,6 +310,7 @@ if args.webhook_port:
 
 jeedom_utils.set_log_level(_log_level)
 jeedom_cnx = jeedom_com(_apikey, _callback, _cycle)
+bc_push_manager = BaichuanPushManager(jeedom_cnx)
 
 logging.info('Start demond')
 logging.info('Log level: %s', _log_level)

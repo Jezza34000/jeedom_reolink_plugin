@@ -269,7 +269,10 @@ class reolink extends eqLogic {
     if ($host === '') {
       return false;
     }
-    $cnxtype = strtolower(strval($eqLogic->getConfiguration('cnxtype', 'https')));
+    $cnxtype = strtolower(trim(strval($eqLogic->getConfiguration('cnxtype', 'https'))));
+    if ($cnxtype === 'baichuan') {
+      return true;
+    }
     if ($cnxtype !== 'http' && $cnxtype !== 'https') {
       $cnxtype = 'https';
     }
@@ -2028,8 +2031,56 @@ class reolink extends eqLogic {
   }
 
 
+  private static $lastBaichuanSyncHash = null;
+
+  public static function syncBaichuanDaemonSubscriptions($force = false) {
+    $deamon_info = self::deamon_info();
+    if (($deamon_info['state'] ?? '') !== 'ok') {
+      return;
+    }
+    $cameras = array();
+    $seen = array();
+    $eqLogics = eqLogic::byType('reolink', true);
+    usort($eqLogics, function ($a, $b) {
+      return intval($a->isNvrParent()) - intval($b->isNvrParent());
+    });
+    foreach ($eqLogics as $camera) {
+      if (strtolower(trim(strval($camera->getConfiguration('cnxtype', '')))) !== 'baichuan') {
+        continue;
+      }
+      $contact = trim(strval($camera->getConfiguration('adresseip', '')));
+      if ($contact === '') {
+        continue;
+      }
+      $ip = filter_var($contact, FILTER_VALIDATE_IP) ? $contact : gethostbyname($contact);
+      $port = reolinkBaichuan::resolvePort($camera);
+      $key = $ip . ':' . $port;
+      if (isset($seen[$key])) {
+        continue;
+      }
+      $seen[$key] = true;
+      $cameras[] = array(
+        'ip' => $ip,
+        'port' => $port,
+        'user' => strval($camera->getConfiguration('login', 'admin')),
+        'pwd' => strval($camera->getConfiguration('password', '')),
+      );
+    }
+    $hash = md5(json_encode($cameras));
+    if (!$force && self::$lastBaichuanSyncHash === $hash) {
+      return;
+    }
+    self::$lastBaichuanSyncHash = $hash;
+    log::add('reolink', 'debug', 'Synchronisation démon Baichuan push (' . count($cameras) . ' caméra(s))');
+    reolink::sendToDaemon(array(
+      'action' => 'syncbaichuan',
+      'cameras' => $cameras,
+    ));
+  }
+
   // Fonction exécutée automatiquement toutes les 10 minutes par Jeedom
   public static function cron10() {
+    self::syncBaichuanDaemonSubscriptions(true);
     // Refresh motion detection subscription (1 souscription par couple IP:port ONVIF)
     $seen = array();
     $eqLogics = eqLogic::byType('reolink', true);
@@ -2144,6 +2195,8 @@ class reolink extends eqLogic {
       return false;
     }
     message::removeAll(__CLASS__, 'unableStartDeamon');
+    usleep(600000);
+    self::syncBaichuanDaemonSubscriptions(true);
     return true;
   }
 
@@ -2229,6 +2282,14 @@ class reolink extends eqLogic {
       throw new Exception(__('Le mot de passe ne peut pas être vide', __FILE__));
     }
     // Champs OK
+  }
+
+  public function postSave() {
+    self::syncBaichuanDaemonSubscriptions(false);
+  }
+
+  public function postRemove() {
+    self::syncBaichuanDaemonSubscriptions(true);
   }
 
 
@@ -2748,10 +2809,16 @@ class reolink extends eqLogic {
     $probeResults = reolink::probePayloads($cnx, $probeList);
 
     // Resolve dual families (channel/standalone only)
+    $isBaichuanOnly = (strtolower(trim(strval($camera->getConfiguration('cnxtype', '')))) === 'baichuan');
     $allowedLogical = array();
     $deniedLogical = array(
       'EvMotionAlarm' => true,
     );
+    if ($isBaichuanOnly) {
+      $deniedLogical['EvLastOnvifFull'] = true;
+      $deniedLogical['EvLastOnvifName'] = true;
+      $deniedLogical['EvLastOnvifState'] = true;
+    }
     if ($camera->isNvrParent()) {
       foreach ($dualFamilies as $fam) {
         foreach (array_merge($fam['v20'], $fam['v1']) as $lid) {
@@ -2987,10 +3054,25 @@ class reolink extends eqLogic {
         if ($lid === '' || $lid === null) {
           continue;
         }
-        // Never prune refresh (and channel ONVIF/motion infos on camera equipments)
+        // Never prune refresh (and supported motion/AI/ONVIF event infos on camera equipments)
         $keepAlways = array('refresh');
         if (!$camera->isNvrParent()) {
-          $keepAlways = array_merge($keepAlways, array('ChannelOnline', 'EvMotion', 'EvFaceDetect', 'EvPeopleDetect', 'EvVehicleDetect', 'EvDogCatDetect', 'EvPackageDetect', 'EvLastOnvifFull', 'EvLastOnvifName', 'EvLastOnvifState', 'MdState'));
+          $keepAlways = array_merge($keepAlways, array('ChannelOnline', 'EvMotion', 'MdState'));
+          if (!$isBaichuanOnly) {
+            $keepAlways = array_merge($keepAlways, array('EvLastOnvifFull', 'EvLastOnvifName', 'EvLastOnvifState'));
+          }
+          $aiKeepMap = array(
+            'EvFaceDetect' => 'supportAiFace',
+            'EvPeopleDetect' => 'supportAiPeople',
+            'EvVehicleDetect' => 'supportAiVehicle',
+            'EvDogCatDetect' => 'supportAiDogCat',
+            'EvPackageDetect' => 'supportAiPackage',
+          );
+          foreach ($aiKeepMap as $aiLid => $aiSubKey) {
+            if (reolink::isAbilityOk($devAbilityReturn, 'alarmMd', $aiSubKey)) {
+              $keepAlways[] = $aiLid;
+            }
+          }
           if (reolink::isAbilityOk($devAbilityReturn, 'doorbell')) {
             $keepAlways[] = 'EvVisitor';
           }
@@ -3094,12 +3176,14 @@ class reolink extends eqLogic {
     $ptzDirVer = intval($devAbilityReturn['ptzDirection']['ver'] ?? 0);
     $ptzTypeVer = intval($devAbilityReturn['ptzType']['ver'] ?? 0);
     $ptzCtrlVer = intval($devAbilityReturn['ptzCtrl']['ver'] ?? 0);
+    $hasPtzSpeed = (intval($devAbilityReturn['supportPtzSpeed']['ver'] ?? 0) > 0)
+      || ($ptzCtrlVer > 1 && (($ptzCtrlVer >> 6) & 1) === 1);
 
     if ($ptzDirVer === 2 || $ptzTypeVer === 7) {
       $rawList = 'Stop|Stop;Left|Gauche;Right|Droite';
       $helpKey = 'Déplacement PTZ manuel (gauche/droite/stop).';
       $valuesHelpKey = 'Stop = Stop, Left = Gauche, Right = Droite';
-    } elseif ($ptzDirVer === 1 || ($ptzCtrlVer > 1 && (($ptzCtrlVer >> 1) & 1) === 1)) {
+    } elseif (!$hasPtzSpeed && ($ptzDirVer === 1 || ($ptzCtrlVer > 1 && (($ptzCtrlVer >> 1) & 1) === 1))) {
       $rawList = 'Stop|Stop;Left|Gauche;Right|Droite;Up|Haut;Down|Bas';
       $helpKey = 'Déplacement PTZ manuel (haut/bas/gauche/droite/stop).';
       $valuesHelpKey = 'Stop = Stop, Left = Gauche, Right = Droite, Up = Haut, Down = Bas';

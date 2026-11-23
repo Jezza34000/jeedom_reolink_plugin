@@ -16,7 +16,50 @@ try {
         die();
     }
 
-    if (isset($result['message']) && (($result['message'] == "motion") || (strpos($result['message'], 'Ev') !== false))) {
+    if (isset($result['message']) && $result['message'] === 'baichuan_events') {
+        $plugin = plugin::byId('reolink');
+        $eqLogics = eqLogic::byType($plugin->getId(), true);
+        $events = is_array($result['events'] ?? null) ? $result['events'] : array();
+
+        foreach ($eqLogics as $eqLogic) {
+            $camera_contact_point = $eqLogic->getConfiguration('adresseip');
+            $camera_ip = filter_var($camera_contact_point, FILTER_VALIDATE_IP)
+              ? $camera_contact_point
+              : gethostbyname($camera_contact_point);
+            if ($camera_ip != ($result['ip'] ?? '')) {
+              continue;
+            }
+            $defCh = $eqLogic->getConfiguration('defined_channel', '');
+            $isNvr = $eqLogic->isNvrParent();
+            $multiChannel = ($defCh !== '' || $isNvr || $eqLogic->isChannelChild());
+            if ($isNvr && $defCh === '') {
+              continue;
+            }
+            $channel = ($defCh !== '') ? intval($defCh) : max(0, intval($eqLogic->getConfiguration('channelNum', 1)) - 1);
+
+            $matchedAny = false;
+            foreach ($events as $ev) {
+              $evCh = array_key_exists('channel', $ev) ? intval($ev['channel']) : null;
+              if ($evCh !== null && $multiChannel && $channel !== $evCh) {
+                continue;
+              }
+              $matchedAny = true;
+              $evName = strval($ev['event'] ?? '');
+              $evState = intval($ev['state'] ?? 0);
+              if ($evName === 'motion') {
+                $eqLogic->checkAndUpdateCmd('MdState', $evState);
+                $eqLogic->checkAndUpdateCmd('EvMotion', $evState);
+              } elseif ($evName === 'EvPrivacy') {
+                $eqLogic->checkAndUpdateCmd('SetPrivacyModeState', $evState);
+              } elseif (strpos($evName, 'Ev') !== false) {
+                $eqLogic->checkAndUpdateCmd($evName, $evState);
+              }
+            }
+            if ($matchedAny && $multiChannel) {
+              $eqLogic->checkAndUpdateCmd('ChannelOnline', 1);
+            }
+        }
+    } elseif (isset($result['message']) && (($result['message'] == "motion") || (strpos($result['message'], 'Ev') !== false))) {
         $plugin = plugin::byId('reolink');
         $eqLogics = eqLogic::byType($plugin->getId(), true);
         $cnxByIp = array();
@@ -47,13 +90,18 @@ try {
               continue;
             }
 
-            $eqLogic->checkAndUpdateCmd('EvLastOnvifName', $result['message']);
-            $eqLogic->checkAndUpdateCmd('EvLastOnvifState', $result['motionstate']);
-            $eqLogic->checkAndUpdateCmd('EvLastOnvifFull', $result['message'] . '-' . $result['motionstate']);
+            $isBaichuanPush = (($result['source'] ?? '') === 'baichuan');
+            if (!$isBaichuanPush) {
+              $eqLogic->checkAndUpdateCmd('EvLastOnvifName', $result['message']);
+              $eqLogic->checkAndUpdateCmd('EvLastOnvifState', $result['motionstate']);
+              $eqLogic->checkAndUpdateCmd('EvLastOnvifFull', $result['message'] . '-' . $result['motionstate']);
+            }
 
             if ($result['message'] == "motion") {
               $eqLogic->checkAndUpdateCmd('MdState', $result['motionstate']);
               $eqLogic->checkAndUpdateCmd('EvMotion', $result['motionstate']);
+            } elseif ($result['message'] == "EvPrivacy") {
+              $eqLogic->checkAndUpdateCmd('SetPrivacyModeState', intval($result['motionstate']));
             } elseif (strpos($result['message'], 'Ev') !== false) {
               $eqLogic->checkAndUpdateCmd($result['message'], $result['motionstate']);
             }
@@ -68,8 +116,8 @@ try {
               }
             }
 
-            $needAiPoll = ($camera_AI == "Oui" && $result['message'] == "motion");
-            $needMdPoll = ($multiChannel && $eventChannel === null && $result['message'] == "motion");
+            $needAiPoll = (!$isBaichuanPush && $camera_AI == "Oui" && $result['message'] == "motion");
+            $needMdPoll = (!$isBaichuanPush && $multiChannel && $eventChannel === null && $result['message'] == "motion");
             if (!$needAiPoll && !$needMdPoll) {
               if ($multiChannel) {
                 $eqLogic->checkAndUpdateCmd('ChannelOnline', 1);
