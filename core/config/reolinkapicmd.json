@@ -205,9 +205,10 @@
 		},
 		{
 			"abilityneed": "performance",
-			"name": "Débit codec (Kbps)",
+			"name": "Débit codec",
 			"type": "info",
 			"subtype": "numeric",
+			"Unite": "Kbps",
 			"configuration": {
 				"payload": "{\"cmd\":\"GetPerformance\"}",
 				"help": "Débit codec vidéo mesuré (info). Commande d'état (lecture seule).",
@@ -238,9 +239,10 @@
 		},
 		{
 			"abilityneed": "performance",
-			"name": "Débit réseau (Kbps)",
+			"name": "Débit réseau",
 			"type": "info",
 			"subtype": "numeric",
+			"Unite": "Kbps",
 			"configuration": {
 				"payload": "{\"cmd\":\"GetPerformance\"}",
 				"help": "Débit réseau de la caméra (info). Commande d'état (lecture seule).",
@@ -1079,7 +1081,7 @@
 			"subtype": "binary",
 			"configuration": {
 				"payload": "{\"cmd\":\"GetAutoFocus\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
-				"help": "Mise au point automatique. Attention : selon firmware, 0 peut signifier Activer. Commande d'état (lecture seule).",
+				"help": "État du verrouillage de la mise au point automatique lors d'un zoom optique (0 = autofocus actif après un zoom, 1 = mise au point verrouillée). Commande d'état (lecture seule).",
 				"valuesHelp": "0 = Autofocus activé, 1 = Autofocus désactivé (valeur API disable)"
 			},
 			"IsHistorized": 0,
@@ -1098,7 +1100,7 @@
 				"valueFrom": "SetAutoFocusState",
 				"actionapi": "SetAutoFocus",
 				"payload": "{\"AutoFocus\":{\"channel\":#CHANNEL#,\"disable\":#OPTSELECTEDINT#}}",
-				"help": "Mise au point automatique. Attention : selon firmware, 0 peut signifier Activer (certaines révisions matérielles verrouillent l'autofocus actif et renvoient rspCode -13).",
+				"help": "Autorise (0 = Activer) ou verrouille (1 = Désactiver) le recalcul automatique de la mise au point lors d'un changement de zoom optique (aucun mouvement immédiat à l'appui).",
 				"valuesHelp": "0 = Autofocus activé, 1 = Autofocus désactivé (sens API Reolink : disable)"
 			},
 			"IsHistorized": 0,
@@ -1194,6 +1196,22 @@
 		},
 		{
 			"abilityneed": "ptzCtrl",
+			"name": "Vitesse PTZ (valeur)",
+			"type": "info",
+			"subtype": "numeric",
+			"configuration": {
+				"minValue": 1,
+				"maxValue": 64,
+				"help": "Vitesse mémorisée pour les prochains déplacements PTZ manuels. Commande d'état (lecture seule).",
+				"valuesHelp": "Valeur numérique de 1 à 64 (lecture seule)"
+			},
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetSpeedState",
+			"scope": "channel"
+		},
+		{
+			"abilityneed": "ptzCtrl",
 			"name": "Vitesse",
 			"type": "action",
 			"subtype": "slider",
@@ -1203,7 +1221,8 @@
 				"maxValue": 64,
 				"setValue": 32,
 				"speedvalue": 32,
-				"help": "Vitesse de déplacement PTZ.",
+				"valueFrom": "SetSpeedState",
+				"help": "Règle la vitesse utilisée lors des prochains déplacements PTZ manuels (Haut, Bas, Gauche, Droite et diagonales).",
 				"valuesHelp": "Curseur de 1 à 64"
 			},
 			"IsHistorized": 0,
@@ -1334,11 +1353,11 @@
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "0|Ronde 0",
+				"listValue": "0|Ronde 1",
 				"actionapi": "PtzCtrl",
 				"payload": "{\"channel\":#CHANNEL#,\"op\":\"StartPatrol\",\"id\":#OPTSELECTEDINT#}",
 				"help": "Démarre une ronde PTZ.",
-				"valuesHelp": "0 = Ronde 0"
+				"valuesHelp": "0 = Ronde 1, 1 = Ronde 2, ..., 5 = Ronde 6 (identifiants API 0 à 5)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -2130,9 +2149,10 @@
 		},
 		{
 			"abilityneed": "enc",
-			"name": "Débit kbps (Stream1)",
+			"name": "Débit (Stream1)",
 			"type": "info",
 			"subtype": "numeric",
+			"Unite": "Kbps",
 			"configuration": {
 				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
 				"help": "Paramètre d'encodage vidéo (flux main/sub). Commande d'état (lecture seule).",
@@ -2175,9 +2195,10 @@
 		},
 		{
 			"abilityneed": "enc",
-			"name": "Débit kbps (Stream2)",
+			"name": "Débit (Stream2)",
 			"type": "info",
 			"subtype": "numeric",
+			"Unite": "Kbps",
 			"configuration": {
 				"payload": "{\"cmd\":\"GetEnc\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
 				"help": "Paramètre d'encodage vidéo (flux main/sub). Commande d'état (lecture seule).",
@@ -2602,7 +2623,6 @@
 			"name": "Retour automatique au point de garde (état)",
 			"type": "info",
 			"subtype": "binary",
-			"Unite": "s",
 			"configuration": {
 				"payload": "{\"cmd\":\"GetPtzGuard\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
 				"help": "Information : Retour automatique au point de garde (état). Commande d'état (lecture seule).",
@@ -3121,7 +3141,7 @@
 		},
 		{
 			"abilityneed": "enc",
-			"name": "Bitrate Stream1",
+			"name": "Débit Stream1",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
@@ -3197,7 +3217,7 @@
 		},
 		{
 			"abilityneed": "enc",
-			"name": "Bitrate Stream2",
+			"name": "Débit Stream2",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {

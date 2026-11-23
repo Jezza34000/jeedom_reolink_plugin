@@ -6,6 +6,7 @@
 
 # 23/11/2026
 
+- Ergonomie, Unités & Rondes PTZ (#136) : suppression de l'unité erronée sur `SetAutoReturnPtzGuardPointState`, ajout des unités `Kbps` et harmonisation `Débit Stream1/2`, numérotation d'affichage `Ronde 1` à `Ronde 6` (clés `0..5` préservées), ajout de l'état `SetSpeedState` lié au curseur `SetSpeed` et clarification de l'aide `SetAutoFocus`
 - Commandes ISP, Encodage & ONVIF (#136) : correction des valeurs API `SetAntiFlicker` (`Other`), `SetExposure` (`Anti-Smearing`) et `SetBackLight` (`ispBackLight`) avec filtrage dynamique via `GetIsp` (`action=1`), remontée cron des codecs H.264 fixes (`SetEncodingst1State`/`SetEncodingst2State`) et retrait des sélecteurs de codec fixes/vides, suppression de la commande morte `EvMotionAlarm` et restriction de `EvVisitor` aux sonnettes (`Doorbell`)
 - UID caméra autonome (#137) : correction de la requête `GetP2p`, prise en charge des caméras autonomes avec canal `0` renseigné et fallback Baichuan `cmd 114`
 

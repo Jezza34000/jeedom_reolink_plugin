@@ -32,7 +32,7 @@ if (!is_object($camera)) {
 <div class="input-group" style="width:100%;margin-bottom:10px;">
   <span class="input-group-addon" style="width:140px;">{{Ronde}}</span>
   <select class="form-control" id="sel_patrolId">
-    <?php for ($i = 0; $i <= 5; $i++) { echo '<option value="'.$i.'">{{Ronde}} '.$i.'</option>'; } ?>
+    <?php for ($i = 0; $i <= 5; $i++) { echo '<option value="'.$i.'">{{Ronde}} '.($i + 1).'</option>'; } ?>
   </select>
   <span class="input-group-btn" style="width:auto;white-space:nowrap;">
     <input type="hidden" id="cb_patrolEnable" value="0">
