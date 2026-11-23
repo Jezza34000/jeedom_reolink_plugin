@@ -916,6 +916,24 @@ class reolinkBaichuan {
   }
 
   /**
+   * Read device UID via Baichuan cmd 114 (fallback when HTTP GetP2p is restricted or omitted).
+   * @return string|null
+   */
+  public function getUid() {
+    try {
+      $this->ensureLogin();
+      $xml = $this->sendRaw(114, null, '', '', 'aes', '1464');
+      $uid = trim(strval($this->xmlValue($xml, 'uid') ?? ''));
+      return ($uid !== '') ? $uid : null;
+    } catch (Exception $e) {
+      log::add('reolink', 'debug', 'Baichuan getUid: ' . $e->getMessage());
+      return null;
+    } finally {
+      $this->logout();
+    }
+  }
+
+  /**
    * Read channel standby/sleep state via Baichuan cmd 145 (ChannelInfoList).
    * @return bool|null
    */
