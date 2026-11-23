@@ -106,7 +106,16 @@ class reolink extends eqLogic {
 
   public function isChannelChild() {
     $defCh = $this->getConfiguration('defined_channel', '');
-    return ($defCh !== '' && $defCh !== null);
+    if ($defCh === '' || $defCh === null) {
+      return false;
+    }
+    // Single-channel standalone IPC where user entered 0 in defined_channel is not an NVR child
+    $hostType = strtoupper(strval($this->getConfiguration('hostExactType', '')));
+    $hostChannels = intval($this->getConfiguration('hostChannelNum', 0));
+    if ($hostType !== '' && !in_array($hostType, self::MULTI_HOST_TYPES, true) && $hostChannels === 1 && intval($defCh) === 0) {
+      return false;
+    }
+    return true;
   }
 
   public function isNvrParent() {
@@ -498,7 +507,7 @@ class reolink extends eqLogic {
 
     $batch = array(
       array('cmd' => 'GetDevInfo'),
-      array('cmd' => 'GetP2P'),
+      array('cmd' => 'GetP2p'),
       array('cmd' => 'GetLocalLink'),
       array('cmd' => 'GetNetPort'),
     );
@@ -522,6 +531,8 @@ class reolink extends eqLogic {
     $camera->setConfiguration('hostModel', $devInfo['model'] ?? '');
     $camera->setConfiguration('hostName', $devInfo['name'] ?? '');
     $camera->setConfiguration('hostFirmVer', $devInfo['firmVer'] ?? '');
+    // Re-evaluate channel child status now that hostExactType/hostChannelNum are known
+    $isChannel = $camera->isChannelChild();
 
     if ($camera->isNvrParent() || $camera->isStandaloneCamera()) {
       foreach ($devInfo as $key => $value) {
@@ -544,13 +555,22 @@ class reolink extends eqLogic {
         $byCmd[$item['cmd']] = $item;
       }
     }
-    // API may answer GetChannelstatus with that exact casing
+    // API may answer GetChannelstatus / GetP2p with either casing
     if (!isset($byCmd['GetChannelstatus']) && isset($byCmd['GetChannelStatus'])) {
       $byCmd['GetChannelstatus'] = $byCmd['GetChannelStatus'];
     }
-
-    if (isset($byCmd['GetP2P']['value']['P2p']['uid']) && !$isChannel) {
-      $camera->setConfiguration('uid', $byCmd['GetP2P']['value']['P2p']['uid']);
+    $p2pItem = $byCmd['GetP2p'] ?? ($byCmd['GetP2P'] ?? null);
+    $hostUid = trim(strval($p2pItem['value']['P2p']['uid'] ?? ($p2pItem['value']['P2P']['uid'] ?? '')));
+    if ($hostUid !== '' && !$isChannel) {
+      $camera->setConfiguration('uid', $hostUid);
+    } elseif (!$isChannel && trim(strval($camera->getConfiguration('uid', ''))) === '') {
+      $bcUid = reolinkBaichuan::fromEqLogic($camera);
+      if (is_object($bcUid)) {
+        $fallbackUid = $bcUid->getUid();
+        if ($fallbackUid !== null && $fallbackUid !== '') {
+          $camera->setConfiguration('uid', $fallbackUid);
+        }
+      }
     }
     if (isset($byCmd['GetLocalLink']['value']['LocalLink']['activeLink'])) {
       $camera->setConfiguration('linkconnection', $byCmd['GetLocalLink']['value']['LocalLink']['activeLink']);

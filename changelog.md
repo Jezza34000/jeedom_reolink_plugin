@@ -1,5 +1,9 @@
 # Change log
 
+23/11/2026
+
+- UID caméra autonome (#137) : correction de la requête `GetP2p` (casse officielle IPC), prise en charge des caméras autonomes avec canal `0` renseigné et fallback Baichuan `cmd 114` lorsque le compte HTTP est restreint
+
 22/11/2026
 
 - Actions V20 sur caméras autonomes vs NVR : envoie et lit automatiquement `enable` (`0`/`1`) sur les caméras autonomes (`SetEmailV20`, `SetFtpV20`, `SetPushV20`, `SetRecV20`, `SetBuzzerAlarmV20`) tout en conservant `scheduleEnable` par canal derrière un NVR, sans recréation de commandes requise (retours Community)
