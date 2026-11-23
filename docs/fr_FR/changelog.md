@@ -6,6 +6,7 @@
 
 # 23/11/2026
 
+- Commandes ISP, Encodage & ONVIF (#136) : correction des valeurs API `SetAntiFlicker` (`Other`), `SetExposure` (`Anti-Smearing`) et `SetBackLight` (`ispBackLight`) avec filtrage dynamique via `GetIsp` (`action=1`), remontée cron des codecs H.264 fixes (`SetEncodingst1State`/`SetEncodingst2State`) et retrait des sélecteurs de codec fixes/vides, suppression de la commande morte `EvMotionAlarm` et restriction de `EvVisitor` aux sonnettes (`Doorbell`)
 - UID caméra autonome (#137) : correction de la requête `GetP2p`, prise en charge des caméras autonomes avec canal `0` renseigné et fallback Baichuan `cmd 114`
 
 # 22/11/2026

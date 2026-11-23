@@ -903,7 +903,7 @@ class reolink extends eqLogic {
     $ptzPresetPermit = intval($deviceAbility['ptzPreset']['permit'] ?? 0);
     if (($ptzPatrolPermit == 0 || $ptzPatrolVer <= 0) && $ptzPresetPermit != 0) {
       $patrol = $reolinkConn->SendCMD('[{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
-      if (is_array($patrol) && isset($patrol[0]['value']['PtzPatrol']) && is_array($patrol[0]['value']['PtzPatrol'])) {
+      if (is_array($patrol) && !empty($patrol[0]['value']['PtzPatrol']) && is_array($patrol[0]['value']['PtzPatrol'])) {
         $deviceAbility['ptzPatrol'] = array(
           'permit' => max(1, $ptzPatrolPermit),
           'ver' => max(1, $ptzPatrolVer),
@@ -999,6 +999,21 @@ class reolink extends eqLogic {
       && isset($deviceAbility['supportRemoteUpgrade'])
       && intval($deviceAbility['supportRemoteUpgrade']['permit'] ?? 0) > 0) {
       $deviceAbility['upgrade'] = $deviceAbility['supportRemoteUpgrade'];
+    }
+
+    // Doorbell visitor event ability (Doorbell WiFi / PoE / Battery)
+    $modelStr = strval($camera->getConfiguration('model', ''));
+    $isDoorbell = (stripos($modelStr, 'Doorbell') !== false)
+      || (intval($deviceAbility['doorbellVersion']['ver'] ?? 0) > 0)
+      || (intval($deviceAbility['visitor']['ver'] ?? 0) > 0);
+    $deviceAbility['doorbell'] = array('permit' => $isDoorbell ? 4 : 0, 'ver' => $isDoorbell ? 1 : 0);
+
+    // Legacy firmwares without explicit recPreRecord / ispBackLight keys: defer to GetRec / GetIsp probes
+    if (!isset($deviceAbility['recPreRecord']) && isset($deviceAbility['sdCard'])) {
+      $deviceAbility['recPreRecord'] = $deviceAbility['sdCard'];
+    }
+    if (!isset($deviceAbility['ispBackLight']) && isset($deviceAbility['isp'])) {
+      $deviceAbility['ispBackLight'] = $deviceAbility['isp'];
     }
 
     log::add('reolink', 'debug', 'GetAbility à récupérer : ' . count($deviceAbility) . ' items (canal ' . $channel . ')');
@@ -1684,21 +1699,25 @@ class reolink extends eqLogic {
               $camcmd->checkAndUpdateCmd('SetResolutionst1State', $enc['mainStream']['size']);
               $camcmd->checkAndUpdateCmd('SetFPSst1State', $enc['mainStream']['frameRate']);
               $camcmd->checkAndUpdateCmd('SetBitratest1State', $enc['mainStream']['bitRate']);
-              if (isset($enc['mainStream']['vType'])) {
-                $camcmd->checkAndUpdateCmd('SetEncodingst1State', $enc['mainStream']['vType']);
+              $vType1 = $enc['mainStream']['vType'] ?? null;
+              if ($vType1 === null || $vType1 === '') {
+                $vType1 = 'h264';
               }
+              $camcmd->checkAndUpdateCmd('SetEncodingst1State', $vType1);
             }
             if (isset($enc['subStream'])) {
               $camcmd->checkAndUpdateCmd('SetResolutionst2State', $enc['subStream']['size']);
               $camcmd->checkAndUpdateCmd('SetFPSst2State', $enc['subStream']['frameRate']);
               $camcmd->checkAndUpdateCmd('SetBitratest2State', $enc['subStream']['bitRate']);
-              if (isset($enc['subStream']['vType'])) {
-                $camcmd->checkAndUpdateCmd('SetEncodingst2State', $enc['subStream']['vType']);
+              $vType2 = $enc['subStream']['vType'] ?? null;
+              if ($vType2 === null || $vType2 === '') {
+                $vType2 = 'h264';
               }
+              $camcmd->checkAndUpdateCmd('SetEncodingst2State', $vType2);
             }
             // Auto-fill dynamic SetEnc lists when missing (existing equipments)
             $needEncLists = false;
-            foreach (array('SetResolutionst1', 'SetEncodingst1', 'SetFPSst1', 'SetBitratest1') as $encLid) {
+            foreach (array('SetResolutionst1', 'SetFPSst1', 'SetBitratest1') as $encLid) {
               $encCmd = $camcmd->getCmd(null, $encLid);
               if (is_object($encCmd) && strval($encCmd->getConfiguration('listValue', '')) === '') {
                 $needEncLists = true;
@@ -2232,6 +2251,9 @@ class reolink extends eqLogic {
     $staticListUpdates = array(
       'SetPTZmoove' => 'Stop|Stop;Left|Gauche;Right|Droite;Up|Haut;Down|Bas;LeftUp|Haut gauche;RightUp|Haut droite;LeftDown|Bas gauche;RightDown|Bas droite',
       'SetIrLights' => 'Auto|Auto;On|Activer;Off|Désactiver',
+      'SetAntiFlicker' => 'Other|Autre;50HZ|50Hz;60HZ|60Hz;Off|Désactiver',
+      'SetExposure' => 'Auto|Auto;LowNoise|Faible bruit;Anti-Smearing|Anti-smear;Manual|Manuel',
+      'SetBackLight' => 'Off|Désactiver;BackLightControl|Compensation contre-jour (BLC);DynamicRangeControl|Plage dynamique (DRC)',
     );
     foreach ($staticListUpdates as $logicalId => $rawList) {
       $cmd = $this->getCmd(null, $logicalId);
@@ -2662,7 +2684,9 @@ class reolink extends eqLogic {
 
     // Resolve dual families (channel/standalone only)
     $allowedLogical = array();
-    $deniedLogical = array();
+    $deniedLogical = array(
+      'EvMotionAlarm' => true,
+    );
     if ($camera->isNvrParent()) {
       foreach ($dualFamilies as $fam) {
         foreach (array_merge($fam['v20'], $fam['v1']) as $lid) {
@@ -2691,9 +2715,10 @@ class reolink extends eqLogic {
         foreach ($fam['v1'] as $lid) {
           $deniedLogical[$lid] = true;
         }
-        // preRec only if present in GetRecV20 value
+        // preRec only if present in GetRecV20 value and recPreRecord ability allows it
         if ($abilityKey === 'sdCard') {
-          $hasPreRec = isset($probeResults[$p20]['value']['Rec']['preRec']);
+          $hasPreRec = isset($probeResults[$p20]['value']['Rec']['preRec'])
+            && reolink::isAbilityOk($devAbilityReturn, 'sdCard', 'recPreRecord');
           if (!$hasPreRec) {
             $deniedLogical['SetPreRecordStateV20'] = true;
             $deniedLogical['SetPreRecordV20'] = true;
@@ -2708,7 +2733,8 @@ class reolink extends eqLogic {
           $deniedLogical[$lid] = true;
         }
         if ($abilityKey === 'sdCard') {
-          $hasPreRec = isset($probeResults[$p1]['value']['Rec']['preRec']);
+          $hasPreRec = isset($probeResults[$p1]['value']['Rec']['preRec'])
+            && reolink::isAbilityOk($devAbilityReturn, 'sdCard', 'recPreRecord');
           if (!$hasPreRec) {
             $deniedLogical['SetPreRecordState'] = true;
             $deniedLogical['SetPreRecord'] = true;
@@ -2725,12 +2751,26 @@ class reolink extends eqLogic {
     $unsupportedPayloads = array();
     $cmd_order = 0;
 
+    $ispProbe = null;
     if (!$camera->isNvrParent()) {
-      $ispProbe = $cnx->SendCMD('[{"cmd":"GetIsp","action":0,"param":{"channel":' . intval($channel) . '}}]');
-      $hasHdr = is_array($ispProbe) && array_key_exists('hdr', $ispProbe[0]['value']['Isp'] ?? array());
+      $ispProbe = $cnx->SendCMD('[{"cmd":"GetIsp","action":1,"param":{"channel":' . intval($channel) . '}}]');
+      $ispValue = $ispProbe[0]['value']['Isp'] ?? array();
+      $ispRange = $ispProbe[0]['range']['Isp'] ?? array();
+      $hasHdr = is_array($ispProbe) && array_key_exists('hdr', $ispValue);
       if (!$hasHdr) {
         $deniedLogical['SetHdrState'] = true;
         $deniedLogical['SetHdr'] = true;
+      }
+      $backLightSupported = reolink::isAbilityOk($devAbilityReturn, 'ispBackLight');
+      if (is_array($ispRange) && isset($ispRange['backLight']) && is_array($ispRange['backLight']) && count($ispRange['backLight']) <= 1) {
+        $backLightSupported = false;
+      }
+      if (!array_key_exists('backLight', $ispValue) && (!is_array($ispRange) || !isset($ispRange['backLight']))) {
+        $backLightSupported = false;
+      }
+      if (!$backLightSupported) {
+        $deniedLogical['SetBackLightState'] = true;
+        $deniedLogical['SetBackLight'] = true;
       }
     }
 
@@ -2871,7 +2911,10 @@ class reolink extends eqLogic {
         // Never prune refresh (and channel ONVIF/motion infos on camera equipments)
         $keepAlways = array('refresh');
         if (!$camera->isNvrParent()) {
-          $keepAlways = array_merge($keepAlways, array('ChannelOnline', 'EvMotion', 'EvFaceDetect', 'EvPeopleDetect', 'EvVehicleDetect', 'EvDogCatDetect', 'EvPackageDetect', 'EvMotionAlarm', 'EvVisitor', 'EvLastOnvifFull', 'EvLastOnvifName', 'EvLastOnvifState', 'MdState'));
+          $keepAlways = array_merge($keepAlways, array('ChannelOnline', 'EvMotion', 'EvFaceDetect', 'EvPeopleDetect', 'EvVehicleDetect', 'EvDogCatDetect', 'EvPackageDetect', 'EvLastOnvifFull', 'EvLastOnvifName', 'EvLastOnvifState', 'MdState'));
+          if (reolink::isAbilityOk($devAbilityReturn, 'doorbell')) {
+            $keepAlways[] = 'EvVisitor';
+          }
         }
         if (in_array($lid, $keepAlways, true)) {
           continue;
@@ -2932,7 +2975,8 @@ class reolink extends eqLogic {
     }
 
     if (!$camera->isNvrParent()) {
-      reolink::applyEncListValues($camera, $cnx, $channel);
+      reolink::applyEncListValues($camera, $cnx, $channel, $pruneUnsupported);
+      reolink::applyIspRanges($camera, $ispProbe, $cnx, $channel);
       reolink::applyZoomFocusRanges($camera, $cnx, $channel);
     }
     $cnx->batteryChannelMode = false;
@@ -2944,7 +2988,7 @@ class reolink extends eqLogic {
     return $cmd_order;
   }
 
-  public static function applyEncListValues($camera, $cnx, $channel) {
+  public static function applyEncListValues($camera, $cnx, $channel, $pruneSingleCodec = false) {
     if (!is_object($camera) || !is_object($cnx)) {
       return;
     }
@@ -3001,15 +3045,37 @@ class reolink extends eqLogic {
       }
       return implode(';', $out);
     };
+    $codecTargets = array(
+      'SetEncodingst1' => $vt1,
+      'SetEncodingst2' => $vt2,
+    );
+    foreach ($codecTargets as $codecLid => $codecSet) {
+      $codecCmd = $camera->getCmd(null, $codecLid);
+      if (!is_object($codecCmd)) {
+        continue;
+      }
+      if (count($codecSet) <= 1) {
+        if ($pruneSingleCodec && !reolink::isCmdUsedExternally($codecCmd)) {
+          log::add('reolink', 'info', 'Sélecteur codec fixe supprimé : ' . $codecCmd->getName() . ' (' . $codecLid . ')');
+          $codecCmd->remove();
+          continue;
+        }
+        $fallbackCodec = !empty($codecSet) ? $toList($codecSet) : 'h264|h264';
+        if (strval($codecCmd->getConfiguration('listValue', '')) !== $fallbackCodec) {
+          $codecCmd->setConfiguration('listValue', $fallbackCodec);
+          $codecCmd->save();
+        }
+      }
+    }
     $map = array(
       'SetResolutionst1' => $toList($sizes1),
       'SetFPSst1' => $toList($fps1),
       'SetBitratest1' => $toList($br1),
-      'SetEncodingst1' => $toList($vt1),
+      'SetEncodingst1' => (count($vt1) > 1) ? $toList($vt1) : '',
       'SetResolutionst2' => $toList($sizes2),
       'SetFPSst2' => $toList($fps2),
       'SetBitratest2' => $toList($br2),
-      'SetEncodingst2' => $toList($vt2),
+      'SetEncodingst2' => (count($vt2) > 1) ? $toList($vt2) : '',
     );
     foreach ($map as $lid => $list) {
       if ($list === '') {
@@ -3021,6 +3087,75 @@ class reolink extends eqLogic {
       }
       $cmd->setConfiguration('listValue', $list);
       $cmd->save();
+    }
+  }
+
+  public static function applyIspRanges($camera, $ispProbe = null, $cnx = null, $channel = 0) {
+    if (!is_object($camera)) {
+      return;
+    }
+    if (!is_array($ispProbe) || !isset($ispProbe[0]['range']['Isp'])) {
+      if (!is_object($cnx)) {
+        return;
+      }
+      $ispProbe = $cnx->SendCMD('[{"cmd":"GetIsp","action":1,"param":{"channel":' . intval($channel) . '}}]');
+    }
+    if (!is_array($ispProbe) || !isset($ispProbe[0]['range']['Isp']) || !is_array($ispProbe[0]['range']['Isp'])) {
+      return;
+    }
+    $ispRange = $ispProbe[0]['range']['Isp'];
+    $defaultLabels = array(
+      'Other' => __('Autre', __FILE__),
+      '50HZ' => __('50Hz', __FILE__),
+      '60HZ' => __('60Hz', __FILE__),
+      'Off' => __('Désactiver', __FILE__),
+      'Auto' => __('Auto', __FILE__),
+      'LowNoise' => __('Faible bruit', __FILE__),
+      'Anti-Smearing' => __('Anti-smear', __FILE__),
+      'Manual' => __('Manuel', __FILE__),
+      'BackLightControl' => __('Compensation contre-jour (BLC)', __FILE__),
+      'DynamicRangeControl' => __('Plage dynamique (DRC)', __FILE__),
+      'Color' => __('Couleur', __FILE__),
+      'Black&White' => __('Noir&Blanc', __FILE__),
+    );
+    $fields = array(
+      'SetAntiFlicker' => 'antiFlicker',
+      'SetExposure' => 'exposure',
+      'SetBackLight' => 'backLight',
+      'SetDayNight' => 'dayNight',
+    );
+    foreach ($fields as $lid => $rangeKey) {
+      if (!isset($ispRange[$rangeKey]) || !is_array($ispRange[$rangeKey]) || empty($ispRange[$rangeKey])) {
+        continue;
+      }
+      $cmd = $camera->getCmd(null, $lid);
+      if (!is_object($cmd)) {
+        continue;
+      }
+      $existingLabels = array();
+      foreach (explode(';', strval($cmd->getConfiguration('listValue', ''))) as $pair) {
+        $bits = explode('|', $pair, 2);
+        if (count($bits) === 2 && $bits[0] !== '') {
+          $existingLabels[$bits[0]] = $bits[1];
+        }
+      }
+      $out = array();
+      foreach ($ispRange[$rangeKey] as $allowedVal) {
+        $valStr = strval($allowedVal);
+        if ($valStr === '') {
+          continue;
+        }
+        $label = $existingLabels[$valStr] ?? ($defaultLabels[$valStr] ?? $valStr);
+        $out[] = $valStr . '|' . $label;
+      }
+      if (empty($out)) {
+        continue;
+      }
+      $newList = implode(';', $out);
+      if (strval($cmd->getConfiguration('listValue', '')) !== $newList) {
+        $cmd->setConfiguration('listValue', $newList);
+        $cmd->save();
+      }
     }
   }
 

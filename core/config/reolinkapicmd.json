@@ -148,21 +148,7 @@
 			}
 		},
 		{
-			"abilityneed": "alarmMd",
-			"name": "event MotionAlarm (etat)",
-			"type": "info",
-			"subtype": "binary",
-			"IsHistorized": 0,
-			"isVisible": 1,
-			"logicalId": "EvMotionAlarm",
-			"scope": "channel",
-			"configuration": {
-				"help": "Événement ONVIF : alarme mouvement.",
-				"valuesHelp": "0 = Alarme mouvement inactive, 1 = Alarme mouvement active"
-			}
-		},
-		{
-			"abilityneed": "alarmMd",
+			"abilityneed": "doorbell",
 			"name": "event Visitor (etat)",
 			"type": "info",
 			"subtype": "binary",
@@ -447,6 +433,7 @@
 		},
 		{
 			"abilityneed": "sdCard",
+			"subability": "recPreRecord",
 			"iastate": 0,
 			"name": "Enregistrement avant détection (état)",
 			"type": "info",
@@ -463,6 +450,7 @@
 		},
 		{
 			"abilityneed": "sdCard",
+			"subability": "recPreRecord",
 			"iastate": 0,
 			"name": "Enregistrement avant détection",
 			"type": "action",
@@ -1486,7 +1474,7 @@
 			"scope": "channel"
 		},
 		{
-			"abilityneed": "isp",
+			"abilityneed": "ispBackLight",
 			"name": "Rétroéclairage (état)",
 			"type": "info",
 			"subtype": "string",
@@ -1571,12 +1559,12 @@
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "Outdoor|Extérieur;50HZ|50Hz;60HZ|60Hz;Off|Désactiver",
+				"listValue": "Other|Autre;50HZ|50Hz;60HZ|60Hz;Off|Désactiver",
 				"valueFrom": "SetAntiFlickerState",
 				"actionapi": "SetIsp",
 				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"antiFlicker\":#OPTSELECTEDSTR#}}",
 				"help": "Anti-scintillement secteur (50/60 Hz).",
-				"valuesHelp": "Outdoor = Extérieur, 50HZ = 50Hz, 60HZ = 60Hz, Off = Désactiver"
+				"valuesHelp": "Other = Autre, 50HZ = 50Hz, 60HZ = 60Hz, Off = Désactiver"
 			},
 			"IsHistorized": 0,
 			"isVisible": 0,
@@ -3355,12 +3343,12 @@
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "Auto|Auto;LowNoise|Faible bruit;AntiSmear|Anti-smear;Manual|Manuel",
+				"listValue": "Auto|Auto;LowNoise|Faible bruit;Anti-Smearing|Anti-smear;Manual|Manuel",
 				"valueFrom": "SetExposureState",
 				"actionapi": "SetIsp",
 				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"exposure\":#OPTSELECTEDSTR#}}",
 				"help": "Mode / valeur d'exposition.",
-				"valuesHelp": "Auto = Auto, LowNoise = Faible bruit, AntiSmear = Anti-smear, Manual = Manuel"
+				"valuesHelp": "Auto = Auto, LowNoise = Faible bruit, Anti-Smearing = Anti-smear, Manual = Manuel"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
@@ -3368,18 +3356,18 @@
 			"scope": "channel"
 		},
 		{
-			"abilityneed": "isp",
+			"abilityneed": "ispBackLight",
 			"name": "Rétroéclairage",
 			"type": "action",
 			"subtype": "select",
 			"configuration": {
 				"option": "select",
-				"listValue": "Off|Off;On|On;Auto|Auto",
+				"listValue": "Off|Désactiver;BackLightControl|Compensation contre-jour (BLC);DynamicRangeControl|Plage dynamique (DRC)",
 				"valueFrom": "SetBackLightState",
 				"actionapi": "SetIsp",
 				"payload": "{\"Isp\":{\"channel\":#CHANNEL#,\"backLight\":#OPTSELECTEDSTR#}}",
 				"help": "Compensation de contre-jour.",
-				"valuesHelp": "Off = Off, On = On, Auto = Auto"
+				"valuesHelp": "Off = Désactiver, BackLightControl = Compensation contre-jour (BLC), DynamicRangeControl = Plage dynamique (DRC)"
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
