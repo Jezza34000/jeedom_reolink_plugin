@@ -2267,7 +2267,6 @@ class reolink extends eqLogic {
     }
 
     $staticListUpdates = array(
-      'SetPTZmoove' => 'Stop|Stop;Left|Gauche;Right|Droite;Up|Haut;Down|Bas;LeftUp|Haut gauche;RightUp|Haut droite;LeftDown|Bas gauche;RightDown|Bas droite',
       'SetIrLights' => 'Auto|Auto;On|Activer;Off|Désactiver',
       'SetAntiFlicker' => 'Other|Autre;50HZ|50Hz;60HZ|60Hz;Off|Désactiver',
       'SetExposure' => 'Auto|Auto;LowNoise|Faible bruit;Anti-Smearing|Anti-smear;Manual|Manuel',
@@ -2904,18 +2903,20 @@ class reolink extends eqLogic {
           $cmd->setConfiguration('payload', $payloadTpl);
           $dirty = true;
         }
-        $helpTpl = strval($command['configuration']['help'] ?? '');
-        if ($helpTpl !== '') {
-          $cmd->setConfiguration('help', __($helpTpl, __FILE__));
-          $dirty = true;
-        }
-        $valuesHelpTpl = strval($command['configuration']['valuesHelp'] ?? '');
-        if ($valuesHelpTpl !== '') {
-          $cmd->setConfiguration('valuesHelp', __($valuesHelpTpl, __FILE__));
-          $dirty = true;
+        if ($logicalId !== 'SetPTZmoove') {
+          $helpTpl = strval($command['configuration']['help'] ?? '');
+          if ($helpTpl !== '' && strval($cmd->getConfiguration('help', '')) !== __($helpTpl, __FILE__)) {
+            $cmd->setConfiguration('help', __($helpTpl, __FILE__));
+            $dirty = true;
+          }
+          $valuesHelpTpl = strval($command['configuration']['valuesHelp'] ?? '');
+          if ($valuesHelpTpl !== '' && strval($cmd->getConfiguration('valuesHelp', '')) !== __($valuesHelpTpl, __FILE__)) {
+            $cmd->setConfiguration('valuesHelp', __($valuesHelpTpl, __FILE__));
+            $dirty = true;
+          }
         }
         $dynamicSelects = array(
-          'SetPtzByPreset', 'StartPtzPatrol', 'SetPTZpatrol',
+          'SetPTZmoove', 'SetPtzByPreset', 'StartPtzPatrol', 'SetPTZpatrol',
           'SetResolutionst1', 'SetFPSst1', 'SetBitratest1', 'SetEncodingst1',
           'SetResolutionst2', 'SetFPSst2', 'SetBitratest2', 'SetEncodingst2',
         );
@@ -3056,6 +3057,7 @@ class reolink extends eqLogic {
       reolink::applyEncListValues($camera, $cnx, $channel, $pruneUnsupported);
       reolink::applyIspRanges($camera, $ispProbe, $cnx, $channel);
       reolink::applyZoomFocusRanges($camera, $cnx, $channel);
+      reolink::applyPtzDirectionListValues($camera, $devAbilityReturn);
       $speedInfo = $camera->getCmd(null, 'SetSpeedState');
       if (is_object($speedInfo) && strval($speedInfo->execCmd()) === '') {
         $speedAct = $camera->getCmd(null, 'SetSpeed');
@@ -3079,6 +3081,53 @@ class reolink extends eqLogic {
     $camera->setConfiguration('needs_cmd_resync', 0);
     $camera->save();
     return $cmd_order;
+  }
+
+  public static function applyPtzDirectionListValues($camera, $devAbilityReturn) {
+    if (!is_object($camera) || !is_array($devAbilityReturn)) {
+      return;
+    }
+    $ptzCmd = $camera->getCmd(null, 'SetPTZmoove');
+    if (!is_object($ptzCmd)) {
+      return;
+    }
+    $ptzDirVer = intval($devAbilityReturn['ptzDirection']['ver'] ?? 0);
+    $ptzTypeVer = intval($devAbilityReturn['ptzType']['ver'] ?? 0);
+    $ptzCtrlVer = intval($devAbilityReturn['ptzCtrl']['ver'] ?? 0);
+
+    if ($ptzDirVer === 2 || $ptzTypeVer === 7) {
+      $rawList = 'Stop|Stop;Left|Gauche;Right|Droite';
+      $helpKey = 'Déplacement PTZ manuel (gauche/droite/stop).';
+      $valuesHelpKey = 'Stop = Stop, Left = Gauche, Right = Droite';
+    } elseif ($ptzDirVer === 1 || ($ptzCtrlVer > 1 && (($ptzCtrlVer >> 1) & 1) === 1)) {
+      $rawList = 'Stop|Stop;Left|Gauche;Right|Droite;Up|Haut;Down|Bas';
+      $helpKey = 'Déplacement PTZ manuel (haut/bas/gauche/droite/stop).';
+      $valuesHelpKey = 'Stop = Stop, Left = Gauche, Right = Droite, Up = Haut, Down = Bas';
+    } else {
+      $rawList = 'Stop|Stop;Left|Gauche;Right|Droite;Up|Haut;Down|Bas;LeftUp|Haut gauche;RightUp|Haut droite;LeftDown|Bas gauche;RightDown|Bas droite';
+      $helpKey = 'Déplacement PTZ manuel (haut/bas/gauche/droite/diagonales/stop).';
+      $valuesHelpKey = 'Stop = Stop, Left = Gauche, Right = Droite, Up = Haut, Down = Bas, LeftUp = Haut gauche, RightUp = Haut droite, LeftDown = Bas gauche, RightDown = Bas droite';
+    }
+
+    $localizedList = reolink::translateCmdListValue($rawList);
+    $localizedHelp = __($helpKey, __FILE__);
+    $localizedValuesHelp = __($valuesHelpKey, __FILE__);
+    $dirty = false;
+    if (strval($ptzCmd->getConfiguration('listValue', '')) !== $localizedList) {
+      $ptzCmd->setConfiguration('listValue', $localizedList);
+      $dirty = true;
+    }
+    if (strval($ptzCmd->getConfiguration('help', '')) !== $localizedHelp) {
+      $ptzCmd->setConfiguration('help', $localizedHelp);
+      $dirty = true;
+    }
+    if (strval($ptzCmd->getConfiguration('valuesHelp', '')) !== $localizedValuesHelp) {
+      $ptzCmd->setConfiguration('valuesHelp', $localizedValuesHelp);
+      $dirty = true;
+    }
+    if ($dirty) {
+      $ptzCmd->save();
+    }
   }
 
   public static function applyEncListValues($camera, $cnx, $channel, $pruneSingleCodec = false) {

@@ -20,6 +20,21 @@ if (!is_object($cmdSiren)) {
   $cmdSiren = $eqLogic->getCmd(null, 'SetAudioAlarm');
 }
 $hasPtz = is_object($cmdPtz);
+$ptzDirs = array();
+if ($hasPtz) {
+  $rawPtzList = strval($cmdPtz->getConfiguration('listValue', ''));
+  if ($rawPtzList === '') {
+    $ptzDirs = array('Up' => true, 'Left' => true, 'Right' => true, 'Down' => true);
+  } else {
+    foreach (explode(';', $rawPtzList) as $pair) {
+      $bits = explode('|', $pair, 2);
+      $dirKey = trim($bits[0]);
+      if ($dirKey !== '') {
+        $ptzDirs[$dirKey] = true;
+      }
+    }
+  }
+}
 $hasWhite = is_object($cmdWhite);
 $hasSiren = is_object($cmdSiren);
 $whiteState = is_object($eqLogic->getCmd(null, 'SetWhitLedState')) ? intval($eqLogic->getCmd(null, 'SetWhitLedState')->execCmd()) : 0;
@@ -38,12 +53,25 @@ $whiteState = is_object($eqLogic->getCmd(null, 'SetWhitLedState')) ? intval($eqL
     <div id="divLiveError" class="alert alert-warning" style="display:none;margin-top:8px;"></div>
   </div>
   <div class="col-xs-12 text-center" style="margin-top:8px;">
-<?php if ($hasPtz) { ?>
+<?php if ($hasPtz) {
+  $ptzButtons = array(
+    'LeftUp' => '↖',
+    'Up' => '↑',
+    'RightUp' => '↗',
+    'Left' => '←',
+    'Right' => '→',
+    'LeftDown' => '↙',
+    'Down' => '↓',
+    'RightDown' => '↘',
+  );
+?>
     <div class="btn-group" style="margin:2px;">
-      <a class="btn btn-default btn-sm btLivePtz" data-dir="Up">↑</a>
-      <a class="btn btn-default btn-sm btLivePtz" data-dir="Left">←</a>
-      <a class="btn btn-default btn-sm btLivePtz" data-dir="Right">→</a>
-      <a class="btn btn-default btn-sm btLivePtz" data-dir="Down">↓</a>
+<?php foreach ($ptzButtons as $dirKey => $arrow) {
+  if (!isset($ptzDirs[$dirKey])) {
+    continue;
+  } ?>
+      <a class="btn btn-default btn-sm btLivePtz" data-dir="<?php echo $dirKey; ?>"><?php echo $arrow; ?></a>
+<?php } ?>
     </div>
 <?php } ?>
 <?php if ($hasWhite) { ?>

@@ -677,6 +677,15 @@ class reolinkBaichuanAdapter {
     $ptzType = $v('ptzType', 0);
     $ptzCtrlBits = $v('ptzControl', 0);
     $hasPtz = ($ptzType > 0 || $ptzCtrlBits > 0);
+    $ptzDirDefault = 0;
+    if ($hasPtz) {
+      if ($ptzType === 7) {
+        $ptzDirDefault = 2;
+      } elseif ($ptzCtrlBits > 1 && (($ptzCtrlBits >> 1) & 1) === 1) {
+        $ptzDirDefault = 1;
+      }
+    }
+    $ptzDirVer = $hasTag('ptzDirection') ? $v('ptzDirection', $ptzDirDefault) : $ptzDirDefault;
     $hasZoom = ($ptzType === 1 || $ptzType === 2 || $ptzType === 5 || (($ptzCtrlBits >> 4) & 1) === 1);
     $ledCtrl = $v('ledCtrl', 1);
     $aiBits = $v('aitype', 0);
@@ -715,8 +724,9 @@ class reolinkBaichuanAdapter {
     }
 
     $abCh = array(
-      'ptzCtrl' => $permit($hasPtz),
+      'ptzCtrl' => $permit($hasPtz, $ptzCtrlBits > 0 ? $ptzCtrlBits : 1),
       'ptzType' => $permit($hasPtz, max(1, $ptzType)),
+      'ptzDirection' => ($hasPtz && $ptzDirVer > 0) ? array('permit' => 6, 'ver' => $ptzDirVer) : array('permit' => 0, 'ver' => 0),
       'ptzPreset' => $permit($v('ptzPreset', 0) > 0 || $hasPtz),
       'ptzPatrol' => $permit($v('ptzPatrol', 0) > 0),
       'ptzGuard' => $permit((($ptzCtrlBits >> 2) & 1) === 1),
