@@ -6,6 +6,7 @@
 
 # 23/11/2026
 
+- Documentation & Compatibilité : mise à jour des modèles supportés (`HTTP/HTTPS`, `Baichuan port 9000`, `via NVR / Home Hub`) et explication technique des limites matérielles (4G `Go`, batterie sans Hub/NVR, `Bxxx`/`Dxxx` sans NVR)
 - Mode Baichuan E321 (#130, #134) : filtrage de `WhiteLed` selon `ledCtrl`/`lightType`, exclusion de `PtzPatrol` sur `<cruiseList />` vide, détection `aiTrack` via `cmd 299` (`smartTrack`) et détection `sdCard` depuis `DeviceInfo` au login
 - Ergonomie, Unités & Rondes PTZ (#136) : suppression de l'unité erronée sur `SetAutoReturnPtzGuardPointState`, ajout des unités `Kbps` et harmonisation `Débit Stream1/2`, numérotation d'affichage `Ronde 1` à `Ronde 6` (clés `0..5` préservées), ajout de l'état `SetSpeedState` lié au curseur `SetSpeed` et clarification de l'aide `SetAutoFocus`
 - Commandes ISP, Encodage & ONVIF (#136) : correction des valeurs API `SetAntiFlicker` (`Other`), `SetExposure` (`Anti-Smearing`) et `SetBackLight` (`ispBackLight`) avec filtrage dynamique via `GetIsp` (`action=1`), remontée cron des codecs H.264 fixes (`SetEncodingst1State`/`SetEncodingst2State`) et retrait des sélecteurs de codec fixes/vides, suppression de la commande morte `EvMotionAlarm` et restriction de `EvVisitor` aux sonnettes (`Doorbell`)

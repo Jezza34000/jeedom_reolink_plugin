@@ -1,26 +1,30 @@
 # Plugin Reolink pour Jeedom
 
-Ce plugin permet le controle des caméras de marque Réolink qui possède l'API.
-Live Low/High via `go2rtc` (fMP4/WebRTC) ; pont optionnel vers le plugin Jeedom officiel « Caméra » (`reolink::getSnapshot`).
+Ce plugin permet le contrôle et le paramétrage local des caméras, NVR et Home Hub de marque Reolink (via l'API officielle HTTP/HTTPS ou le protocole natif Baichuan TCP sur le port `9000`).
+Flux vidéo Live Low/High via `go2rtc` (fMP4/WebRTC) lorsque la caméra expose RTSP, et pont optionnel vers le plugin Jeedom officiel « Caméra » (`reolink::getSnapshot`).
 
-### Support des caméras
+### Compatibilité et support des caméras
 
-Supportes :
+#### 1. Supportées en connexion directe `HTTP` / `HTTPS` (complet : commandes, captures, Live `go2rtc` & événements ONVIF)
+* Les séries **RLC-xxxx** et **CX**
+* Les enregistreurs **RLN-xxxx** (NVR) et **Reolink Home Hub / Home Hub Pro** (équipement parent + un équipement par canal)
+* Les séries **DUO, DUO 2 et DUO 3** (PoE / Wi-Fi secteur)
+* Les séries **TrackMix** (PoE / Wi-Fi secteur), **FE-P / FE-W** (Fisheye) et **Video Doorbell** (PoE / Wi-Fi secteur)
+* Les **E1 Zoom**, **E1 Outdoor** (PoE / Wi-Fi) et **C1 / C2**
 
-* La série des RLC-xxxx
-* La série des RLN-xxxx-x
-* Les séries des DUO, DUO2 et DUO3
-* La série des C1 & C2.
-* La E1 Zoom et E1 Outdoor
-* La série TrackMix
-* La série CX
+#### 2. Supportées en connexion directe `Baichuan (port 9000 uniquement)` (modèles secteur sans interface Web)
+* Les modèles secteur dépourvus d'API HTTP/HTTPS : **E1**, **E1 Pro**, **E Series (E320, E321, E330, E340…)**, **Lumus / Lumus Pro**, etc.
+* Pilotage local complet en TCP `9000` (PTZ, presets, garde, suivi IA, IR/projecteur, sirène, réglages image/ISP/OSD, enregistrement microSD, notifications, mode confidentialité) et **captures JPEG natives (`cmd 109`)**.
+* *Limitation liée au firmware de ces modèles* : lorsqu'une caméra n'embarque aucun serveur RTSP (`554`) ni ONVIF (`8000`) dans son firmware (ex. `E321`), les captures JPEG et les commandes fonctionnent mais le flux vidéo Live continu (`go2rtc`) et le webhook temps réel ONVIF ne sont pas disponibles. Sur certaines révisions (`E1 Pro`, `Lumus`) où RTSP/ONVIF sont simplement désactivés par défaut, ils peuvent être activés depuis l'application Reolink Client ou via Baichuan.
 
-Non-supportés :
+#### 3. Supportées via un **NVR Reolink** ou un **Reolink Home Hub** (un équipement par canal)
+* **Caméras sur batterie Wi-Fi** (**Argus**, **Altas**, **TrackMix Battery**, **Doorbell Battery**, **Keen**…) **rattachées à un Home Hub ou un NVR** : remontée du niveau de batterie, de l'état de charge, de la température et du mode veille, avec polling économe (`NONE_WAKING_COMMANDS` sans réveiller la caméra), cache de la dernière capture en veille et réveil passif sur événement ONVIF du Hub/NVR.
+* **Caméras « Add-on » de kits NVR** (**B400, B800, B1200, D400, D800, D1200** — séries **Bxxx & Dxxx**) **rattachées à leur NVR Reolink** : le NVR expose pour elles l'API complète, les événements ONVIF, les captures et les flux Live.
 
-* La série ARGUS
-* La série GO
-* Les modèles commencant part Bxxx & Dxxx
-* Le modèle Keen, Lumus, E1 & E1 Pro
+#### 4. Pourquoi certaines caméras (ou configurations) ne seront jamais supportées en direct ?
+* **Séries cellulaires 4G / LTE (`Reolink Go`, `Go PT`, `Go Plus`, `TrackMix LTE`…)** : ces caméras passent exclusivement par le réseau mobile 4G derrière un CGNAT opérateur (qui bloque toute connexion entrante) et par le relais Cloud P2P de Reolink. Elles ne disposent d'aucune adresse IP locale joignable par Jeedom sur votre réseau.
+* **Caméras sur batterie (`Argus`, `Altas`, `Keen`…) utilisées seules en Wi-Fi sans Home Hub ni NVR** : pour préserver plusieurs mois d'autonomie, ces caméras coupent complètement leur Wi-Fi et leur pile TCP lorsqu'elles sont en veille (même le port `9000` est éteint) et ne se réveillent que via leur capteur PIR ou un paquet propriétaire `BCUDP` de réveil batterie. Une interrogation directe par un serveur domotique aboutirait soit à des erreurs `Timeout` permanentes, soit à vider la batterie en quelques heures (même contrainte matérielle que sur Home Assistant).
+* **Caméras « Add-on » de kit (`Bxxx` & `Dxxx`) branchées seules sur un switch PoE sans NVR** : leur firmware est bridé d'usine pour dialoguer uniquement avec un NVR Reolink via le protocole propriétaire d'appairage `BCUDP` ; elles n'embarquent ni API autonome standard ni flux RTSP/ONVIF indépendant.
 
 ### Page de configuration d'une caméra :
 
@@ -30,11 +34,11 @@ Non-supportés :
   * Donner un nom à l'équipement
   * Renseigner les champs ci-dessous :
     * IP / Nom d'hôte
-    * Port HTTP/HTTPS (ce champ est facultatif, à renseigner uniquement si vous avez personnaliser le port d'accès à l'interface web)
+    * Port HTTP/HTTPS ou Baichuan (facultatif : `80` en HTTP, `443` en HTTPS, `9000` en mode Baichuan par défaut)
     * Login
-    * Port ONVIF (par défaut 8000, à modifier uniquement si vous avez personnaliser le port d'accès au protocole ONVIF )
+    * Port ONVIF (par défaut 8000, utilisé uniquement en modes HTTP/HTTPS)
     * Mot de passe
-    * Type de connexion (http/https)
+    * Type de connexion (`http`, `https` ou `Baichuan (port 9000 uniquement)`)
     * Auto-actualisation (cron) (par défaut réglé à 1h, ce CRON sert à actualiser les paramètres globaux de la caméra, il n'influence en rien la remontée de détection de mouvement)
 
   * Sauvegardez l'équipement en cliquant sur **"Sauvegarder"** ![image](https://user-images.githubusercontent.com/54839700/174434052-44ac9904-3bfa-4afa-a20f-4cd669d4c636.png)
@@ -95,7 +99,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
   - [x] Zoom
   - [x] Focus
   - [x] Activation/Désactivation Auto-Focus
-- [x] Mouvement (Haut/Bas/Gauche/Droite)
+- [x] Mouvement (Haut/Bas/Gauche/Droite et diagonales)
 - [ ] Position PTZ exacte (lecture/écriture Pan & Tilt)
 - [ ] Zoom 3D
 - [x] Presets PTZ
@@ -118,7 +122,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [ ] IP/DNS/MASQUE
 - [ ] DDNS
 - [ ] Wifi (configuration + niveau de signal RSSI)
-- [ ] Activation/Désactivation des ports réseau (HTTP, HTTPS, RTSP, RTMP, ONVIF)
+- [x] Activation/Désactivation des ports réseau (HTTP, HTTPS, RTSP, RTMP, ONVIF via Baichuan)
 - [x] Activation/Désactivation UPNP
 - [x] Activation/Désactivation P2P
 
