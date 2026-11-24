@@ -1,5 +1,15 @@
 {
     "plugins/reolink/core/class/reolink.class.php": {
+        "Récupérer les scènes": "Retrieve scenes",
+        "Scène active (état)": "Active scene (state)",
+        "Activer une scène": "Activate scene",
+        "Désactiver les scènes": "Disable scenes",
+        "Relit la liste des scènes / modes configurés sur le Reolink Home Hub ou NVR compatible (protocole Baichuan).": "Reloads the list of scenes / modes configured on the Reolink Home Hub or compatible NVR (Baichuan protocol).",
+        "Action immédiate : met à jour la liste du sélecteur Activer une scène": "Immediate action: updates the Activate scene selector list",
+        "Identifiant de la scène active sur le Reolink Home Hub (-1 = aucune scène active).": "Identifier of the active scene on the Reolink Home Hub (-1 = no active scene).",
+        "-1 = Désactivé, 0..N = Identifiant de la scène active": "-1 = Disabled, 0..N = Active scene identifier",
+        "Active une scène Reolink (Home, Away, Night…) ou désactive le mode scène sur le Reolink Home Hub.": "Activates a Reolink scene (Home, Away, Night…) or disables scene mode on the Reolink Home Hub.",
+        "-1 = Désactiver les scènes, sinon scène configurée sur le Home Hub": "-1 = Disable scenes, otherwise scene configured on the Home Hub",
         "Batterie": "Battery",
         "Batterie en charge": "Battery charging",
         "État de charge": "Charging state",

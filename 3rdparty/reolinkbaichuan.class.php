@@ -940,6 +940,176 @@ class reolinkBaichuan {
     }
   }
 
+  public static function parseSceneSupportXml($supportXml) {
+    if ($supportXml === null || $supportXml === '') {
+      return false;
+    }
+    if (preg_match('/<sceneModeCfg>\s*(\d+)\s*<\/sceneModeCfg>/i', $supportXml, $m)) {
+      return intval($m[1]) > 0;
+    }
+    return false;
+  }
+
+  public static function parseSceneListIdsXml($xml) {
+    $ids = array();
+    if ($xml === null || $xml === '') {
+      return $ids;
+    }
+    if (preg_match_all('/<id>\s*(-?\d+)\s*<\/id>/i', $xml, $m)) {
+      foreach ($m[1] as $rawId) {
+        $id = intval($rawId);
+        if ($id >= 0 && !in_array($id, $ids, true)) {
+          $ids[] = $id;
+        }
+      }
+    }
+    sort($ids, SORT_NUMERIC);
+    return $ids;
+  }
+
+  public static function parseSceneCfgXml($xml) {
+    if ($xml === null || $xml === '') {
+      return null;
+    }
+    $sx = @simplexml_load_string($xml);
+    if ($sx === false) {
+      return null;
+    }
+    $nodes = $sx->xpath('.//sceneCfg');
+    $cfg = ($nodes && !empty($nodes)) ? $nodes[0] : $sx;
+    if (!isset($cfg->id)) {
+      return null;
+    }
+    return array(
+      'id' => intval($cfg->id),
+      'valid' => (intval($cfg->valid ?? 0) === 1),
+      'name' => trim(strval($cfg->name ?? '')),
+    );
+  }
+
+  public static function parseSceneModeXml($xml) {
+    if ($xml === null || $xml === '' || stripos($xml, 'sceneModeCfg') === false) {
+      return null;
+    }
+    $sx = @simplexml_load_string($xml);
+    if ($sx === false) {
+      return null;
+    }
+    $nodes = $sx->xpath('.//sceneModeCfg');
+    if (!$nodes || empty($nodes)) {
+      return null;
+    }
+    $node = $nodes[0];
+    if (!isset($node->enable)) {
+      return null;
+    }
+    if (intval($node->enable) !== 1) {
+      return -1;
+    }
+    return isset($node->curSceneId) ? intval($node->curSceneId) : -1;
+  }
+
+  public static function buildSceneCfgRequestXml($sceneId) {
+    return '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+      . '<body>' . "\n"
+      . '<sceneCfg version="1.1">' . "\n"
+      . '<id>' . intval($sceneId) . '</id>' . "\n"
+      . '</sceneCfg>' . "\n"
+      . '</body>';
+  }
+
+  public static function buildSceneModeSetXml($sceneId) {
+    $id = intval($sceneId);
+    if ($id < 0) {
+      return '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+        . '<body>' . "\n"
+        . '<sceneModeCfg version="1.1">' . "\n"
+        . '<enable>0</enable>' . "\n"
+        . '</sceneModeCfg>' . "\n"
+        . '</body>';
+    }
+    return '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+      . '<body>' . "\n"
+      . '<sceneModeCfg version="1.1">' . "\n"
+      . '<enable>1</enable>' . "\n"
+      . '<curSceneId>' . $id . '</curSceneId>' . "\n"
+      . '</sceneModeCfg>' . "\n"
+      . '</body>';
+  }
+
+  public function probeSceneSupport() {
+    try {
+      $this->ensureLogin();
+      $xml199 = $this->sendRaw(199, null, '', '', 'aes', '1464');
+      if (!self::parseSceneSupportXml($xml199)) {
+        return false;
+      }
+      $this->sendRaw(603, null, '', '', 'aes', '1464');
+      return true;
+    } catch (Exception $e) {
+      log::add('reolink', 'debug', 'Baichuan probeSceneSupport: ' . $e->getMessage());
+      return false;
+    } finally {
+      $this->logout();
+    }
+  }
+
+  public function getScenes() {
+    try {
+      $this->ensureLogin();
+      $xml603 = $this->sendRaw(603, null, '', '', 'aes', '1464');
+      $ids = self::parseSceneListIdsXml($xml603);
+      $scenes = array();
+      foreach ($ids as $sid) {
+        try {
+          $xml604 = $this->sendRaw(604, null, self::buildSceneCfgRequestXml($sid), '', 'aes', '1464');
+          $parsed = self::parseSceneCfgXml($xml604);
+          if (is_array($parsed) && !empty($parsed['valid'])) {
+            $scenes[$sid] = ($parsed['name'] !== '') ? $parsed['name'] : ('Scene ' . $sid);
+          }
+        } catch (Exception $inner) {
+          log::add('reolink', 'debug', 'Baichuan sceneCfg id=' . $sid . ': ' . $inner->getMessage());
+        }
+      }
+      $xml601 = $this->sendRaw(601, null, '', '', 'aes', '1464');
+      $active = self::parseSceneModeXml($xml601);
+      return array(
+        'activeSceneId' => ($active !== null) ? $active : -1,
+        'scenes' => $scenes,
+      );
+    } catch (Exception $e) {
+      log::add('reolink', 'debug', 'Baichuan getScenes: ' . $e->getMessage());
+      return null;
+    } finally {
+      $this->logout();
+    }
+  }
+
+  public function getActiveSceneId() {
+    try {
+      $this->ensureLogin();
+      $xml601 = $this->sendRaw(601, null, '', '', 'aes', '1464');
+      return self::parseSceneModeXml($xml601);
+    } catch (Exception $e) {
+      log::add('reolink', 'debug', 'Baichuan getActiveSceneId: ' . $e->getMessage());
+      return null;
+    } finally {
+      $this->logout();
+    }
+  }
+
+  public function setScene($sceneId) {
+    try {
+      $this->ensureLogin();
+      $this->sendRaw(602, null, self::buildSceneModeSetXml($sceneId), '', 'aes', '1464');
+      $xml601 = $this->sendRaw(601, null, '', '', 'aes', '1464');
+      $active = self::parseSceneModeXml($xml601);
+      return ($active !== null) ? $active : (intval($sceneId) < 0 ? -1 : intval($sceneId));
+    } finally {
+      $this->logout();
+    }
+  }
+
   /**
    * Read channel standby/sleep state via Baichuan cmd 145 (ChannelInfoList).
    * @return bool|null
@@ -1022,6 +1192,8 @@ class reolinkBaichuan {
         array(93, null, 'GetLinkType', ''),
         array(102, null, 'GetHddInfo', ''),
         array(145, null, 'GetChannelInfoList', ''),
+        array(601, null, 'GetSceneModeCfg', ''),
+        array(603, null, 'GetSceneListID', ''),
         array(318, $ch, 'GetChnTypeInfo', ''),
         array(56, $ch, 'GetEnc (Compression)', ''),
         array(26, $ch, 'GetImage / GetIsp (VideoInput)', ''),

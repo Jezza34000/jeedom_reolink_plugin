@@ -93,7 +93,7 @@ Les options correspondent aux paramètres que vous avez dans : Réglages > Syst�
 - [x] Controle des mise à jour logiciel (vérification + installation OTA)
 - [x] Monitoring de la caméra : Utilisation CPU, Débit codec et Débit réseau
 - [x] Buzzer NVR / Home Hub (activation/désactivation)
-- [ ] Scènes / Modes Reolink (Home, Away, Night…)
+- [x] Scènes / Modes Reolink sur Home Hub (`Home`, `Away`, `Night`… via Baichuan `cmd 601..604`)
 - [x] Caméras sur batterie via NVR / Home Hub (niveau batterie, charge, mode veille)
 
 #### PTZ
