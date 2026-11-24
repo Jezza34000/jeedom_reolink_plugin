@@ -241,6 +241,17 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 											</div>
 									</div>
 							</div>
+							<div class="form-group" id="fg_eventMode">
+									<label class="col-sm-3 control-label">{{Mode d'événements temps réel}}
+										<sup><i class="fas fa-question-circle tooltips" title="{{En HTTP/HTTPS, choisissez ONVIF (webhook HTTP entrant par défaut) ou Baichuan TCP (écoute persistante sur le port 9000 sans webhook entrant + état canal/veille temps réel cmd 145). Sur un canal enfant, Par défaut hérite du NVR parent.}}"></i></sup></label>
+									<div class="col-sm-7">
+											<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="event_mode">
+													<option value="">{{Par défaut (ONVIF ou hérité du NVR)}}</option>
+													<option value="onvif">{{ONVIF (webhook HTTP)}}</option>
+													<option value="baichuan">{{Baichuan TCP (port 9000)}}</option>
+											</select>
+									</div>
+							</div>
 							<div class="form-group expertModeVisible">
 								<label class="col-sm-3 control-label">{{Auto-actualisation (cron)}}
 									<sup><i class="fas fa-question-circle tooltips" title="{{Actualise les paramètres globaux de la caméra. N'influence pas la remontée de détection de mouvement}}"></i></sup>

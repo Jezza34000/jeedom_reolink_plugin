@@ -1187,6 +1187,11 @@ class reolinkBaichuan {
       if ($cfgPort > 0 && $cfgPort !== 80 && $cfgPort !== 443) {
         return $cfgPort;
       }
+    } else {
+      $mediaPort = intval(preg_replace('/\D/', '', strval($eqLogic->getConfiguration('mediaPort', ''))));
+      if ($mediaPort > 0 && $mediaPort !== 80 && $mediaPort !== 443) {
+        return $mediaPort;
+      }
     }
     return self::DEFAULT_PORT;
   }

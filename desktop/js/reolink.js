@@ -133,8 +133,10 @@ function updateEqLogicRoleUi(_eqLogic) {
   reolinkSetVisible(document.getElementById('fg_hostChannelNum'), !!isNvrParent)
   reolinkSetVisible(document.getElementById('fg_supportAi'), !isNvrParent)
   var cnxType = String((typeof cfg.cnxtype !== 'undefined' ? cfg.cnxtype : $('.eqLogicAttr[data-l1key=configuration][data-l2key=cnxtype]').value()) || '').trim().toLowerCase()
+  var eventMode = String((typeof cfg.event_mode !== 'undefined' ? cfg.event_mode : $('.eqLogicAttr[data-l1key=configuration][data-l2key=event_mode]').value()) || '').trim().toLowerCase()
   var isBaichuanOnly = (cnxType === 'baichuan')
-  reolinkSetVisible(document.getElementById('fg_portOnvif'), !isBaichuanOnly)
+  reolinkSetVisible(document.getElementById('fg_eventMode'), !isBaichuanOnly)
+  reolinkSetVisible(document.getElementById('fg_portOnvif'), !isBaichuanOnly && eventMode !== 'baichuan')
   reolinkSetVisible(document.getElementById('div_baichuanHint'), isBaichuanOnly)
   var lblPort = document.getElementById('lbl_accessPort')
   if (lblPort) {
@@ -203,6 +205,7 @@ function updateNvrParentHint() {
 }
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').on('change keyup', updateNvrParentHint)
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=cnxtype]').on('change', updateNvrParentHint)
+$('.eqLogicAttr[data-l1key=configuration][data-l2key=event_mode]').on('change', updateNvrParentHint)
 
 function reolinkFireChange(el) {
   if (!el) return

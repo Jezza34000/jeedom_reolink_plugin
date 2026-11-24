@@ -39,6 +39,7 @@ Flux vidéo Live Low/High via `go2rtc` (fMP4/WebRTC) lorsque la caméra expose R
     * Port ONVIF (par défaut 8000, utilisé uniquement en modes HTTP/HTTPS)
     * Mot de passe
     * Type de connexion (`http`, `https` ou `Baichuan (port 9000 uniquement)`)
+    * Mode d'événements temps réel (en `http`/`https` : `ONVIF (webhook HTTP)` par défaut ou `Baichuan TCP (port 9000)` pour recevoir les détections IA, mouvements, mode confidentialité et états canal/veille `cmd 145` sans ouvrir de flux entrant vers Jeedom ; hérité automatiquement du NVR parent par ses canaux)
     * Auto-actualisation (cron) (par défaut réglé à 1h, ce CRON sert à actualiser les paramètres globaux de la caméra, il n'influence en rien la remontée de détection de mouvement)
 
   * Sauvegardez l'équipement en cliquant sur **"Sauvegarder"** ![image](https://user-images.githubusercontent.com/54839700/174434052-44ac9904-3bfa-4afa-a20f-4cd669d4c636.png)
