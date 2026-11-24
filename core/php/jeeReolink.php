@@ -159,10 +159,20 @@ try {
             }
         }
     } elseif (isset($result['message']) && $result['message'] == "subscription") {
-        if ($result['state'] == 0) {
-          $title = 'Plugin Reolink';
-          $message = 'Notification de détection de mouvement indisponible sur la caméra : ' . $result['ip'] . ' ( Détails : ' . $result['details'] . ')';
-          message::add($title, $message);
+        $subIp = trim(strval($result['ip'] ?? ''));
+        $cacheKey = 'reolink::sub_fail::' . $subIp;
+        if (intval($result['state'] ?? 0) === 0) {
+          $fails = intval(cache::byKey($cacheKey)->getValue(0)) + 1;
+          cache::set($cacheKey, $fails);
+          // Absorb single transient failure (e.g. weekly AutoMaint reboot) before alerting Message Center
+          if ($fails >= 2) {
+            $message = 'Notification de détection de mouvement indisponible sur la caméra : ' . $subIp . ' ( Détails : ' . ($result['details'] ?? '') . ')';
+            message::add('Plugin Reolink', $message, '', 'reolink_sub_' . $subIp);
+          } else {
+            log::add('reolink', 'warning', 'Souscription événements indisponible (1er échec, nouvel essai au prochain cron10) sur ' . $subIp . ' : ' . ($result['details'] ?? ''));
+          }
+        } elseif ($subIp !== '' && intval(cache::byKey($cacheKey)->getValue(0)) > 0) {
+          cache::set($cacheKey, 0);
         }
     } else {
         log::add('reolink', 'error', 'unknown message received from daemon');
