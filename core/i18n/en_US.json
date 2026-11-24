@@ -1,5 +1,18 @@
 {
     "plugins/reolink/core/class/reolink.class.php": {
+        "Équipements actifs": "Active equipments",
+        "Caméras en ligne": "Online cameras",
+        "Un ou plusieurs canaux actifs sont hors ligne (ChannelOnline = 0)": "One or more active channels are offline (ChannelOnline = 0)",
+        "Serveur Live go2rtc": "go2rtc Live Server",
+        "Non installé": "Not installed",
+        "Arrêté": "Stopped",
+        "OK (127.0.0.1:1984)": "OK (127.0.0.1:1984)",
+        "Indisponible": "Unavailable",
+        "Le démon tourne mais le port local go2rtc 127.0.0.1:1984 ne répond pas": "Daemon is running but local go2rtc port 127.0.0.1:1984 is not responding",
+        "Mises à jour firmware": "Firmware updates",
+        "disponible(s)": "available",
+        "À jour": "Up to date",
+        "Consultez Vérifier les firmwares sur la page du plugin Reolink": "Check firmware updates on the Reolink plugin page",
         "Récupérer les scènes": "Retrieve scenes",
         "Scène active (état)": "Active scene (state)",
         "Activer une scène": "Activate scene",
@@ -576,9 +589,11 @@
         "Découverte et création des caméras du NVR en cours...": "Discovering and creating NVR cameras...",
         "Synchronisation NVR terminée": "NVR synchronization completed",
         "caméra(s) créée(s)": "camera(s) created",
-        "déjà présente(s)": "already present"
+        "déjà présente(s)": "already present",
+        "Santé Reolink": "Reolink Health"
     },
     "plugins/reolink/desktop/php/reolink.php": {
+        "Santé": "Health",
         "Mode d'événements temps réel": "Real-time event mode",
         "Par défaut (ONVIF ou hérité du NVR)": "Default (ONVIF or inherited from NVR)",
         "ONVIF (webhook HTTP)": "ONVIF (HTTP webhook)",
@@ -604,6 +619,31 @@
         "Équipement visible": "Visible equipment",
         "Équipement non visible": "Hidden equipment",
         "Numéro de canal si la caméra est derrière un NVR (0 = premier canal). Laissez vide pour un NVR parent ou une caméra autonome.": "Channel number if the camera is behind an NVR (0 = first channel). Leave empty for a parent NVR or a standalone camera."
+    },
+    "plugins/reolink/desktop/modal/health.php": {
+        "401 - Accès non autorisé": "401 - Unauthorized access",
+        "Image": "Image",
+        "Équipement": "Equipment",
+        "ID": "ID",
+        "Rôle": "Role",
+        "Modèle": "Model",
+        "Accès": "Access",
+        "Événements": "Events",
+        "Statut": "Status",
+        "Batterie": "Battery",
+        "Firmware": "Firmware",
+        "Dernière communication": "Last communication",
+        "Canal": "Channel",
+        "Autonome": "Standalone",
+        "Inactif": "Inactive",
+        "en ligne": "online",
+        "Actif": "Active",
+        "Scène": "Scene",
+        "En veille": "Sleeping",
+        "En ligne": "Online",
+        "Hors ligne": "Offline",
+        "MAJ": "Update",
+        "À jour": "Up to date"
     },
     "plugins/reolink/desktop/modal/modal.reolink.php": {
         "Activer": "Enable",

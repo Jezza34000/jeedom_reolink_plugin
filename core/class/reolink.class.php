@@ -2683,6 +2683,91 @@ class reolink extends eqLogic {
     return $return;
   }
 
+  public static function health() {
+    $eqLogics = eqLogic::byType('reolink');
+    $totalEq = count($eqLogics);
+    $enabledEq = 0;
+    $activeCams = 0;
+    $onlineCams = 0;
+    $fwUpdates = 0;
+
+    foreach ($eqLogics as $eq) {
+      $enabled = (intval($eq->getIsEnable()) === 1);
+      if ($enabled) {
+        $enabledEq++;
+      }
+      if (strval($eq->getConfiguration('fwArchiveStatus', '')) === 'update_available') {
+        $fwUpdates++;
+      }
+      if (!$enabled || $eq->isNvrParent()) {
+        continue;
+      }
+      $activeCams++;
+      $onlineCmd = $eq->getCmd(null, 'ChannelOnline');
+      if (!is_object($onlineCmd) || strval($onlineCmd->execCmd()) === '' || intval($onlineCmd->execCmd()) === 1) {
+        $onlineCams++;
+      }
+    }
+
+    $result = array(
+      array(
+        'test' => __('Équipements actifs', __FILE__),
+        'result' => $enabledEq . ' / ' . $totalEq,
+        'advice' => '',
+        'state' => true,
+      ),
+      array(
+        'test' => __('Caméras en ligne', __FILE__),
+        'result' => $onlineCams . ' / ' . $activeCams,
+        'advice' => ($onlineCams < $activeCams) ? __('Un ou plusieurs canaux actifs sont hors ligne (ChannelOnline = 0)', __FILE__) : '',
+        'state' => ($activeCams === 0 || $onlineCams === $activeCams),
+      ),
+    );
+
+    $go2rtcBin = dirname(__FILE__) . '/../../resources/bin/go2rtc';
+    $deamonState = self::deamon_info()['state'] ?? 'nok';
+    if (!is_file($go2rtcBin)) {
+      $result[] = array(
+        'test' => __('Serveur Live go2rtc', __FILE__),
+        'result' => __('Non installé', __FILE__),
+        'advice' => '',
+        'state' => true,
+      );
+    } elseif ($deamonState !== 'ok') {
+      $result[] = array(
+        'test' => __('Serveur Live go2rtc', __FILE__),
+        'result' => __('Arrêté', __FILE__),
+        'advice' => '',
+        'state' => true,
+      );
+    } else {
+      $errno = 0;
+      $errstr = '';
+      $fp = @fsockopen('127.0.0.1', 1984, $errno, $errstr, 0.25);
+      $go2rtcOk = is_resource($fp);
+      if ($go2rtcOk) {
+        fclose($fp);
+      }
+      $result[] = array(
+        'test' => __('Serveur Live go2rtc', __FILE__),
+        'result' => $go2rtcOk ? __('OK (127.0.0.1:1984)', __FILE__) : __('Indisponible', __FILE__),
+        'advice' => $go2rtcOk ? '' : __('Le démon tourne mais le port local go2rtc 127.0.0.1:1984 ne répond pas', __FILE__),
+        'state' => $go2rtcOk,
+      );
+    }
+
+    if (self::isGithubFirmwareCheckEnabled()) {
+      $result[] = array(
+        'test' => __('Mises à jour firmware', __FILE__),
+        'result' => ($fwUpdates > 0) ? ($fwUpdates . ' ' . __('disponible(s)', __FILE__)) : __('À jour', __FILE__),
+        'advice' => ($fwUpdates > 0) ? __('Consultez Vérifier les firmwares sur la page du plugin Reolink', __FILE__) : '',
+        'state' => true,
+      );
+    }
+
+    return $result;
+  }
+
   public static function deamon_start() {
     self::deamon_stop();
     $deamon_info = self::deamon_info();

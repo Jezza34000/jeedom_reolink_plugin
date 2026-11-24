@@ -76,6 +76,11 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 				<span>{{Vérifier les firmwares}}</span>
 			</div>
 			<?php } ?>
+			<div class="cursor logoSecondary" id="btHealthReolink">
+				<i class="fas fa-medkit"></i>
+				<br>
+				<span>{{Santé}}</span>
+			</div>
 		</div>
 		<?php
 		if (count($eqLogics) == 0) {
