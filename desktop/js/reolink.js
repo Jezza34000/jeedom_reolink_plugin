@@ -105,7 +105,8 @@ function updateEqLogicRoleUi(_eqLogic) {
   var hostName = String(cfg.hostName || $('.eqLogicAttr[data-l1key=configuration][data-l2key=hostName]').text() || '').trim()
   var emptyCh = (ch === '' || ch === null || typeof ch === 'undefined')
   var isChannelChild = !emptyCh
-  var isNvrParent = emptyCh && (hostType === 'NVR' || hostChannels > 1)
+  var nvrTypes = ['NVR', 'WIFI_NVR', 'HOMEHUB', 'HVR', 'DVR']
+  var isNvrParent = emptyCh && (nvrTypes.indexOf(hostType.toUpperCase()) !== -1 || hostChannels > 1)
 
   reolinkSetVisible(document.getElementById('div_nvrParentHint'), !!isNvrParent)
   var lblAccess = document.getElementById('lbl_accessParams')
@@ -145,6 +146,9 @@ function updateEqLogicRoleUi(_eqLogic) {
   }
   document.querySelectorAll('.cameraOnlyAction').forEach(function (el) {
     reolinkSetVisible(el, !isNvrParent)
+  })
+  document.querySelectorAll('.nvrOnlyAction').forEach(function (el) {
+    reolinkSetVisible(el, !!isNvrParent)
   })
 
   document.querySelectorAll('.reolinkPortBadge').forEach(function (el) {
@@ -353,6 +357,48 @@ $('#btSyncCameraPlugin').on('click', function () {
     return
   }
   syncCameraPlugin(id)
+})
+
+$('#btSyncNvrChannels').on('click', function () {
+  var id = $('.eqLogicAttr[data-l1key=id]').value()
+  if (id == '') {
+    $('#div_alert').showAlert({message: '{{Veuillez d\'abord sauvegarder l\'équipement}}', level: 'danger'})
+    return
+  }
+  $('#div_alert').showAlert({message: '{{Découverte et création des caméras du NVR en cours...}}', level: 'info'})
+  $.ajax({
+    type: 'POST',
+    url: 'plugins/reolink/core/ajax/reolink.ajax.php',
+    data: {
+      action: 'SyncNvrChannels',
+      id: id
+    },
+    dataType: 'json',
+    error: function (request, status, error) {
+      handleAjaxError(request, status, error)
+    },
+    success: function (data) {
+      if (data.state != 'ok') {
+        $('#div_alert').showAlert({message: data.result, level: 'danger'})
+        return
+      }
+      var r = data.result || {}
+      var created = parseInt(r.created || 0, 10)
+      var existing = parseInt(r.existing || 0, 10)
+      var msg = '{{Synchronisation NVR terminée}} : ' + created + ' {{caméra(s) créée(s)}}, ' + existing + ' {{déjà présente(s)}}'
+      $('#div_alert').showAlert({message: msg, level: 'success'})
+      if (created > 0) {
+        setTimeout(function () {
+          var url = 'index.php?v=d&m=reolink&p=reolink&id=' + encodeURIComponent(id)
+          if (typeof jeedomUtils !== 'undefined' && typeof jeedomUtils.loadPage === 'function') {
+            jeedomUtils.loadPage(url)
+          } else {
+            window.location.href = url
+          }
+        }, 1200)
+      }
+    }
+  })
 })
 
 function reolinkOpenFirmwareModal(report) {

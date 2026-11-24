@@ -47,6 +47,7 @@ Vous pouvez tester si les paramètres sont correctes et si le plugin arrive à a
 
 * Récupérez les informations de la caméra : bouton ![image](https://user-images.githubusercontent.com/54839700/174434125-261308a3-c8a7-4689-9095-0a5d56177449.png)
 * Générez les commandes de la caméra : bouton ![image](https://user-images.githubusercontent.com/54839700/174434177-5f433dc2-91b5-4cdb-9bcc-8a42d6a48f0d.png)
+* **Pour un NVR ou Reolink Home Hub** (champ `Canal NVR` laissé vide) : après **Récupérer les informations**, cliquez sur **« Synchroniser les caméras du NVR »** pour créer automatiquement en un clic tous les équipements canaux connectés (avec leurs informations, commandes et états initiaux, sans dupliquer les canaux déjà configurés et en ignorant les emplacements NVR vides).
 
 
 > IMPORTANT : Lors de mise(s) à jour du plugin Reolink, de nouvelles commandes peuvent être ajouter (cf. Changelog du plugin) pour faciliter une meilleure gestion de la caméra. **Pour bénéficier des nouvelles commandes, relancer le processus de création de commandes pour chacun de la (des) caméra(s)**

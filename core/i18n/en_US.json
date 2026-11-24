@@ -562,9 +562,15 @@
         "Modèle": "Model",
         "Firmware": "Firmware",
         "Commandes OK": "Commands OK",
-        "Snapshot cmd 109": "Snapshot cmd 109"
+        "Snapshot cmd 109": "Snapshot cmd 109",
+        "Découverte et création des caméras du NVR en cours...": "Discovering and creating NVR cameras...",
+        "Synchronisation NVR terminée": "NVR synchronization completed",
+        "caméra(s) créée(s)": "camera(s) created",
+        "déjà présente(s)": "already present"
     },
     "plugins/reolink/desktop/php/reolink.php": {
+        "Synchroniser les caméras du NVR": "Synchronize NVR cameras",
+        "Crée automatiquement un équipement Jeedom par canal caméra connecté au NVR / Home Hub sans dupliquer les canaux déjà configurés": "Automatically creates one Jeedom equipment per camera channel connected to the NVR / Home Hub without duplicating already configured channels",
         "Assistant cron": "Cron helper",
         "Baichuan (port 9000 uniquement)": "Baichuan (port 9000 only)",
         "Diagnostic Baichuan (XML)": "Baichuan Diagnostic (XML)",

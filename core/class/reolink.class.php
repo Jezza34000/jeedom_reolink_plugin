@@ -779,6 +779,160 @@ class reolink extends eqLogic {
     return $jpeg;
   }
 
+  public static function extractPopulatedNvrChannels($statusList) {
+    $populated = array();
+    if (!is_array($statusList)) {
+      return $populated;
+    }
+    foreach ($statusList as $st) {
+      if (!is_array($st) || !isset($st['channel']) || !is_numeric($st['channel'])) {
+        continue;
+      }
+      $ch = intval($st['channel']);
+      if ($ch < 0) {
+        continue;
+      }
+      $hasCam = (intval($st['online'] ?? 0) === 1
+        || intval($st['sleep'] ?? 0) === 1
+        || trim(strval($st['uid'] ?? '')) !== ''
+        || trim(strval($st['name'] ?? '')) !== ''
+        || trim(strval($st['typeInfo'] ?? '')) !== '');
+      if ($hasCam) {
+        $populated[$ch] = $st;
+      }
+    }
+    ksort($populated);
+    return $populated;
+  }
+
+  public static function syncNvrChannels($nvrId) {
+    $nvr = reolink::byId($nvrId, 'reolink');
+    if (!is_object($nvr)) {
+      throw new Exception(__('Équipement Reolink introuvable', __FILE__));
+    }
+    if (trim(strval($nvr->getConfiguration('defined_channel', ''))) === ''
+      && trim(strval($nvr->getConfiguration('hostExactType', ''))) === '') {
+      reolink::GetCamNFO($nvr->getId());
+      $nvr = reolink::byId($nvrId, 'reolink');
+    }
+    if (!is_object($nvr) || !$nvr->isNvrParent()) {
+      throw new Exception(__('Cet équipement n\'est pas un NVR ou Home Hub parent (le champ Canal NVR doit rester vide)', __FILE__));
+    }
+
+    $conn = reolink::getReolinkConnection($nvr->getId());
+    if (!is_object($conn) || $conn->is_loggedin != true) {
+      throw new Exception(__('Impossible de se connecter au NVR / Home Hub', __FILE__));
+    }
+
+    $res = $conn->SendCMD('[{"cmd":"GetChannelstatus","action":0,"param":{}}]');
+    $data = is_array($res) ? $res : $conn->lastResponseData;
+    $statusList = null;
+    if (is_array($data)) {
+      foreach ($data as $item) {
+        if (in_array($item['cmd'] ?? '', array('GetChannelstatus', 'GetChannelStatus'), true)
+          && isset($item['value']['status']) && is_array($item['value']['status'])) {
+          $statusList = $item['value']['status'];
+          break;
+        }
+      }
+    }
+    if (!is_array($statusList)) {
+      throw new Exception(__('Impossible de lire la liste des canaux du NVR (GetChannelstatus)', __FILE__));
+    }
+
+    $populated = self::extractPopulatedNvrChannels($statusList);
+    $resolveIp = function ($raw) {
+      $h = trim(strval($raw));
+      if ($h === '') {
+        return '';
+      }
+      return filter_var($h, FILTER_VALIDATE_IP) ? $h : gethostbyname($h);
+    };
+    $nvrHost = trim(strval($nvr->getConfiguration('adresseip', '')));
+    $nvrIp = $resolveIp($nvrHost);
+
+    $existingByChannel = array();
+    foreach (eqLogic::byType('reolink', false) as $eq) {
+      if (intval($eq->getId()) === intval($nvr->getId())) {
+        continue;
+      }
+      $defCh = trim(strval($eq->getConfiguration('defined_channel', '')));
+      if ($defCh === '' || !is_numeric($defCh)) {
+        continue;
+      }
+      $eqHost = trim(strval($eq->getConfiguration('adresseip', '')));
+      if ($eqHost === $nvrHost || ($nvrIp !== '' && $resolveIp($eqHost) === $nvrIp)) {
+        $existingByChannel[intval($defCh)] = $eq;
+      }
+    }
+
+    $created = 0;
+    $existing = 0;
+    $createdIds = array();
+    $objId = $nvr->getObject_id();
+    $autoRefresh = trim(strval($nvr->getConfiguration('autorefresh', '')));
+    if ($autoRefresh === '') {
+      $autoRefresh = '*/15 * * * *';
+    }
+
+    foreach ($populated as $ch => $st) {
+      if (isset($existingByChannel[$ch])) {
+        $existing++;
+        continue;
+      }
+      $baseName = trim(strval($st['name'] ?? ''));
+      if ($baseName === '') {
+        $baseName = trim(strval($nvr->getName())) . ' - Canal ' . $ch;
+      }
+      $candidateName = $baseName;
+      $suffix = 1;
+      while (is_object(eqLogic::byObjectIdEqLogicName($objId, $candidateName))) {
+        $candidateName = $baseName . ' (' . ($suffix === 1 ? ('ch' . $ch) : ('ch' . $ch . '_' . $suffix)) . ')';
+        $suffix++;
+      }
+
+      $child = new reolink();
+      $child->setEqType_name('reolink');
+      $child->setName($candidateName);
+      $child->setObject_id($objId);
+      $child->setCategory('security', 1);
+      $child->setIsEnable(1);
+      $child->setIsVisible(1);
+      foreach (array('adresseip', 'port', 'port_onvif', 'login', 'password', 'cnxtype', 'event_mode') as $cfgKey) {
+        $val = $nvr->getConfiguration($cfgKey, '');
+        if ($val !== '' || in_array($cfgKey, array('adresseip', 'login', 'password', 'cnxtype'), true)) {
+          $child->setConfiguration($cfgKey, $val);
+        }
+      }
+      $child->setConfiguration('autorefresh', $autoRefresh);
+      $child->setConfiguration('defined_channel', strval($ch));
+      $child->save();
+
+      $newId = $child->getId();
+      reolink::GetCamNFO($newId);
+      $childReloaded = reolink::byId($newId, 'reolink');
+      if (is_object($childReloaded)) {
+        $childReloaded->loadCmdFromConf($newId);
+        if (intval($st['online'] ?? 0) === 1) {
+          reolink::refreshNFO($newId);
+        }
+      }
+      $created++;
+      $createdIds[] = intval($newId);
+    }
+
+    if ($created > 0 && intval($nvr->getIsEnable()) === 1) {
+      reolink::cron10();
+    }
+
+    return array(
+      'created' => $created,
+      'existing' => $existing,
+      'total' => count($populated),
+      'createdIds' => $createdIds,
+    );
+  }
+
   public static function syncCameraPlugin($id = null) {
     try {
       $camPlugin = plugin::byId('camera');

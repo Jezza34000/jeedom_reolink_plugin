@@ -36,6 +36,10 @@ try {
       ajax::success(array('count' => $count));
     }
 
+    if (init('action') == 'SyncNvrChannels') {
+      ajax::success(reolink::syncNvrChannels(init('id')));
+    }
+
     if (init('action') == 'CheckFirmwareUpdates') {
       $id = init('id', null);
       $force = intval(init('force', 1)) === 1;
