@@ -288,6 +288,9 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 										<div class="col-sm-12 cameraOnlyAction" style="margin-bottom:8px;">
 											<a class="btn btn-block btn-info" id="btSyncCameraPlugin"><i class="fas fa-video"></i> {{Synchroniser vers plugin Caméra}}</a>
 										</div>
+										<div class="col-sm-12 nvrOnlyAction" style="display:none;margin-bottom:8px;">
+											<a class="btn btn-block btn-success" id="btSyncNvrChannels" title="{{Crée automatiquement un équipement Jeedom par canal caméra connecté au NVR / Home Hub sans dupliquer les canaux déjà configurés}}"><i class="fas fa-sitemap"></i> {{Synchroniser les caméras du NVR}}</a>
+										</div>
 									</div>
 								</div>
 							</div>
