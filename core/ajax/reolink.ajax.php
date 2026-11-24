@@ -36,6 +36,13 @@ try {
       ajax::success(array('count' => $count));
     }
 
+    if (init('action') == 'CheckFirmwareUpdates') {
+      $id = init('id', null);
+      $force = intval(init('force', 1)) === 1;
+      $targetId = ($id === '' || $id === null) ? null : intval($id);
+      ajax::success(reolink::checkAllFirmwareUpdates($targetId, $force));
+    }
+
     if (init('action') == 'webrtcOffer') {
       $id = intval(init('id', 0));
       $quality = (init('quality', 'sub') === 'main') ? 'main' : 'sub';

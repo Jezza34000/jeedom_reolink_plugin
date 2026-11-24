@@ -4,6 +4,11 @@
 >
 >Pour rappel s'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 24/11/2026
+
+- Vérification des mises à jour firmware officielles Reolink : nouvelle option dans la configuration du plugin permettant de vérifier quotidiennement (`cronDaily`) et à la demande (**Vérifier les firmwares**) la disponibilité de nouveaux firmwares par modèle et révision matérielle (`hardVer`) via l'index `AT0myks/reolink-fw-archive` filtré exclusivement sur les liens HTTPS officiels Reolink, avec badge sur la fiche équipement, téléchargement direct (`.zip`) et commandes `NewFirmwareState` / `LatestFirmware` sur l'ensemble des caméras et NVR (sans accès Internet requis côté caméra et sans réveiller les caméras sur batterie)
+- Masque de confidentialité PTZ 3D (`RLC-823S2`, #148) : conservation des zones `screen`/`block` et du paramètre `enableMaskTrack` lors de l'activation ou désactivation de `SetMask`
+
 # 23/11/2026
 
 - Événements push temps réel Baichuan, Sirène, IA & Diagonales PTZ (#130, #134, #136) : écoute temps réel des événements push Baichuan `cmd 33` (`EvMotion`, `MdState`, `EvPeopleDetect`, `EvDogCatDetect`, etc.) dans le démon Python pour le mode `Baichuan (port 9000 uniquement)` sans dépendance externe supplémentaire, ajout de `supportAudioAlarm` (sirène & volume sur `E321`), filtrage/nettoyage strict des événements IA non supportés (`EvVehicleDetect` sur `E321`) et des commandes `EvLastOnvif*` en mode Baichuan, casse `lowerCamelCase` (`leftUp`…) sur `PtzControl` `cmd 18` et maintien des 8 directions PTZ sur `TrackMix` / `RLC-823S2` (`supportPtzSpeed`) contre 4 directions sur la gamme `E1` / `E321`

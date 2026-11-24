@@ -626,6 +626,10 @@
         "Taille des blocs de commandes envoyés simultanément à la caméra (plus grand = plus rapide mais plus de risque de plantage ; plus petit = plus lent mais plus stable)": "Size of command blocks sent simultaneously to the camera (larger = faster but more crash risk; smaller = slower but more stable)",
         "Adresse IP vers laquelle les caméras renvoient les événements de détection de mouvement (IP permettant d'atteindre le webhook du démon du plugin)": "IP address where cameras send motion detection events (IP that can reach the plugin daemon webhook)",
         "IP utilisée pour le rappel du démon lorsque vous sélectionnez l'option Personnalisée": "IP used for the daemon callback when you select the Custom option",
-        "Port du webhook du démon utilisé par les caméras lors de la détection des mouvements": "Daemon webhook port used by cameras for motion detection"
+        "Port du webhook du démon utilisé par les caméras lors de la détection des mouvements": "Daemon webhook port used by cameras for motion detection",
+        "Vérifier les mises à jour firmware (dépôt GitHub)": "Check firmware updates (GitHub repository)",
+        "Compare quotidiennement le modèle et la révision matérielle (hardVer) de vos caméras et NVR avec l'index AT0myks/reolink-fw-archive en ne retenant que les liens HTTPS hébergés sur les serveurs officiels Reolink. Fonctionne sans exposer les caméras à Internet et sans réveiller les caméras sur batterie.": "Checks your cameras and NVRs model and hardware revision (hardVer) daily against the AT0myks/reolink-fw-archive index while strictly keeping HTTPS links hosted on official Reolink servers. Works without exposing cameras to the Internet and without waking battery cameras.",
+        "Activé (liens officiels Reolink uniquement)": "Enabled (official Reolink links only)",
+        "Désactivé": "Disabled"
     }
 }

@@ -626,6 +626,10 @@
         "Taille des blocs de commandes envoyés simultanément à la caméra (plus grand = plus rapide mais plus de risque de plantage ; plus petit = plus lent mais plus stable)": "Tamaño de los bloques de comandos enviados simultáneamente a la cámara (mayor = más rápido pero más riesgo de fallo; menor = más lento pero más estable)",
         "Adresse IP vers laquelle les caméras renvoient les événements de détection de mouvement (IP permettant d'atteindre le webhook du démon du plugin)": "IP a la que las cámaras envían los eventos de detección de movimiento (IP que permite alcanzar el webhook del demonio del plugin)",
         "IP utilisée pour le rappel du démon lorsque vous sélectionnez l'option Personnalisée": "IP utilizada para la devolución de llamada del demonio cuando selecciona la opción Personalizada",
-        "Port du webhook du démon utilisé par les caméras lors de la détection des mouvements": "Puerto del webhook del demonio usado por las cámaras durante la detección de movimiento"
+        "Port du webhook du démon utilisé par les caméras lors de la détection des mouvements": "Puerto del webhook del demonio usado por las cámaras durante la detección de movimiento",
+        "Vérifier les mises à jour firmware (dépôt GitHub)": "Comprobar actualizaciones de firmware (repositorio GitHub)",
+        "Compare quotidiennement le modèle et la révision matérielle (hardVer) de vos caméras et NVR avec l'index AT0myks/reolink-fw-archive en ne retenant que les liens HTTPS hébergés sur les serveurs officiels Reolink. Fonctionne sans exposer les caméras à Internet et sans réveiller les caméras sur batterie.": "Compara diariamente el modelo y la revisión de hardware (hardVer) de sus cámaras y NVR con el índice AT0myks/reolink-fw-archive conservando únicamente enlaces HTTPS alojados en servidores oficiales de Reolink. Funciona sin exponer las cámaras a Internet y sin despertar las cámaras con batería.",
+        "Activé (liens officiels Reolink uniquement)": "Activado (solo enlaces oficiales de Reolink)",
+        "Désactivé": "Desactivado"
     }
 }

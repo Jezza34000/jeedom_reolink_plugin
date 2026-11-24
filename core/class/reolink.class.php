@@ -19,6 +19,7 @@
 require_once __DIR__  . '/../../../../core/php/core.inc.php';
 require_once dirname(__FILE__) . '/../../3rdparty/reolinkapi.class.php';
 require_once dirname(__FILE__) . '/../../3rdparty/reolinkbaichuan.class.php';
+require_once dirname(__FILE__) . '/../../3rdparty/reolinkfwarchive.class.php';
 
 const CMD_SEND_QTY = 8;
 
@@ -546,6 +547,7 @@ class reolink extends eqLogic {
     $camera->setConfiguration('hostModel', $devInfo['model'] ?? '');
     $camera->setConfiguration('hostName', $devInfo['name'] ?? '');
     $camera->setConfiguration('hostFirmVer', $devInfo['firmVer'] ?? '');
+    $camera->setConfiguration('hostHardVer', $devInfo['hardVer'] ?? '');
     // Re-evaluate channel child status now that hostExactType/hostChannelNum are known
     $isChannel = $camera->isChannelChild();
 
@@ -652,6 +654,14 @@ class reolink extends eqLogic {
       }
       $camera->setConfiguration('rtspMainUrl', reolink::buildRtspTemplate($rawMain, $channel, false));
       $camera->setConfiguration('rtspSubUrl', reolink::buildRtspTemplate($rawSub, $channel, true));
+    }
+
+    if (self::isGithubFirmwareCheckEnabled()) {
+      try {
+        self::checkEquipmentFirmwareArchive($camera, null, false);
+      } catch (Exception $e) {
+        log::add('reolink', 'debug', 'GetCamNFO firmware archive check ignoré : ' . $e->getMessage());
+      }
     }
 
     $camera->save();
@@ -1849,7 +1859,18 @@ class reolink extends eqLogic {
             break;
 
           case reolinkAPI::CAM_CHECKFIRMWARE:
-            $camcmd->checkAndUpdateCmd('NewFirmwareState', $json_data['value']['newFirmware'] ?? 0);
+            $cgiNewFw = intval($json_data['value']['newFirmware'] ?? 0);
+            if (self::isGithubFirmwareCheckEnabled()) {
+              try {
+                $ghFw = self::checkEquipmentFirmwareArchive($camcmd, null, true);
+                if (!empty($ghFw['updateAvailable'])) {
+                  $cgiNewFw = 1;
+                }
+              } catch (Exception $e) {
+                log::add('reolink', 'debug', 'CheckFirmware GitHub fallback ignoré : ' . $e->getMessage());
+              }
+            }
+            $camcmd->checkAndUpdateCmd('NewFirmwareState', $cgiNewFw);
             $ipForFw = strval($camcmd->getConfiguration('adresseip'));
             if ($ipForFw !== '') {
               config::save('last_firmware_check_' . preg_replace('/[^a-zA-Z0-9_.-]/', '_', $ipForFw), time(), __CLASS__);
@@ -2121,6 +2142,199 @@ class reolink extends eqLogic {
 
       log::add('reolink', 'debug', 'CRON mise à jour souscription ONVIF events Cam=' . $camera->getConfiguration('adresseip'));
       reolink::sendToDaemon($params);
+    }
+  }
+
+  public static function isGithubFirmwareCheckEnabled() {
+    return intval(config::byKey('check_fw_github', 'reolink', 1)) === 1;
+  }
+
+  public static function ensureGithubFirmwareCommands($camera) {
+    if (!is_object($camera) || !($camera instanceof reolink) || intval($camera->getId()) <= 0) {
+      return;
+    }
+    $isBaichuanOnly = (strtolower(trim(strval($camera->getConfiguration('cnxtype', '')))) === 'baichuan');
+    $isChannel = $camera->isChannelChild();
+
+    $newFwCmd = $camera->getCmd(null, 'NewFirmwareState');
+    if (!is_object($newFwCmd)) {
+      $newFwCmd = new reolinkCmd();
+      $newFwCmd->setEqLogic_id($camera->getId());
+      $newFwCmd->setLogicalId('NewFirmwareState');
+      $newFwCmd->setName(__('Nouveau firmware (état)', __FILE__));
+      $newFwCmd->setType('info');
+      $newFwCmd->setSubType('binary');
+      $newFwCmd->setIsHistorized(0);
+      $newFwCmd->setIsVisible(($isChannel || $isBaichuanOnly) ? 0 : 1);
+      $newFwCmd->setConfiguration('help', __('Indique si une mise à jour firmware officielle Reolink est disponible (0 = À jour, 1 = Mise à jour disponible).', __FILE__));
+      $newFwCmd->setConfiguration('valuesHelp', __('0 = À jour, 1 = Mise à jour disponible', __FILE__));
+      if (!$isChannel && !$isBaichuanOnly) {
+        $newFwCmd->setConfiguration('payload', '{"cmd":"CheckFirmware"}');
+      }
+      $newFwCmd->save();
+    }
+
+    $latestFwCmd = $camera->getCmd(null, 'LatestFirmware');
+    if (!is_object($latestFwCmd)) {
+      $latestFwCmd = new reolinkCmd();
+      $latestFwCmd->setEqLogic_id($camera->getId());
+      $latestFwCmd->setLogicalId('LatestFirmware');
+      $latestFwCmd->setName(__('Dernier firmware disponible', __FILE__));
+      $latestFwCmd->setType('info');
+      $latestFwCmd->setSubType('string');
+      $latestFwCmd->setIsHistorized(0);
+      $latestFwCmd->setIsVisible(0);
+      $latestFwCmd->setConfiguration('help', __('Dernière version de firmware officielle référencée pour ce modèle et cette révision matérielle.', __FILE__));
+      $latestFwCmd->save();
+    }
+
+    $checkCmd = $camera->getCmd(null, 'CheckFirmware');
+    if (!is_object($checkCmd)) {
+      $checkCmd = new reolinkCmd();
+      $checkCmd->setEqLogic_id($camera->getId());
+      $checkCmd->setLogicalId('CheckFirmware');
+      $checkCmd->setName(__('Vérifier firmware', __FILE__));
+      $checkCmd->setType('action');
+      $checkCmd->setSubType('other');
+      $checkCmd->setIsVisible(($isChannel || $isBaichuanOnly) ? 0 : 1);
+      $checkCmd->setConfiguration('help', __('Vérifie la disponibilité d\'une mise à jour firmware officielle Reolink.', __FILE__));
+      $checkCmd->save();
+    }
+  }
+
+  public static function checkEquipmentFirmwareArchive($camera, $index = null, $saveConfig = true) {
+    if (!is_object($camera) || !($camera instanceof reolink)) {
+      throw new Exception(__('Équipement Reolink invalide', __FILE__));
+    }
+    $model = trim(strval($camera->getConfiguration('model', '')));
+    $hardVer = trim(strval($camera->getConfiguration('hardVer', '')));
+    $firmVer = trim(strval($camera->getConfiguration('firmVer', '')));
+
+    $res = reolinkFwArchive::checkDevice($model, $hardVer, $firmVer, $index);
+    $checkedAt = date('Y-m-d H:i:s');
+    $changelogText = !empty($res['changelog']) ? implode("\n", $res['changelog']) : '';
+
+    $updates = array(
+      'fwArchiveStatus' => $res['status'],
+      'fwArchiveLatestVer' => $res['latestVer'],
+      'fwArchiveBuildDate' => $res['buildDate'],
+      'fwArchiveDownloadUrl' => $res['downloadUrl'],
+      'fwArchiveChangelog' => $changelogText,
+      'fwArchiveCheckedAt' => $checkedAt,
+    );
+
+    $changed = false;
+    foreach ($updates as $k => $v) {
+      if (strval($camera->getConfiguration($k, '')) !== strval($v)) {
+        $camera->setConfiguration($k, $v);
+        $changed = true;
+      }
+    }
+    if ($saveConfig && $changed && intval($camera->getId()) > 0) {
+      $camera->save(true);
+    }
+
+    if (intval($camera->getId()) > 0) {
+      if (self::isGithubFirmwareCheckEnabled()) {
+        self::ensureGithubFirmwareCommands($camera);
+      }
+      if (is_object($camera->getCmd(null, 'LatestFirmware'))) {
+        $camera->checkAndUpdateCmd('LatestFirmware', $res['latestVer']);
+      }
+      if (is_object($camera->getCmd(null, 'NewFirmwareState'))) {
+        if ($res['status'] === 'update_available') {
+          $camera->checkAndUpdateCmd('NewFirmwareState', 1);
+        } elseif ($res['status'] === 'up_to_date') {
+          $camera->checkAndUpdateCmd('NewFirmwareState', 0);
+        }
+      }
+    }
+
+    $role = 'camera';
+    if ($camera->isNvrParent()) {
+      $role = 'nvr';
+    } elseif ($camera->isChannelChild()) {
+      $role = 'channel';
+    }
+
+    return array(
+      'id' => intval($camera->getId()),
+      'name' => $camera->getName(),
+      'humanName' => $camera->getHumanName(),
+      'isEnable' => intval($camera->getIsEnable()) === 1,
+      'role' => $role,
+      'model' => $model,
+      'hardVer' => $hardVer,
+      'installedVer' => $firmVer,
+      'status' => $res['status'],
+      'updateAvailable' => !empty($res['updateAvailable']),
+      'latestVer' => $res['latestVer'],
+      'latestPakVer' => $res['latestPakVer'],
+      'buildDate' => $res['buildDate'],
+      'downloadUrl' => $res['downloadUrl'],
+      'changelog' => $res['changelog'],
+      'checkedAt' => $checkedAt,
+    );
+  }
+
+  public static function checkAllFirmwareUpdates($id = null, $forceRefresh = false) {
+    $index = reolinkFwArchive::fetchIndex($forceRefresh);
+    $eqList = array();
+    if ($id !== null && intval($id) > 0) {
+      $single = reolink::byId(intval($id));
+      if (!is_object($single)) {
+        throw new Exception(__('Impossible de trouver l\'équipement : ', __FILE__) . intval($id));
+      }
+      $eqList[] = $single;
+    } else {
+      $eqList = eqLogic::byType('reolink');
+      usort($eqList, function ($a, $b) {
+        if ($a->isNvrParent() !== $b->isNvrParent()) {
+          return $a->isNvrParent() ? -1 : 1;
+        }
+        return strcasecmp($a->getHumanName(), $b->getHumanName());
+      });
+    }
+
+    $devices = array();
+    $updatesCount = 0;
+    foreach ($eqList as $eq) {
+      if (!is_object($eq)) {
+        continue;
+      }
+      $item = self::checkEquipmentFirmwareArchive($eq, $index, true);
+      if (!empty($item['updateAvailable'])) {
+        $updatesCount++;
+      }
+      $devices[] = $item;
+    }
+
+    return array(
+      'enabled' => self::isGithubFirmwareCheckEnabled(),
+      'fetchedAt' => date('Y-m-d H:i:s', intval($index['fetchedAt'] ?? time())),
+      'stale' => !empty($index['stale']),
+      'entryCount' => intval($index['entryCount'] ?? 0),
+      'repoUrl' => reolinkFwArchive::REPO_HTML_URL,
+      'updatesCount' => $updatesCount,
+      'devices' => $devices,
+    );
+  }
+
+  // Fonction exécutée automatiquement une fois par jour par Jeedom
+  public static function cronDaily() {
+    if (!self::isGithubFirmwareCheckEnabled()) {
+      return;
+    }
+    try {
+      $report = self::checkAllFirmwareUpdates(null, true);
+      $updates = intval($report['updatesCount'] ?? 0);
+      if ($updates > 0) {
+        log::add('reolink', 'info', sprintf(__('Vérification quotidienne des firmwares Reolink : %d mise(s) à jour officielle(s) disponible(s)', __FILE__), $updates));
+      } else {
+        log::add('reolink', 'debug', __('Vérification quotidienne des firmwares Reolink : tous les équipements référencés sont à jour', __FILE__));
+      }
+    } catch (Exception $e) {
+      log::add('reolink', 'warning', 'cronDaily firmware check : ' . $e->getMessage());
     }
   }
 
@@ -3154,8 +3368,9 @@ class reolink extends eqLogic {
           && reolink::isPermanentUnsupportedRsp($probeResults[$payload]['rsp'], $isBatChannel));
 
         $shouldRemove = isset($deniedLogical[$lid]) || $probeFailed;
+        $isGithubFwCmd = self::isGithubFirmwareCheckEnabled() && in_array($lid, array('NewFirmwareState', 'CheckFirmware', 'LatestFirmware'), true);
         // Also remove if ability/subability/scope from JSON would deny
-        if (!$shouldRemove) {
+        if (!$shouldRemove && !$isGithubFwCmd) {
           $foundInConf = false;
           foreach ($device['commands'] as $command) {
             if (($command['logicalId'] ?? '') !== $lid) {
@@ -3170,7 +3385,7 @@ class reolink extends eqLogic {
             break;
           }
           // Orphan camera cmds on NVR parent (legacy) not in host scope
-          if (!$foundInConf && $camera->isNvrParent()) {
+          if (!$foundInConf && $camera->isNvrParent() && $lid !== 'LatestFirmware') {
             $shouldRemove = true;
           }
         }
@@ -3224,6 +3439,10 @@ class reolink extends eqLogic {
       }
     }
     $cnx->batteryChannelMode = false;
+
+    if (self::isGithubFirmwareCheckEnabled()) {
+      self::ensureGithubFirmwareCommands($camera);
+    }
 
     $camera->setConfiguration('unsupported_payloads', array_keys(array_merge($unsupportedPayloads, $keptUnsupported)));
     $camera->setConfiguration('unsupported_fail_counts', array());
@@ -3665,10 +3884,31 @@ class reolinkCmd extends cmd {
         }
         break;
       case 'CheckFirmware':
-        $camcnx = reolink::getReolinkConnection($EqId);
-        $res = $camcnx->SendCMD('[{"cmd":"CheckFirmware"}]');
-        if (is_array($res) && isset($res[0]['value']['newFirmware']) && is_object($eqLogic)) {
-          $eqLogic->checkAndUpdateCmd('NewFirmwareState', $res[0]['value']['newFirmware']);
+        $newFwVal = null;
+        $isBaichuanOnly = is_object($eqLogic) && (strtolower(trim(strval($eqLogic->getConfiguration('cnxtype', '')))) === 'baichuan');
+        if (is_object($eqLogic) && !$isBaichuanOnly && !$eqLogic->isChannelChild()) {
+          $camcnx = reolink::getReolinkConnection($EqId);
+          if (is_object($camcnx)) {
+            $res = $camcnx->SendCMD('[{"cmd":"CheckFirmware"}]');
+            if (is_array($res) && isset($res[0]['value']['newFirmware'])) {
+              $newFwVal = intval($res[0]['value']['newFirmware']);
+            }
+          }
+        }
+        if (is_object($eqLogic) && reolink::isGithubFirmwareCheckEnabled()) {
+          try {
+            $ghRes = reolink::checkEquipmentFirmwareArchive($eqLogic, null, true);
+            if (!empty($ghRes['updateAvailable'])) {
+              $newFwVal = 1;
+            } elseif ($newFwVal === null && ($ghRes['status'] ?? '') === 'up_to_date') {
+              $newFwVal = 0;
+            }
+          } catch (Exception $e) {
+            log::add('reolink', 'warning', 'CheckFirmware GitHub : ' . $e->getMessage());
+          }
+        }
+        if ($newFwVal !== null && is_object($eqLogic)) {
+          $eqLogic->checkAndUpdateCmd('NewFirmwareState', $newFwVal);
           $ipForFw = strval($eqLogic->getConfiguration('adresseip'));
           if ($ipForFw !== '') {
             config::save('last_firmware_check_' . preg_replace('/[^a-zA-Z0-9_.-]/', '_', $ipForFw), time(), 'reolink');
