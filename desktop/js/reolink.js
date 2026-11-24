@@ -353,6 +353,10 @@ function syncCameraPlugin(id) {
 $('#btSyncCameraPluginAll').on('click', function () {
   syncCameraPlugin('')
 })
+$('#btHealthReolink').on('click', function () {
+  $('#md_modal').dialog({title: '{{Santé Reolink}}'})
+  $('#md_modal').load('index.php?v=d&plugin=reolink&modal=health').dialog('open')
+})
 $('#btSyncCameraPlugin').on('click', function () {
   var id = $('.eqLogicAttr[data-l1key=id]').value()
   if (id == '') {

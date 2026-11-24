@@ -1,5 +1,18 @@
 {
     "plugins/reolink/core/class/reolink.class.php": {
+        "Équipements actifs": "Equipos activos",
+        "Caméras en ligne": "Cámaras en línea",
+        "Un ou plusieurs canaux actifs sont hors ligne (ChannelOnline = 0)": "Uno o más canales activos están fuera de línea (ChannelOnline = 0)",
+        "Serveur Live go2rtc": "Servidor Live go2rtc",
+        "Non installé": "No instalado",
+        "Arrêté": "Detenido",
+        "OK (127.0.0.1:1984)": "OK (127.0.0.1:1984)",
+        "Indisponible": "No disponible",
+        "Le démon tourne mais le port local go2rtc 127.0.0.1:1984 ne répond pas": "El demonio está en ejecución pero el puerto local go2rtc 127.0.0.1:1984 no responde",
+        "Mises à jour firmware": "Actualizaciones de firmware",
+        "disponible(s)": "disponible(s)",
+        "À jour": "Actualizado",
+        "Consultez Vérifier les firmwares sur la page du plugin Reolink": "Consulte Comprobar actualizaciones de firmware en la página del plugin Reolink",
         "Récupérer les scènes": "Recuperar escenas",
         "Scène active (état)": "Escena activa (estado)",
         "Activer une scène": "Activar una escena",
@@ -576,9 +589,11 @@
         "Découverte et création des caméras du NVR en cours...": "Descubriendo y creando cámaras del NVR...",
         "Synchronisation NVR terminée": "Sincronización del NVR completada",
         "caméra(s) créée(s)": "cámara(s) creada(s)",
-        "déjà présente(s)": "ya existente(s)"
+        "déjà présente(s)": "ya existente(s)",
+        "Santé Reolink": "Salud Reolink"
     },
     "plugins/reolink/desktop/php/reolink.php": {
+        "Santé": "Salud",
         "Mode d'événements temps réel": "Modo de eventos en tiempo real",
         "Par défaut (ONVIF ou hérité du NVR)": "Por defecto (ONVIF o heredado del NVR)",
         "ONVIF (webhook HTTP)": "ONVIF (webhook HTTP)",
@@ -604,6 +619,31 @@
         "Équipement visible": "Equipo visible",
         "Équipement non visible": "Equipo no visible",
         "Numéro de canal si la caméra est derrière un NVR (0 = premier canal). Laissez vide pour un NVR parent ou une caméra autonome.": "Número de canal si la cámara está detrás de un NVR (0 = primer canal). Déjelo vacío para un NVR padre o una cámara autónoma."
+    },
+    "plugins/reolink/desktop/modal/health.php": {
+        "401 - Accès non autorisé": "401 - Acceso no autorizado",
+        "Image": "Imagen",
+        "Équipement": "Equipo",
+        "ID": "ID",
+        "Rôle": "Rol",
+        "Modèle": "Modelo",
+        "Accès": "Acceso",
+        "Événements": "Eventos",
+        "Statut": "Estado",
+        "Batterie": "Batería",
+        "Firmware": "Firmware",
+        "Dernière communication": "Última comunicación",
+        "Canal": "Canal",
+        "Autonome": "Autónoma",
+        "Inactif": "Inactivo",
+        "en ligne": "en línea",
+        "Actif": "Activo",
+        "Scène": "Escena",
+        "En veille": "En reposo",
+        "En ligne": "En línea",
+        "Hors ligne": "Fuera de línea",
+        "MAJ": "Act.",
+        "À jour": "Actualizado"
     },
     "plugins/reolink/desktop/modal/modal.reolink.php": {
         "Activer": "Activar",
