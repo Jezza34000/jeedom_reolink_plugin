@@ -1891,7 +1891,7 @@ class reolink extends eqLogic {
             break;
 
           case reolinkAPI::CAM_GET_MASK:
-            $camcmd->checkAndUpdateCmd('SetMaskState', $json_data['value']['Mask']['enable']);
+            $camcmd->checkAndUpdateCmd('SetMaskState', self::extractMaskState($json_data['value']['Mask'] ?? null));
             break;
 
           case reolinkAPI::CAM_GET_AUTOMAINT:
@@ -2489,6 +2489,73 @@ class reolink extends eqLogic {
       return null;
     }
     return array_replace_recursive($cur, $patchArray);
+  }
+
+  /**
+   * Detect whether a GetMask response uses 3D PTZ-tracked Position Masks
+   * (`supportPrivacyCoverFollow` / `enableMaskTrack` on RLC-823S2, RLC-823S1,
+   * RLC-823S1W, P840, P850, W840).
+   */
+  public static function usesDynamicMaskTrack($mask) {
+    if (!is_array($mask) || !array_key_exists('enableMaskTrack', $mask)) {
+      return false;
+    }
+    if (!empty($mask['enableMaskTrack'])) {
+      return true;
+    }
+    if (!empty($mask['area']) && is_array($mask['area'])) {
+      foreach ($mask['area'] as $area) {
+        if (is_array($area) && !empty($area['track']['valid'])) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Extract normalized binary state (0/1) from a GetMask `value.Mask` object.
+   * On 3D Position Mask cameras (`bc_ptz.cpp`), tracked masks are only active
+   * when `enable == 0 && enableMaskTrack != 0` (`enable == 1` disables 3D tracking).
+   */
+  public static function extractMaskState($mask) {
+    if (!is_array($mask)) {
+      return 0;
+    }
+    if (self::usesDynamicMaskTrack($mask)) {
+      return (empty($mask['enable']) && !empty($mask['enableMaskTrack'])) ? 1 : 0;
+    }
+    return !empty($mask['enable']) ? 1 : 0;
+  }
+
+  /**
+   * Build the `SetMask` param payload, adapting `enable` vs `enableMaskTrack`
+   * when the camera uses 3D PTZ-tracked Position Masks.
+   */
+  public static function buildSetMaskParam($camcnx, $channel, $patch) {
+    if (!is_array($patch) || !isset($patch['Mask']) || !is_array($patch['Mask'])) {
+      return $patch;
+    }
+    $desired = !empty($patch['Mask']['enable']) ? 1 : 0;
+    $curMask = null;
+    if (is_object($camcnx)) {
+      $res = $camcnx->SendCMD('[{"cmd":"GetMask","action":0,"param":{"channel":' . intval($channel) . '}}]');
+      if (is_array($res) && isset($res[0]['value']['Mask']) && is_array($res[0]['value']['Mask'])) {
+        $curMask = $res[0]['value']['Mask'];
+      }
+    }
+    if (self::usesDynamicMaskTrack($curMask)) {
+      return array(
+        'Mask' => array(
+          'channel' => intval($channel),
+          'enable' => 0,
+          'enableMaskTrack' => $desired,
+        ),
+      );
+    }
+    $patch['Mask']['channel'] = intval($channel);
+    $patch['Mask']['enable'] = $desired;
+    return $patch;
   }
 
   /**
@@ -3760,6 +3827,9 @@ class reolinkCmd extends cmd {
                 $patch['Rec']['channel'] = $channel;
               }
               $payload = json_encode(array(array('cmd' => $actionAPI, 'action' => 0, 'param' => $patch)));
+            } elseif ($actionAPI === 'SetMask' && is_array($patch)) {
+              $maskParam = reolink::buildSetMaskParam($camcnx, $channel, $patch);
+              $payload = json_encode(array(array('cmd' => $actionAPI, 'action' => 0, 'param' => $maskParam)));
             } else {
               $payload = '[{"cmd":"' . $actionAPI . '","action":0,"param":' . $patchJson . '}]';
             }
