@@ -22,6 +22,9 @@ try {
         $events = is_array($result['events'] ?? null) ? $result['events'] : array();
 
         foreach ($eqLogics as $eqLogic) {
+            if (!$eqLogic->usesBaichuanPush()) {
+              continue;
+            }
             $camera_contact_point = $eqLogic->getConfiguration('adresseip');
             $camera_ip = filter_var($camera_contact_point, FILTER_VALIDATE_IP)
               ? $camera_contact_point
@@ -38,6 +41,8 @@ try {
             $channel = ($defCh !== '') ? intval($defCh) : max(0, intval($eqLogic->getConfiguration('channelNum', 1)) - 1);
 
             $matchedAny = false;
+            $hasExplicitOnline = false;
+            $wokeBattery = false;
             foreach ($events as $ev) {
               $evCh = array_key_exists('channel', $ev) ? intval($ev['channel']) : null;
               if ($evCh !== null && $multiChannel && $channel !== $evCh) {
@@ -49,13 +54,33 @@ try {
               if ($evName === 'motion') {
                 $eqLogic->checkAndUpdateCmd('MdState', $evState);
                 $eqLogic->checkAndUpdateCmd('EvMotion', $evState);
+                if ($evState === 1) {
+                  $wokeBattery = true;
+                }
               } elseif ($evName === 'EvPrivacy') {
                 $eqLogic->checkAndUpdateCmd('SetPrivacyModeState', $evState);
+              } elseif ($evName === 'EvChannelOnline') {
+                $hasExplicitOnline = true;
+                $eqLogic->checkAndUpdateCmd('ChannelOnline', $evState);
+              } elseif ($evName === 'EvBatterySleep') {
+                if ($eqLogic->hasBattery()) {
+                  $eqLogic->checkAndUpdateCmd('BatterySleepState', $evState);
+                }
               } elseif (strpos($evName, 'Ev') !== false) {
                 $eqLogic->checkAndUpdateCmd($evName, $evState);
+                if ($evState === 1) {
+                  $wokeBattery = true;
+                }
               }
             }
-            if ($matchedAny && $multiChannel) {
+            if ($wokeBattery && $eqLogic->hasBattery()) {
+              $eqLogic->checkAndUpdateCmd('BatterySleepState', 0);
+              $lastWake = intval(cache::byKey('reolink::battery_last_wake::' . $eqLogic->getId())->getValue(0));
+              if ((time() - $lastWake) > reolink::BATTERY_PASSIVE_WAKE_INTERVAL) {
+                reolink::refreshNFO($eqLogic->getId(), true);
+              }
+            }
+            if ($matchedAny && $multiChannel && !$hasExplicitOnline) {
               $eqLogic->checkAndUpdateCmd('ChannelOnline', 1);
             }
         }
@@ -66,6 +91,10 @@ try {
         $eventChannel = array_key_exists('channel', $result) ? intval($result['channel']) : null;
 
         foreach ($eqLogics as $eqLogic) {
+            $isBaichuanPush = (($result['source'] ?? '') === 'baichuan');
+            if (!$isBaichuanPush && $eqLogic->usesBaichuanPush()) {
+              continue;
+            }
             $camera_contact_point = $eqLogic->getConfiguration('adresseip');
             $camera_AI = $eqLogic->getConfiguration('supportai');
 

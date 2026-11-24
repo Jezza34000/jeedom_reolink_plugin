@@ -569,6 +569,11 @@
         "déjà présente(s)": "already present"
     },
     "plugins/reolink/desktop/php/reolink.php": {
+        "Mode d'événements temps réel": "Real-time event mode",
+        "Par défaut (ONVIF ou hérité du NVR)": "Default (ONVIF or inherited from NVR)",
+        "ONVIF (webhook HTTP)": "ONVIF (HTTP webhook)",
+        "Baichuan TCP (port 9000)": "Baichuan TCP (port 9000)",
+        "En HTTP/HTTPS, choisissez ONVIF (webhook HTTP entrant par défaut) ou Baichuan TCP (écoute persistante sur le port 9000 sans webhook entrant + état canal/veille temps réel cmd 145). Sur un canal enfant, Par défaut hérite du NVR parent.": "In HTTP/HTTPS mode, choose ONVIF (default inbound HTTP webhook) or Baichuan TCP (persistent port 9000 listener without inbound webhook + real-time channel/sleep state cmd 145). On a child channel, Default inherits from the parent NVR.",
         "Synchroniser les caméras du NVR": "Synchronize NVR cameras",
         "Crée automatiquement un équipement Jeedom par canal caméra connecté au NVR / Home Hub sans dupliquer les canaux déjà configurés": "Automatically creates one Jeedom equipment per camera channel connected to the NVR / Home Hub without duplicating already configured channels",
         "Assistant cron": "Cron helper",

@@ -28,7 +28,7 @@ class reolink extends eqLogic {
   const PYTHON_PATH = __DIR__ . '/../../resources/venv/bin/python3';
   const BATTERY_PASSIVE_WAKE_INTERVAL = 3600;
   const BATTERY_WAKE_INTERVAL = 21600;
-  const MULTI_HOST_TYPES = array('NVR', 'WIFI_NVR', 'HOMEHUB');
+  const MULTI_HOST_TYPES = array('NVR', 'WIFI_NVR', 'HOMEHUB', 'HVR', 'DVR');
   const NONE_WAKING_COMMANDS = array(
     'GetIsp',
     'GetEvents',
@@ -145,6 +145,41 @@ class reolink extends eqLogic {
 
   public function isStandaloneCamera() {
     return !$this->isNvrParent() && !$this->isChannelChild();
+  }
+
+  public function usesBaichuanPush() {
+    $cnxType = strtolower(trim(strval($this->getConfiguration('cnxtype', ''))));
+    if ($cnxType === 'baichuan') {
+      return true;
+    }
+    $mode = strtolower(trim(strval($this->getConfiguration('event_mode', ''))));
+    if ($mode === 'baichuan') {
+      return true;
+    }
+    if ($mode === 'onvif') {
+      return false;
+    }
+    if ($this->isChannelChild()) {
+      $myHost = trim(strval($this->getConfiguration('adresseip', '')));
+      if ($myHost !== '') {
+        $myIp = filter_var($myHost, FILTER_VALIDATE_IP) ? $myHost : gethostbyname($myHost);
+        foreach (eqLogic::byType('reolink', true) as $eq) {
+          if (!$eq->isNvrParent()) {
+            continue;
+          }
+          $pHost = trim(strval($eq->getConfiguration('adresseip', '')));
+          if ($pHost === '') {
+            continue;
+          }
+          $pIp = filter_var($pHost, FILTER_VALIDATE_IP) ? $pHost : gethostbyname($pHost);
+          if (($pHost === $myHost || $pIp === $myIp)
+            && strtolower(trim(strval($eq->getConfiguration('event_mode', '')))) === 'baichuan') {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   public function hasBattery() {
@@ -2284,7 +2319,7 @@ class reolink extends eqLogic {
       return intval($a->isNvrParent()) - intval($b->isNvrParent());
     });
     foreach ($eqLogics as $camera) {
-      if (strtolower(trim(strval($camera->getConfiguration('cnxtype', '')))) !== 'baichuan') {
+      if (!$camera->usesBaichuanPush()) {
         continue;
       }
       $contact = trim(strval($camera->getConfiguration('adresseip', '')));
@@ -2331,7 +2366,7 @@ class reolink extends eqLogic {
       if ($camera->isStandalonePrivacyBlocking()) {
         continue;
       }
-      if (strtolower(trim(strval($camera->getConfiguration('cnxtype', '')))) === 'baichuan') {
+      if ($camera->usesBaichuanPush() || $camera->isNvrParent()) {
         continue;
       }
 
@@ -3309,11 +3344,12 @@ class reolink extends eqLogic {
 
     // Resolve dual families (channel/standalone only)
     $isBaichuanOnly = (strtolower(trim(strval($camera->getConfiguration('cnxtype', '')))) === 'baichuan');
+    $usesBcPush = $camera->usesBaichuanPush();
     $allowedLogical = array();
     $deniedLogical = array(
       'EvMotionAlarm' => true,
     );
-    if ($isBaichuanOnly) {
+    if ($usesBcPush) {
       $deniedLogical['EvLastOnvifFull'] = true;
       $deniedLogical['EvLastOnvifName'] = true;
       $deniedLogical['EvLastOnvifState'] = true;
@@ -3557,7 +3593,7 @@ class reolink extends eqLogic {
         $keepAlways = array('refresh');
         if (!$camera->isNvrParent()) {
           $keepAlways = array_merge($keepAlways, array('ChannelOnline', 'EvMotion', 'MdState'));
-          if (!$isBaichuanOnly) {
+          if (!$usesBcPush) {
             $keepAlways = array_merge($keepAlways, array('EvLastOnvifFull', 'EvLastOnvifName', 'EvLastOnvifState'));
           }
           $aiKeepMap = array(

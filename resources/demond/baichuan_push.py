@@ -126,6 +126,52 @@ def _xml_tag_value(xml_str: str, tag: str):
     return m.group(1) if m else None
 
 
+def _parse_channel_info_xml(clean_xml: str, ext_xml: str = ""):
+    blocks = re.findall(r"<ChannelInfo\b[^>]*>(.*?)</ChannelInfo>", clean_xml, flags=re.S)
+    if not blocks:
+        return []
+    ext_ch = _xml_tag_value(ext_xml, "channelId") or _xml_tag_value(ext_xml, "chnID")
+    results = []
+    for block in blocks:
+        ch_txt = (
+            _xml_tag_value(block, "channelId")
+            or _xml_tag_value(block, "chnID")
+            or _xml_tag_value(block, "index")
+            or (ext_ch if len(blocks) == 1 else None)
+        )
+        if ch_txt is None:
+            if len(blocks) == 1:
+                ch = 0
+            else:
+                continue
+        elif ch_txt.strip().isdigit():
+            ch = int(ch_txt.strip())
+        else:
+            continue
+
+        login_state = (_xml_tag_value(block, "loginState") or "").strip().lower()
+        state = (_xml_tag_value(block, "state") or "").strip().lower()
+
+        if login_state == "standby" or state == "standby":
+            results.append((ch, 1, 1))
+        elif login_state in (
+            "pwderror",
+            "connectfailed",
+            "unsupportedfirmware",
+            "offline",
+            "disconnect",
+            "disconnected",
+        ) or state in ("none", "disconnect", "disconnected", "offline"):
+            results.append((ch, 0, None))
+        elif login_state in ("success", "connected", "login", "online") or state in (
+            "connect",
+            "connected",
+            "online",
+        ):
+            results.append((ch, 1, 0))
+    return results
+
+
 class _BaichuanPushWorker:
     def __init__(self, ip: str, port: int, user: str, pwd: str, jeedom_cnx):
         self.ip = ip
@@ -141,6 +187,7 @@ class _BaichuanPushWorker:
         )
         self._mess_seq = 0
         self._state_cache = {}
+        self._channel_state_cache = {}
         self._sleep_state = None
         self._reported_sub_ok = False
         self._reported_sub_err = False
@@ -359,6 +406,20 @@ class _BaichuanPushWorker:
                 if self._sleep_state != (sleep_ch, sleep_val):
                     self._sleep_state = (sleep_ch, sleep_val)
                     self._emit_events_batch([{"channel": sleep_ch, "event": "EvPrivacy", "state": sleep_val}])
+
+        elif cmd_id == 145:
+            batch = []
+            for ch, online_val, sleep_val in _parse_channel_info_xml(clean_xml, ext_xml):
+                on_key = (ch, "online")
+                if self._channel_state_cache.get(on_key) != online_val:
+                    self._channel_state_cache[on_key] = online_val
+                    batch.append({"channel": int(ch), "event": "EvChannelOnline", "state": int(online_val)})
+                if sleep_val is not None:
+                    sl_key = (ch, "sleep")
+                    if self._channel_state_cache.get(sl_key) != sleep_val:
+                        self._channel_state_cache[sl_key] = sleep_val
+                        batch.append({"channel": int(ch), "event": "EvBatterySleep", "state": int(sleep_val)})
+            self._emit_events_batch(batch)
 
     def _run_single_session(self):
         buf = bytearray()
