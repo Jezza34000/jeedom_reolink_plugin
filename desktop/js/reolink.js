@@ -18,6 +18,7 @@
 var reolinkCmdQueue = []
 var reolinkLoadingEqLogic = false
 var reolinkInfoOptionsHtml = ''
+var reolinkCurrentEqCfg = null
 
 if (typeof jeedom !== 'undefined' && typeof jeedom.getConfiguration === 'function' && (!jeedom.cache || jeedom.cache.getConfiguration == null)) {
   jeedom.getConfiguration({
@@ -33,6 +34,9 @@ function prePrintEqLogic(_eqlogicId) {
   reolinkCmdQueue = []
   reolinkLoadingEqLogic = true
   reolinkInfoOptionsHtml = ''
+  reolinkCurrentEqCfg = null
+  var badgeEl = document.getElementById('span_fwArchiveBadge')
+  if (badgeEl) badgeEl.innerHTML = ''
   var tbody = document.querySelector('#table_cmd tbody')
   if (tbody) tbody.empty()
 }
@@ -88,7 +92,10 @@ function printEqLogic(_eqLogic) {
 }
 
 function updateEqLogicRoleUi(_eqLogic) {
-  var cfg = (_eqLogic && _eqLogic.configuration) ? _eqLogic.configuration : {}
+  if (_eqLogic && _eqLogic.configuration) {
+    reolinkCurrentEqCfg = _eqLogic.configuration
+  }
+  var cfg = (_eqLogic && _eqLogic.configuration) ? _eqLogic.configuration : (reolinkCurrentEqCfg || {})
   var ch = (typeof cfg.defined_channel !== 'undefined')
     ? cfg.defined_channel
     : $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').value()
@@ -152,6 +159,39 @@ function updateEqLogicRoleUi(_eqLogic) {
       el.innerHTML = ''
     }
   })
+
+  reolinkRenderEqFirmwareBadge(cfg)
+}
+
+function reolinkRenderEqFirmwareBadge(cfg) {
+  var badgeEl = document.getElementById('span_fwArchiveBadge')
+  if (!badgeEl) return
+  cfg = cfg || {}
+  var status = String(cfg.fwArchiveStatus || '').trim()
+  var latest = String(cfg.fwArchiveLatestVer || '').trim()
+  var buildDate = String(cfg.fwArchiveBuildDate || '').trim()
+  var dlUrl = String(cfg.fwArchiveDownloadUrl || '').trim()
+  var checkedAt = String(cfg.fwArchiveCheckedAt || '').trim()
+  var changelog = String(cfg.fwArchiveChangelog || '').trim()
+  var safeDl = /^https:\/\//i.test(dlUrl) ? dlUrl : ''
+
+  if (status === 'update_available' && latest !== '') {
+    var tip = '{{Dernier firmware officiel}} : ' + latest
+    if (buildDate !== '') tip += ' (' + buildDate + ')'
+    if (changelog !== '') tip += ' — ' + changelog.replace(/\s*\n\s*/g, ' / ')
+    var html = '<span class="label label-warning" title="' + reolinkEscapeHtml(tip) + '"><i class="fas fa-arrow-circle-up"></i> {{MAJ dispo}} : ' + reolinkEscapeHtml(latest) + '</span>'
+    if (safeDl !== '') {
+      html += ' <a class="btn btn-xs btn-success" href="' + reolinkEscapeHtml(safeDl) + '" target="_blank" rel="noopener noreferrer" title="{{Télécharger depuis le serveur officiel Reolink}}"><i class="fas fa-download"></i> {{Télécharger (.zip)}}</a>'
+    }
+    badgeEl.innerHTML = html
+  } else if (status === 'up_to_date') {
+    var okTip = checkedAt !== '' ? ('{{Vérifié le}} ' + checkedAt) : '{{Firmware à jour}}'
+    badgeEl.innerHTML = '<span class="label label-success" title="' + reolinkEscapeHtml(okTip) + '"><i class="fas fa-check"></i> {{À jour}}</span>'
+  } else if (status === 'not_found') {
+    badgeEl.innerHTML = '<span class="label label-default" title="{{Aucun firmware officiel référencé dans l\'index GitHub pour ce couple modèle / révision matérielle}}">{{Non référencé}}</span>'
+  } else {
+    badgeEl.innerHTML = ''
+  }
 }
 
 function updateNvrParentHint() {
@@ -313,6 +353,171 @@ $('#btSyncCameraPlugin').on('click', function () {
     return
   }
   syncCameraPlugin(id)
+})
+
+function reolinkOpenFirmwareModal(report) {
+  var devices = (report && Array.isArray(report.devices)) ? report.devices : []
+  var updatesCount = parseInt((report && report.updatesCount) || 0, 10)
+  var fetchedAt = String((report && report.fetchedAt) || '')
+  var repoUrl = String((report && report.repoUrl) || 'https://github.com/AT0myks/reolink-fw-archive')
+  var safeRepoUrl = /^https:\/\//i.test(repoUrl) ? repoUrl : 'https://github.com/AT0myks/reolink-fw-archive'
+
+  var html = '<div style="text-align:left;">'
+  html += '<p>'
+  if (updatesCount > 0) {
+    html += '<span class="label label-warning" style="font-size:0.95em;"><i class="fas fa-arrow-circle-up"></i> ' + updatesCount + ' {{mise(s) à jour disponible(s)}}</span>'
+  } else {
+    html += '<span class="label label-success" style="font-size:0.95em;"><i class="fas fa-check"></i> {{Tous les équipements référencés sont à jour}}</span>'
+  }
+  if (fetchedAt !== '') {
+    html += ' &nbsp;<span class="text-muted" style="font-size:12px;">({{Index synchronisé :}} ' + reolinkEscapeHtml(fetchedAt) + (report && report.stale ? ' - cache local' : '') + ')</span>'
+  }
+  html += '</p>'
+  html += '<p class="text-muted" style="font-size:12px;">{{Source de l\'index :}} <a href="' + reolinkEscapeHtml(safeRepoUrl) + '" target="_blank" rel="noopener noreferrer">AT0myks/reolink-fw-archive</a> — {{seuls les téléchargements HTTPS hébergés sur les serveurs officiels Reolink sont proposés. Décompressez l\'archive .zip avant d\'appliquer le fichier .pak/.paks dans l\'interface Reolink.}}</p>'
+  html += '<div style="max-height:60vh;overflow-y:auto;">'
+  html += '<table class="table table-bordered table-condensed">'
+  html += '<thead><tr>'
+  html += '<th>{{Équipement}}</th>'
+  html += '<th>{{Modèle / Hardware}}</th>'
+  html += '<th>{{Installé}}</th>'
+  html += '<th>{{Dernier officiel}}</th>'
+  html += '<th>{{État}}</th>'
+  html += '<th>{{Téléchargement}}</th>'
+  html += '</tr></thead><tbody>'
+
+  for (var i = 0; i < devices.length; i++) {
+    var d = devices[i] || {}
+    var stBadge = ''
+    if (d.status === 'update_available') {
+      stBadge = '<span class="label label-warning"><i class="fas fa-arrow-circle-up"></i> {{MAJ disponible}}</span>'
+    } else if (d.status === 'up_to_date') {
+      stBadge = '<span class="label label-success"><i class="fas fa-check"></i> {{À jour}}</span>'
+    } else if (d.status === 'missing_info') {
+      stBadge = '<span class="label label-default">{{Infos caméra manquantes}}</span>'
+    } else {
+      stBadge = '<span class="label label-default">{{Non référencé}}</span>'
+    }
+
+    var latestHtml = d.latestVer ? ('<code>' + reolinkEscapeHtml(d.latestVer) + '</code>') : '-'
+    if (d.buildDate) {
+      latestHtml += '<br><small class="text-muted">' + reolinkEscapeHtml(d.buildDate) + '</small>'
+    }
+    if (Array.isArray(d.changelog) && d.changelog.length > 0) {
+      latestHtml += '<div class="text-muted" style="font-size:11px;margin-top:3px;max-width:340px;">' + reolinkEscapeHtml(d.changelog.join(' • ')) + '</div>'
+    }
+
+    var safeDl = (d.downloadUrl && /^https:\/\//i.test(d.downloadUrl)) ? d.downloadUrl : ''
+    var dlHtml = '-'
+    if (safeDl !== '') {
+      var btnClass = (d.status === 'update_available') ? 'btn-success' : 'btn-default'
+      dlHtml = '<a class="btn btn-xs ' + btnClass + '" href="' + reolinkEscapeHtml(safeDl) + '" target="_blank" rel="noopener noreferrer"><i class="fas fa-download"></i> {{Télécharger (.zip)}}</a>'
+    }
+
+    var hwInfo = reolinkEscapeHtml(d.model || '-')
+    if (d.hardVer) {
+      hwInfo += '<br><small class="text-muted">' + reolinkEscapeHtml(d.hardVer) + '</small>'
+    }
+
+    html += '<tr>'
+    html += '<td><strong>' + reolinkEscapeHtml(d.humanName || d.name || ('#' + d.id)) + '</strong>' + (d.isEnable === false ? ' <span class="label label-default">{{Inactif}}</span>' : '') + '</td>'
+    html += '<td>' + hwInfo + '</td>'
+    html += '<td>' + (d.installedVer ? ('<code>' + reolinkEscapeHtml(d.installedVer) + '</code>') : '-') + '</td>'
+    html += '<td>' + latestHtml + '</td>'
+    html += '<td>' + stBadge + '</td>'
+    html += '<td>' + dlHtml + '</td>'
+    html += '</tr>'
+  }
+  html += '</tbody></table></div></div>'
+
+  if (typeof jeeDialog !== 'undefined' && typeof jeeDialog.alert === 'function') {
+    jeeDialog.alert({
+      title: '{{Vérification des firmwares officiels Reolink}}',
+      message: html,
+      width: '82vw'
+    })
+    return
+  }
+  if (typeof bootbox !== 'undefined' && typeof bootbox.alert === 'function') {
+    bootbox.alert({
+      title: '{{Vérification des firmwares officiels Reolink}}',
+      size: 'large',
+      message: html
+    })
+  }
+}
+
+$('#btCheckFirmwareAll').on('click', function () {
+  $('#div_alert').showAlert({message: '{{Vérification des mises à jour firmware sur l\'index GitHub en cours...}}', level: 'info'})
+  $.ajax({
+    type: 'POST',
+    url: 'plugins/reolink/core/ajax/reolink.ajax.php',
+    data: {
+      action: 'CheckFirmwareUpdates',
+      force: 1
+    },
+    dataType: 'json',
+    error: function (request, status, error) {
+      handleAjaxError(request, status, error)
+    },
+    success: function (data) {
+      if (data.state != 'ok') {
+        $('#div_alert').showAlert({message: data.result, level: 'danger'})
+        return
+      }
+      $('#div_alert').hideAlert()
+      reolinkOpenFirmwareModal(data.result || {})
+    }
+  })
+})
+
+$('#btCheckEqFirmware').on('click', function () {
+  var id = $('.eqLogicAttr[data-l1key=id]').value()
+  if (id == '') {
+    $('#div_alert').showAlert({message: '{{Veuillez d\'abord sauvegarder l\'équipement}}', level: 'danger'})
+    return
+  }
+  $('#div_alert').showAlert({message: '{{Vérification du firmware en cours...}}', level: 'info'})
+  $.ajax({
+    type: 'POST',
+    url: 'plugins/reolink/core/ajax/reolink.ajax.php',
+    data: {
+      action: 'CheckFirmwareUpdates',
+      id: id,
+      force: 1
+    },
+    dataType: 'json',
+    error: function (request, status, error) {
+      handleAjaxError(request, status, error)
+    },
+    success: function (data) {
+      if (data.state != 'ok') {
+        $('#div_alert').showAlert({message: data.result, level: 'danger'})
+        return
+      }
+      var res = data.result || {}
+      var dev = (Array.isArray(res.devices) && res.devices.length > 0) ? res.devices[0] : null
+      if (dev) {
+        reolinkCurrentEqCfg = reolinkCurrentEqCfg || {}
+        reolinkCurrentEqCfg.fwArchiveStatus = dev.status || ''
+        reolinkCurrentEqCfg.fwArchiveLatestVer = dev.latestVer || ''
+        reolinkCurrentEqCfg.fwArchiveBuildDate = dev.buildDate || ''
+        reolinkCurrentEqCfg.fwArchiveDownloadUrl = dev.downloadUrl || ''
+        reolinkCurrentEqCfg.fwArchiveCheckedAt = dev.checkedAt || ''
+        reolinkCurrentEqCfg.fwArchiveChangelog = Array.isArray(dev.changelog) ? dev.changelog.join('\n') : ''
+        reolinkRenderEqFirmwareBadge(reolinkCurrentEqCfg)
+        if (dev.status === 'update_available') {
+          $('#div_alert').hideAlert()
+          reolinkOpenFirmwareModal(res)
+        } else if (dev.status === 'up_to_date') {
+          $('#div_alert').showAlert({message: '{{Le firmware de cet équipement est à jour}} (' + (dev.installedVer || '') + ')', level: 'success'})
+        } else if (dev.status === 'missing_info') {
+          $('#div_alert').showAlert({message: '{{Modèle ou révision matérielle manquants : cliquez d\'abord sur Récupérer les infos}}', level: 'warning'})
+        } else {
+          $('#div_alert').showAlert({message: '{{Aucun firmware officiel référencé dans l\'index GitHub pour ce modèle / hardware}}', level: 'warning'})
+        }
+      }
+    }
+  })
 })
 
 $('#btOpenLive').on('click', function () {

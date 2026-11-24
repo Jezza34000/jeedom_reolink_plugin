@@ -78,5 +78,16 @@ if (!isConnect()) {
         <input class="configKey form-control" data-l1key="webhookport" value="44010" />
       </div>
     </div>
+    <div class="form-group">
+      <label class="col-md-4 control-label">{{Vérifier les mises à jour firmware (dépôt GitHub)}}
+        <sup><i class="fas fa-question-circle tooltips" title="{{Compare quotidiennement le modèle et la révision matérielle (hardVer) de vos caméras et NVR avec l'index AT0myks/reolink-fw-archive en ne retenant que les liens HTTPS hébergés sur les serveurs officiels Reolink. Fonctionne sans exposer les caméras à Internet et sans réveiller les caméras sur batterie.}}"></i></sup>
+      </label>
+      <div class="col-md-4">
+        <select class="configKey form-control" data-l1key="check_fw_github">
+          <option value="1">{{Activé (liens officiels Reolink uniquement)}}</option>
+          <option value="0">{{Désactivé}}</option>
+        </select>
+      </div>
+    </div>
   </fieldset>
 </form>

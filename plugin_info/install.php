@@ -20,11 +20,16 @@ require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 
 // Fonction exécutée automatiquement après l'installation du plugin
   function reolink_install() {
-
+    if (config::byKey('check_fw_github', 'reolink', '') === '') {
+      config::save('check_fw_github', '1', 'reolink');
+    }
   }
 
 // Fonction exécutée automatiquement après la mise à jour du plugin
   function reolink_update() {
+    if (config::byKey('check_fw_github', 'reolink', '') === '') {
+      config::save('check_fw_github', '1', 'reolink');
+    }
     $plugin = plugin::byId('reolink');
     $eqLogics = eqLogic::byType($plugin->getId());
     foreach ($eqLogics as $eqLogic) {

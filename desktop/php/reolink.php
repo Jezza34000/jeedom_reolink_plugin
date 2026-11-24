@@ -4,7 +4,9 @@ if (!isConnect('admin')) {
 }
 // Déclaration des variables obligatoires
 $plugin = plugin::byId('reolink');
+$fwCheckEnabled = intval(config::byKey('check_fw_github', 'reolink', 1)) === 1;
 sendVarToJS('eqType', $plugin->getId());
+sendVarToJS('reolinkFwCheckEnabled', $fwCheckEnabled ? 1 : 0);
 $eqLogics = eqLogic::byType($plugin->getId());
 $nvrs = array();
 $cameras = array();
@@ -15,7 +17,7 @@ foreach ($eqLogics as $eqLogic) {
 		$cameras[] = $eqLogic;
 	}
 }
-$renderCard = function ($eqLogic) {
+$renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 	$opacity = ($eqLogic->getIsEnable()) ? '' : 'disableCard';
 	$model = strval($eqLogic->getConfiguration('model', ''));
 	$ip = strval($eqLogic->getConfiguration('adresseip', ''));
@@ -24,11 +26,16 @@ $renderCard = function ($eqLogic) {
 	if ($channel !== '' && $channel !== null) {
 		$info = trim($ip . ' · Canal ' . $channel);
 	}
+	$hasFwUpdate = $fwCheckEnabled && strval($eqLogic->getConfiguration('fwArchiveStatus', '')) === 'update_available';
 	echo '<div class="eqLogicDisplayCard cursor ' . $opacity . '" data-eqLogic_id="' . $eqLogic->getId() . '">';
 	echo '<img src="' . $eqLogic->getImage() . '" loading="lazy" decoding="async"/>';
 	echo '<br>';
 	echo '<span class="name">' . $eqLogic->getHumanName(true, true) . '</span>';
 	echo '<span class="hiddenAsCard displayTableRight hidden">';
+	if ($hasFwUpdate) {
+		$latestFw = strval($eqLogic->getConfiguration('fwArchiveLatestVer', ''));
+		echo '<span class="label label-warning" title="' . htmlspecialchars('Mise à jour firmware disponible : ' . $latestFw, ENT_QUOTES, 'UTF-8') . '"><i class="fas fa-arrow-circle-up"></i> MAJ FW</span> ';
+	}
 	if ($model !== '') {
 		echo '<span class="label label-default">' . htmlspecialchars($model, ENT_QUOTES, 'UTF-8') . '</span> ';
 	}
@@ -62,6 +69,13 @@ $renderCard = function ($eqLogic) {
 				<br>
 				<span>{{Sync. plugin Caméra}}</span>
 			</div>
+			<?php if ($fwCheckEnabled) { ?>
+			<div class="cursor logoSecondary" id="btCheckFirmwareAll">
+				<i class="fas fa-microchip"></i>
+				<br>
+				<span>{{Vérifier les firmwares}}</span>
+			</div>
+			<?php } ?>
 		</div>
 		<?php
 		if (count($eqLogics) == 0) {
@@ -349,6 +363,10 @@ $renderCard = function ($eqLogic) {
 												<label class="col-sm-4 control-label">{{Version firmware}}</label>
 												<div class="col-sm-8">
 													<span class="eqLogicAttr" data-l1key="configuration" data-l2key="firmVer"></span>
+													<?php if ($fwCheckEnabled) { ?>
+													<span id="span_fwArchiveBadge" style="margin-left:8px;"></span>
+													<a class="btn btn-xs btn-default" id="btCheckEqFirmware" style="margin-left:6px;" title="{{Vérifier les mises à jour firmware officielles Reolink (index GitHub)}}"><i class="fas fa-sync-alt"></i></a>
+													<?php } ?>
 												</div>
 											</div>
 											<div class="form-group">
