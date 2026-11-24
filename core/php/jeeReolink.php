@@ -36,6 +36,11 @@ try {
             $isNvr = $eqLogic->isNvrParent();
             $multiChannel = ($defCh !== '' || $isNvr || $eqLogic->isChannelChild());
             if ($isNvr && $defCh === '') {
+              foreach ($events as $ev) {
+                if (($ev['event'] ?? '') === 'EvScene') {
+                  $eqLogic->checkAndUpdateCmd('SetSceneState', intval($ev['state'] ?? -1));
+                }
+              }
               continue;
             }
             $channel = ($defCh !== '') ? intval($defCh) : max(0, intval($eqLogic->getConfiguration('channelNum', 1)) - 1);
@@ -44,6 +49,9 @@ try {
             $hasExplicitOnline = false;
             $wokeBattery = false;
             foreach ($events as $ev) {
+              if (($ev['event'] ?? '') === 'EvScene') {
+                continue;
+              }
               $evCh = array_key_exists('channel', $ev) ? intval($ev['channel']) : null;
               if ($evCh !== null && $multiChannel && $channel !== $evCh) {
                 continue;

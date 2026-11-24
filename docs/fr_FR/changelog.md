@@ -6,6 +6,7 @@
 
 # 24/11/2026
 
+- Scènes / Modes Reolink sur **Home Hub** (`GetScenes`, `SetScene`, `SetSceneState`) : pilotage natif en Baichuan (`cmd 601..604`), détection automatique de la capacité `sceneModeCfg` (`cmd 199`) sans commande superflue sur les NVR classiques, liste dynamique des scènes configurées et mise à jour temps réel sur push `cmd 601`
 - Mode d'événements temps réel **Baichuan TCP (port 9000)** par équipement & push `cmd 145` : sélecteur optionnel par équipement HTTP/HTTPS (avec héritage NVR → canaux) permettant de recevoir les événements IA/mouvement/confidentialité ainsi que l'état temps réel des canaux et de la veille batterie (`cmd 145` `ChannelOnline` / `BatterySleepState`) en TCP 9000 sans webhook ONVIF entrant
 - Découverte automatique des caméras NVR / Home Hub (**Synchroniser les caméras du NVR**) : bouton dédié sur l'équipement NVR / Home Hub parent créant en un clic tous les canaux caméras peuplés (`GetChannelstatus`, caméras en veille incluses, emplacements vides ignorés, aucun doublon sur les canaux existants) avec création automatique des commandes
 - Fiabilité de l'état en ligne (`ChannelOnline`), `Tester la connexion` par canal & alertes démon : mise à `0` de `ChannelOnline` lorsque l'équipement est injoignable, contrôle effectif de `GetDevInfo` et de l'état du canal NVR lors du test de connexion, temporisation sur 2 cycles `cron10` des alertes de souscription ONVIF (évite les fausses alertes lors des redémarrages planifiés `AutoMaint`) et formatage Jeedom des journaux Uvicorn

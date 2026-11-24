@@ -3474,6 +3474,50 @@
 			"isVisible": 1,
 			"logicalId": "BatterySleepState",
 			"scope": "channel"
+		},
+		{
+			"abilityneed": "scene",
+			"name": "Récupérer les scènes",
+			"type": "action",
+			"subtype": "other",
+			"isVisible": 1,
+			"logicalId": "GetScenes",
+			"scope": "host",
+			"configuration": {
+				"help": "Relit la liste des scènes / modes configurés sur le Reolink Home Hub ou NVR compatible (protocole Baichuan).",
+				"valuesHelp": "Action immédiate : met à jour la liste du sélecteur Activer une scène"
+			}
+		},
+		{
+			"abilityneed": "scene",
+			"name": "Scène active (état)",
+			"type": "info",
+			"subtype": "numeric",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetSceneState",
+			"scope": "host",
+			"configuration": {
+				"help": "Identifiant de la scène active sur le Reolink Home Hub (-1 = aucune scène active).",
+				"valuesHelp": "-1 = Désactivé, 0..N = Identifiant de la scène active"
+			}
+		},
+		{
+			"abilityneed": "scene",
+			"name": "Activer une scène",
+			"type": "action",
+			"subtype": "select",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "SetScene",
+			"scope": "host",
+			"configuration": {
+				"option": "select",
+				"listValue": "-1|Désactiver les scènes",
+				"valueFrom": "SetSceneState",
+				"help": "Active une scène Reolink (Home, Away, Night…) ou désactive le mode scène sur le Reolink Home Hub.",
+				"valuesHelp": "-1 = Désactiver les scènes, sinon scène configurée sur le Home Hub"
+			}
 		}
 	]
 }

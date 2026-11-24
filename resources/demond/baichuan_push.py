@@ -172,6 +172,22 @@ def _parse_channel_info_xml(clean_xml: str, ext_xml: str = ""):
     return results
 
 
+def _parse_scene_mode_xml(clean_xml: str):
+    m = re.search(r"<sceneModeCfg\b[^>]*>(.*?)</sceneModeCfg>", clean_xml, flags=re.S | re.I)
+    if not m:
+        return None
+    block = m.group(1)
+    en_txt = _xml_tag_value(block, "enable")
+    if en_txt is None or not en_txt.strip().lstrip("-").isdigit():
+        return None
+    if int(en_txt.strip()) != 1:
+        return -1
+    cur_txt = _xml_tag_value(block, "curSceneId")
+    if cur_txt is not None and cur_txt.strip().lstrip("-").isdigit():
+        return int(cur_txt.strip())
+    return -1
+
+
 class _BaichuanPushWorker:
     def __init__(self, ip: str, port: int, user: str, pwd: str, jeedom_cnx):
         self.ip = ip
@@ -189,6 +205,7 @@ class _BaichuanPushWorker:
         self._state_cache = {}
         self._channel_state_cache = {}
         self._sleep_state = None
+        self._scene_state = None
         self._reported_sub_ok = False
         self._reported_sub_err = False
 
@@ -420,6 +437,12 @@ class _BaichuanPushWorker:
                         self._channel_state_cache[sl_key] = sleep_val
                         batch.append({"channel": int(ch), "event": "EvBatterySleep", "state": int(sleep_val)})
             self._emit_events_batch(batch)
+
+        elif cmd_id == 601 or "<sceneModeCfg" in clean_xml:
+            scene_val = _parse_scene_mode_xml(clean_xml)
+            if scene_val is not None and self._scene_state != scene_val:
+                self._scene_state = scene_val
+                self._emit_events_batch([{"event": "EvScene", "state": int(scene_val)}])
 
     def _run_single_session(self):
         buf = bytearray()

@@ -59,7 +59,6 @@ class reolink extends eqLogic {
     'GetChannelstatus',
     'GetChannelStatus',
     'GetPushCfg',
-    'GetScene',
   );
 
   /************* Static methods ************/
@@ -968,6 +967,66 @@ class reolink extends eqLogic {
     );
   }
 
+  public static function formatSceneListValue($scenes) {
+    $entries = array('-1|' . __('Désactiver les scènes', __FILE__));
+    if (is_array($scenes)) {
+      ksort($scenes, SORT_NUMERIC);
+      foreach ($scenes as $id => $name) {
+        $sid = intval($id);
+        if ($sid < 0) {
+          continue;
+        }
+        $clean = trim(str_replace(array(';', '|'), array(',', '/'), strval($name)));
+        if ($clean === '') {
+          $clean = 'Scene ' . $sid;
+        }
+        $entries[] = $sid . '|' . $clean;
+      }
+    }
+    return implode(';', $entries);
+  }
+
+  public static function updateScenes($id) {
+    $eqLogic = reolink::byId($id, 'reolink');
+    if (!is_object($eqLogic) || !$eqLogic->isNvrParent()) {
+      return false;
+    }
+    $bc = reolinkBaichuan::fromEqLogic($eqLogic);
+    if (!is_object($bc)) {
+      return false;
+    }
+    $data = $bc->getScenes();
+    if (!is_array($data)) {
+      return false;
+    }
+    $setCmd = $eqLogic->getCmd(null, 'SetScene');
+    if (is_object($setCmd)) {
+      $listVal = self::formatSceneListValue($data['scenes'] ?? array());
+      if (strval($setCmd->getConfiguration('listValue', '')) !== $listVal) {
+        $setCmd->setConfiguration('listValue', $listVal);
+        $setCmd->save();
+      }
+    }
+    if (isset($data['activeSceneId'])) {
+      $eqLogic->checkAndUpdateCmd('SetSceneState', intval($data['activeSceneId']));
+    }
+    return true;
+  }
+
+  public static function setScene($id, $sceneId) {
+    $eqLogic = reolink::byId($id, 'reolink');
+    if (!is_object($eqLogic) || !$eqLogic->isNvrParent()) {
+      throw new Exception(__('Les scènes Reolink ne sont supportées que sur un équipement Home Hub / NVR parent', __FILE__));
+    }
+    $bc = reolinkBaichuan::fromEqLogic($eqLogic);
+    if (!is_object($bc)) {
+      throw new Exception(__('Connexion Baichuan impossible (IP/identifiants manquants)', __FILE__));
+    }
+    $active = $bc->setScene(intval($sceneId));
+    $eqLogic->checkAndUpdateCmd('SetSceneState', intval($active));
+    return $active;
+  }
+
   public static function syncCameraPlugin($id = null) {
     try {
       $camPlugin = plugin::byId('camera');
@@ -1790,6 +1849,17 @@ class reolink extends eqLogic {
         }
       }
     }
+
+    if ($camcmd->isNvrParent() && is_object($camcmd->getCmd(null, 'SetSceneState'))) {
+      $bcScene = reolinkBaichuan::fromEqLogic($camcmd);
+      if (is_object($bcScene)) {
+        $curScene = $bcScene->getActiveSceneId();
+        if ($curScene !== null) {
+          $camcmd->checkAndUpdateCmd('SetSceneState', intval($curScene));
+        }
+      }
+    }
+
     if (empty($cmdarr)) {
       $camcnx->batteryChannelMode = false;
       return;
@@ -3244,6 +3314,10 @@ class reolink extends eqLogic {
               && isset($devAbilityReturn['supportRemoteUpgrade'])) {
               $devAbilityReturn['upgrade'] = $devAbilityReturn['supportRemoteUpgrade'];
             }
+            $bcScene = reolinkBaichuan::fromEqLogic($camera);
+            if (is_object($bcScene) && $bcScene->probeSceneSupport()) {
+              $devAbilityReturn['scene'] = array('ver' => 1, 'permit' => 7);
+            }
           }
         }
       }
@@ -3521,6 +3595,7 @@ class reolink extends eqLogic {
           'SetPTZmoove', 'SetPtzByPreset', 'StartPtzPatrol', 'SetPTZpatrol',
           'SetResolutionst1', 'SetFPSst1', 'SetBitratest1', 'SetEncodingst1',
           'SetResolutionst2', 'SetFPSst2', 'SetBitratest2', 'SetEncodingst2',
+          'SetScene',
         );
         $listTpl = strval($command['configuration']['listValue'] ?? '');
         if ($listTpl !== '' && !in_array($logicalId, $dynamicSelects, true)) {
@@ -3691,6 +3766,8 @@ class reolink extends eqLogic {
           reolink::applyPtzPatrolState($camera, $patrolRefresh[0]);
         }
       }
+    } elseif (is_object($camera->getCmd(null, 'SetScene'))) {
+      reolink::updateScenes($id);
     }
     $cnx->batteryChannelMode = false;
 
@@ -4071,6 +4148,12 @@ class reolinkCmd extends cmd {
         if (is_array($data) && isset($data[0])) {
           reolink::updatePTZpatrol($EqId, $data[0]);
         }
+        break;
+      case 'GetScenes':
+        reolink::updateScenes($EqId);
+        break;
+      case 'SetScene':
+        reolink::setScene($EqId, intval($_options['select'] ?? -1));
         break;
       case 'StartPtzPatrol':
         reolink::runPatrol($EqId, 'StartPatrol', $_options['select'] ?? null);
