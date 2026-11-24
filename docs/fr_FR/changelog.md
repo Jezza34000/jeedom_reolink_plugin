@@ -6,6 +6,7 @@
 
 # 24/11/2026
 
+- Fiabilité de l'état en ligne (`ChannelOnline`), `Tester la connexion` par canal & alertes démon : mise à `0` de `ChannelOnline` lorsque l'équipement est injoignable, contrôle effectif de `GetDevInfo` et de l'état du canal NVR lors du test de connexion, temporisation sur 2 cycles `cron10` des alertes de souscription ONVIF (évite les fausses alertes lors des redémarrages planifiés `AutoMaint`) et formatage Jeedom des journaux Uvicorn
 - Vérification des mises à jour firmware officielles Reolink : nouvelle option dans la configuration du plugin permettant de vérifier quotidiennement (`cronDaily`) et à la demande (**Vérifier les firmwares**) la disponibilité de nouveaux firmwares par modèle et révision matérielle (`hardVer`) via l'index `AT0myks/reolink-fw-archive` filtré exclusivement sur les liens HTTPS officiels Reolink, avec badge sur la fiche équipement, téléchargement direct (`.zip`) et commandes `NewFirmwareState` / `LatestFirmware` sur l'ensemble des caméras et NVR (sans accès Internet requis côté caméra et sans réveiller les caméras sur batterie)
 - Masque de confidentialité PTZ 3D (`RLC-823S2`, #148) : conservation des zones `screen`/`block` et du paramètre `enableMaskTrack` lors de l'activation ou désactivation de `SetMask`
 

@@ -493,14 +493,63 @@ class reolink extends eqLogic {
   }
 
   public static function TryConnect($id) {
+    $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera)) {
+      return false;
+    }
     $reolinkConn = reolink::getReolinkConnection($id);
-    if (is_object($reolinkConn) && $reolinkConn->is_loggedin == true) {
-      log::add('reolink', 'info', 'Connection à la caméra réussie');
-      return true;
-    } else {
+    if (!is_object($reolinkConn) || $reolinkConn->is_loggedin != true) {
       log::add('reolink', 'error', 'Connection à la caméra NOK');
       return false;
     }
+
+    $res = $reolinkConn->SendCMD('[{"cmd":"GetDevInfo"}]');
+    $data = is_array($res) ? $res : $reolinkConn->lastResponseData;
+    $devInfo = null;
+    if (is_array($data)) {
+      foreach ($data as $item) {
+        if (($item['cmd'] ?? '') === 'GetDevInfo' && isset($item['value']['DevInfo']) && is_array($item['value']['DevInfo'])) {
+          $devInfo = $item['value']['DevInfo'];
+          break;
+        }
+      }
+    }
+    if (!is_array($devInfo)) {
+      log::add('reolink', 'error', 'Connection OK mais GetDevInfo indisponible');
+      return false;
+    }
+
+    $hostType = strtoupper(strval($devInfo['exactType'] ?? ($devInfo['type'] ?? '')));
+    $isMultiHost = in_array($hostType, self::MULTI_HOST_TYPES, true) || intval($devInfo['channelNum'] ?? 1) > 1;
+    $definedChannel = trim(strval($camera->getConfiguration('defined_channel', '')));
+    if ($isMultiHost && $definedChannel !== '' && is_numeric($definedChannel)) {
+      $ch = intval($definedChannel);
+      $stRes = $reolinkConn->SendCMD('[{"cmd":"GetChannelstatus","action":0,"param":{}}]');
+      $stData = is_array($stRes) ? $stRes : $reolinkConn->lastResponseData;
+      $chFound = false;
+      $chAlive = false;
+      if (is_array($stData)) {
+        foreach ($stData as $stItem) {
+          if (!in_array($stItem['cmd'] ?? '', array('GetChannelstatus', 'GetChannelStatus'), true)) {
+            continue;
+          }
+          foreach (($stItem['value']['status'] ?? array()) as $entry) {
+            if (is_array($entry) && intval($entry['channel'] ?? -1) === $ch) {
+              $chFound = true;
+              $chAlive = (intval($entry['online'] ?? 0) === 1 || intval($entry['sleep'] ?? 0) === 1);
+              break 2;
+            }
+          }
+        }
+      }
+      if (!$chFound || !$chAlive) {
+        log::add('reolink', 'error', 'Connexion au NVR OK mais canal ' . $ch . ' hors ligne ou inexistant');
+        return false;
+      }
+    }
+
+    log::add('reolink', 'info', 'Connection à la caméra réussie');
+    return true;
   }
 
   public static function GetCamNFO($id) {
@@ -1420,6 +1469,9 @@ class reolink extends eqLogic {
     $cmdget = NULL;
 
     if (!is_object($camcnx) || $camcnx->is_loggedin == false) {
+      if (!$camcmd->isNvrParent()) {
+        $camcmd->checkAndUpdateCmd('ChannelOnline', 0);
+      }
       return false;
     }
 
@@ -1554,6 +1606,9 @@ class reolink extends eqLogic {
       return;
     }
     $cmd_block = array_chunk($cmdarr, config::byKey('cmdblock', __CLASS__, CMD_SEND_QTY));
+    $anyAlive = false;
+    $anyMdSeen = false;
+    $channelStatusSeen = false;
 
     foreach ($cmd_block as $key => &$value) {
       $cmdget = "";
@@ -1578,6 +1633,9 @@ class reolink extends eqLogic {
         if (!isset($json_data['error']['rspCode']) && isset($json_data['value'])) {
           $channelAlive = true;
         }
+      }
+      if ($channelAlive) {
+        $anyAlive = true;
       }
 
       // Runtime learning of unsupported payloads
@@ -1994,6 +2052,7 @@ class reolink extends eqLogic {
             if (is_array($stItems)) {
               foreach ($stItems as $stEntry) {
                 if (is_array($stEntry) && intval($stEntry['channel'] ?? -1) === intval($channel)) {
+                  $channelStatusSeen = true;
                   $camcmd->checkAndUpdateCmd('ChannelOnline', intval($stEntry['online'] ?? 1) === 1 ? 1 : 0);
                   if (array_key_exists('sleep', $stEntry)) {
                     $camcmd->checkAndUpdateCmd('BatterySleepState', intval($stEntry['sleep']) === 1 ? 1 : 0);
@@ -2010,9 +2069,14 @@ class reolink extends eqLogic {
         }
       }
       if ($mdSeen) {
+        $anyMdSeen = true;
         $camcmd->checkAndUpdateCmd('ChannelOnline', $mdOk ? 1 : 0);
       }
     } #END foreach
+
+    if (!$camcmd->isNvrParent() && !$anyMdSeen && !$channelStatusSeen) {
+      $camcmd->checkAndUpdateCmd('ChannelOnline', $anyAlive ? 1 : 0);
+    }
 
     $camcnx->batteryChannelMode = false;
 

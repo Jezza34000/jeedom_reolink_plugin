@@ -144,13 +144,32 @@ def get_logger_text():
     return "error"
 
 
+def _uvicorn_log_config(level_name):
+    upper = level_name.upper()
+    access_level = "DEBUG" if upper == "DEBUG" else "WARNING"
+    fmt = "[%(asctime)-15s][%(levelname)s] : %(message)s"
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {"jeedom": {"format": fmt, "datefmt": "%Y-%m-%d %H:%M:%S"}},
+        "handlers": {"default": {"class": "logging.StreamHandler", "formatter": "jeedom", "stream": "ext://sys.stdout"}},
+        "loggers": {
+            "uvicorn": {"handlers": ["default"], "level": upper, "propagate": False},
+            "uvicorn.error": {"handlers": ["default"], "level": upper, "propagate": False},
+            "uvicorn.access": {"handlers": ["default"], "level": access_level, "propagate": False},
+        },
+    }
+
+
 def run_uvicorn():
     logging.info('Starting webhook...')
+    lvl = get_logger_text()
     uvicorn.run(
         app="camhook:app",
         host="0.0.0.0",
         port=_webhook_port,
-        log_level=get_logger_text(),
+        log_level=lvl,
+        log_config=_uvicorn_log_config(lvl),
     )
 
 
