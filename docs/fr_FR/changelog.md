@@ -4,6 +4,10 @@
 >
 >Pour rappel s'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 25/11/2026
+
+- Stabilité des sessions push **Baichuan TCP (port 9000)** : réduction du keepalive de `50 s` à `20 s` (avec ajustement adaptatif jusqu'à `9 s` aligné sur `reolink_aio` et `SO_KEEPALIVE` TCP) pour prévenir les fermetures de session au bout de ~30 s d'inactivité sur les caméras autonomes, et suppression du délai de backoff de `40–45 s` en cas de fermeture par la caméra
+
 # 24/11/2026
 
 - Page et modale **Santé** (`reolink::health()`) : résumé dans **Analyse → Santé** et bouton **Santé** sur la page d'accueil du plugin présentant en lecture instantanée (sans requête réseau ni réveil batterie) le rôle, le mode d'accès/événements, l'état en ligne, la batterie, le firmware et la dernière communication de chaque équipement

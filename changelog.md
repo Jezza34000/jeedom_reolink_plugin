@@ -1,5 +1,9 @@
 # Change log
 
+25/11/2026
+
+- Stabilité des sessions push **Baichuan TCP (port 9000)** (`resources/demond/baichuan_push.py`) : abaissement de l'intervalle de keepalive applicatif de `50 s` à **`20 s`** (avec ajustement adaptatif jusqu'à `9 s` aligné sur `reolink_aio` et `SO_KEEPALIVE` TCP) afin d'envoyer le keepalive (`cmd 93` / `cmd 31`) avant l'expiration du délai d'inactivité de ~30 s des caméras autonomes Reolink ; reconnexion immédiate (`1 s` au lieu du backoff exponentiel `40–45 s`) et journalisation en `DEBUG` lors d'une fermeture propre de socket par la caméra sans perte d'événements ni bruit dans `reolinkd`
+
 24/11/2026
 
 - Page et modale **Santé** du plugin (`reolink::health()` & `desktop/modal/health.php`) : indicateurs synthétiques dans **Analyse → Santé** (équipements actifs, caméras en ligne, disponibilité locale `go2rtc` `127.0.0.1:1984`, mises à jour firmware) et bouton **Santé** sur la page du plugin affichant l'état consolidé de tous les NVR, Home Hub et caméras (rôle, modèle/révision, mode d'accès et d'événements, statut en ligne/veille, batterie, firmware et dernière communication) en lecture purement locale (zéro requête réseau vers les caméras, zéro réveil batterie)

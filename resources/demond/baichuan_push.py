@@ -28,6 +28,13 @@ _MAGIC = b"\xf0\xde\xbc\x0a"
 _BC_KEY = bytes([0x1F, 0x2D, 0x3C, 0x4B, 0x5A, 0x69, 0x78, 0xFF])
 _BC_IV = b"0123456789abcdef"
 
+# Standalone Reolink IPC firmwares close idle Baichuan TCP sockets after ~30s
+# without client traffic (and ~15-25s on some older builds). Keep well under 30s
+# by default and adaptively step down to 9s (matching reolink_aio) if needed.
+_DEFAULT_KEEPALIVE_SEC = 20.0
+_MIN_KEEPALIVE_SEC = 9.0
+_MAX_KEEPALIVE_SEC = 25.0
+
 
 def _load_libcrypto():
     candidates = []
@@ -188,6 +195,13 @@ def _parse_scene_mode_xml(clean_xml: str):
     return -1
 
 
+class _RemoteSocketClosed(ConnectionError):
+    def __init__(self, session_age: float, since_keepalive: float):
+        super().__init__("Baichuan push socket closed by camera")
+        self.session_age = session_age
+        self.since_keepalive = since_keepalive
+
+
 class _BaichuanPushWorker:
     def __init__(self, ip: str, port: int, user: str, pwd: str, jeedom_cnx):
         self.ip = ip
@@ -208,6 +222,11 @@ class _BaichuanPushWorker:
         self._scene_state = None
         self._reported_sub_ok = False
         self._reported_sub_err = False
+        self._keepalive_interval = _DEFAULT_KEEPALIVE_SEC
+        self._last_keepalive_inc = 0.0
+        self._last_fast_reconnect = 0.0
+        self._logged_initial_connect = False
+        self._in_warning_state = False
 
     def start(self):
         self.thread.start()
@@ -256,16 +275,17 @@ class _BaichuanPushWorker:
 
     @staticmethod
     def _try_parse_one(buf: bytearray, enc_type: str, aes_key: bytes):
-        if len(buf) < 20:
+        if len(buf) < 4:
             return None
         if bytes(buf[:4]) != _MAGIC:
             pos = buf.find(_MAGIC)
             if pos < 0:
-                buf.clear()
+                if len(buf) > 3:
+                    del buf[:-3]
                 return None
             del buf[:pos]
-            if len(buf) < 20:
-                return None
+        if len(buf) < 20:
+            return None
 
         cmd_id, body_len, full_mid = struct.unpack("<III", bytes(buf[4:16]))
         ch_id = full_mid & 0xFF
@@ -294,7 +314,7 @@ class _BaichuanPushWorker:
         ext_xml = ""
         body_xml = ""
         if body_len > 0:
-            if 0 < offset <= body_len:
+            if 0 < offset < body_len:
                 ext_enc = raw[:offset]
                 main_enc = raw[offset:]
             else:
@@ -312,6 +332,10 @@ class _BaichuanPushWorker:
                 body_xml = _aes128_cfb128(main_enc, aes_key, False).decode(
                     "utf-8", errors="ignore"
                 )
+            # If offset pointed to a trailing binary payload, ext_xml holds the XML body
+            if ext_xml and "<body>" in ext_xml and not body_xml.lstrip().startswith("<?xml"):
+                body_xml = ext_xml
+                ext_xml = ""
 
         return cmd_id, full_mid, status, ext_xml, body_xml
 
@@ -444,13 +468,27 @@ class _BaichuanPushWorker:
                 self._scene_state = scene_val
                 self._emit_events_batch([{"event": "EvScene", "state": int(scene_val)}])
 
+    @staticmethod
+    def _configure_socket_keepalive(sock: socket.socket):
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        try:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            if hasattr(socket, "TCP_KEEPIDLE"):
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 20)
+            if hasattr(socket, "TCP_KEEPINTVL"):
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 5)
+            if hasattr(socket, "TCP_KEEPCNT"):
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)
+        except OSError:
+            pass
+
     def _run_single_session(self):
         buf = bytearray()
         aes_key = b""
         logged_in = False
         sock = socket.create_connection((self.ip, self.port), timeout=5.0)
         try:
-            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            self._configure_socket_keepalive(sock)
             # 1. Pre-login nonce (cmd 1, msg_class 1465)
             mid1 = self._send_packet(sock, 1, 250, "", "bc", "1465", b"")
             nonce_xml = self._recv_matching(sock, buf, 1, mid1, "bc", b"", 6.0)
@@ -487,7 +525,23 @@ class _BaichuanPushWorker:
             mid31 = self._send_packet(sock, 31, 251, "", "aes", "1464", aes_key)
             self._recv_matching(sock, buf, 31, mid31, "aes", aes_key, 6.0)
 
-            logging.info("Baichuan push listener connected to %s:%s", self.ip, self.port)
+            if not self._logged_initial_connect or self._in_warning_state:
+                logging.info(
+                    "Baichuan push listener connected to %s:%s (keepalive=%.0fs)",
+                    self.ip,
+                    self.port,
+                    self._keepalive_interval,
+                )
+                self._logged_initial_connect = True
+                self._in_warning_state = False
+            else:
+                logging.debug(
+                    "Baichuan push listener reconnected to %s:%s (keepalive=%.0fs)",
+                    self.ip,
+                    self.port,
+                    self._keepalive_interval,
+                )
+
             if not self._reported_sub_ok:
                 self._reported_sub_ok = True
                 self._reported_sub_err = False
@@ -495,8 +549,9 @@ class _BaichuanPushWorker:
                     {"message": "subscription", "ip": self.ip, "state": 1}
                 )
 
-            last_recv = time.monotonic()
-            last_keepalive = last_recv
+            sub_started_at = time.monotonic()
+            last_recv = sub_started_at
+            last_keepalive = sub_started_at
             events_seen = bool(self._state_cache)
 
             while not self.stop_event.is_set():
@@ -511,21 +566,37 @@ class _BaichuanPushWorker:
                     self._handle_push(rec_cmd, ext_xml, body_xml)
 
                 now = time.monotonic()
-                if (now - last_recv) > 130.0:
+                idle_limit = max(75.0, self._keepalive_interval * 3.2)
+                if (now - last_recv) > idle_limit:
                     raise TimeoutError("Baichuan push stream idle timeout")
 
-                if (now - last_keepalive) >= 50.0:
+                if (now - last_keepalive) >= self._keepalive_interval:
                     last_keepalive = now
                     if events_seen:
                         self._send_packet(sock, 93, 250, "", "aes", "1464", aes_key)
                     else:
                         self._send_packet(sock, 31, 251, "", "aes", "1464", aes_key)
+                    if (
+                        self._keepalive_interval < _MAX_KEEPALIVE_SEC
+                        and (now - sub_started_at) > 3600.0
+                        and (now - self._last_keepalive_inc) > 3600.0
+                    ):
+                        self._last_keepalive_inc = now
+                        self._keepalive_interval = min(
+                            _MAX_KEEPALIVE_SEC, self._keepalive_interval + 1.0
+                        )
 
-                sock.settimeout(1.5)
+                wait_sec = max(0.2, min(1.5, self._keepalive_interval - (time.monotonic() - last_keepalive)))
+                sock.settimeout(wait_sec)
                 try:
                     chunk = sock.recv(16384)
                     if not chunk:
-                        raise ConnectionError("Baichuan push socket closed by camera")
+                        closed_at = time.monotonic()
+                        logged_in = False  # Peer already closed TCP; skip logout write on dead socket
+                        raise _RemoteSocketClosed(
+                            session_age=closed_at - sub_started_at,
+                            since_keepalive=closed_at - last_keepalive,
+                        )
                     buf.extend(chunk)
                     last_recv = time.monotonic()
                 except socket.timeout:
@@ -572,11 +643,54 @@ class _BaichuanPushWorker:
                         }
                     )
                 self.stop_event.wait(300.0)
+            except _RemoteSocketClosed as exc:
+                if self.stop_event.is_set():
+                    break
+                if exc.since_keepalive < (self._keepalive_interval + 2.0):
+                    old_ka = self._keepalive_interval
+                    self._keepalive_interval = max(
+                        _MIN_KEEPALIVE_SEC,
+                        min(exc.since_keepalive - 3.0, self._keepalive_interval - 2.0),
+                    )
+                    if self._keepalive_interval < old_ka:
+                        logging.debug(
+                            "Baichuan push %s:%s closed after %.1fs idle; reducing keepalive %.0fs -> %.0fs",
+                            self.ip,
+                            self.port,
+                            exc.since_keepalive,
+                            old_ka,
+                            self._keepalive_interval,
+                        )
+                now = time.monotonic()
+                if exc.session_age > 60.0 or (now - self._last_fast_reconnect) > 60.0:
+                    self._last_fast_reconnect = now
+                    backoff = 5.0
+                    logging.debug(
+                        "Baichuan push %s:%s closed by camera after %.1fs, reconnecting in 1s (keepalive=%.0fs)",
+                        self.ip,
+                        self.port,
+                        exc.session_age,
+                        self._keepalive_interval,
+                    )
+                    self.stop_event.wait(1.0)
+                    continue
+                self._in_warning_state = True
+                logging.warning(
+                    "Baichuan push %s:%s disconnected (%s after %.1fs), retrying in %.0fs",
+                    self.ip,
+                    self.port,
+                    exc,
+                    exc.session_age,
+                    backoff,
+                )
+                self.stop_event.wait(backoff)
+                backoff = min(45.0, backoff * 2.0)
             except Exception as exc:
                 if self.stop_event.is_set():
                     break
                 if (time.monotonic() - started) > 60.0:
                     backoff = 5.0
+                self._in_warning_state = True
                 logging.warning(
                     "Baichuan push %s:%s disconnected (%s), retrying in %.0fs",
                     self.ip,
