@@ -11,12 +11,20 @@ class reolinkBaichuanAdapter {
   public $lastResponseData = null;
 
   private $bc;
+  private $ip = '';
+  private $port = 9000;
   private $lastError = '';
+  private $transportFailed = false;
+  private $loginAttempted = false;
   private $abilityXmlCache = null;
   private $eventsSubscribed = false;
   private $motionByCh = array();
   private $aiAlarmByCh = array();
   private $aiSupportByCh = array();
+
+  public function hasTransportFailed() {
+    return $this->transportFailed;
+  }
 
   public function __construct($cnxinfo) {
     $ip = trim(strval($cnxinfo['adresseIP'] ?? ''));
@@ -24,15 +32,39 @@ class reolinkBaichuanAdapter {
     $pass = strval($cnxinfo['password'] ?? '');
     $rawPort = intval(preg_replace('/\D/', '', strval($cnxinfo['port'] ?? '')));
     $port = ($rawPort > 0 && $rawPort !== 80 && $rawPort !== 443) ? $rawPort : reolinkBaichuan::DEFAULT_PORT;
+    $bypass = !empty($cnxinfo['bypassCooldown']);
 
-    $this->bc = new reolinkBaichuan($ip, $user, $pass, $port, 4, 6);
+    $this->ip = $ip;
+    $this->port = $port;
+    $this->bc = new reolinkBaichuan($ip, $user, $pass, $port, 3, 5);
+
+    if (!$bypass && class_exists('reolink') && reolink::isHostInCooldown('baichuan', $ip, $port)) {
+      $this->is_loggedin = false;
+      $this->transportFailed = true;
+      $this->loginAttempted = true;
+      $this->lastError = 'Caméra en pause (disjoncteur actif)';
+      return;
+    }
+
+    $this->loginAttempted = true;
     try {
       $this->is_loggedin = $this->bc->openSession();
+      if ($this->is_loggedin && class_exists('reolink')) {
+        reolink::recordHostSuccess('baichuan', $ip, $port);
+      }
       $this->ingestPushes();
     } catch (Exception $e) {
       $this->is_loggedin = false;
       $this->lastError = $e->getMessage();
-      log::add('reolink', 'error', 'Baichuan login NOK (' . $ip . ':' . $port . ') : ' . $e->getMessage());
+      $isAuthErr = (stripos($this->lastError, 'refusé') !== false || stripos($this->lastError, '401') !== false);
+      if (!$isAuthErr) {
+        $this->transportFailed = true;
+        if (class_exists('reolink')) {
+          reolink::recordHostFailure('baichuan', $ip, $port, $this->lastError);
+        }
+      } else {
+        log::add('reolink', 'error', 'Baichuan login NOK (' . $ip . ':' . $port . ') : ' . $this->lastError);
+      }
     }
   }
 
@@ -179,10 +211,15 @@ class reolinkBaichuanAdapter {
   public function SendCMD($jsonCmd) {
     $this->lastError = '';
     if (!$this->is_loggedin) {
+      if ($this->loginAttempted || $this->transportFailed) {
+        return false;
+      }
+      $this->loginAttempted = true;
       try {
         $this->is_loggedin = $this->bc->openSession();
       } catch (Exception $e) {
         $this->lastError = $e->getMessage();
+        $this->transportFailed = true;
         return false;
       }
     }
@@ -208,11 +245,20 @@ class reolinkBaichuanAdapter {
       try {
         $out[] = $this->dispatchOne($cmd, $action, $param);
       } catch (Exception $e) {
-        $rsp = self::mapBaichuanStatusToRsp($e->getMessage());
+        $msg = $e->getMessage();
+        $rsp = self::mapBaichuanStatusToRsp($msg);
         if (!$this->probeMode && $rsp !== -9) {
-          log::add('reolink', 'debug', 'Baichuan SendCMD ' . $cmd . ' error: ' . $e->getMessage());
+          log::add('reolink', 'debug', 'Baichuan SendCMD ' . $cmd . ' error: ' . $msg);
         }
-        $out[] = $this->err($cmd, $rsp, $e->getMessage());
+        $out[] = $this->err($cmd, $rsp, $msg);
+        if (!$this->bc->isLoggedIn() || stripos($msg, 'Timeout') !== false || stripos($msg, 'Socket') !== false || stripos($msg, 'Connexion') !== false) {
+          $this->is_loggedin = false;
+          $this->transportFailed = true;
+          if (class_exists('reolink')) {
+            reolink::recordHostFailure('baichuan', $this->ip, $this->port, $msg);
+          }
+          break;
+        }
       }
     }
     $hasOk = false;

@@ -6,6 +6,8 @@
 
 # 25/11/2026
 
+- Correction du plantage MySQL `1054` à l'ajout et à la sauvegarde d'une caméra (`Unknown column 'lastBaichuanSyncHash' in 'INSERT INTO'` / `UPDATE`) : préfixage de la propriété statique interne `$_lastBaichuanSyncHash` conformément à l'ORM Jeedom (`utils::o2a()` / `DB::buildField()`)
+- Protection anti-saturation de Jeedom lorsqu'une caméra est plantée ou hors ligne (`Too many connections` SQL / blocage des scénarios) : disjoncteur automatique par hôte (`30 s → 60 s → 120 s` sur timeout ou `502 Bad Gateway`, réinitialisé dès qu'un test ou rafraîchissement manuel est lancé), verrou de session non bloquant (`2 s` max au lieu d'une file d'attente illimitée), timeouts HTTP ramenés à `3 s / 6 s` sans triple retry sur caméra muette ou en erreur `502`, suppression du double `login()` sur les captures JPEG, arrêt immédiat des appels `getSnapshot` / `snap.php` / `stream.php` / `jeeReolink` lorsque l'équipement ou le plugin est désactivé, et protection anti-chevauchement de `reolink::cron()`
 - Stabilité des sessions push **Baichuan TCP (port 9000)** : réduction du keepalive de `50 s` à `20 s` (avec ajustement adaptatif jusqu'à `9 s` aligné sur `reolink_aio` et `SO_KEEPALIVE` TCP) pour prévenir les fermetures de session au bout de ~30 s d'inactivité sur les caméras autonomes, et suppression du délai de backoff de `40–45 s` en cas de fermeture par la caméra
 
 # 24/11/2026

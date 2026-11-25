@@ -12,7 +12,7 @@ import asyncio
 import templates
 
 TERMINATION_TIME = 15
-DEFAULT_TIMEOUT = 30
+DEFAULT_TIMEOUT = 8
 
 
 def _utc_now():
@@ -24,7 +24,7 @@ class Manager:
         self._host = host
         self._username = username
         self._password = password[:31]
-        self._timeout = aiohttp.ClientTimeout(total=timeout)
+        self._timeout = aiohttp.ClientTimeout(total=timeout, connect=min(3, timeout))
         self._subscribe_url = f"http://{host}:{port}/onvif/event_service"
         self._manager_url = None
         self._termination_time = None

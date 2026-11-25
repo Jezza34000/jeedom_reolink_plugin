@@ -8,12 +8,22 @@ if (!isConnect()) {
   exit;
 }
 
+if (!reolink::isPluginActiveFast()) {
+  http_response_code(503);
+  echo 'Plugin Reolink disabled';
+  exit;
+}
 $id = intval(init('id', 0));
 $quality = (init('quality', 'sub') === 'main') ? 'main' : 'sub';
 $camera = reolink::byId($id, 'reolink');
 if (!is_object($camera) || $camera->isNvrParent()) {
   http_response_code(404);
   echo 'Camera not found';
+  exit;
+}
+if (intval($camera->getIsEnable()) !== 1 || reolink::isEquipmentHostInCooldown($camera)) {
+  http_response_code(503);
+  echo 'Camera unavailable';
   exit;
 }
 if ($camera->isStandalonePrivacyBlocking()) {
