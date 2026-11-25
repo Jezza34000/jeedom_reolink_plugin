@@ -37,6 +37,10 @@ try {
     }
 
     if (init('action') == 'SyncNvrChannels') {
+      $nvrEq = reolink::byId(init('id'), 'reolink');
+      if (is_object($nvrEq)) {
+        reolink::clearHostCooldown($nvrEq);
+      }
       ajax::success(reolink::syncNvrChannels(init('id')));
     }
 
@@ -79,6 +83,7 @@ try {
 
 
     if (init('action') == 'CreateCMD') {
+        reolink::clearHostCooldown($camera);
         $camera->GetCamNFO(init('id'));
         $res = $camera->loadCmdFromConf(init('id'));
 
@@ -90,6 +95,7 @@ try {
     }
 
     if (init('action') == 'CheckConnexion') {
+        reolink::clearHostCooldown($camera);
         $res = $camera->TryConnect(init('id'));
         if ($res === true) {
           ajax::success();
@@ -99,6 +105,7 @@ try {
     }
 
     if (init('action') == 'CheckDeviceInfo') {
+        reolink::clearHostCooldown($camera);
         $res = $camera->GetCamNFO(init('id'));
         if ($res === true) {
           ajax::success();
@@ -108,6 +115,7 @@ try {
     }
 
     if (init('action') == 'GetCAMConfig') {
+      reolink::clearHostCooldown($camera);
       $res = reolink::refreshNFO(init('id'));
       ajax::success();
     }
@@ -128,6 +136,7 @@ try {
     }
 
     if (init('action') == 'BaichuanDiagnostic') {
+      reolink::clearHostCooldown($camera);
       ajax::success(reolink::runBaichuanDiagnostic(init('id')));
     }
 
@@ -135,4 +144,6 @@ try {
     /*     * *********Catch exeption*************** */
 } catch (Exception $e) {
     ajax::error(displayException($e), $e->getCode());
+} catch (\Throwable $e) {
+    ajax::error($e->getMessage(), $e->getCode());
 }

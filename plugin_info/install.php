@@ -32,8 +32,22 @@ require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
     }
     $plugin = plugin::byId('reolink');
     $eqLogics = eqLogic::byType($plugin->getId());
+    $cleanedTokens = array();
     foreach ($eqLogics as $eqLogic) {
-      if (!is_object($eqLogic) || $eqLogic->isNvrParent()) {
+      if (!is_object($eqLogic)) {
+        continue;
+      }
+      $tagToken = str_replace('.', '', trim(strval($eqLogic->getConfiguration('adresseip', ''))));
+      if ($tagToken !== '' && !isset($cleanedTokens[$tagToken])) {
+        $cleanedTokens[$tagToken] = true;
+        try {
+          config::remove('token' . $tagToken, 'reolink');
+          config::remove('tokenEXP' . $tagToken, 'reolink');
+        } catch (Exception $e) {
+          // ignore
+        }
+      }
+      if ($eqLogic->isNvrParent()) {
         continue;
       }
       try {
@@ -44,8 +58,9 @@ require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
           continue;
         }
         $id = $eqLogic->getId();
-        reolink::GetCamNFO($id);
-        $eqLogic->loadCmdFromConf($id, true);
+        if (reolink::GetCamNFO($id)) {
+          $eqLogic->loadCmdFromConf($id, true);
+        }
       } catch (Exception $e) {
         log::add('reolink', 'warning', 'reolink_update : ' . $eqLogic->getHumanName() . ' — ' . $e->getMessage());
       } catch (Throwable $e) {

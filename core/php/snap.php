@@ -7,11 +7,19 @@ if (!isConnect()) {
   exit;
 }
 
+if (!reolink::isPluginActiveFast()) {
+  http_response_code(503);
+  exit;
+}
 $id = intval(init('id', 0));
 $quality = (init('quality', 'sub') === 'main') ? 'main' : 'sub';
 $eq = reolink::byId($id, 'reolink');
 if (!is_object($eq) || $eq->isNvrParent()) {
   http_response_code(404);
+  exit;
+}
+if (intval($eq->getIsEnable()) !== 1) {
+  http_response_code(503);
   exit;
 }
 if ($eq->isStandalonePrivacyBlocking()) {

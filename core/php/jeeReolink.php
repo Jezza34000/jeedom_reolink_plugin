@@ -11,6 +11,9 @@ try {
         echo 'OK';
         die();
     }
+    if (!reolink::isPluginActiveFast()) {
+        die();
+    }
     $result = json_decode(file_get_contents("php://input"), true);
     if (!is_array($result)) {
         die();
@@ -161,8 +164,8 @@ try {
               }
               continue;
             }
-            if ($eqLogic->isStandalonePrivacyBlocking()) {
-              log::add('reolink', 'debug', 'jeeReolink : poll HTTP ignoré pendant Mode confidentialité / réveil HTTP (' . $eqLogic->getHumanName() . ')');
+            if ($eqLogic->isStandalonePrivacyBlocking() || reolink::isEquipmentHostInCooldown($eqLogic)) {
+              log::add('reolink', 'debug', 'jeeReolink : poll HTTP ignoré (confidentialité ou disjoncteur actif) pour ' . $eqLogic->getHumanName());
               continue;
             }
 
@@ -177,7 +180,7 @@ try {
             if ($needAiPoll) {
               $parts[] = '{"cmd":"GetAiState","action":0,"param":{"channel":' . $channel . '}}';
             }
-            $res = is_object($camcnx) ? $camcnx->SendCMD('[' . implode(',', $parts) . ']') : false;
+            $res = (is_object($camcnx) && $camcnx->is_loggedin) ? $camcnx->SendCMD('[' . implode(',', $parts) . ']') : false;
             $mdOk = false;
             if (is_array($res)) {
               foreach ($res as $item) {
