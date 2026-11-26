@@ -591,6 +591,174 @@ class reolink extends eqLogic {
     return str_replace(array_keys($replace), array_values($replace), $tpl);
   }
 
+  public static function getGo2rtcApiPort() {
+    $p = intval(config::byKey('go2rtc_api_port', __CLASS__, 44011));
+    return ($p > 0 && $p <= 65535) ? $p : 44011;
+  }
+
+  public static function getGo2rtcWebrtcPort() {
+    $p = intval(config::byKey('go2rtc_webrtc_port', __CLASS__, 44012));
+    return ($p > 0 && $p <= 65535) ? $p : 44012;
+  }
+
+  public static function getTalkBridgePort() {
+    $p = intval(config::byKey('talk_port', __CLASS__, 44013));
+    return ($p > 0 && $p <= 65535) ? $p : 44013;
+  }
+
+  public static function sanitizeStreamKey($key) {
+    $key = strtolower(trim(strval($key)));
+    $allowed = array('sub', 'ext', 'main', 'autotrack_sub', 'autotrack_main', 'jpeg');
+    return in_array($key, $allowed, true) ? $key : 'sub';
+  }
+
+  public function getOrCreateTalkToken() {
+    $tok = trim(strval($this->getConfiguration('talk_token', '')));
+    if (!preg_match('/^[A-Za-z0-9_-]{16,64}$/', $tok)) {
+      $tok = bin2hex(random_bytes(12));
+      $this->setConfiguration('talk_token', $tok);
+      if ($this->getId() > 0) {
+        $this->save(true);
+      }
+    }
+    return $tok;
+  }
+
+  public function getLocalTalkRtspUrl($withBackchannelParam = true) {
+    $tok = $this->getOrCreateTalkToken();
+    $url = 'rtsp://127.0.0.1:' . self::getTalkBridgePort() . '/talk/' . intval($this->getId()) . '/' . $tok;
+    return $withBackchannelParam ? ($url . '#backchannel=1') : $url;
+  }
+
+  public function buildFlvStreamUrl($streamSuffix) {
+    $cnxType = strtolower(trim(strval($this->getConfiguration('cnxtype', ''))));
+    if ($cnxType === 'baichuan') {
+      return '';
+    }
+    $rtmpEnable = strval($this->getConfiguration('rtmpEnable', 'Actif'));
+    if ($rtmpEnable === 'Désactivé' || $rtmpEnable === '0') {
+      return '';
+    }
+    $rtmpPort = intval(preg_replace('/\D/', '', strval($this->getConfiguration('rtmpPort', '1935')))) ?: 1935;
+    $useHttps = ($cnxType === 'https');
+    $configuredPort = preg_replace('/\D/', '', strval($this->getConfiguration('port', '')));
+    if ($configuredPort !== '') {
+      $webPort = intval($configuredPort);
+    } elseif ($useHttps) {
+      $webPort = intval(preg_replace('/\D/', '', strval($this->getConfiguration('httpsPort', '443')))) ?: 443;
+    } else {
+      $webPort = intval(preg_replace('/\D/', '', strval($this->getConfiguration('httpPort', '80')))) ?: 80;
+    }
+    // httpx:// tells go2rtc to skip TLS certificate verification even when host is a DNS name
+    $scheme = $useHttps ? 'httpx' : 'http';
+    $ip = trim(strval($this->getConfiguration('adresseip', '')));
+    if ($ip === '') {
+      return '';
+    }
+    $ch = intval($this->getChannel());
+    $u = rawurlencode(strval($this->getConfiguration('login', 'admin')));
+    $p = rawurlencode(strval($this->getConfiguration('password', '')));
+    return $scheme . '://' . $ip . ':' . $webPort
+      . '/flv?port=' . $rtmpPort
+      . '&app=bcs&stream=channel' . $ch . '_' . $streamSuffix . '.bcs'
+      . '&user=' . $u . '&password=' . $p;
+  }
+
+  private static function appendNoBackchannel($rtspUrl) {
+    $rtspUrl = trim(strval($rtspUrl));
+    if ($rtspUrl === '' || strpos($rtspUrl, '#') !== false) {
+      return $rtspUrl;
+    }
+    return $rtspUrl . '#backchannel=0';
+  }
+
+  public function getAvailableStreams() {
+    if ($this->isNvrParent()) {
+      return array();
+    }
+    $cnxType = strtolower(trim(strval($this->getConfiguration('cnxtype', ''))));
+    $hasTalk = (intval($this->getConfiguration('hasAudioTalk', 0)) === 1);
+    if ($cnxType === 'baichuan') {
+      return array(
+        'jpeg' => array(
+          'key' => 'jpeg',
+          'label' => __('JPEG (cmd 109)', __FILE__),
+          'type' => 'jpeg',
+          'url' => '',
+          'talk' => $hasTalk,
+        ),
+      );
+    }
+
+    $streams = array();
+    $subUrl = self::appendNoBackchannel($this->resolveRtspUrl($this->getConfiguration('rtspSubUrl'), true));
+    if ($subUrl !== '') {
+      $streams['sub'] = array(
+        'key' => 'sub',
+        'label' => __('Low (sub)', __FILE__),
+        'type' => 'go2rtc',
+        'url' => $subUrl,
+        'talk' => $hasTalk,
+      );
+    }
+
+    if (intval($this->getConfiguration('hasExtStream', 0)) === 1) {
+      $extUrl = $this->buildFlvStreamUrl('ext');
+      if ($extUrl !== '') {
+        $streams['ext'] = array(
+          'key' => 'ext',
+          'label' => __('Fluent (ext)', __FILE__),
+          'type' => 'go2rtc',
+          'url' => $extUrl,
+          'talk' => $hasTalk,
+        );
+      }
+    }
+
+    $mainUrl = self::appendNoBackchannel($this->resolveRtspUrl($this->getConfiguration('rtspMainUrl'), false));
+    if ($mainUrl !== '') {
+      $streams['main'] = array(
+        'key' => 'main',
+        'label' => __('High (main)', __FILE__),
+        'type' => 'go2rtc',
+        'url' => $mainUrl,
+        'talk' => $hasTalk,
+      );
+    }
+
+    if (intval($this->getConfiguration('hasAutoTrackStream', 0)) === 1) {
+      if ($this->isChannelChild()) {
+        $atSubUrl = $this->buildFlvStreamUrl('autotrack_sub');
+        $chStr = str_pad(strval(intval($this->getChannel()) + 1), 2, '0', STR_PAD_LEFT);
+        $atMainTpl = 'rtsp://#username#:#password#@#ip#:#port#/Preview_' . $chStr . '_autotrack';
+        $atMainUrl = self::appendNoBackchannel($this->resolveRtspUrl($atMainTpl, false));
+      } else {
+        $atSubUrl = self::appendNoBackchannel($this->resolveRtspUrl('rtsp://#username#:#password#@#ip#:#port#/h264Preview_02_sub', true));
+        $atMainUrl = self::appendNoBackchannel($this->resolveRtspUrl('rtsp://#username#:#password#@#ip#:#port#/Preview_02_main', false));
+      }
+      if ($atSubUrl !== '') {
+        $streams['autotrack_sub'] = array(
+          'key' => 'autotrack_sub',
+          'label' => __('Téléobjectif Low', __FILE__),
+          'type' => 'go2rtc',
+          'url' => $atSubUrl,
+          'talk' => $hasTalk,
+        );
+      }
+      if ($atMainUrl !== '') {
+        $streams['autotrack_main'] = array(
+          'key' => 'autotrack_main',
+          'label' => __('Téléobjectif High', __FILE__),
+          'type' => 'go2rtc',
+          'url' => $atMainUrl,
+          'talk' => $hasTalk,
+        );
+      }
+    }
+
+    return $streams;
+  }
+
   public static function downloadCamIcon($id, $model, $camera = null) {
     if ($model === '' || $model === null) {
       return '';
@@ -773,6 +941,9 @@ class reolink extends eqLogic {
     if (!$camera->isNvrParent()) {
       $batch[] = array('cmd' => 'GetAiState', 'action' => 0, 'param' => array('channel' => $channel));
       $batch[] = array('cmd' => 'GetRtspUrl', 'action' => 0, 'param' => array('channel' => $channel));
+      if (!$camera->hasBattery()) {
+        $batch[] = array('cmd' => 'GetEnc', 'action' => 0, 'param' => array('channel' => $channel));
+      }
     }
     if ($isChannel) {
       $batch[] = array('cmd' => 'GetChnTypeInfo', 'action' => 0, 'param' => array('channel' => $channel));
@@ -847,6 +1018,10 @@ class reolink extends eqLogic {
         }
         $camera->setConfiguration($key, $value);
       }
+    }
+    if (isset($byCmd['GetEnc']['value']['Enc']) && is_array($byCmd['GetEnc']['value']['Enc'])) {
+      $hasExt = (isset($byCmd['GetEnc']['value']['Enc']['extStream']) && is_array($byCmd['GetEnc']['value']['Enc']['extStream'])) ? 1 : 0;
+      $camera->setConfiguration('hasExtStream', $hasExt);
     }
 
     if ($isChannel) {
@@ -1301,26 +1476,57 @@ class reolink extends eqLogic {
     if (!is_object($camera) || $camera->isNvrParent()) {
       throw new Exception(__('Équipement Reolink invalide', __FILE__));
     }
-    if (strtolower(trim(strval($camera->getConfiguration('cnxtype', '')))) === 'baichuan') {
-      throw new Exception(__('Flux vidéo RTSP/Live indisponible en mode Baichuan seul (port 9000 uniquement). Utilisez les captures JPEG (plugin Caméra ou snap.php via cmd 109).', __FILE__));
+    $cnxType = strtolower(trim(strval($camera->getConfiguration('cnxtype', ''))));
+    if (!$camera->hasBattery() || !$camera->isBatterySleeping()) {
+      $needNfo = ($cnxType !== 'baichuan') && (
+        $camera->getConfiguration('rtspSubUrl') == ''
+        || $camera->getConfiguration('rtspMainUrl') == ''
+        || (!$camera->hasBattery() && $camera->getConfiguration('hasExtStream', '') === '')
+      );
+      if ($needNfo) {
+        reolink::GetCamNFO($id);
+        $camera = reolink::byId($id, 'reolink');
+      }
+      if ($camera->getConfiguration('hasAudioTalk', '') === '' || $camera->getConfiguration('hasAutoTrackStream', '') === '') {
+        reolink::GetCamAbility($id);
+        $camera = reolink::byId($id, 'reolink');
+      }
     }
-    if ($camera->getConfiguration('rtspSubUrl') == '' || $camera->getConfiguration('rtspMainUrl') == '') {
-      reolink::GetCamNFO($id);
-      $camera = reolink::byId($id, 'reolink');
+    if ($cnxType === 'baichuan') {
+      self::syncTalkRoutesToDaemon($camera, true);
+      throw new Exception(__('Flux vidéo RTSP/Live indisponible en mode Baichuan seul (port 9000 uniquement). Utilisez le flux JPEG (cmd 109).', __FILE__));
     }
-    $streams = array(
-      'reolink_' . $id . '_sub' => $camera->resolveRtspUrl($camera->getConfiguration('rtspSubUrl'), true),
-      'reolink_' . $id . '_main' => $camera->resolveRtspUrl($camera->getConfiguration('rtspMainUrl'), false),
-    );
-    $registered = 0;
-    foreach ($streams as $name => $src) {
-      if ($src === '' || $src === null) {
+
+    $available = $camera->getAvailableStreams();
+    $hasTalk = (intval($camera->getConfiguration('hasAudioTalk', 0)) === 1);
+    $talkUrl = '';
+    if ($hasTalk) {
+      self::syncTalkRoutesToDaemon($camera, true);
+      $talkUrl = $camera->getLocalTalkRtspUrl(true);
+    }
+
+    $apiPort = self::getGo2rtcApiPort();
+    $registered = array();
+    foreach ($available as $key => $meta) {
+      if (($meta['type'] ?? '') !== 'go2rtc' || empty($meta['url'])) {
         continue;
       }
-      // PATCH = in-memory update/create without rewriting go2rtc.yaml
-      $url = 'http://127.0.0.1:1984/api/streams?name=' . rawurlencode($name) . '&src=' . rawurlencode($src);
+      $name = 'reolink_' . intval($id) . '_' . $key;
+      $sources = array(
+        $meta['url'],
+        'ffmpeg:' . $name . '#audio=opus',
+      );
+      if ($talkUrl !== '') {
+        $sources[] = $talkUrl;
+      }
+      $query = 'name=' . rawurlencode($name);
+      foreach ($sources as $src) {
+        $query .= '&src=' . rawurlencode($src);
+      }
+      // PUT registers multi-source streams (video + Opus WebRTC audio + Baichuan talk backchannel)
+      $url = 'http://127.0.0.1:' . $apiPort . '/api/streams?' . $query;
       $ch = curl_init($url);
-      curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
+      curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
       curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
       curl_setopt($ch, CURLOPT_TIMEOUT, 5);
@@ -1331,16 +1537,16 @@ class reolink extends eqLogic {
       if ($code < 200 || $code >= 300) {
         log::add('reolink', 'warning', 'go2rtc stream ' . $name . ' HTTP ' . $code . ' ' . strval($body) . ' ' . $err);
         if ($code === 0) {
-          throw new Exception(__('Service go2rtc injoignable (127.0.0.1:1984) : vérifiez que les dépendances sont à jour et que le démon Reolink est démarré', __FILE__));
+          throw new Exception(__('Service go2rtc injoignable', __FILE__) . ' (127.0.0.1:' . $apiPort . ') : ' . __('vérifiez que les dépendances sont à jour et que le démon Reolink est démarré', __FILE__));
         }
         throw new Exception(__('Échec enregistrement flux go2rtc', __FILE__) . ' (' . $name . ' HTTP ' . $code . ')');
       }
-      $registered++;
+      $registered[] = $name;
     }
-    if ($registered === 0) {
-      throw new Exception(__('Aucune URL RTSP disponible pour cette caméra', __FILE__));
+    if (empty($registered)) {
+      throw new Exception(__('Aucune URL de flux vidéo disponible pour cette caméra', __FILE__));
     }
-    return array_keys($streams);
+    return $registered;
   }
 
   public static function GetCamAbility($id) {
@@ -1495,6 +1701,37 @@ class reolink extends eqLogic {
       || (intval($deviceAbility['doorbellVersion']['ver'] ?? 0) > 0)
       || (intval($deviceAbility['visitor']['ver'] ?? 0) > 0);
     $deviceAbility['doorbell'] = array('permit' => $isDoorbell ? 4 : 0, 'ver' => $isDoorbell ? 1 : 0);
+
+    // Stream & two-way audio capabilities persisted for Live / go2rtc / JeedomConnect
+    $hasTalk = (intval($deviceAbility['talk']['ver'] ?? 0) > 0) ? 1 : 0;
+    $hasAutoTrack = (intval($deviceAbility['supportAutoTrackStream']['ver'] ?? 0) > 0) ? 1 : 0;
+    $dirtyCfg = false;
+    if (intval($camera->getConfiguration('hasAudioTalk', -1)) !== $hasTalk) {
+      $camera->setConfiguration('hasAudioTalk', $hasTalk);
+      $dirtyCfg = true;
+    }
+    if (intval($camera->getConfiguration('hasAutoTrackStream', -1)) !== $hasAutoTrack) {
+      $camera->setConfiguration('hasAutoTrackStream', $hasAutoTrack);
+      $dirtyCfg = true;
+    }
+    if (!$hasBat && $camera->getConfiguration('hasExtStream', '') === '') {
+      $encResp = $reolinkConn->SendCMD('[{"cmd":"GetEnc","action":0,"param":{"channel":' . intval($channel) . '}}]');
+      if (is_array($encResp) && isset($encResp[0]['value']['Enc']) && is_array($encResp[0]['value']['Enc'])) {
+        $hasExt = (isset($encResp[0]['value']['Enc']['extStream']) && is_array($encResp[0]['value']['Enc']['extStream'])) ? 1 : 0;
+        $camera->setConfiguration('hasExtStream', $hasExt);
+        $dirtyCfg = true;
+      }
+    }
+    if ($hasTalk === 1 && trim(strval($camera->getConfiguration('talk_token', ''))) === '') {
+      $camera->setConfiguration('talk_token', bin2hex(random_bytes(12)));
+      $dirtyCfg = true;
+    }
+    if ($dirtyCfg) {
+      $camera->save(true);
+      if ($hasTalk === 1) {
+        self::syncTalkRoutesToDaemon($camera, true);
+      }
+    }
 
     // Legacy firmwares without explicit recPreRecord / ispBackLight keys: defer to GetRec / GetIsp probes
     if (!isset($deviceAbility['recPreRecord']) && isset($deviceAbility['sdCard'])) {
@@ -2578,8 +2815,54 @@ class reolink extends eqLogic {
 
   // Leading underscore required: Jeedom utils::o2a() / DB::buildField() persist any non-_ property into eqLogic SQL
   private static $_lastBaichuanSyncHash = null;
+  private static $_lastTalkSyncHash = null;
+
+  public static function syncTalkRoutesToDaemon($targetCamera = null, $force = false) {
+    $deamon_info = self::deamon_info();
+    if (($deamon_info['state'] ?? '') !== 'ok') {
+      return;
+    }
+    $targets = is_object($targetCamera) ? array($targetCamera) : eqLogic::byType('reolink', true);
+    $routes = array();
+    foreach ($targets as $camera) {
+      if (!is_object($camera) || $camera->isNvrParent() || intval($camera->getIsEnable()) !== 1) {
+        continue;
+      }
+      if (is_object($targetCamera) || intval($camera->getConfiguration('hasAudioTalk', 0)) === 1) {
+        $contact = trim(strval($camera->getConfiguration('adresseip', '')));
+        if ($contact === '') {
+          continue;
+        }
+        $ip = filter_var($contact, FILTER_VALIDATE_IP) ? $contact : gethostbyname($contact);
+        $routes[] = array(
+          'eq_id' => intval($camera->getId()),
+          'ip' => $ip,
+          'port' => reolinkBaichuan::resolvePort($camera),
+          'channel' => intval($camera->getChannel()),
+          'user' => strval($camera->getConfiguration('login', 'admin')),
+          'pwd' => strval($camera->getConfiguration('password', '')),
+          'token' => $camera->getOrCreateTalkToken(),
+        );
+      }
+    }
+    if (empty($routes)) {
+      return;
+    }
+    if (!is_object($targetCamera)) {
+      $hash = md5(json_encode($routes));
+      if (!$force && self::$_lastTalkSyncHash === $hash) {
+        return;
+      }
+      self::$_lastTalkSyncHash = $hash;
+    }
+    reolink::sendToDaemon(array(
+      'action' => 'preparetalk',
+      'routes' => $routes,
+    ));
+  }
 
   public static function syncBaichuanDaemonSubscriptions($force = false) {
+    self::syncTalkRoutesToDaemon(null, $force);
     $deamon_info = self::deamon_info();
     if (($deamon_info['state'] ?? '') !== 'ok') {
       return;
@@ -2969,15 +3252,16 @@ class reolink extends eqLogic {
     } else {
       $errno = 0;
       $errstr = '';
-      $fp = @fsockopen('127.0.0.1', 1984, $errno, $errstr, 0.25);
+      $apiPort = self::getGo2rtcApiPort();
+      $fp = @fsockopen('127.0.0.1', $apiPort, $errno, $errstr, 0.25);
       $go2rtcOk = is_resource($fp);
       if ($go2rtcOk) {
         fclose($fp);
       }
       $result[] = array(
         'test' => __('Serveur Live go2rtc', __FILE__),
-        'result' => $go2rtcOk ? __('OK (127.0.0.1:1984)', __FILE__) : __('Indisponible', __FILE__),
-        'advice' => $go2rtcOk ? '' : __('Le démon tourne mais le port local go2rtc 127.0.0.1:1984 ne répond pas', __FILE__),
+        'result' => $go2rtcOk ? ('OK (127.0.0.1:' . $apiPort . ')') : __('Indisponible', __FILE__),
+        'advice' => $go2rtcOk ? '' : (__('Le démon tourne mais le port local go2rtc ne répond pas', __FILE__) . ' (127.0.0.1:' . $apiPort . ')'),
         'state' => $go2rtcOk,
       );
     }
@@ -3026,6 +3310,9 @@ class reolink extends eqLogic {
       $cmd .= ' --webhook_ip ' . $webhook_ip;
     }
     $cmd .= ' --webhook_port ' . config::byKey('webhookport', __CLASS__, '44010');
+    $cmd .= ' --go2rtc_api_port ' . self::getGo2rtcApiPort();
+    $cmd .= ' --go2rtc_webrtc_port ' . self::getGo2rtcWebrtcPort();
+    $cmd .= ' --talk_port ' . self::getTalkBridgePort();
     log::add(__CLASS__, 'info', 'Lancement démon');
     $result = exec($cmd . ' >> ' . log::getPathToLog('reolink_daemon') . ' 2>&1 &');
     $i = 0;

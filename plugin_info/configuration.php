@@ -79,6 +79,22 @@ if (!isConnect()) {
       </div>
     </div>
     <div class="form-group">
+      <label class="col-md-4 control-label">{{Port API local go2rtc}}
+        <sup><i class="fas fa-question-circle tooltips" title="{{Port HTTP local (127.0.0.1) de l'instance go2rtc interne au plugin Reolink (44011 par défaut pour éviter tout conflit avec JeedomConnect sur 1984)}}"></i></sup>
+      </label>
+      <div class="col-md-4">
+        <input class="configKey form-control" data-l1key="go2rtc_api_port" placeholder="44011" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-md-4 control-label">{{Port WebRTC go2rtc}}
+        <sup><i class="fas fa-question-circle tooltips" title="{{Port ICE TCP/UDP utilisé par WebRTC (44012 par défaut pour éviter tout conflit avec JeedomConnect sur 8555)}}"></i></sup>
+      </label>
+      <div class="col-md-4">
+        <input class="configKey form-control" data-l1key="go2rtc_webrtc_port" placeholder="44012" />
+      </div>
+    </div>
+    <div class="form-group">
       <label class="col-md-4 control-label">{{Vérifier les mises à jour firmware (dépôt GitHub)}}
         <sup><i class="fas fa-question-circle tooltips" title="{{Compare quotidiennement le modèle et la révision matérielle (hardVer) de vos caméras et NVR avec l'index AT0myks/reolink-fw-archive en ne retenant que les liens HTTPS hébergés sur les serveurs officiels Reolink. Fonctionne sans exposer les caméras à Internet et sans réveiller les caméras sur batterie.}}"></i></sup>
       </label>

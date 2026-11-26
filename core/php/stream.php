@@ -14,7 +14,10 @@ if (!reolink::isPluginActiveFast()) {
   exit;
 }
 $id = intval(init('id', 0));
-$quality = (init('quality', 'sub') === 'main') ? 'main' : 'sub';
+$quality = reolink::sanitizeStreamKey(init('quality', 'sub'));
+if ($quality === 'jpeg') {
+  $quality = 'sub';
+}
 $camera = reolink::byId($id, 'reolink');
 if (!is_object($camera) || $camera->isNvrParent()) {
   http_response_code(404);
@@ -41,7 +44,7 @@ try {
 }
 
 $src = 'reolink_' . $id . '_' . $quality;
-$url = 'http://127.0.0.1:1984/api/stream.mp4?src=' . rawurlencode($src);
+$url = 'http://127.0.0.1:' . reolink::getGo2rtcApiPort() . '/api/stream.mp4?src=' . rawurlencode($src);
 
 // false = PHP s'arrête quand le navigateur annule (changement qualité / fermeture modale)
 ignore_user_abort(false);
