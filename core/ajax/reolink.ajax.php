@@ -21,11 +21,12 @@ try {
     include_file('core', 'authentification', 'php');
 
     if (init('action') == 'webrtcOffer') {
-      if (!isConnect()) {
+      $id = intval(init('id', 0));
+      $camOffer = reolink::byId($id, 'reolink');
+      if (!reolink::isAuthorizedForLive($camOffer, init('token', ''))) {
         throw new Exception(__('401 - Accès non autorisé', __FILE__));
       }
       ajax::init();
-      $id = intval(init('id', 0));
       $quality = reolink::sanitizeStreamKey(init('quality', 'sub'));
       if ($quality === 'jpeg') {
         $quality = 'sub';
@@ -50,6 +51,15 @@ try {
         throw new Exception(__('WebRTC go2rtc indisponible', __FILE__));
       }
       ajax::success(array('sdp' => $answer));
+    }
+
+    if (init('action') == 'SavePtzPreset') {
+      if (!isConnect()) {
+        throw new Exception(__('401 - Accès non autorisé', __FILE__));
+      }
+      ajax::init();
+      $presets = reolink::savePtzPreset(intval(init('id', 0)), intval(init('presetId', 0)), strval(init('name', '')), intval(init('enable', 1)));
+      ajax::success(array('presets' => $presets));
     }
 
     if (!isConnect('admin')) {
@@ -145,6 +155,26 @@ try {
     if (init('action') == 'BaichuanDiagnostic') {
       reolink::clearHostCooldown($camera);
       ajax::success(reolink::runBaichuanDiagnostic(init('id')));
+    }
+
+    if (init('action') == 'GetLiveUrls') {
+      if ($camera->isNvrParent()) {
+        ajax::success(array('webviewUrl' => '', 'talkRtspUrl' => ''));
+      }
+      ajax::success(array(
+        'webviewUrl' => $camera->getWebViewLiveUrl(true),
+        'talkRtspUrl' => $camera->getLocalTalkRtspUrl(true),
+      ));
+    }
+
+    if (init('action') == 'RegenerateLiveToken') {
+      if ($camera->isNvrParent()) {
+        throw new Exception(__('Action réservée aux équipements caméra', __FILE__));
+      }
+      $camera->regenerateLiveToken();
+      ajax::success(array(
+        'webviewUrl' => $camera->getWebViewLiveUrl(true),
+      ));
     }
 
     throw new Exception(__('Aucune méthode correspondante à : ', __FILE__) . init('action'));

@@ -191,6 +191,26 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked/>{{Visible}}</label>
 								</div>
 							</div>
+							<div class="form-group cameraOnlyAction">
+								<label class="col-sm-3 control-label">{{Tuile Dashboard / Design}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Mode d'affichage de la tuile Reolink sur le Dashboard, les Designs et le Mobile. Choisissez Commandes seules si vous affichez déjà le flux via le plugin Caméra.}}"></i></sup>
+								</label>
+								<div class="col-sm-7">
+									<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="dashboard_mode">
+										<option value="commands">{{Commandes seules (défaut / usage avec plugin Caméra)}}</option>
+										<option value="snapshot_live">{{Vignette périodique + Live / Interphone au clic}}</option>
+										<option value="live_auto">{{Live direct automatique (caméras secteur uniquement)}}</option>
+									</select>
+								</div>
+							</div>
+							<div class="form-group cameraOnlyAction" id="fg_dashSnapInterval" style="display:none;">
+								<label class="col-sm-3 control-label">{{Rafraîchissement vignette (s)}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Intervalle de rafraîchissement du cliché sur le Dashboard (5 s min, sans réveiller les caméras sur batterie).}}"></i></sup>
+								</label>
+								<div class="col-sm-3">
+									<input type="number" min="5" max="3600" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="dashboard_snap_interval" placeholder="15"/>
+								</div>
+							</div>
 							<legend id="lgd_accessParams"><i class="fas fa-cogs"></i> <span id="lbl_accessParams">{{Paramètres d'accès à la caméra}}</span></legend>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{IP / Nom d'hôte}}
@@ -452,6 +472,36 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 													</tr>
 												</tbody>
 											</table>
+											<div class="cameraOnlyAction" style="margin-top:10px;">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">{{WebView Live + Micro}}
+														<sup><i class="fas fa-question-circle tooltips" title="{{URL autonome avec jeton révocable pour afficher le Live et l'interphone WebRTC dans un widget WebView JeedomConnect (nécessite HTTPS pour le microphone).}}"></i></sup>
+													</label>
+													<div class="col-sm-8">
+														<div class="input-group">
+															<input type="text" class="form-control input-sm" id="inp_rlkWebViewUrl" readonly/>
+															<span class="input-group-btn">
+																<a class="btn btn-default btn-sm" id="btCopyWebViewUrl" title="{{Copier l'URL}}"><i class="fas fa-copy"></i></a>
+																<a class="btn btn-default btn-sm" id="btOpenWebViewTab" title="{{Ouvrir dans un nouvel onglet}}"><i class="fas fa-external-link-alt"></i></a>
+																<a class="btn btn-warning btn-sm" id="btRegenWebViewToken" title="{{Régénérer le jeton d'accès}}"><i class="fas fa-key"></i></a>
+															</span>
+														</div>
+													</div>
+												</div>
+												<div class="form-group">
+													<label class="col-sm-4 control-label">{{RTSP Talk local}}
+														<sup><i class="fas fa-question-circle tooltips" title="{{URL RTSP backchannel locale (127.0.0.1) exposant l'audio bidirectionnel Baichuan universel à go2rtc / JeedomConnect.}}"></i></sup>
+													</label>
+													<div class="col-sm-8">
+														<div class="input-group">
+															<input type="text" class="form-control input-sm" id="inp_rlkTalkRtspUrl" readonly/>
+															<span class="input-group-btn">
+																<a class="btn btn-default btn-sm" id="btCopyTalkRtspUrl" title="{{Copier l'URL}}"><i class="fas fa-copy"></i></a>
+															</span>
+														</div>
+													</div>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>

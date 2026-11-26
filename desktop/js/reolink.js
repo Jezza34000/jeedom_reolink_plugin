@@ -259,6 +259,26 @@ function updateEqLogicRoleUi(_eqLogic) {
   document.querySelectorAll('.nvrOnlyAction').forEach(function (el) {
     reolinkSetVisible(el, !!isNvrParent)
   })
+  var dashMode = String((typeof cfg.dashboard_mode !== 'undefined' ? cfg.dashboard_mode : $('.eqLogicAttr[data-l1key=configuration][data-l2key=dashboard_mode]').value()) || 'commands').trim()
+  reolinkSetVisible(document.getElementById('fg_dashSnapInterval'), !isNvrParent && dashMode === 'snapshot_live')
+
+  if (_eqLogic && _eqLogic.id && !isNvrParent) {
+    $.ajax({
+      type: 'POST',
+      url: 'plugins/reolink/core/ajax/reolink.ajax.php',
+      data: { action: 'GetLiveUrls', id: _eqLogic.id },
+      dataType: 'json',
+      global: false,
+      success: function (res) {
+        if (res && res.state === 'ok' && res.result) {
+          var wInp = document.getElementById('inp_rlkWebViewUrl')
+          var tInp = document.getElementById('inp_rlkTalkRtspUrl')
+          if (wInp) wInp.value = String(res.result.webviewUrl || '')
+          if (tInp) tInp.value = String(res.result.talkRtspUrl || '')
+        }
+      }
+    })
+  }
 
   document.querySelectorAll('.reolinkPortBadge').forEach(function (el) {
     var key = el.getAttribute('data-enable-key')
@@ -324,6 +344,48 @@ function updateNvrParentHint() {
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').on('change keyup', updateNvrParentHint)
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=cnxtype]').on('change', updateNvrParentHint)
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=event_mode]').on('change', updateNvrParentHint)
+$('.eqLogicAttr[data-l1key=configuration][data-l2key=dashboard_mode]').on('change', function () {
+  var dm = String($(this).value() || 'commands').trim()
+  var isNvr = document.getElementById('div_nvrParentHint') && document.getElementById('div_nvrParentHint').style.display !== 'none'
+  reolinkSetVisible(document.getElementById('fg_dashSnapInterval'), !isNvr && dm === 'snapshot_live')
+})
+$('#btCopyWebViewUrl').on('click', function () {
+  var inp = document.getElementById('inp_rlkWebViewUrl')
+  if (inp && inp.value && navigator.clipboard) {
+    navigator.clipboard.writeText(inp.value)
+    $('#div_alert').showAlert({message: '{{URL WebView copiée}}', level: 'success'})
+  }
+})
+$('#btCopyTalkRtspUrl').on('click', function () {
+  var inp = document.getElementById('inp_rlkTalkRtspUrl')
+  if (inp && inp.value && navigator.clipboard) {
+    navigator.clipboard.writeText(inp.value)
+    $('#div_alert').showAlert({message: '{{URL RTSP Talk copiée}}', level: 'success'})
+  }
+})
+$('#btOpenWebViewTab').on('click', function () {
+  var inp = document.getElementById('inp_rlkWebViewUrl')
+  if (inp && inp.value) {
+    window.open(inp.value, '_blank', 'noopener,noreferrer')
+  }
+})
+$('#btRegenWebViewToken').on('click', function () {
+  var id = $('.eqLogicAttr[data-l1key=id]').value()
+  if (!id) return
+  $.ajax({
+    type: 'POST',
+    url: 'plugins/reolink/core/ajax/reolink.ajax.php',
+    data: { action: 'RegenerateLiveToken', id: id },
+    dataType: 'json',
+    success: function (res) {
+      if (res && res.state === 'ok' && res.result) {
+        var inp = document.getElementById('inp_rlkWebViewUrl')
+        if (inp) inp.value = String(res.result.webviewUrl || '')
+        $('#div_alert').showAlert({message: '{{Nouveau jeton WebView généré}}', level: 'success'})
+      }
+    }
+  })
+})
 $('.eqLogicAttr[data-l1key=isEnable]').on('change', function () {
   reolinkRenderEqFirmwareBadge(reolinkCurrentEqCfg)
 })
@@ -1052,10 +1114,22 @@ function reolinkBuildCmdRow(_cmd) {
   html += '<td style="min-width:100px;width:150px;">'
   html += '<span class="cmdAttr label label-default" data-l1key="logicalId">' + reolinkEscapeHtml(init(_cmd.logicalId)) + '</span>'
   html += '</td>'
+  var isSnapCmd = (String(init(_cmd.logicalId)) === 'SendSnapshot')
   html += '<td style="min-width:150px;width:250px;">'
-  html += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min.}}" style="width:30%;display:inline-block;"/> '
-  html += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max.}}" style="width:30%;display:inline-block;"/> '
-  html += '<input class="cmdAttr form-control input-sm" data-l1key="unite" placeholder="{{Unité}}" style="width:30%;display:inline-block;"/>'
+  if (isSnapCmd) {
+    html += '<div class="input-group input-group-sm" style="margin-bottom:3px;">'
+    html += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="targetMsgCmd" placeholder="{{#[Objet][Notif][Envoyer]#}}"/>'
+    html += '<span class="input-group-btn"><a class="btn btn-default btn-sm btSelectSnapMsgCmd" title="{{Choisir une commande de notification}}"><i class="fas fa-list-alt"></i></a></span>'
+    html += '</div>'
+    html += '<select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="snapQuality">'
+    html += '<option value="main">{{Qualité High (main)}}</option>'
+    html += '<option value="sub">{{Qualité Low (sub)}}</option>'
+    html += '</select>'
+  } else {
+    html += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min.}}" style="width:30%;display:inline-block;"/> '
+    html += '<input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max.}}" style="width:30%;display:inline-block;"/> '
+    html += '<input class="cmdAttr form-control input-sm" data-l1key="unite" placeholder="{{Unité}}" style="width:30%;display:inline-block;"/>'
+  }
   html += '</td>'
   html += '<td style="min-width:150px;width:250px;">'
   html += '<label class="checkbox-inline"><input type="checkbox" class="cmdAttr" data-l1key="isVisible" checked/>{{Afficher}}</label> '
@@ -1088,9 +1162,27 @@ function reolinkBuildCmdRow(_cmd) {
   if (needInfoSelect && cmdValue !== '') {
     row.querySelector('select[data-l1key="value"]').value = String(cmdValue)
   }
-  row.querySelector('input[data-l2key="minValue"]').value = init(cfg.minValue)
-  row.querySelector('input[data-l2key="maxValue"]').value = init(cfg.maxValue)
-  row.querySelector('input[data-l1key="unite"]').value = init(_cmd.unite)
+  if (isSnapCmd) {
+    var tgtInp = row.querySelector('input[data-l2key="targetMsgCmd"]')
+    var qSel = row.querySelector('select[data-l2key="snapQuality"]')
+    if (tgtInp) tgtInp.value = init(cfg.targetMsgCmd)
+    if (qSel) qSel.value = (init(cfg.snapQuality) === 'sub') ? 'sub' : 'main'
+    var pickBtn = row.querySelector('.btSelectSnapMsgCmd')
+    if (pickBtn) {
+      pickBtn.addEventListener('click', function (e) {
+        e.preventDefault()
+        jeedom.cmd.getSelectModal({cmd: {type: 'action', subType: 'message'}}, function (result) {
+          if (tgtInp && result && result.human) {
+            tgtInp.value = result.human
+          }
+        })
+      })
+    }
+  } else {
+    row.querySelector('input[data-l2key="minValue"]').value = init(cfg.minValue)
+    row.querySelector('input[data-l2key="maxValue"]').value = init(cfg.maxValue)
+    row.querySelector('input[data-l1key="unite"]').value = init(_cmd.unite)
+  }
   if (init(_cmd.isVisible) !== '') {
     row.querySelector('input[data-l1key="isVisible"]').checked = (String(_cmd.isVisible) === '1')
   }
