@@ -1,5 +1,9 @@
 # Change log
 
+26/11/2026
+
+- Organisation des commandes par onglets thématiques & allègement de la tuile Dashboard par défaut : remplacement de la liste unique **Commandes** par 6 onglets de premier niveau adaptés dynamiquement aux capacités de l'équipement (**Détections & IA**, **PTZ & Rondes**, **Éclairage & Audio**, **Alertes & Enreg.**, **Image & Encodage**, **Système**, avec masquage automatique des catégories vides et compteurs), ajout d'une barre de filtrage instantané par type (**Toutes** · **Infos (lecture)** · **Actions**) et par recherche texte, réduction de la sélection `isVisible` initiale à la création aux seules commandes courantes (~12–16 commandes sur une caméra PTZ + IA au lieu de plus de 70, sans écraser les choix existants lors des mises à jour ou resynchronisations), et ajout d'un bouton **Affichage par défaut** (sur confirmation) permettant d'appliquer ce profil allégé en un clic sur les équipements déjà créés
+
 25/11/2026
 
 - Correction du plantage MySQL `1054` à l'ajout / sauvegarde d'équipement (`Unknown column 'lastBaichuanSyncHash' in 'INSERT INTO'` / `UPDATE`, #152106) : préfixage de `$_lastBaichuanSyncHash` par un underscore afin que l'ORM Jeedom (`utils::o2a()` / `DB::buildField()`) ne persiste pas la propriété statique interne comme colonne SQL de `eqLogic`, et capture complète de `\Throwable` dans `reolink.ajax.php`

@@ -12,7 +12,8 @@
 			"configuration": {
 				"help": "Rafraîchit toutes les informations et états de l'équipement depuis la caméra.",
 				"valuesHelp": "Action immédiate : relance la lecture des états depuis la caméra (pas de valeur)"
-			}
+			},
+			"category": "system"
 		},
 		{
 			"abilityneed": "reboot",
@@ -27,7 +28,8 @@
 			},
 			"isVisible": 0,
 			"logicalId": "reboot",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -42,7 +44,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "MdState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "none",
@@ -56,7 +59,8 @@
 			"configuration": {
 				"help": "Indique si le canal caméra est joignable derrière le NVR.",
 				"valuesHelp": "0 = Canal hors ligne / injoignable, 1 = Canal en ligne"
-			}
+			},
+			"category": "system"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -64,13 +68,14 @@
 			"type": "info",
 			"subtype": "binary",
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "EvMotion",
 			"scope": "channel",
 			"configuration": {
 				"help": "Événement ONVIF : mouvement détecté (temps réel via le démon).",
 				"valuesHelp": "0 = Pas de mouvement, 1 = Mouvement détecté (événement ONVIF temps réel)"
-			}
+			},
+			"category": "detection"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -85,7 +90,8 @@
 			"configuration": {
 				"help": "Événement ONVIF / IA : visage détecté.",
 				"valuesHelp": "0 = Aucun visage, 1 = Visage détecté"
-			}
+			},
+			"category": "detection"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -100,7 +106,8 @@
 			"configuration": {
 				"help": "Événement ONVIF / IA : personne détectée.",
 				"valuesHelp": "0 = Aucune personne, 1 = Personne détectée"
-			}
+			},
+			"category": "detection"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -115,7 +122,8 @@
 			"configuration": {
 				"help": "Événement ONVIF / IA : véhicule détecté.",
 				"valuesHelp": "0 = Aucun véhicule, 1 = Véhicule détecté"
-			}
+			},
+			"category": "detection"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -130,7 +138,8 @@
 			"configuration": {
 				"help": "Événement ONVIF / IA : animal (chien/chat) détecté.",
 				"valuesHelp": "0 = Aucun animal, 1 = Animal (chien/chat) détecté"
-			}
+			},
+			"category": "detection"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -145,7 +154,8 @@
 			"configuration": {
 				"help": "Événement ONVIF / IA : colis détecté.",
 				"valuesHelp": "0 = Aucun colis, 1 = Colis détecté"
-			}
+			},
+			"category": "detection"
 		},
 		{
 			"abilityneed": "doorbell",
@@ -159,7 +169,8 @@
 			"configuration": {
 				"help": "Événement ONVIF : visiteur (sonnette / visitor).",
 				"valuesHelp": "0 = Pas de visiteur, 1 = Visiteur / sonnette"
-			}
+			},
+			"category": "detection"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -167,13 +178,14 @@
 			"type": "info",
 			"subtype": "string",
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "EvLastOnvifFull",
 			"scope": "channel",
 			"configuration": {
 				"help": "Dernier message ONVIF reçu (détail brut).",
 				"valuesHelp": "Texte libre : détail brut du dernier message ONVIF"
-			}
+			},
+			"category": "detection"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -181,13 +193,14 @@
 			"type": "info",
 			"subtype": "string",
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "EvLastOnvifName",
 			"scope": "channel",
 			"configuration": {
 				"help": "Nom du dernier événement ONVIF reçu.",
 				"valuesHelp": "Texte libre : nom du dernier événement ONVIF reçu"
-			}
+			},
+			"category": "detection"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -195,13 +208,14 @@
 			"type": "info",
 			"subtype": "binary",
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "EvLastOnvifState",
 			"scope": "channel",
 			"configuration": {
 				"help": "État du dernier événement ONVIF (actif/inactif).",
 				"valuesHelp": "0 = Dernier événement inactif, 1 = Dernier événement actif"
-			}
+			},
+			"category": "detection"
 		},
 		{
 			"abilityneed": "performance",
@@ -217,7 +231,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetCodecRateState",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "performance",
@@ -235,7 +250,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetCpuUsedState",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "performance",
@@ -251,7 +267,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetNetThroughputState",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "push",
@@ -268,7 +285,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPushState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "push",
@@ -288,7 +306,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetPush",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "push",
@@ -305,7 +324,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPushStateV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "push",
@@ -325,7 +345,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetPushV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "supportPushInterval",
@@ -340,7 +361,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPushCfgState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "supportPushInterval",
@@ -357,9 +379,10 @@
 				"valuesHelp": "20 = 20 Sec, 30 = 30 Sec, 60 = 1 Min, 120 = 2 Min"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetPushCfg",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -375,7 +398,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetRecordState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -395,7 +419,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetRecord",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -411,7 +436,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetRecordStateV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -431,7 +457,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetRecordV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -448,7 +475,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPreRecordState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -467,9 +495,10 @@
 				"valuesHelp": "0 = Désactiver, 1 = Activer"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetPreRecord",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -486,7 +515,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPreRecordStateV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -505,9 +535,10 @@
 				"valuesHelp": "0 = Désactiver, 1 = Activer"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetPreRecordV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -523,7 +554,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetOverwriteState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -541,9 +573,10 @@
 				"valuesHelp": "0 = Désactiver, 1 = Activer"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetOverwrite",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -559,7 +592,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetOverwriteStateV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -577,9 +611,10 @@
 				"valuesHelp": "0 = Désactiver, 1 = Activer"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetOverwriteV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -595,7 +630,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPostRecordState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -613,9 +649,10 @@
 				"valuesHelp": "15 Seconds = 15 Sec, 30 Seconds = 30 Sec, 1 Minute = 1 Min, 10 Minutes = 10 Min"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetPostRecord",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -631,7 +668,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPostRecordStateV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -649,9 +687,10 @@
 				"valuesHelp": "15 Seconds = 15 Sec, 30 Seconds = 30 Sec, 1 Minute = 1 Min, 10 Minutes = 10 Min"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetPostRecordV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "email",
@@ -667,7 +706,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetEmailState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "email",
@@ -685,9 +725,10 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetEmail",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "email",
@@ -703,7 +744,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetEmailStateV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "email",
@@ -721,9 +763,10 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetEmailV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "ftp",
@@ -739,7 +782,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetFTPState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "ftp",
@@ -757,9 +801,10 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetFTP",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "ftp",
@@ -775,7 +820,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetFTPStateV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "ftp",
@@ -793,9 +839,10 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetFTPV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "ledControl",
@@ -810,7 +857,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetIrLightsState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "ledControl",
@@ -827,9 +875,10 @@
 				"valuesHelp": "Auto = Auto, On = Activer, Off = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetIrLights",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "supportFLswitch",
@@ -844,7 +893,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetWhitLedState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "supportFLswitch",
@@ -863,7 +913,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetWhitLed",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "supportFLswitch",
@@ -878,7 +929,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetWhiteLedModeState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "supportFLswitch",
@@ -895,9 +947,10 @@
 				"valuesHelp": "1 = Auto, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetWhiteLedMode",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "supportFLBrightness",
@@ -912,7 +965,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetWhitLedLuxState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "supportFLBrightness",
@@ -930,9 +984,10 @@
 				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetWhitLedLux",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "alarmAudio",
@@ -948,7 +1003,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAudioAlarmState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "alarmAudio",
@@ -966,9 +1022,10 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetAudioAlarm",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "alarmAudio",
@@ -984,7 +1041,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAudioAlarmStateV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "alarmAudio",
@@ -1002,9 +1060,10 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetAudioAlarmV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "powerLed",
@@ -1019,7 +1078,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPowerLedState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "powerLed",
@@ -1036,9 +1096,10 @@
 				"valuesHelp": "On = Activer, Off = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetPowerLed",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "enc",
@@ -1053,7 +1114,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetMicrophoneState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "enc",
@@ -1070,9 +1132,10 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetMicrophone",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "disableAutoFocus",
@@ -1087,7 +1150,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAutoFocusState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "disableAutoFocus",
@@ -1106,7 +1170,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAutoFocus",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "autoMaint",
@@ -1121,7 +1186,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAutoMaintState",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "autoMaint",
@@ -1138,9 +1204,10 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetAutoMaint",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -1154,9 +1221,10 @@
 				"valuesHelp": "Action immédiate : rafraîchit la liste des presets PTZ (pas de valeur)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "GetPtzPreset",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -1174,7 +1242,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetPtzByPreset",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzCtrl",
@@ -1192,7 +1261,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetPTZmoove",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzCtrl",
@@ -1208,7 +1278,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetSpeedState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzCtrl",
@@ -1226,9 +1297,10 @@
 				"valuesHelp": "Curseur de 1 à 64"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetSpeed",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "supportZoom",
@@ -1243,7 +1315,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetZoomState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "supportZoom",
@@ -1263,7 +1336,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetZoom",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "supportFocus",
@@ -1278,7 +1352,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetFocusState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "supportFocus",
@@ -1298,7 +1373,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetFocus",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzPatrol",
@@ -1312,9 +1388,10 @@
 				"valuesHelp": "Action immédiate : rafraîchit la configuration des rondes PTZ (pas de valeur)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "GetPtzPatrol",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzPatrol",
@@ -1327,9 +1404,10 @@
 				"valuesHelp": "0 = Aucune ronde en cours, 1 = Ronde PTZ active"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "PtzPatrolState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzPatrol",
@@ -1342,9 +1420,10 @@
 				"valuesHelp": "Identifiant numérique de la ronde active (0 à 5 en général)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "PtzPatrolId",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzPatrol",
@@ -1362,7 +1441,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "StartPtzPatrol",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzPatrol",
@@ -1378,7 +1458,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "StopPtzPatrol",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "supportPtzCheck",
@@ -1392,9 +1473,10 @@
 				"valuesHelp": "Action immédiate : lance la calibration PTZ (pas de valeur)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "PtzCheck",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "supportPtzCheck",
@@ -1407,9 +1489,10 @@
 				"valuesHelp": "REQUISE = Calibration nécessaire, EN COURS = Calibration en cours, TERMINEE = Calibration terminée"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetPtzCheckState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "supportAudioAlarm",
@@ -1425,7 +1508,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "AudioAlarmPlayTimes",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "supportAudioAlarm",
@@ -1440,7 +1524,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetSirenVolumeState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "supportAudioAlarm",
@@ -1458,9 +1543,10 @@
 				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetSirenVolume",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "ispMirror",
@@ -1475,7 +1561,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetRotationState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "ispFlip",
@@ -1490,7 +1577,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetMirroringState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "ispBackLight",
@@ -1505,7 +1593,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetBackLightState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "isp",
@@ -1520,7 +1609,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetExposureState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "isp",
@@ -1535,7 +1625,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetDayNightState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "isp",
@@ -1554,7 +1645,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetDayNight",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "ispAntiFlick",
@@ -1569,7 +1661,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAntiFlickerState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "ispAntiFlick",
@@ -1588,7 +1681,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAntiFlicker",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "isp3Dnr",
@@ -1603,7 +1697,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetNr3dState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "isp3Dnr",
@@ -1622,7 +1717,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetNr3d",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "upnp",
@@ -1637,7 +1733,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetUpnpState",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "upnp",
@@ -1656,7 +1753,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetUpnpp",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "p2p",
@@ -1671,7 +1769,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetUidP2pState",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "p2p",
@@ -1690,7 +1789,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetUidP2p",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "mask",
@@ -1705,7 +1805,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetMaskState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "mask",
@@ -1722,9 +1823,10 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetMask",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "privacyMode",
@@ -1738,7 +1840,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPrivacyModeState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "privacyMode",
@@ -1755,7 +1858,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetPrivacyMode",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "light_audio"
 		},
 		{
 			"abilityneed": "white_balance",
@@ -1770,7 +1874,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetWhiteBalanceState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "image",
@@ -1785,7 +1890,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetBrightState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "image",
@@ -1803,9 +1909,10 @@
 				"valuesHelp": "Curseur de 1 à 255"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetBright",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "image",
@@ -1820,7 +1927,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetContrastState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "image",
@@ -1838,9 +1946,10 @@
 				"valuesHelp": "Curseur de 1 à 255"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetContrast",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "image",
@@ -1855,7 +1964,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetSaturationState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "image",
@@ -1873,9 +1983,10 @@
 				"valuesHelp": "Curseur de 1 à 255"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetSaturation",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "ispHue",
@@ -1890,7 +2001,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetHueState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "ispHue",
@@ -1908,9 +2020,10 @@
 				"valuesHelp": "Curseur de 1 à 255"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetHue",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "ispSharpen",
@@ -1925,7 +2038,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetSharpenState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "ispSharpen",
@@ -1943,9 +2057,10 @@
 				"valuesHelp": "Curseur de 1 à 255"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetSharpen",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "waterMark",
@@ -1960,7 +2075,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetWatermarkState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "waterMark",
@@ -1979,7 +2095,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetWatermark",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "osd",
@@ -1994,7 +2111,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetOsdTimeState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "osd",
@@ -2013,7 +2131,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetOsdTime",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "osd",
@@ -2028,7 +2147,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPosOsdTimeState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "osd",
@@ -2047,7 +2167,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPosOsdTime",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "osd",
@@ -2062,7 +2183,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetOsdChannelState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "osd",
@@ -2081,7 +2203,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetOsdChannel",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "osd",
@@ -2096,7 +2219,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPosOsdChannelState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "osd",
@@ -2115,7 +2239,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetPosOsdChannel",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -2130,7 +2255,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetResolutionst1State",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -2145,7 +2271,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetFPSst1State",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -2161,7 +2288,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetBitratest1State",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -2176,7 +2304,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetResolutionst2State",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -2191,7 +2320,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetFPSst2State",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -2207,7 +2337,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetBitratest2State",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -2220,9 +2351,10 @@
 				"valuesHelp": "0 = Non, 1 = Oui"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "driveAvailable",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -2240,7 +2372,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "driveSpaceAvailable",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "sdCard",
@@ -2255,7 +2388,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "driveType",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "aiTrack",
@@ -2270,7 +2404,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetaiTrackState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "aiTrack",
@@ -2289,7 +2424,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetaiTrack",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -2307,7 +2443,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetMdDefaultSensitivityState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -2328,7 +2465,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetMdDefaultSensitivity",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2345,7 +2483,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetSdSensitivityPeopleState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2365,9 +2504,10 @@
 				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetSdSensitivityPeople",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2384,7 +2524,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetSdSensitivityVehicleState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2404,9 +2545,10 @@
 				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetSdSensitivityVehicle",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2423,7 +2565,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetSdSensitivityDogCatState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2443,9 +2586,10 @@
 				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetSdSensitivityDogCat",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2463,7 +2607,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAlarmDelayPeopleState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2483,9 +2628,10 @@
 				"valuesHelp": "Curseur de 0 à 8"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetAlarmDelayPeople",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2503,7 +2649,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAlarmDelayVehicleState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2523,9 +2670,10 @@
 				"valuesHelp": "Curseur de 0 à 8"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetAlarmDelayVehicle",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2543,7 +2691,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAlarmDelayDogCatState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2563,9 +2712,10 @@
 				"valuesHelp": "Curseur de 0 à 8"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetAlarmDelayDogCat",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2579,9 +2729,10 @@
 				"valuesHelp": "0 = Inactif / désactivé, 1 = Actif / activé"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "CheckIsExistsPtzGuardPoint",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2596,9 +2747,10 @@
 				"valuesHelp": "Action immédiate (pas de valeur)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetPtzGuardPoint",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2613,9 +2765,10 @@
 				"valuesHelp": "Action immédiate (pas de valeur)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "ToPosPtzGuardPoint",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2631,7 +2784,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAutoReturnPtzGuardPointState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2649,9 +2803,10 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetAutoReturnPtzGuardPoint",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2668,7 +2823,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetIntervalAutoReturnPtzGuardPointState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "ptzPreset",
@@ -2687,9 +2843,10 @@
 				"valuesHelp": "Curseur de 10 à 300"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetIntervalAutoReturnPtzGuardPoint",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "ptz"
 		},
 		{
 			"abilityneed": "supportBuzzer",
@@ -2705,7 +2862,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetBuzzerStateV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "supportBuzzer",
@@ -2723,9 +2881,10 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetBuzzerV20",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "supportBuzzerEnable",
@@ -2741,7 +2900,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetNvrBuzzerState",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "supportBuzzerEnable",
@@ -2761,7 +2921,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "SetNvrBuzzer",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "supportRecordEnable",
@@ -2776,7 +2937,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetManualRecordState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "supportRecordEnable",
@@ -2793,9 +2955,10 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetManualRecord",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "notif_rec"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -2811,7 +2974,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetMdEnableState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "alarmMd",
@@ -2829,9 +2993,10 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetMdEnable",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2847,7 +3012,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetSdSensitivityFaceState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2866,9 +3032,10 @@
 				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetSdSensitivityFace",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2885,7 +3052,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAlarmDelayFaceState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2904,9 +3072,10 @@
 				"valuesHelp": "Curseur de 0 à 8"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetAlarmDelayFace",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2922,7 +3091,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetSdSensitivityPackageState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiSensitivity",
@@ -2941,9 +3111,10 @@
 				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetSdSensitivityPackage",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2960,7 +3131,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetAlarmDelayPackageState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "supportAiStayTime",
@@ -2979,9 +3151,10 @@
 				"valuesHelp": "Curseur de 0 à 8"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetAlarmDelayPackage",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "detection"
 		},
 		{
 			"abilityneed": "upgrade",
@@ -2996,20 +3169,22 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "NewFirmwareState",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "upgrade",
 			"name": "Vérifier firmware",
 			"type": "action",
 			"subtype": "other",
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "CheckFirmware",
 			"scope": "host",
 			"configuration": {
 				"help": "Vérification ou mise à jour firmware.",
 				"valuesHelp": "Action immédiate (pas de valeur)"
-			}
+			},
+			"category": "system"
 		},
 		{
 			"abilityneed": "upgrade",
@@ -3022,7 +3197,8 @@
 			"configuration": {
 				"help": "Vérification ou mise à jour firmware.",
 				"valuesHelp": "Action immédiate (pas de valeur)"
-			}
+			},
+			"category": "system"
 		},
 		{
 			"abilityneed": "ntp",
@@ -3037,7 +3213,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetNtpEnableState",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "ntp",
@@ -3054,22 +3231,24 @@
 				"valuesHelp": "1 = Activer, 0 = Désactiver"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetNtpEnable",
-			"scope": "host"
+			"scope": "host",
+			"category": "system"
 		},
 		{
 			"abilityneed": "ntp",
 			"name": "Synchroniser l'heure",
 			"type": "action",
 			"subtype": "other",
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SyncTime",
 			"scope": "host",
 			"configuration": {
 				"help": "Synchronisation horaire / NTP.",
 				"valuesHelp": "Action immédiate (pas de valeur)"
-			}
+			},
+			"category": "system"
 		},
 		{
 			"abilityneed": "enc",
@@ -3084,7 +3263,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetEncodingst1State",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -3099,7 +3279,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetEncodingst2State",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -3116,9 +3297,10 @@
 				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetResolutionst1",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -3135,9 +3317,10 @@
 				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetFPSst1",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -3154,9 +3337,10 @@
 				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetBitratest1",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -3173,9 +3357,10 @@
 				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetEncodingst1",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -3192,9 +3377,10 @@
 				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetResolutionst2",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -3211,9 +3397,10 @@
 				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetFPSst2",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -3230,9 +3417,10 @@
 				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetBitratest2",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "enc",
@@ -3249,9 +3437,10 @@
 				"valuesHelp": "Liste de choix définie par la caméra (valeurs dynamiques)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetEncodingst2",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "isp",
@@ -3266,7 +3455,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetDayNightThresholdState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "isp",
@@ -3284,9 +3474,10 @@
 				"valuesHelp": "Curseur de 0 à 100"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetDayNightThreshold",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "isp",
@@ -3301,7 +3492,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetBinningModeState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "isp",
@@ -3318,9 +3510,10 @@
 				"valuesHelp": "0 = Off, 1 = Auto"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetBinningMode",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "isp",
@@ -3335,7 +3528,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "SetHdrState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "isp",
@@ -3352,9 +3546,10 @@
 				"valuesHelp": "0 = Off, 1 = Auto, 2 = On"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetHdr",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "isp",
@@ -3371,9 +3566,10 @@
 				"valuesHelp": "Auto = Auto, LowNoise = Faible bruit, Anti-Smearing = Anti-smear, Manual = Manuel"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetExposure",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "ispBackLight",
@@ -3390,9 +3586,10 @@
 				"valuesHelp": "Off = Désactiver, BackLightControl = Compensation contre-jour (BLC), DynamicRangeControl = Plage dynamique (DRC)"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "SetBackLight",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "image_enc"
 		},
 		{
 			"abilityneed": "battery",
@@ -3411,7 +3608,8 @@
 			"IsHistorized": 1,
 			"isVisible": 1,
 			"logicalId": "BatteryPercent",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "system"
 		},
 		{
 			"abilityneed": "battery",
@@ -3426,7 +3624,8 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "BatteryCharging",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "system"
 		},
 		{
 			"abilityneed": "battery",
@@ -3439,9 +3638,10 @@
 				"valuesHelp": "Décharge / En charge / Charge terminée"
 			},
 			"IsHistorized": 0,
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "BatteryChargeStatus",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "system"
 		},
 		{
 			"abilityneed": "battery",
@@ -3458,7 +3658,8 @@
 			"IsHistorized": 0,
 			"isVisible": 0,
 			"logicalId": "BatteryTemperature",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "system"
 		},
 		{
 			"abilityneed": "batterySleep",
@@ -3473,20 +3674,22 @@
 			"IsHistorized": 0,
 			"isVisible": 1,
 			"logicalId": "BatterySleepState",
-			"scope": "channel"
+			"scope": "channel",
+			"category": "system"
 		},
 		{
 			"abilityneed": "scene",
 			"name": "Récupérer les scènes",
 			"type": "action",
 			"subtype": "other",
-			"isVisible": 1,
+			"isVisible": 0,
 			"logicalId": "GetScenes",
 			"scope": "host",
 			"configuration": {
 				"help": "Relit la liste des scènes / modes configurés sur le Reolink Home Hub ou NVR compatible (protocole Baichuan).",
 				"valuesHelp": "Action immédiate : met à jour la liste du sélecteur Activer une scène"
-			}
+			},
+			"category": "system"
 		},
 		{
 			"abilityneed": "scene",
@@ -3500,7 +3703,8 @@
 			"configuration": {
 				"help": "Identifiant de la scène active sur le Reolink Home Hub (-1 = aucune scène active).",
 				"valuesHelp": "-1 = Désactivé, 0..N = Identifiant de la scène active"
-			}
+			},
+			"category": "system"
 		},
 		{
 			"abilityneed": "scene",
@@ -3517,7 +3721,8 @@
 				"valueFrom": "SetSceneState",
 				"help": "Active une scène Reolink (Home, Away, Night…) ou désactive le mode scène sur le Reolink Home Hub.",
 				"valuesHelp": "-1 = Désactiver les scènes, sinon scène configurée sur le Home Hub"
-			}
+			},
+			"category": "system"
 		}
 	]
 }

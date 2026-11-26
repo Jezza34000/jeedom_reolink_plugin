@@ -2721,7 +2721,7 @@ class reolink extends eqLogic {
       $checkCmd->setName(__('Vérifier firmware', __FILE__));
       $checkCmd->setType('action');
       $checkCmd->setSubType('other');
-      $checkCmd->setIsVisible(($isChannel || $isBaichuanOnly) ? 0 : 1);
+      $checkCmd->setIsVisible(0);
       $checkCmd->setConfiguration('help', __('Vérifie la disponibilité d\'une mise à jour firmware officielle Reolink.', __FILE__));
       $checkCmd->save();
     }

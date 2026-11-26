@@ -19,6 +19,10 @@ var reolinkCmdQueue = []
 var reolinkLoadingEqLogic = false
 var reolinkInfoOptionsHtml = ''
 var reolinkCurrentEqCfg = null
+var reolinkCmdCategories = ['detection', 'ptz', 'light_audio', 'notif_rec', 'image_enc', 'system']
+var reolinkActiveTypeFilter = 'all'
+var reolinkActiveSearch = ''
+var reolinkCategoryStats = {}
 
 if (typeof jeedom !== 'undefined' && typeof jeedom.getConfiguration === 'function' && (!jeedom.cache || jeedom.cache.getConfiguration == null)) {
   jeedom.getConfiguration({
@@ -35,14 +39,20 @@ function prePrintEqLogic(_eqlogicId) {
   reolinkLoadingEqLogic = true
   reolinkInfoOptionsHtml = ''
   reolinkCurrentEqCfg = null
+  reolinkActiveSearch = ''
+  reolinkCategoryStats = {}
+  document.querySelectorAll('.in_reolinkCmdSearch').forEach(function (inp) {
+    inp.value = ''
+  })
   var badgeEl = document.getElementById('span_fwArchiveBadge')
   if (badgeEl) badgeEl.innerHTML = ''
-  var tbody = document.querySelector('#table_cmd tbody')
-  if (tbody) tbody.empty()
+  document.querySelectorAll('.reolinkCmdTable tbody').forEach(function (tbody) {
+    tbody.empty()
+  })
 }
 
 function saveEqLogic(_eqLogic) {
-  // shortcut: omit cmd while eqLogic is still loading or queued cmds have not been flushed to #table_cmd yet; prevents wiping DB cmds and skips 130+ SQL cmd->save() when #commandtab stayed closed
+  // shortcut: omit cmd while eqLogic is still loading or queued cmds have not been flushed yet; prevents wiping DB cmds and skips 130+ SQL cmd->save() when command tabs stayed closed
   if ((reolinkLoadingEqLogic || reolinkCmdQueue.length > 0) && _eqLogic) {
     delete _eqLogic.cmd
   }
@@ -54,9 +64,104 @@ function reolinkSetVisible(el, show) {
   el.style.display = show ? '' : 'none'
 }
 
+function reolinkResolveCmdCategory(_cmd) {
+  var lid = String((_cmd && _cmd.logicalId) || '')
+  var cat = String((reolinkCmdCatalog(lid).category) || '').trim()
+  return (reolinkCmdCategories.indexOf(cat) !== -1) ? cat : 'system'
+}
+
 function reolinkIsCommandTabActive() {
-  var pane = document.getElementById('commandtab')
-  return !!(pane && pane.classList.contains('active')) || window.location.hash === '#commandtab'
+  if (document.querySelector('.reolinkCmdPane.active')) return true
+  return /^#commandtab/i.test(String(window.location.hash || ''))
+}
+
+function reolinkActivateTabLink(selector) {
+  var link = document.querySelector(selector)
+  if (link) link.click()
+}
+
+function reolinkUpdateCmdTabsAndCounts(cmdsList) {
+  var stats = {}
+  for (var k = 0; k < reolinkCmdCategories.length; k++) {
+    stats[reolinkCmdCategories[k]] = { all: 0, info: 0, action: 0 }
+  }
+  if (Array.isArray(cmdsList)) {
+    for (var i = 0; i < cmdsList.length; i++) {
+      var c = cmdsList[i] || {}
+      var cat = reolinkResolveCmdCategory(c)
+      var cType = (String(c.type || 'info') === 'action') ? 'action' : 'info'
+      stats[cat].all++
+      stats[cat][cType]++
+    }
+  } else if (reolinkCmdQueue.length > 0) {
+    for (var q = 0; q < reolinkCmdQueue.length; q++) {
+      var qc = reolinkCmdQueue[q] || {}
+      var qCat = reolinkResolveCmdCategory(qc)
+      var qType = (String(qc.type || 'info') === 'action') ? 'action' : 'info'
+      stats[qCat].all++
+      stats[qCat][qType]++
+    }
+  } else {
+    document.querySelectorAll('.reolinkCmdTable tbody tr.cmd').forEach(function (row) {
+      var rCat = row.getAttribute('data-cmd-cat') || 'system'
+      if (!stats[rCat]) stats[rCat] = { all: 0, info: 0, action: 0 }
+      var rType = (row.getAttribute('data-cmd-type') === 'action') ? 'action' : 'info'
+      stats[rCat].all++
+      stats[rCat][rType]++
+    })
+  }
+  reolinkCategoryStats = stats
+
+  var firstNonEmptyCat = null
+  for (var idx = 0; idx < reolinkCmdCategories.length; idx++) {
+    var catKey = reolinkCmdCategories[idx]
+    var countAll = stats[catKey].all
+    if (countAll > 0 && firstNonEmptyCat === null) {
+      firstNonEmptyCat = catKey
+    }
+    var li = document.querySelector('.reolinkCmdTabLi[data-cmd-cat="' + catKey + '"]')
+    if (li) {
+      var badge = li.querySelector('.reolinkCmdTabCount')
+      if (badge) badge.textContent = String(countAll)
+      reolinkSetVisible(li, countAll > 0)
+    }
+    var pane = document.querySelector('.reolinkCmdPane[data-cmd-cat="' + catKey + '"]')
+    if (pane) {
+      var bAll = pane.querySelector('.reolinkTypeCount[data-count-type="all"]')
+      var bInfo = pane.querySelector('.reolinkTypeCount[data-count-type="info"]')
+      var bAct = pane.querySelector('.reolinkTypeCount[data-count-type="action"]')
+      if (bAll) bAll.textContent = String(stats[catKey].all)
+      if (bInfo) bInfo.textContent = String(stats[catKey].info)
+      if (bAct) bAct.textContent = String(stats[catKey].action)
+    }
+  }
+
+  var hash = String(window.location.hash || '')
+  var activePane = document.querySelector('.eqLogic .tab-pane.active')
+  var activePaneCat = activePane ? activePane.getAttribute('data-cmd-cat') : null
+  if (/^#commandtab/i.test(hash)) {
+    var targetPane = (hash.toLowerCase() !== '#commandtab') ? document.getElementById(hash.substring(1)) : null
+    var tCat = targetPane ? targetPane.getAttribute('data-cmd-cat') : null
+    if (targetPane && tCat && stats[tCat] && stats[tCat].all > 0) {
+      if (!targetPane.classList.contains('active')) {
+        reolinkActivateTabLink('.reolinkCmdTabLi[data-cmd-cat="' + tCat + '"] > a')
+      }
+      return
+    }
+    if (firstNonEmptyCat) {
+      reolinkActivateTabLink('.reolinkCmdTabLi[data-cmd-cat="' + firstNonEmptyCat + '"] > a')
+    } else {
+      reolinkActivateTabLink('.reolinkEqTabs a[href="#eqlogictab"], .reolinkEqTabs a[data-target="#eqlogictab"]')
+    }
+    return
+  }
+  if (activePaneCat && (!stats[activePaneCat] || stats[activePaneCat].all === 0)) {
+    if (firstNonEmptyCat) {
+      reolinkActivateTabLink('.reolinkCmdTabLi[data-cmd-cat="' + firstNonEmptyCat + '"] > a')
+    } else {
+      reolinkActivateTabLink('.reolinkEqTabs a[href="#eqlogictab"], .reolinkEqTabs a[data-target="#eqlogictab"]')
+    }
+  }
 }
 
 function printEqLogic(_eqLogic) {
@@ -72,10 +177,11 @@ function printEqLogic(_eqLogic) {
     }
   }
   reolinkInfoOptionsHtml = ''
-  if (_eqLogic && Array.isArray(_eqLogic.cmd)) {
+  var cmds = (_eqLogic && Array.isArray(_eqLogic.cmd)) ? _eqLogic.cmd : []
+  if (cmds.length > 0) {
     var opts = ''
-    for (var i = 0; i < _eqLogic.cmd.length; i++) {
-      var c = _eqLogic.cmd[i]
+    for (var i = 0; i < cmds.length; i++) {
+      var c = cmds[i]
       if (c && c.type === 'info') {
         opts += '<option value="' + reolinkEscapeHtml(c.id) + '" data-type="info" data-subType="' + reolinkEscapeHtml(c.subType) + '">' + reolinkEscapeHtml(c.name) + '</option>'
       }
@@ -83,6 +189,7 @@ function printEqLogic(_eqLogic) {
     reolinkInfoOptionsHtml = opts
   }
   updateEqLogicRoleUi(_eqLogic)
+  reolinkUpdateCmdTabsAndCounts(cmds)
   setTimeout(function () {
     reolinkLoadingEqLogic = false
     if (reolinkIsCommandTabActive()) {
@@ -945,7 +1052,11 @@ function reolinkBuildCmdRow(_cmd) {
 
   var row = document.createElement('tr')
   row.className = 'cmd'
+  var resolvedCat = reolinkResolveCmdCategory(_cmd)
   row.setAttribute('data-cmd_id', init(_cmd.id))
+  row.setAttribute('data-cmd-cat', resolvedCat)
+  row.setAttribute('data-cmd-type', (cmdType === 'action') ? 'action' : 'info')
+  row.setAttribute('data-logical-id', String(init(_cmd.logicalId)))
   row.innerHTML = html
   row._reolinkHelp = helpData
 
@@ -996,22 +1107,100 @@ function reolinkBindLiveCmdStates(container) {
   })
 }
 
+function reolinkNormSearchText(str) {
+  if (typeof jeedomUtils !== 'undefined' && typeof jeedomUtils.normTextLower === 'function') {
+    return jeedomUtils.normTextLower(String(str || ''))
+  }
+  return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+}
+
+function reolinkSyncFilterUi() {
+  var activePane = document.querySelector('.reolinkCmdPane.active')
+  if (activePane && reolinkActiveTypeFilter !== 'all') {
+    var cat = activePane.getAttribute('data-cmd-cat')
+    var st = reolinkCategoryStats[cat]
+    if (st && st.all > 0 && st[reolinkActiveTypeFilter] === 0) {
+      reolinkActiveTypeFilter = 'all'
+    }
+  }
+  document.querySelectorAll('.reolinkCmdTypeFilterBtn').forEach(function (btn) {
+    var isMatch = (btn.getAttribute('data-filter-type') === reolinkActiveTypeFilter)
+    btn.classList.toggle('btn-primary', isMatch)
+    btn.classList.toggle('btn-default', !isMatch)
+  })
+  document.querySelectorAll('.in_reolinkCmdSearch').forEach(function (inp) {
+    if (inp.value !== reolinkActiveSearch) {
+      inp.value = reolinkActiveSearch
+    }
+  })
+}
+
+function reolinkApplyCmdFilters() {
+  reolinkSyncFilterUi()
+  var needle = reolinkNormSearchText(reolinkActiveSearch.trim())
+  document.querySelectorAll('.reolinkCmdTable tbody tr.cmd').forEach(function (row) {
+    var matchType = (reolinkActiveTypeFilter === 'all') || (row.getAttribute('data-cmd-type') === reolinkActiveTypeFilter)
+    var matchText = true
+    if (matchType && needle !== '') {
+      var nameInp = row.querySelector('input[data-l1key="name"]')
+      var nameVal = nameInp ? nameInp.value : ''
+      var lidVal = row.getAttribute('data-logical-id') || ''
+      matchText = reolinkNormSearchText(nameVal + ' ' + lidVal).indexOf(needle) !== -1
+    }
+    row.classList.toggle('reolinkCmdFilteredOut', !(matchType && matchText))
+  })
+}
+
+function reolinkEnsureSortables() {
+  if (typeof Sortable === 'undefined') return
+  document.querySelectorAll('.reolinkCmdTable tbody').forEach(function (tbody) {
+    if (tbody._reolinkSortable) return
+    tbody._reolinkSortable = Sortable.create(tbody, {
+      delay: 100,
+      delayOnTouchOnly: true,
+      touchStartThreshold: 20,
+      draggable: 'tr.cmd',
+      filter: 'a, input, textarea, label, select',
+      preventOnFilter: false,
+      direction: 'vertical',
+      chosenClass: 'dragSelected',
+      onEnd: function () {
+        if (typeof jeeFrontEnd !== 'undefined') jeeFrontEnd.modifyWithoutSave = true
+        modifyWithoutSave = true
+      }
+    })
+  })
+}
+
 function reolinkFlushCmdQueue() {
   if (reolinkLoadingEqLogic || reolinkCmdQueue.length === 0) return
-  var tbody = document.querySelector('#table_cmd tbody')
-  if (!tbody) return
+  var frags = {}
+  for (var c = 0; c < reolinkCmdCategories.length; c++) {
+    frags[reolinkCmdCategories[c]] = document.createDocumentFragment()
+  }
   var prevMod = (typeof jeeFrontEnd !== 'undefined') ? jeeFrontEnd.modifyWithoutSave : false
-  var frag = document.createDocumentFragment()
   var items = reolinkCmdQueue
   reolinkCmdQueue = []
   for (var i = 0; i < items.length; i++) {
-    frag.appendChild(reolinkBuildCmdRow(items[i]))
+    var row = reolinkBuildCmdRow(items[i])
+    var cat = row.getAttribute('data-cmd-cat') || 'system'
+    if (!frags[cat]) frags[cat] = document.createDocumentFragment()
+    frags[cat].appendChild(row)
   }
-  tbody.appendChild(frag)
-  reolinkBindLiveCmdStates(tbody)
-  if (typeof jeedomUtils !== 'undefined' && typeof jeedomUtils.initTooltips === 'function') {
-    jeedomUtils.initTooltips(tbody)
+  for (var k = 0; k < reolinkCmdCategories.length; k++) {
+    var catKey = reolinkCmdCategories[k]
+    var tbody = document.querySelector('#table_cmd_' + catKey + ' tbody')
+    if (tbody && frags[catKey].childNodes.length > 0) {
+      tbody.appendChild(frags[catKey])
+      reolinkBindLiveCmdStates(tbody)
+      if (typeof jeedomUtils !== 'undefined' && typeof jeedomUtils.initTooltips === 'function') {
+        jeedomUtils.initTooltips(tbody)
+      }
+    }
   }
+  reolinkEnsureSortables()
+  reolinkUpdateCmdTabsAndCounts(null)
+  reolinkApplyCmdFilters()
   if (typeof jeeFrontEnd !== 'undefined') jeeFrontEnd.modifyWithoutSave = prevMod
   modifyWithoutSave = prevMod
 }
@@ -1024,15 +1213,19 @@ function addCmdToTable(_cmd) {
   if (reolinkCmdQueue.length > 0) {
     reolinkFlushCmdQueue()
   }
-  var tbody = document.querySelector('#table_cmd tbody')
-  if (!tbody) return
   var finish = function () {
     var row = reolinkBuildCmdRow(_cmd)
+    var cat = row.getAttribute('data-cmd-cat') || 'system'
+    var tbody = document.querySelector('#table_cmd_' + cat + ' tbody')
+    if (!tbody) return
     tbody.appendChild(row)
+    reolinkEnsureSortables()
     reolinkBindLiveCmdStates(row)
     if (typeof jeedomUtils !== 'undefined' && typeof jeedomUtils.initTooltips === 'function') {
       jeedomUtils.initTooltips(row)
     }
+    reolinkUpdateCmdTabsAndCounts(null)
+    reolinkApplyCmdFilters()
   }
   if (reolinkInfoOptionsHtml === '' && $('.eqLogicAttr[data-l1key=id]').value()) {
     jeedom.eqLogic.buildSelectCmd({
@@ -1049,7 +1242,43 @@ function addCmdToTable(_cmd) {
   finish()
 }
 
-$('#table_cmd').on('click', '.cmdHelpBtn', function (e) {
+function reolinkApplyDefaultVisibilityPreset() {
+  if (reolinkCmdQueue.length > 0) {
+    reolinkFlushCmdQueue()
+  }
+  var cfg = reolinkCurrentEqCfg || {}
+  var chVal = String((typeof cfg.defined_channel !== 'undefined')
+    ? cfg.defined_channel
+    : ($('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').value() || '')).trim()
+  var cnxVal = String((typeof cfg.cnxtype !== 'undefined')
+    ? cfg.cnxtype
+    : ($('.eqLogicAttr[data-l1key=configuration][data-l2key=cnxtype]').value() || '')).trim().toLowerCase()
+  var isChannelOrBc = (chVal !== '') || (cnxVal === 'baichuan')
+
+  var total = 0
+  var visibleCount = 0
+  document.querySelectorAll('.reolinkCmdTable tbody tr.cmd').forEach(function (row) {
+    var cb = row.querySelector('input.cmdAttr[data-l1key="isVisible"]')
+    if (!cb) return
+    total++
+    var lid = row.getAttribute('data-logical-id') || ''
+    var meta = reolinkCmdCatalog(lid)
+    var wantVisible = (lid === 'NewFirmwareState' && isChannelOrBc)
+      ? false
+      : (parseInt(meta.defaultVisible || 0, 10) === 1)
+    cb.checked = wantVisible
+    if (wantVisible) visibleCount++
+  })
+
+  if (typeof jeeFrontEnd !== 'undefined') jeeFrontEnd.modifyWithoutSave = true
+  modifyWithoutSave = true
+  $('#div_alert').showAlert({
+    message: '{{Affichage par défaut appliqué}} : ' + visibleCount + ' / ' + total + ' {{commandes cochées. Vérifiez au besoin puis cliquez sur Sauvegarder.}}',
+    level: 'info'
+  })
+}
+
+$('body').on('click', '.reolinkCmdTable .cmdHelpBtn', function (e) {
   e.preventDefault()
   e.stopPropagation()
   var row = this.closest('tr')
@@ -1058,8 +1287,65 @@ $('#table_cmd').on('click', '.cmdHelpBtn', function (e) {
   }
 })
 
-$('body').on('shown.bs.tab click', '.nav-tabs a[data-target="#commandtab"], .nav-tabs a[href="#commandtab"]', function () {
-  if (!reolinkLoadingEqLogic && reolinkCmdQueue.length > 0) {
-    requestAnimationFrame(reolinkFlushCmdQueue)
+$('body').on('click', '.reolinkCmdTypeFilterBtn', function (e) {
+  e.preventDefault()
+  reolinkActiveTypeFilter = String(this.getAttribute('data-filter-type') || 'all')
+  reolinkApplyCmdFilters()
+})
+
+$('body').on('input keyup', '.in_reolinkCmdSearch', function () {
+  reolinkActiveSearch = String(this.value || '')
+  reolinkApplyCmdFilters()
+})
+
+$('body').on('click', '.bt_reolinkResetCmdSearch', function (e) {
+  e.preventDefault()
+  reolinkActiveSearch = ''
+  reolinkApplyCmdFilters()
+})
+
+$('body').on('click', '.bt_reolinkResetDefaultVisible', function (e) {
+  e.preventDefault()
+  var confirmMsg = '{{Réinitialiser la case « Afficher » de toutes les commandes de cet équipement selon la sélection par défaut (commandes courantes) ? Les autres réglages (noms, icônes, historisation, inversions) seront conservés.}}'
+  if (typeof jeeDialog !== 'undefined' && typeof jeeDialog.confirm === 'function') {
+    jeeDialog.confirm(confirmMsg, function (result) {
+      if (result) reolinkApplyDefaultVisibilityPreset()
+    })
+    return
+  }
+  if (typeof bootbox !== 'undefined' && typeof bootbox.confirm === 'function') {
+    bootbox.confirm(confirmMsg, function (result) {
+      if (result) reolinkApplyDefaultVisibilityPreset()
+    })
+    return
+  }
+  if (window.confirm(confirmMsg)) {
+    reolinkApplyDefaultVisibilityPreset()
+  }
+})
+
+$('body').on('click', '.reolinkCmdTable .cmdAction[data-action="remove"]', function () {
+  setTimeout(function () {
+    reolinkUpdateCmdTabsAndCounts(null)
+    reolinkApplyCmdFilters()
+  }, 0)
+})
+
+$('body').on('change', '.reolinkCmdTable select.cmdAttr[data-l1key="type"]', function () {
+  var row = this.closest('tr.cmd')
+  if (row) {
+    row.setAttribute('data-cmd-type', (this.value === 'action') ? 'action' : 'info')
+    reolinkUpdateCmdTabsAndCounts(null)
+    reolinkApplyCmdFilters()
+  }
+})
+
+$('body').on('shown.bs.tab click', '.reolinkEqTabs a.reolinkCmdTabLink', function () {
+  if (!reolinkLoadingEqLogic) {
+    if (reolinkCmdQueue.length > 0) {
+      requestAnimationFrame(reolinkFlushCmdQueue)
+    } else {
+      requestAnimationFrame(reolinkApplyCmdFilters)
+    }
   }
 })
