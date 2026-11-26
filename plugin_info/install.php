@@ -23,12 +23,18 @@ require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
     if (config::byKey('check_fw_github', 'reolink', '') === '') {
       config::save('check_fw_github', '1', 'reolink');
     }
+    if (config::byKey('enable_webrtc', 'reolink', '') === '') {
+      config::save('enable_webrtc', '0', 'reolink');
+    }
   }
 
 // Fonction exécutée automatiquement après la mise à jour du plugin
   function reolink_update() {
     if (config::byKey('check_fw_github', 'reolink', '') === '') {
       config::save('check_fw_github', '1', 'reolink');
+    }
+    if (config::byKey('enable_webrtc', 'reolink', '') === '') {
+      config::save('enable_webrtc', '0', 'reolink');
     }
     $plugin = plugin::byId('reolink');
     $eqLogics = eqLogic::byType($plugin->getId());

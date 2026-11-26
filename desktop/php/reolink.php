@@ -474,8 +474,8 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 											</table>
 											<div class="cameraOnlyAction" style="margin-top:10px;">
 												<div class="form-group">
-													<label class="col-sm-4 control-label">{{WebView Live + Micro}}
-														<sup><i class="fas fa-question-circle tooltips" title="{{URL autonome avec jeton révocable pour afficher le Live et l'interphone WebRTC dans un widget WebView JeedomConnect (nécessite HTTPS pour le microphone).}}"></i></sup>
+													<label class="col-sm-4 control-label">{{WebView Live}}
+														<sup><i class="fas fa-question-circle tooltips" title="{{URL autonome avec jeton révocable pour afficher le Live dans un widget WebView JeedomConnect (flux fMP4 par défaut ; boutons WebRTC et Parler affichés si l'option Live WebRTC est activée dans la configuration du plugin et ouverte en HTTPS).}}"></i></sup>
 													</label>
 													<div class="col-sm-8">
 														<div class="input-group">
@@ -490,7 +490,7 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 												</div>
 												<div class="form-group">
 													<label class="col-sm-4 control-label">{{RTSP Talk local}}
-														<sup><i class="fas fa-question-circle tooltips" title="{{URL RTSP backchannel locale (127.0.0.1) exposant l'audio bidirectionnel Baichuan universel à go2rtc / JeedomConnect.}}"></i></sup>
+														<sup><i class="fas fa-question-circle tooltips" title="{{URL RTSP backchannel locale (127.0.0.1) exposant l'audio bidirectionnel Baichuan universel au moteur go2rtc de JeedomConnect (reste active même lorsque l'option Live WebRTC du navigateur Reolink est désactivée).}}"></i></sup>
 													</label>
 													<div class="col-sm-8">
 														<div class="input-group">

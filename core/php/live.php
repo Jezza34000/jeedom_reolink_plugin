@@ -82,6 +82,7 @@ if ($cnxType !== 'baichuan') {
 $liveMeta = $eqLogic->buildLiveControlsMeta();
 $streamMetaJs = $liveMeta['streams'];
 $firstStreamKey = !empty($streamMetaJs) ? array_key_first($streamMetaJs) : 'sub';
+$hasWebrtc = !empty($liveMeta['hasWebrtc']);
 $hasTalk = $liveMeta['hasTalk'];
 $ctrls = $liveMeta['controls'];
 $camTitle = htmlspecialchars($eqLogic->getName(), ENT_QUOTES, 'UTF-8');
@@ -123,7 +124,7 @@ $ptzButtons = array(
       <option value="<?php echo htmlspecialchars($sKey, ENT_QUOTES, 'UTF-8'); ?>"<?php echo ($sKey === $firstStreamKey) ? ' selected' : ''; ?>><?php echo htmlspecialchars($sMeta['label'], ENT_QUOTES, 'UTF-8'); ?></option>
 <?php } ?>
     </select>
-<?php if ($cnxType !== 'baichuan') { ?>
+<?php if ($hasWebrtc) { ?>
     <a class="btn rlkWebRtcBtn">WebRTC</a>
 <?php } ?>
 <?php if ($hasTalk) { ?>
@@ -186,6 +187,7 @@ new window.ReolinkLivePlayer({
   streams: <?php echo json_encode($streamMetaJs); ?>,
   initialQuality: <?php echo json_encode($firstStreamKey); ?>,
   mode: 'live',
+  hasWebrtc: <?php echo $hasWebrtc ? 'true' : 'false'; ?>,
   isBattery: <?php echo $liveMeta['isBattery'] ? 'true' : 'false'; ?>,
   controls: <?php echo json_encode($ctrls); ?>
 });

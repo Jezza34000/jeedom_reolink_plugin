@@ -601,6 +601,25 @@ class reolink extends eqLogic {
     return ($p > 0 && $p <= 65535) ? $p : 44012;
   }
 
+  public static function isWebrtcEnabled() {
+    return intval(config::byKey('enable_webrtc', __CLASS__, 0)) === 1;
+  }
+
+  public static function getGo2rtcWebrtcCandidates() {
+    $raw = trim(strval(config::byKey('go2rtc_webrtc_candidates', __CLASS__, '')));
+    if ($raw === '') {
+      return array();
+    }
+    $out = array();
+    foreach (preg_split('/[\s,;]+/', $raw) as $item) {
+      $item = trim($item);
+      if ($item !== '' && preg_match('/^[A-Za-z0-9._:\[\]-]{3,128}$/', $item)) {
+        $out[] = $item;
+      }
+    }
+    return array_values(array_unique($out));
+  }
+
   public static function getTalkBridgePort() {
     $p = intval(config::byKey('talk_port', __CLASS__, 44013));
     return ($p > 0 && $p <= 65535) ? $p : 44013;
@@ -709,7 +728,8 @@ class reolink extends eqLogic {
         'type' => $sMeta['type'],
       );
     }
-    $hasTalk = (intval($this->getConfiguration('hasAudioTalk', 0)) === 1) && ($cnxType !== 'baichuan');
+    $hasWebrtc = self::isWebrtcEnabled() && ($cnxType !== 'baichuan');
+    $hasTalk = $hasWebrtc && (intval($this->getConfiguration('hasAudioTalk', 0)) === 1);
 
     $cmdPtz = $this->getCmd(null, 'SetPTZmoove');
     $ptzDirs = array();
@@ -745,6 +765,7 @@ class reolink extends eqLogic {
 
     return array(
       'cnxType' => $cnxType,
+      'hasWebrtc' => $hasWebrtc,
       'hasTalk' => $hasTalk,
       'isBattery' => $this->hasBattery(),
       'streams' => $streamsJs,
@@ -2062,11 +2083,14 @@ class reolink extends eqLogic {
     }
 
     $available = $camera->getAvailableStreams();
+    $webrtcEnabled = self::isWebrtcEnabled();
     $hasTalk = (intval($camera->getConfiguration('hasAudioTalk', 0)) === 1);
     $talkUrl = '';
     if ($hasTalk) {
       self::syncTalkRoutesToDaemon($camera, true);
-      $talkUrl = $camera->getLocalTalkRtspUrl(true);
+      if ($webrtcEnabled) {
+        $talkUrl = $camera->getLocalTalkRtspUrl(true);
+      }
     }
 
     $apiPort = self::getGo2rtcApiPort();
@@ -2076,12 +2100,12 @@ class reolink extends eqLogic {
         continue;
       }
       $name = 'reolink_' . intval($id) . '_' . $key;
-      $sources = array(
-        $meta['url'],
-        'ffmpeg:' . $name . '#audio=opus',
-      );
-      if ($talkUrl !== '') {
-        $sources[] = $talkUrl;
+      $sources = array($meta['url']);
+      if ($webrtcEnabled) {
+        $sources[] = 'ffmpeg:' . $name . '#audio=opus';
+        if ($talkUrl !== '') {
+          $sources[] = $talkUrl;
+        }
       }
       $query = 'name=' . rawurlencode($name);
       foreach ($sources as $src) {
@@ -3943,9 +3967,10 @@ class reolink extends eqLogic {
       if ($go2rtcOk) {
         fclose($fp);
       }
+      $webrtcSuffix = self::isWebrtcEnabled() ? (', WebRTC :' . self::getGo2rtcWebrtcPort()) : ', fMP4';
       $result[] = array(
         'test' => __('Serveur Live go2rtc', __FILE__),
-        'result' => $go2rtcOk ? ('OK (127.0.0.1:' . $apiPort . ')') : __('Indisponible', __FILE__),
+        'result' => $go2rtcOk ? ('OK (127.0.0.1:' . $apiPort . $webrtcSuffix . ')') : __('Indisponible', __FILE__),
         'advice' => $go2rtcOk ? '' : (__('Le démon tourne mais le port local go2rtc ne répond pas', __FILE__) . ' (127.0.0.1:' . $apiPort . ')'),
         'state' => $go2rtcOk,
       );
@@ -3996,7 +4021,11 @@ class reolink extends eqLogic {
     }
     $cmd .= ' --webhook_port ' . config::byKey('webhookport', __CLASS__, '44010');
     $cmd .= ' --go2rtc_api_port ' . self::getGo2rtcApiPort();
-    $cmd .= ' --go2rtc_webrtc_port ' . self::getGo2rtcWebrtcPort();
+    $cmd .= ' --go2rtc_webrtc_port ' . (self::isWebrtcEnabled() ? self::getGo2rtcWebrtcPort() : 0);
+    $webrtcCandidates = self::getGo2rtcWebrtcCandidates();
+    if (self::isWebrtcEnabled() && !empty($webrtcCandidates)) {
+      $cmd .= ' --go2rtc_webrtc_candidates ' . escapeshellarg(implode(',', $webrtcCandidates));
+    }
     $cmd .= ' --talk_port ' . self::getTalkBridgePort();
     log::add(__CLASS__, 'info', 'Lancement démon');
     $result = exec($cmd . ' >> ' . log::getPathToLog('reolink_daemon') . ' 2>&1 &');
@@ -4155,7 +4184,7 @@ class reolink extends eqLogic {
       . '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;padding:3px 6px;background:rgba(0,0,0,0.75);font-size:11px;flex-wrap:wrap;">'
       . '<select class="rlkQualitySel form-control input-xs" style="width:auto;height:22px;padding:1px 4px;font-size:11px;">' . $optsHtml . '</select>'
       . '<div style="display:flex;align-items:center;gap:3px;">'
-      . ($meta['cnxType'] !== 'baichuan' ? '<a class="btn btn-default btn-xs rlkWebRtcBtn" title="WebRTC">RTC</a>' : '')
+      . (!empty($meta['hasWebrtc']) ? '<a class="btn btn-default btn-xs rlkWebRtcBtn" title="WebRTC">RTC</a>' : '')
       . ($meta['hasTalk'] ? '<a class="btn btn-default btn-xs rlkTalkBtn" title="' . htmlspecialchars(__('Parler', __FILE__), ENT_QUOTES, 'UTF-8') . '"><i class="fas fa-microphone-slash"></i></a>' : '')
       . '<a class="btn btn-default btn-xs rlkSnapBtn" title="' . htmlspecialchars(__('Capture', __FILE__), ENT_QUOTES, 'UTF-8') . '"><i class="fas fa-camera"></i></a>'
       . '<a class="btn btn-warning btn-xs rlkStopBtn" style="display:none;" title="' . htmlspecialchars(__('Arrêter le direct', __FILE__), ENT_QUOTES, 'UTF-8') . '"><i class="fas fa-stop"></i></a>'
@@ -4172,6 +4201,7 @@ class reolink extends eqLogic {
         'initialQuality' => $firstStreamKey,
         'mode' => $mode,
         'refreshSec' => $refreshSec,
+        'hasWebrtc' => !empty($meta['hasWebrtc']),
         'isBattery' => $meta['isBattery'],
         'controls' => $meta['controls'],
       )) . ';'

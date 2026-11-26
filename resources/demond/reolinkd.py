@@ -42,7 +42,8 @@ _GO2RTC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'bin
 _GO2RTC_BIN = os.path.join(_GO2RTC_DIR, 'go2rtc')
 _GO2RTC_CFG = os.path.join(_GO2RTC_DIR, 'go2rtc.yaml')
 _go2rtc_api_port = 44011
-_go2rtc_webrtc_port = 44012
+_go2rtc_webrtc_port = 0
+_go2rtc_webrtc_candidates = []
 _go2rtc_rtsp_port = 44014
 _talk_port = DEFAULT_TALK_PORT
 _go2rtc_check_at = 0.0
@@ -205,6 +206,25 @@ def stop_uvicorn():
     proc = None
 
 
+def build_go2rtc_inline_cfg(api_port, rtsp_port, webrtc_port, webrtc_candidates=None):
+    if webrtc_port and int(webrtc_port) > 0:
+        webrtc_cfg = {"listen": f":{int(webrtc_port)}"}
+        cands = [c.strip() for c in (webrtc_candidates or []) if c and c.strip()]
+        if cands:
+            webrtc_cfg["candidates"] = cands
+    else:
+        webrtc_cfg = {"listen": ""}
+    return json.dumps(
+        {
+            "api": {"listen": f"127.0.0.1:{int(api_port)}", "origin": "*"},
+            "rtsp": {"listen": f"127.0.0.1:{int(rtsp_port)}"},
+            "webrtc": webrtc_cfg,
+            "log": {"level": "warn"},
+        },
+        separators=(",", ":"),
+    )
+
+
 def start_go2rtc():
     global go2rtc_proc
     if not os.path.isfile(_GO2RTC_BIN) or not os.access(_GO2RTC_BIN, os.X_OK):
@@ -217,14 +237,11 @@ def start_go2rtc():
     except OSError as e:
         logging.warning("Unable to remove legacy go2rtc.yaml: %s", e)
     # Loopback-only RTSP (127.0.0.1) is required by go2rtc's internal ffmpeg:...#audio=opus pipeline (zero LAN exposure)
-    inline_cfg = json.dumps(
-        {
-            "api": {"listen": f"127.0.0.1:{_go2rtc_api_port}", "origin": "*"},
-            "rtsp": {"listen": f"127.0.0.1:{_go2rtc_rtsp_port}"},
-            "webrtc": {"listen": f":{_go2rtc_webrtc_port}"},
-            "log": {"level": "warn"},
-        },
-        separators=(",", ":"),
+    inline_cfg = build_go2rtc_inline_cfg(
+        _go2rtc_api_port,
+        _go2rtc_rtsp_port,
+        _go2rtc_webrtc_port,
+        _go2rtc_webrtc_candidates,
     )
     try:
         # -c /dev/null enables PUT /api/streams multi-source updates while writing zero bytes to disk
@@ -235,10 +252,10 @@ def start_go2rtc():
             stderr=None,
         )
         logging.info(
-            "go2rtc started pid=%s (api=127.0.0.1:%s webrtc=:%s)",
+            "go2rtc started pid=%s (api=127.0.0.1:%s webrtc=%s)",
             go2rtc_proc.pid,
             _go2rtc_api_port,
-            _go2rtc_webrtc_port,
+            f":{_go2rtc_webrtc_port}" if _go2rtc_webrtc_port > 0 else "disabled",
         )
     except Exception as e:
         logging.error("Unable to start go2rtc: %s", e)
@@ -344,7 +361,8 @@ parser.add_argument("--socketport", help="Port for server", type=str)
 parser.add_argument("--webhook_ip", help="IP for webhook", type=str)
 parser.add_argument("--webhook_port", help="Port for webhook", type=str)
 parser.add_argument("--go2rtc_api_port", help="Local API port for go2rtc", type=int)
-parser.add_argument("--go2rtc_webrtc_port", help="WebRTC ICE port for go2rtc", type=int)
+parser.add_argument("--go2rtc_webrtc_port", help="WebRTC ICE port for go2rtc (0 disables WebRTC listener)", type=int)
+parser.add_argument("--go2rtc_webrtc_candidates", help="Comma-separated external WebRTC ICE candidates", type=str)
 parser.add_argument("--talk_port", help="Local RTSP port for Baichuan talk bridge", type=int)
 args = parser.parse_args()
 
@@ -368,8 +386,12 @@ if args.webhook_port:
     _webhook_port = int(args.webhook_port)
 if args.go2rtc_api_port:
     _go2rtc_api_port = int(args.go2rtc_api_port)
-if args.go2rtc_webrtc_port:
-    _go2rtc_webrtc_port = int(args.go2rtc_webrtc_port)
+if args.go2rtc_webrtc_port is not None:
+    _go2rtc_webrtc_port = max(0, int(args.go2rtc_webrtc_port))
+if args.go2rtc_webrtc_candidates:
+    _go2rtc_webrtc_candidates = [
+        c.strip() for c in str(args.go2rtc_webrtc_candidates).split(",") if c.strip()
+    ]
 if args.talk_port:
     _talk_port = int(args.talk_port)
 
