@@ -398,7 +398,7 @@ class reolinkBaichuanAdapter {
         return $this->handleSetIrLights($ch, $param);
 
       case 'GetPowerLed':
-        return $this->handleGetPowerLed($ch);
+        return $this->handleGetPowerLed($ch, $action);
 
       case 'SetPowerLed':
         return $this->handleSetPowerLed($ch, $param);
@@ -447,6 +447,24 @@ class reolinkBaichuanAdapter {
 
       case 'SetAudioCfg':
         return $this->handleSetAudioCfg($ch, $param);
+
+      case 'GetAudioFileList':
+        return $this->handleGetAudioFileList($ch);
+
+      case 'QuickReplyPlay':
+        return $this->handleQuickReplyPlay($ch, $param);
+
+      case 'GetAutoReply':
+        return $this->handleGetAutoReply($ch);
+
+      case 'SetAutoReply':
+        return $this->handleSetAutoReply($ch, $param);
+
+      case 'GetDingDongList':
+        return $this->handleGetDingDongList($param);
+
+      case 'DingDongOpt':
+        return $this->handleDingDongOpt($param);
 
       case 'GetMdState':
         $this->ensureEventSnapshot();
@@ -875,6 +893,10 @@ class reolinkBaichuanAdapter {
       'aiTrack' => $permit($hasAiTrack),
       'supportAiTrack' => $permit($hasAiTrack),
       'doorbellVersion' => $permit($v('doorbellVersion', 0) > 0, $v('doorbellVersion', 0)),
+      'supportAudioFileList' => $permit($v('audioFileList', 0) > 0 || $v('supportAudioFileList', 0) > 0 || $v('doorbellVersion', 0) > 0),
+      'supportAutoReply' => $permit($v('autoReply', 0) > 0 || $v('supportAutoReply', 0) > 0),
+      'doorbellLightState' => $permit($v('doorbellLightState', 0) > 0 || $v('doorbellVersion', 0) > 0),
+      'supportDingDong' => $permit($v('dingdong', 0) > 0 || $v('supportDingDong', 0) > 0 || $v('doorbellVersion', 0) > 0),
       'battery' => $permit($v('battery', 0) > 0),
       'sdCard' => $permit($hasSdCard),
       'recPreRecord' => $permit($hasPreRec),
@@ -1318,26 +1340,52 @@ class reolinkBaichuanAdapter {
     return self::okWrite('SetIrLights');
   }
 
-  private function handleGetPowerLed($ch) {
+  private function handleGetPowerLed($ch, $action = 0) {
     $xml = $this->bc->requestXml(208, $ch);
     $ls = strtolower(trim(strval($this->bc->xmlValue($xml, 'lightState') ?? 'open')));
-    return self::ok('GetPowerLed', array(
-      'PowerLed' => array('channel' => $ch, 'state' => ($ls === 'open' || $ls === 'on') ? 'On' : 'Off'),
-    ));
+    $pl = array(
+      'channel' => $ch,
+      'state' => ($ls === 'open' || $ls === 'on') ? 'On' : 'Off',
+    );
+    $range = null;
+    $dbLight = $this->bc->xmlValue($xml, 'doorbellLightState');
+    if ($dbLight !== null && $dbLight !== '') {
+      $mapped = reolinkBaichuan::mapBcToCgiDoorbellLight($dbLight);
+      if ($mapped !== null) {
+        $pl['eDoorbellLightState'] = $mapped;
+      }
+      if (intval($action) === 1) {
+        $range = array(
+          'PowerLed' => array(
+            'eDoorbellLightState' => array('KeepOff', 'Off', 'On', 'KeepOn'),
+          ),
+        );
+      }
+    }
+    return self::ok('GetPowerLed', array('PowerLed' => $pl), $range);
   }
 
   private function handleSetPowerLed($ch, $param) {
     $pl = $param['PowerLed'] ?? $param;
-    $want = strtolower(trim(strval($pl['state'] ?? 'On')));
-    $xmlVal = ($want === 'on' || $want === '1') ? 'open' : 'close';
     $xml = $this->bc->requestXml(208, $ch);
     $sx = @simplexml_load_string($xml);
     if ($sx === false) {
       throw new Exception('Invalid LedState XML');
     }
-    $nodes = $sx->xpath('.//lightState');
-    if ($nodes && isset($nodes[0])) {
-      $nodes[0][0] = $xmlVal;
+    if (isset($pl['eDoorbellLightState'])) {
+      $bcDb = reolinkBaichuan::mapCgiToBcDoorbellLight($pl['eDoorbellLightState']);
+      $dbNodes = $sx->xpath('.//doorbellLightState');
+      if ($dbNodes && isset($dbNodes[0])) {
+        $dbNodes[0][0] = $bcDb;
+      }
+    }
+    if (isset($pl['state'])) {
+      $want = strtolower(trim(strval($pl['state'])));
+      $xmlVal = ($want === 'on' || $want === '1') ? 'open' : 'close';
+      $nodes = $sx->xpath('.//lightState');
+      if ($nodes && isset($nodes[0])) {
+        $nodes[0][0] = $xmlVal;
+      }
     }
     $this->bc->requestXml(209, $ch, $sx->asXML());
     return self::okWrite('SetPowerLed');
@@ -1640,12 +1688,17 @@ class reolinkBaichuanAdapter {
 
   private function handleGetAudioCfg($ch) {
     $xml = $this->bc->requestXml(264, $ch);
-    return self::ok('GetAudioCfg', array(
-      'AudioCfg' => array(
-        'channel' => $ch,
-        'volume' => intval($this->bc->xmlValue($xml, 'volume') ?? 50),
-      ),
-    ));
+    $parsed = reolinkBaichuan::parseAudioCfgXml($xml) ?? array();
+    $ac = array(
+      'channel' => $ch,
+      'volume' => intval($parsed['volume'] ?? 50),
+    );
+    foreach (array('talkAndReplyVolume', 'visitorVolume', 'visitorLoudspeaker') as $extraKey) {
+      if (array_key_exists($extraKey, $parsed)) {
+        $ac[$extraKey] = intval($parsed[$extraKey]);
+      }
+    }
+    return self::ok('GetAudioCfg', array('AudioCfg' => $ac));
   }
 
   private function handleSetAudioCfg($ch, $param) {
@@ -1655,14 +1708,107 @@ class reolinkBaichuanAdapter {
     if ($sx === false) {
       throw new Exception('Invalid audioCfg XML');
     }
-    if (isset($ac['volume'])) {
-      $nodes = $sx->xpath('.//volume');
+    $root = isset($sx->audioCfg) ? $sx->audioCfg : $sx;
+    foreach (array('volume', 'talkAndReplyVolume', 'visitorVolume', 'visitorLoudspeaker') as $tag) {
+      if (!isset($ac[$tag])) {
+        continue;
+      }
+      $nodes = $sx->xpath('.//' . $tag);
       if ($nodes && isset($nodes[0])) {
-        $nodes[0][0] = intval($ac['volume']);
+        $nodes[0][0] = intval($ac[$tag]);
+      } else {
+        $root->addChild($tag, strval(intval($ac[$tag])));
       }
     }
     $this->bc->requestXml(265, $ch, $sx->asXML());
     return self::okWrite('SetAudioCfg');
+  }
+
+  private function handleGetAudioFileList($ch) {
+    $xml = $this->bc->requestXml(347, $ch);
+    return self::ok('GetAudioFileList', array(
+      'AudioFileList' => reolinkBaichuan::parseAudioFileListXml($xml),
+    ));
+  }
+
+  private function handleQuickReplyPlay($ch, $param) {
+    $fid = intval($param['id'] ?? 0);
+    $this->bc->requestXml(349, $ch, reolinkBaichuan::buildQuickReplyPlayXml($ch, $fid));
+    return self::okWrite('QuickReplyPlay');
+  }
+
+  private function handleGetAutoReply($ch) {
+    $xml = $this->bc->requestXml(427, $ch);
+    $ar = reolinkBaichuan::parseAutoReplyXml($xml);
+    if (!is_array($ar)) {
+      throw new Exception('AutoReply unsupported');
+    }
+    $ar['channel'] = $ch;
+    return self::ok('GetAutoReply', array('AutoReply' => $ar));
+  }
+
+  private function handleSetAutoReply($ch, $param) {
+    $ar = $param['AutoReply'] ?? $param;
+    $curXml = $this->bc->requestXml(427, $ch);
+    $cur = reolinkBaichuan::parseAutoReplyXml($curXml) ?? array('enable' => 0, 'fileId' => 0, 'timeout' => 10);
+    $en = array_key_exists('enable', $ar) ? intval($ar['enable']) : intval($cur['enable']);
+    $fid = array_key_exists('fileId', $ar) ? intval($ar['fileId']) : intval($cur['fileId']);
+    $to = array_key_exists('timeout', $ar) ? intval($ar['timeout']) : intval($cur['timeout']);
+    $this->bc->requestXml(428, $ch, reolinkBaichuan::buildAutoReplySetXml($ch, $en, $fid, $to));
+    return self::okWrite('SetAutoReply');
+  }
+
+  private function handleGetDingDongList($param) {
+    $ch = (is_array($param) && array_key_exists('channel', $param) && $param['channel'] !== null)
+      ? intval($param['channel'])
+      : null;
+    $xml = $this->bc->requestXml(484, $ch);
+    $chimes = reolinkBaichuan::parseDingDongListXml($xml);
+    $paired = array();
+    foreach ($chimes as $c) {
+      $paired[] = array(
+        'deviceId' => intval($c['id']),
+        'deviceName' => strval($c['name']),
+        'netState' => intval($c['netState']),
+      );
+    }
+    return self::ok('GetDingDongList', array(
+      'DingDongList' => array('pairedlist' => $paired),
+    ));
+  }
+
+  private function handleDingDongOpt($param) {
+    $dd = $param['DingDong'] ?? $param;
+    $ch = array_key_exists('channel', $dd) ? intval($dd['channel']) : null;
+    $id = intval($dd['id'] ?? 0);
+    $opt = intval($dd['option'] ?? 2);
+    if ($opt === 4) {
+      $this->bc->ringChime($ch, $id, intval($dd['musicId'] ?? 0));
+      return self::okWrite('DingDongOpt');
+    }
+    if ($opt === 3) {
+      $fields = array();
+      if (isset($dd['volLevel'])) {
+        $fields['volLevel'] = intval($dd['volLevel']);
+      }
+      if (isset($dd['ledState'])) {
+        $fields['ledState'] = intval($dd['ledState']);
+      }
+      $this->bc->setChimeParam($ch, $id, $fields);
+      return self::okWrite('DingDongOpt');
+    }
+    $getXml = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+      . '<body><dingdongOpt version="1.1">'
+      . ($ch !== null ? '<channelId>' . $ch . '</channelId>' : '')
+      . '<id>' . $id . '</id><opt>getParam</opt></dingdongOpt></body>';
+    $parsed = reolinkBaichuan::parseDingDongParamXml($this->bc->requestXml(485, $ch, $getXml)) ?? array();
+    return self::ok('DingDongOpt', array(
+      'DingDong' => array(
+        'volLevel' => intval($parsed['volLevel'] ?? 3),
+        'ledState' => intval($parsed['ledState'] ?? 1),
+        'name' => strval($parsed['name'] ?? 'Reolink Chime'),
+      ),
+    ));
   }
 
   private function handleGetAiState($ch) {

@@ -150,6 +150,12 @@ class reolinkAPI {
   const CAM_AUDIOALARMPLAY = 'AudioAlarmPlay';
   const CAM_GET_AUDIOCFG = 'GetAudioCfg';
   const CAM_SET_AUDIOCFG = 'SetAudioCfg';
+  const CAM_GET_AUDIOFILELIST = 'GetAudioFileList';
+  const CAM_QUICKREPLYPLAY = 'QuickReplyPlay';
+  const CAM_GET_AUTOREPLY = 'GetAutoReply';
+  const CAM_SET_AUTOREPLY = 'SetAutoReply';
+  const CAM_GET_DINGDONGLIST = 'GetDingDongList';
+  const CAM_DINGDONGOPT = 'DingDongOpt';
   const CAM_GET_IRLIGHTS = 'GetIrLights';
   const CAM_SET_IRLIGHTS = 'SetIrLights';
   const CAM_GET_POWERLED = 'GetPowerLed';

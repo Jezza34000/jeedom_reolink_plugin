@@ -3723,6 +3723,446 @@
 				"valuesHelp": "-1 = Désactiver les scènes, sinon scène configurée sur le Home Hub"
 			},
 			"category": "system"
+		},
+		{
+			"abilityneed": "supportQuickReply",
+			"name": "Récupérer les réponses rapides",
+			"type": "action",
+			"subtype": "other",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "GetQuickReplies",
+			"scope": "channel",
+			"configuration": {
+				"help": "Relit la liste des messages vocaux pré-enregistrés sur la sonnette Reolink.",
+				"valuesHelp": "Action immédiate : met à jour le sélecteur Réponse rapide"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportQuickReply",
+			"name": "Réponse rapide",
+			"type": "action",
+			"subtype": "select",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "QuickReplyPlay",
+			"scope": "channel",
+			"configuration": {
+				"option": "select",
+				"listValue": "",
+				"help": "Diffuse immédiatement un message vocal pré-enregistré sur le haut-parleur de la sonnette Reolink.",
+				"valuesHelp": "Sélectionnez un message vocal configuré sur la sonnette"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportAutoReply",
+			"name": "Réponse auto (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAutoReplyEnableState",
+			"scope": "channel",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAutoReply\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Indique si la réponse vocale automatique après appui sur la sonnette est activée.",
+				"valuesHelp": "0 = Désactivée, 1 = Activée"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportAutoReply",
+			"name": "Réponse auto",
+			"type": "action",
+			"subtype": "select",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAutoReplyEnable",
+			"scope": "channel",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|Désactiver;1|Activer",
+				"valueFrom": "SetAutoReplyEnableState",
+				"help": "Active ou désactive la réponse vocale automatique après un appui sur la sonnette.",
+				"valuesHelp": "0 = Désactiver, 1 = Activer"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportAutoReply",
+			"name": "Message réponse auto (état)",
+			"type": "info",
+			"subtype": "numeric",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAutoReplyFileState",
+			"scope": "channel",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAutoReply\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Identifiant du message vocal diffusé en réponse automatique.",
+				"valuesHelp": "Identifiant du fichier audio configuré sur la sonnette"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportAutoReply",
+			"name": "Message réponse auto",
+			"type": "action",
+			"subtype": "select",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAutoReplyFile",
+			"scope": "channel",
+			"configuration": {
+				"option": "select",
+				"listValue": "",
+				"valueFrom": "SetAutoReplyFileState",
+				"help": "Sélectionne le message vocal joué lors d'une réponse automatique.",
+				"valuesHelp": "Message vocal configuré sur la sonnette"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportAutoReply",
+			"name": "Délai réponse auto (état)",
+			"type": "info",
+			"subtype": "numeric",
+			"Unite": "s",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAutoReplyTimeoutState",
+			"scope": "channel",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetAutoReply\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Délai d'attente en secondes avant déclenchement de la réponse vocale automatique.",
+				"valuesHelp": "1 à 60 secondes"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportAutoReply",
+			"name": "Délai réponse auto",
+			"type": "action",
+			"subtype": "slider",
+			"Unite": "s",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetAutoReplyTimeout",
+			"scope": "channel",
+			"configuration": {
+				"minValue": 1,
+				"maxValue": 60,
+				"valueFrom": "SetAutoReplyTimeoutState",
+				"help": "Définit le délai d'attente (1 à 60 s) avant diffusion de la réponse automatique.",
+				"valuesHelp": "Curseur de 1 à 60 s"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportDoorbellLight",
+			"name": "LED bouton sonnette (état)",
+			"type": "info",
+			"subtype": "string",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetDoorbellLedState",
+			"scope": "channel",
+			"configuration": {
+				"payload": "{\"cmd\":\"GetPowerLed\",\"action\":0,\"param\":{\"channel\":#CHANNEL#}}",
+				"help": "Mode d'éclairage actuel de l'anneau LED du bouton de la sonnette Reolink.",
+				"valuesHelp": "KeepOff / Off / On / KeepOn / Always"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportDoorbellLight",
+			"name": "LED bouton sonnette",
+			"type": "action",
+			"subtype": "select",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetDoorbellLed",
+			"scope": "channel",
+			"configuration": {
+				"actionapi": "SetPowerLed",
+				"option": "select",
+				"payload": "{\"PowerLed\":{\"channel\":#CHANNEL#,\"eDoorbellLightState\":#OPTSELECTEDSTR#}}",
+				"listValue": "KeepOff|Toujours éteinte;Off|Automatique (sonnerie);On|Automatique et nuit;KeepOn|Toujours allumée",
+				"valueFrom": "SetDoorbellLedState",
+				"help": "Règle le comportement de l'anneau lumineux autour du bouton de la sonnette.",
+				"valuesHelp": "KeepOff = Éteinte, Off = Auto, On = Auto & nuit, KeepOn / Always = Toujours allumée"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportDoorbellAudio",
+			"name": "Volume interphone & réponses (état)",
+			"type": "info",
+			"subtype": "numeric",
+			"Unite": "%",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetTalkVolumeState",
+			"scope": "channel",
+			"configuration": {
+				"help": "Volume actuel de la voix et des réponses rapides sur le haut-parleur de la sonnette.",
+				"valuesHelp": "0 à 100 %"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportDoorbellAudio",
+			"name": "Volume interphone & réponses",
+			"type": "action",
+			"subtype": "slider",
+			"Unite": "%",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetTalkVolume",
+			"scope": "channel",
+			"configuration": {
+				"minValue": 0,
+				"maxValue": 100,
+				"valueFrom": "SetTalkVolumeState",
+				"help": "Règle le volume de l'interphone et des réponses rapides sur la sonnette (protocole Baichuan cmd 265).",
+				"valuesHelp": "Curseur de 0 à 100 %"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportDoorbellAudio",
+			"name": "Volume sonnerie extérieure (état)",
+			"type": "info",
+			"subtype": "numeric",
+			"Unite": "%",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetVisitorVolumeState",
+			"scope": "channel",
+			"configuration": {
+				"help": "Volume actuel de la sonnerie extérieure émise par la sonnette lors d'un appui visiteur.",
+				"valuesHelp": "0 à 100 %"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportDoorbellAudio",
+			"name": "Volume sonnerie extérieure",
+			"type": "action",
+			"subtype": "slider",
+			"Unite": "%",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetVisitorVolume",
+			"scope": "channel",
+			"configuration": {
+				"minValue": 0,
+				"maxValue": 100,
+				"valueFrom": "SetVisitorVolumeState",
+				"help": "Règle le volume de la sonnerie extérieure sur la sonnette (protocole Baichuan cmd 265).",
+				"valuesHelp": "Curseur de 0 à 100 %"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportDoorbellAudio",
+			"name": "Sonnerie bouton sonnette (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetVisitorLoudspeakerState",
+			"scope": "channel",
+			"configuration": {
+				"help": "Indique si la sonnette émet un retour sonore extérieur lors d'un appui visiteur.",
+				"valuesHelp": "0 = Désactivé, 1 = Activé"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportDoorbellAudio",
+			"name": "Sonnerie bouton sonnette",
+			"type": "action",
+			"subtype": "select",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetVisitorLoudspeaker",
+			"scope": "channel",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|Désactiver;1|Activer",
+				"valueFrom": "SetVisitorLoudspeakerState",
+				"help": "Active ou coupe la sonnerie extérieure sur l'unité sonnette lors d'un appui bouton.",
+				"valuesHelp": "0 = Désactiver, 1 = Activer"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportChime",
+			"name": "Carillon en ligne",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "ChimeOnlineState",
+			"scope": "any",
+			"configuration": {
+				"help": "Indique si le carillon sans fil Reolink Chime appairé est en ligne.",
+				"valuesHelp": "0 = Hors ligne, 1 = En ligne"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportChime",
+			"name": "Faire sonner le carillon",
+			"type": "action",
+			"subtype": "select",
+			"IsHistorized": 0,
+			"isVisible": 1,
+			"logicalId": "RingChime",
+			"scope": "any",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|City Bird;1|Original Tune;2|Piano Key;3|Loop;4|Attraction;5|Hop Hop;6|Good Day;7|Operetta;8|Moonlight;9|Way Back Home",
+				"help": "Fait sonner à la demande le carillon sans fil Reolink Chime avec la mélodie choisie.",
+				"valuesHelp": "0..9 = Mélodies intégrées du Reolink Chime"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportChime",
+			"name": "Volume carillon (état)",
+			"type": "info",
+			"subtype": "numeric",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetChimeVolumeState",
+			"scope": "any",
+			"configuration": {
+				"help": "Niveau de volume actuel du carillon sans fil Reolink Chime (0 = muet à 4 = fort).",
+				"valuesHelp": "0 à 4"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportChime",
+			"name": "Volume carillon",
+			"type": "action",
+			"subtype": "slider",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetChimeVolume",
+			"scope": "any",
+			"configuration": {
+				"minValue": 0,
+				"maxValue": 4,
+				"valueFrom": "SetChimeVolumeState",
+				"help": "Règle le niveau de volume du carillon sans fil Reolink Chime (0 à 4).",
+				"valuesHelp": "0 = Muet, 1..4 = Volume croissant"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportChime",
+			"name": "LED carillon (état)",
+			"type": "info",
+			"subtype": "binary",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetChimeLedState",
+			"scope": "any",
+			"configuration": {
+				"help": "État de la LED du carillon sans fil Reolink Chime.",
+				"valuesHelp": "0 = Éteinte, 1 = Allumée"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportChime",
+			"name": "LED carillon",
+			"type": "action",
+			"subtype": "select",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetChimeLed",
+			"scope": "any",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|Désactiver;1|Activer",
+				"valueFrom": "SetChimeLedState",
+				"help": "Allume ou éteint la LED du carillon sans fil Reolink Chime.",
+				"valuesHelp": "0 = Désactiver, 1 = Activer"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportChime",
+			"name": "Mélodie visiteur carillon (état)",
+			"type": "info",
+			"subtype": "numeric",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetChimeVisitorToneState",
+			"scope": "any",
+			"configuration": {
+				"help": "Mélodie jouée par le carillon lors d'un appui visiteur (-1 = désactivée, 0..9 = mélodie).",
+				"valuesHelp": "-1 = Désactivée, 0..9 = Mélodie"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportChime",
+			"name": "Mélodie visiteur carillon",
+			"type": "action",
+			"subtype": "select",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetChimeVisitorTone",
+			"scope": "any",
+			"configuration": {
+				"option": "select",
+				"listValue": "-1|Désactivée;0|City Bird;1|Original Tune;2|Piano Key;3|Loop;4|Attraction;5|Hop Hop;6|Good Day;7|Operetta;8|Moonlight;9|Way Back Home",
+				"valueFrom": "SetChimeVisitorToneState",
+				"help": "Choisit la mélodie jouée par le carillon Reolink Chime lors d'un appui sur la sonnette.",
+				"valuesHelp": "-1 = Désactivée, 0..9 = Mélodie"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportChime",
+			"name": "Silence temporaire carillon (état)",
+			"type": "info",
+			"subtype": "numeric",
+			"Unite": "min",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetChimeSilentState",
+			"scope": "any",
+			"configuration": {
+				"help": "Durée restante de mise en sourdine temporaire du carillon Reolink Chime (en minutes).",
+				"valuesHelp": "0 = Actif, >0 = Minutes restantes de silence"
+			},
+			"category": "light_audio"
+		},
+		{
+			"abilityneed": "supportChime",
+			"name": "Silence temporaire carillon",
+			"type": "action",
+			"subtype": "select",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"logicalId": "SetChimeSilent",
+			"scope": "any",
+			"configuration": {
+				"option": "select",
+				"listValue": "0|Réactiver le carillon;15|Silence 15 min;30|Silence 30 min;60|Silence 1 h;120|Silence 2 h;240|Silence 4 h",
+				"valueFrom": "SetChimeSilentState",
+				"help": "Coupe temporairement le carillon Reolink Chime pendant la durée choisie (protocole Baichuan cmd 610).",
+				"valuesHelp": "0 = Réactiver, 15..240 = Durée en minutes"
+			},
+			"category": "light_audio"
 		}
 	]
 }

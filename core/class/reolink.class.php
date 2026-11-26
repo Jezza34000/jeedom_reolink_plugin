@@ -1365,6 +1365,360 @@ class reolink extends eqLogic {
     return $active;
   }
 
+  public static function formatQuickReplyListValue($files) {
+    if (!is_array($files) || empty($files)) {
+      return '';
+    }
+    $pairs = array();
+    foreach ($files as $entry) {
+      if (!is_array($entry) || !isset($entry['id'])) {
+        continue;
+      }
+      $fid = intval($entry['id']);
+      $label = trim(str_replace(array(';', '|'), array(' ', '-'), strval($entry['fileName'] ?? '')));
+      if ($label === '') {
+        $label = 'Message ' . ($fid + 1);
+      }
+      $pairs[] = $fid . '|' . $label;
+    }
+    return implode(';', $pairs);
+  }
+
+  public static function updateQuickReplies($id) {
+    $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera) || $camera->isNvrParent()) {
+      return false;
+    }
+    if ($camera->hasBattery() && $camera->isBatterySleeping()) {
+      return false;
+    }
+    $cnx = reolink::getReolinkConnection($id);
+    if (!is_object($cnx) || !$cnx->is_loggedin) {
+      return false;
+    }
+    $channel = intval($camera->getChannel());
+    $resp = $cnx->SendCMD('[{"cmd":"GetAudioFileList","action":0,"param":{"channel":' . $channel . '}}]');
+    $files = $resp[0]['value']['AudioFileList'] ?? null;
+    if (!is_array($files)) {
+      $bc = reolinkBaichuan::fromEqLogic($camera);
+      if (is_object($bc)) {
+        try {
+          $files = reolinkBaichuan::parseAudioFileListXml($bc->requestXml(347, $channel));
+          $bc->logout();
+        } catch (Exception $e) {
+          $bc->logout();
+          $files = array();
+        }
+      }
+    }
+    if (!is_array($files)) {
+      return false;
+    }
+    $listVal = self::formatQuickReplyListValue($files);
+    foreach (array('QuickReplyPlay', 'SetAutoReplyFile') as $lid) {
+      $cmd = $camera->getCmd(null, $lid);
+      if (is_object($cmd) && strval($cmd->getConfiguration('listValue', '')) !== $listVal) {
+        $cmd->setConfiguration('listValue', $listVal);
+        $cmd->save();
+      }
+    }
+    return true;
+  }
+
+  public static function playQuickReply($id, $fileId) {
+    $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera) || $camera->isNvrParent()) {
+      throw new Exception(__('Équipement Reolink invalide', __FILE__));
+    }
+    $cnx = reolink::getReolinkConnection($id);
+    if (!is_object($cnx) || !$cnx->is_loggedin) {
+      throw new Exception(__('Caméra injoignable ou connexion impossible', __FILE__));
+    }
+    $channel = intval($camera->getChannel());
+    $payload = json_encode(array(array(
+      'cmd' => 'QuickReplyPlay',
+      'action' => 0,
+      'param' => array('channel' => $channel, 'id' => intval($fileId)),
+    )));
+    $resp = $cnx->SendCMD($payload);
+    if (!(is_array($resp) && intval($resp[0]['code'] ?? -1) === 0)) {
+      $bc = reolinkBaichuan::fromEqLogic($camera);
+      if (is_object($bc)) {
+        try {
+          $bc->requestXml(349, $channel, reolinkBaichuan::buildQuickReplyPlayXml($channel, intval($fileId)));
+          $bc->logout();
+          return true;
+        } catch (Exception $e) {
+          $bc->logout();
+        }
+      }
+      throw new Exception(__('Échec diffusion de la réponse rapide', __FILE__));
+    }
+    return true;
+  }
+
+  public static function setAutoReplyField($id, $field, $val) {
+    $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera) || $camera->isNvrParent()) {
+      throw new Exception(__('Équipement Reolink invalide', __FILE__));
+    }
+    $cnx = reolink::getReolinkConnection($id);
+    if (!is_object($cnx) || !$cnx->is_loggedin) {
+      throw new Exception(__('Caméra injoignable ou connexion impossible', __FILE__));
+    }
+    $channel = intval($camera->getChannel());
+    $curResp = $cnx->SendCMD('[{"cmd":"GetAutoReply","action":0,"param":{"channel":' . $channel . '}}]');
+    $cur = $curResp[0]['value']['AutoReply'] ?? array();
+    $en = intval($cur['enable'] ?? 0);
+    $fid = intval($cur['fileId'] ?? 0);
+    $to = max(1, min(60, intval($cur['timeout'] ?? 10)));
+    if ($field === 'enable') {
+      $en = intval($val) ? 1 : 0;
+    } elseif ($field === 'fileId') {
+      $fid = intval($val);
+    } elseif ($field === 'timeout') {
+      $to = max(1, min(60, intval($val)));
+    }
+    $setPayload = json_encode(array(array(
+      'cmd' => 'SetAutoReply',
+      'action' => 0,
+      'param' => array(
+        'AutoReply' => array(
+          'channel' => $channel,
+          'enable' => $en,
+          'fileId' => $fid,
+          'timeout' => $to,
+        ),
+      ),
+    )));
+    $resp = $cnx->SendCMD($setPayload);
+    if (!(is_array($resp) && intval($resp[0]['code'] ?? -1) === 0)) {
+      throw new Exception(__('Échec configuration de la réponse automatique', __FILE__));
+    }
+    $camera->checkAndUpdateCmd('SetAutoReplyEnableState', $en);
+    $camera->checkAndUpdateCmd('SetAutoReplyFileState', $fid);
+    $camera->checkAndUpdateCmd('SetAutoReplyTimeoutState', $to);
+    return true;
+  }
+
+  public static function setDoorbellAudioField($id, $field, $val) {
+    $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera) || $camera->isNvrParent()) {
+      throw new Exception(__('Équipement Reolink invalide', __FILE__));
+    }
+    $channel = intval($camera->getChannel());
+    $bc = reolinkBaichuan::fromEqLogic($camera);
+    $ok = false;
+    if (is_object($bc)) {
+      $ok = $bc->setDoorbellAudioCfg($channel, array($field => intval($val)));
+    }
+    if (!$ok && $field === 'visitorLoudspeaker') {
+      $cnx = reolink::getReolinkConnection($id);
+      if (is_object($cnx) && $cnx->is_loggedin) {
+        $resp = $cnx->SendCMD(json_encode(array(array(
+          'cmd' => 'SetAudioCfg',
+          'action' => 0,
+          'param' => array('AudioCfg' => array('channel' => $channel, 'visitorLoudspeaker' => intval($val) ? 1 : 0)),
+        ))));
+        $ok = (is_array($resp) && intval($resp[0]['code'] ?? -1) === 0);
+      }
+    }
+    if (!$ok) {
+      throw new Exception(__('Échec réglage audio sonnette (port Baichuan 9000 requis)', __FILE__));
+    }
+    $stateMap = array(
+      'talkAndReplyVolume' => 'SetTalkVolumeState',
+      'visitorVolume' => 'SetVisitorVolumeState',
+      'visitorLoudspeaker' => 'SetVisitorLoudspeakerState',
+    );
+    if (isset($stateMap[$field])) {
+      $camera->checkAndUpdateCmd($stateMap[$field], intval($val));
+    }
+    return true;
+  }
+
+  public static function applyDoorbellLedRange($camera, $cnx, $channel) {
+    if (!is_object($camera) || !is_object($cnx)) {
+      return;
+    }
+    $cmd = $camera->getCmd(null, 'SetDoorbellLed');
+    if (!is_object($cmd)) {
+      return;
+    }
+    $labels = array(
+      'KeepOff' => __('Toujours éteinte', __FILE__),
+      'Off' => __('Automatique (sonnerie)', __FILE__),
+      'On' => __('Automatique et nuit', __FILE__),
+      'KeepOn' => __('Toujours allumée', __FILE__),
+      'Always' => __('Toujours allumée', __FILE__),
+    );
+    $resp = $cnx->SendCMD('[{"cmd":"GetPowerLed","action":1,"param":{"channel":' . intval($channel) . '}}]');
+    $opts = $resp[0]['range']['PowerLed']['eDoorbellLightState'] ?? null;
+    if (!is_array($opts) || empty($opts)) {
+      $opts = array('KeepOff', 'Off', 'On', 'KeepOn');
+    }
+    $pairs = array();
+    foreach ($opts as $optKey) {
+      $k = trim(strval($optKey));
+      if ($k !== '' && isset($labels[$k])) {
+        $pairs[] = $k . '|' . $labels[$k];
+      }
+    }
+    if (!empty($pairs)) {
+      $listVal = implode(';', $pairs);
+      if (strval($cmd->getConfiguration('listValue', '')) !== $listVal) {
+        $cmd->setConfiguration('listValue', $listVal);
+        $cmd->save();
+      }
+    }
+  }
+
+  public static function resolveChimeId($eqLogic, $bc = null) {
+    $saved = intval($eqLogic->getConfiguration('chime_id', -1));
+    if ($saved >= 0) {
+      return $saved;
+    }
+    $chOrNull = $eqLogic->isNvrParent() ? null : intval($eqLogic->getChannel());
+    if (!is_object($bc)) {
+      $bc = reolinkBaichuan::fromEqLogic($eqLogic);
+    }
+    if (is_object($bc)) {
+      $st = $bc->getChimeStatus($chOrNull);
+      if (is_array($st) && isset($st['id'])) {
+        $eqLogic->setConfiguration('chime_id', intval($st['id']));
+        $eqLogic->save(true);
+        return intval($st['id']);
+      }
+    }
+    $cnx = reolink::getReolinkConnection($eqLogic->getId());
+    if (is_object($cnx) && $cnx->is_loggedin) {
+      $param = ($chOrNull === null) ? new stdClass() : array('channel' => $chOrNull);
+      $resp = $cnx->SendCMD(json_encode(array(array('cmd' => 'GetDingDongList', 'action' => 0, 'param' => $param))));
+      $paired = $resp[0]['value']['DingDongList']['pairedlist'] ?? array();
+      if (is_array($paired)) {
+        foreach ($paired as $item) {
+          if (is_array($item) && strcasecmp(strval($item['deviceType'] ?? ''), 'BatteryDB') !== 0 && isset($item['deviceId'])) {
+            $cid = intval($item['deviceId']);
+            $eqLogic->setConfiguration('chime_id', $cid);
+            $eqLogic->save(true);
+            return $cid;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  public static function refreshDoorbellAndChimeState($camera) {
+    if (!is_object($camera) || ($camera->hasBattery() && $camera->isBatterySleeping())) {
+      return;
+    }
+    $hasDbAudio = is_object($camera->getCmd(null, 'SetTalkVolumeState'))
+      || is_object($camera->getCmd(null, 'SetVisitorVolumeState'))
+      || is_object($camera->getCmd(null, 'SetVisitorLoudspeakerState'));
+    $hasChime = is_object($camera->getCmd(null, 'ChimeOnlineState'))
+      || is_object($camera->getCmd(null, 'RingChime'));
+    if (!$hasDbAudio && !$hasChime) {
+      return;
+    }
+    $bc = reolinkBaichuan::fromEqLogic($camera);
+    if ($hasDbAudio && is_object($bc) && !$camera->isNvrParent()) {
+      $ac = $bc->getDoorbellAudioCfg($camera->getChannel());
+      if (is_array($ac)) {
+        if (isset($ac['talkAndReplyVolume'])) {
+          $camera->checkAndUpdateCmd('SetTalkVolumeState', intval($ac['talkAndReplyVolume']));
+        }
+        if (isset($ac['visitorVolume'])) {
+          $camera->checkAndUpdateCmd('SetVisitorVolumeState', intval($ac['visitorVolume']));
+        }
+        if (isset($ac['visitorLoudspeaker'])) {
+          $camera->checkAndUpdateCmd('SetVisitorLoudspeakerState', intval($ac['visitorLoudspeaker']) ? 1 : 0);
+        }
+      }
+    }
+    if ($hasChime) {
+      $chOrNull = $camera->isNvrParent() ? null : intval($camera->getChannel());
+      $st = is_object($bc) ? $bc->getChimeStatus($chOrNull) : null;
+      if (is_array($st) && isset($st['id'])) {
+        if (intval($camera->getConfiguration('chime_id', -1)) !== intval($st['id'])) {
+          $camera->setConfiguration('chime_id', intval($st['id']));
+          $camera->save(true);
+        }
+        $camera->checkAndUpdateCmd('ChimeOnlineState', intval($st['online'] ?? 0));
+        if (isset($st['volLevel'])) {
+          $camera->checkAndUpdateCmd('SetChimeVolumeState', intval($st['volLevel']));
+        }
+        if (isset($st['ledState'])) {
+          $camera->checkAndUpdateCmd('SetChimeLedState', intval($st['ledState']) ? 1 : 0);
+        }
+        if (isset($st['visitorTone'])) {
+          $camera->checkAndUpdateCmd('SetChimeVisitorToneState', intval($st['visitorTone']));
+        }
+        if (isset($st['silentMinutes'])) {
+          $camera->checkAndUpdateCmd('SetChimeSilentState', intval($st['silentMinutes']));
+        }
+      }
+    }
+  }
+
+  public static function execChimeAction($id, $op, $val) {
+    $eqLogic = reolink::byId($id, 'reolink');
+    if (!is_object($eqLogic)) {
+      throw new Exception(__('Équipement Reolink invalide', __FILE__));
+    }
+    $bc = reolinkBaichuan::fromEqLogic($eqLogic);
+    $chimeId = self::resolveChimeId($eqLogic, $bc);
+    if ($chimeId === null) {
+      throw new Exception(__('Aucun carillon Reolink Chime appairé détecté', __FILE__));
+    }
+    $chOrNull = $eqLogic->isNvrParent() ? null : intval($eqLogic->getChannel());
+    if ($op === 'ring') {
+      $music = max(0, min(9, intval($val)));
+      if (is_object($bc)) {
+        try {
+          $bc->ringChime($chOrNull, $chimeId, $music);
+          return true;
+        } catch (Exception $e) {
+          log::add('reolink', 'debug', 'Chime ring fallback CGI: ' . $e->getMessage());
+        }
+      }
+      $cnx = reolink::getReolinkConnection($id);
+      if (!is_object($cnx) || !$cnx->is_loggedin) {
+        throw new Exception(__('Équipement injoignable pour faire sonner le carillon', __FILE__));
+      }
+      $dd = array('id' => $chimeId, 'option' => 4, 'musicId' => $music);
+      if ($chOrNull !== null) {
+        $dd['channel'] = $chOrNull;
+      }
+      $resp = $cnx->SendCMD(json_encode(array(array('cmd' => 'DingDongOpt', 'action' => 0, 'param' => array('DingDong' => $dd)))));
+      if (!(is_array($resp) && intval($resp[0]['code'] ?? -1) === 0)) {
+        throw new Exception(__('Échec déclenchement du carillon', __FILE__));
+      }
+      return true;
+    }
+    if (!is_object($bc)) {
+      throw new Exception(__('Connexion Baichuan requise pour piloter le carillon', __FILE__));
+    }
+    if ($op === 'volume') {
+      $v = max(0, min(4, intval($val)));
+      $bc->setChimeParam($chOrNull, $chimeId, array('volLevel' => $v));
+      $eqLogic->checkAndUpdateCmd('SetChimeVolumeState', $v);
+    } elseif ($op === 'led') {
+      $l = intval($val) ? 1 : 0;
+      $bc->setChimeParam($chOrNull, $chimeId, array('ledState' => $l));
+      $eqLogic->checkAndUpdateCmd('SetChimeLedState', $l);
+    } elseif ($op === 'visitorTone') {
+      $m = intval($val);
+      $bc->setChimeVisitorTone($chOrNull, $chimeId, $m);
+      $eqLogic->checkAndUpdateCmd('SetChimeVisitorToneState', ($m < 0) ? -1 : max(0, min(9, $m)));
+    } elseif ($op === 'silent') {
+      $min = max(0, min(720, intval($val)));
+      $bc->setChimeSilent($chOrNull, $chimeId, $min);
+      $eqLogic->checkAndUpdateCmd('SetChimeSilentState', $min);
+    }
+    return true;
+  }
+
   public static function syncCameraPlugin($id = null) {
     try {
       $camPlugin = plugin::byId('camera');
@@ -1701,6 +2055,67 @@ class reolink extends eqLogic {
       || (intval($deviceAbility['doorbellVersion']['ver'] ?? 0) > 0)
       || (intval($deviceAbility['visitor']['ver'] ?? 0) > 0);
     $deviceAbility['doorbell'] = array('permit' => $isDoorbell ? 4 : 0, 'ver' => $isDoorbell ? 1 : 0);
+
+    // Doorbell & wireless Chime (DingDong) capabilities (never wake sleeping battery cameras)
+    $canProbeActive = (!$hasBat || !$camera->isBatterySleeping());
+    $hasQuickReply = (intval($deviceAbility['supportAudioFileList']['ver'] ?? 0) > 0)
+      || ($isDoorbell && intval($deviceAbility['supportQuickReply']['ver'] ?? 0) > 0);
+    if (!$hasQuickReply && $isDoorbell && $canProbeActive) {
+      $afResp = $reolinkConn->SendCMD('[{"cmd":"GetAudioFileList","action":0,"param":{"channel":' . intval($channel) . '}}]');
+      $hasQuickReply = (is_array($afResp) && isset($afResp[0]['value']['AudioFileList']) && is_array($afResp[0]['value']['AudioFileList']));
+    }
+    $deviceAbility['supportQuickReply'] = array('permit' => $hasQuickReply ? 6 : 0, 'ver' => $hasQuickReply ? 1 : 0);
+
+    $hasAutoReply = (intval($deviceAbility['supportAutoReply']['ver'] ?? 0) > 0);
+    if (!$hasAutoReply && $isDoorbell && $canProbeActive) {
+      $arResp = $reolinkConn->SendCMD('[{"cmd":"GetAutoReply","action":0,"param":{"channel":' . intval($channel) . '}}]');
+      $hasAutoReply = (is_array($arResp) && isset($arResp[0]['value']['AutoReply']) && is_array($arResp[0]['value']['AutoReply']));
+    }
+    $deviceAbility['supportAutoReply'] = array('permit' => $hasAutoReply ? 6 : 0, 'ver' => $hasAutoReply ? 1 : 0);
+
+    $hasDbLight = (intval($deviceAbility['doorbellLightState']['ver'] ?? 0) > 0);
+    if (!$hasDbLight && $isDoorbell) {
+      $plResp = $reolinkConn->SendCMD('[{"cmd":"GetPowerLed","action":1,"param":{"channel":' . intval($channel) . '}}]');
+      $hasDbLight = (is_array($plResp) && !empty($plResp[0]['range']['PowerLed']['eDoorbellLightState']));
+    }
+    $deviceAbility['supportDoorbellLight'] = array('permit' => $hasDbLight ? 6 : 0, 'ver' => $hasDbLight ? 1 : 0);
+
+    $hasDbAudio = false;
+    if ($isDoorbell && $canProbeActive && is_object($bc)) {
+      $dbAc = $bc->getDoorbellAudioCfg($channel);
+      $hasDbAudio = is_array($dbAc) && (
+        array_key_exists('talkAndReplyVolume', $dbAc)
+        || array_key_exists('visitorVolume', $dbAc)
+        || array_key_exists('visitorLoudspeaker', $dbAc)
+      );
+    }
+    $deviceAbility['supportDoorbellAudio'] = array('permit' => $hasDbAudio ? 6 : 0, 'ver' => $hasDbAudio ? 1 : 0);
+
+    $hasPairedChime = false;
+    $chimeHint = ($isDoorbell || intval($deviceAbility['supportDingDong']['ver'] ?? 0) > 0 || intval($deviceAbility['dingdong']['ver'] ?? 0) > 0);
+    if ($chimeHint && $canProbeActive) {
+      if (is_object($bc)) {
+        $chSt = $bc->getChimeStatus($channel);
+        if (is_array($chSt) && !empty($chSt['chimes'])) {
+          $hasPairedChime = true;
+          $camera->setConfiguration('chime_id', intval($chSt['id']));
+        }
+      }
+      if (!$hasPairedChime) {
+        $ddResp = $reolinkConn->SendCMD('[{"cmd":"GetDingDongList","action":0,"param":{"channel":' . intval($channel) . '}}]');
+        $paired = $ddResp[0]['value']['DingDongList']['pairedlist'] ?? array();
+        if (is_array($paired)) {
+          foreach ($paired as $ddItem) {
+            if (is_array($ddItem) && strcasecmp(strval($ddItem['deviceType'] ?? ''), 'BatteryDB') !== 0 && isset($ddItem['deviceId'])) {
+              $hasPairedChime = true;
+              $camera->setConfiguration('chime_id', intval($ddItem['deviceId']));
+              break;
+            }
+          }
+        }
+      }
+    }
+    $deviceAbility['supportChime'] = array('permit' => $hasPairedChime ? 6 : 0, 'ver' => $hasPairedChime ? 1 : 0);
 
     // Stream & two-way audio capabilities persisted for Live / go2rtc / JeedomConnect
     $hasTalk = (intval($deviceAbility['talk']['ver'] ?? 0) > 0) ? 1 : 0;
@@ -2275,6 +2690,9 @@ class reolink extends eqLogic {
         }
       }
     }
+    if (!$isBatteryCam || $shouldWakeBattery) {
+      self::refreshDoorbellAndChimeState($camcmd);
+    }
 
     if (empty($cmdarr)) {
       $camcnx->batteryChannelMode = false;
@@ -2637,7 +3055,26 @@ class reolink extends eqLogic {
             break;
 
           case reolinkAPI::CAM_GET_POWERLED:
-            $camcmd->checkAndUpdateCmd('SetPowerLedState', $json_data['value']['PowerLed']['state']);
+            $plData = $json_data['value']['PowerLed'] ?? array();
+            if (isset($plData['state'])) {
+              $camcmd->checkAndUpdateCmd('SetPowerLedState', $plData['state']);
+            }
+            if (isset($plData['eDoorbellLightState'])) {
+              $camcmd->checkAndUpdateCmd('SetDoorbellLedState', $plData['eDoorbellLightState']);
+            }
+            break;
+
+          case reolinkAPI::CAM_GET_AUTOREPLY:
+            $arData = $json_data['value']['AutoReply'] ?? array();
+            if (isset($arData['enable'])) {
+              $camcmd->checkAndUpdateCmd('SetAutoReplyEnableState', intval($arData['enable']) ? 1 : 0);
+            }
+            if (isset($arData['fileId'])) {
+              $camcmd->checkAndUpdateCmd('SetAutoReplyFileState', intval($arData['fileId']));
+            }
+            if (isset($arData['timeout'])) {
+              $camcmd->checkAndUpdateCmd('SetAutoReplyTimeoutState', intval($arData['timeout']));
+            }
             break;
 
           case reolinkAPI::CAM_GET_ABILITY:
@@ -3925,6 +4362,15 @@ class reolink extends eqLogic {
             if (is_object($bcScene) && $bcScene->probeSceneSupport()) {
               $devAbilityReturn['scene'] = array('ver' => 1, 'permit' => 7);
             }
+            $hostModelStr = strval($camera->getConfiguration('hostModel', $camera->getConfiguration('model', '')));
+            if (is_object($bcScene) && (stripos($hostModelStr, 'Hub') !== false || intval($devAbilityReturn['supportDingDong']['ver'] ?? 0) > 0)) {
+              $hostChime = $bcScene->getChimeStatus(null);
+              if (is_array($hostChime) && !empty($hostChime['chimes'])) {
+                $devAbilityReturn['supportChime'] = array('ver' => 1, 'permit' => 6);
+                $camera->setConfiguration('chime_id', intval($hostChime['id']));
+                $camera->save(true);
+              }
+            }
           }
         }
       }
@@ -4203,6 +4649,9 @@ class reolink extends eqLogic {
           'SetResolutionst1', 'SetFPSst1', 'SetBitratest1', 'SetEncodingst1',
           'SetResolutionst2', 'SetFPSst2', 'SetBitratest2', 'SetEncodingst2',
           'SetScene',
+          'QuickReplyPlay',
+          'SetAutoReplyFile',
+          'SetDoorbellLed',
         );
         $listTpl = strval($command['configuration']['listValue'] ?? '');
         if ($listTpl !== '' && !in_array($logicalId, $dynamicSelects, true)) {
@@ -4373,8 +4822,18 @@ class reolink extends eqLogic {
           reolink::applyPtzPatrolState($camera, $patrolRefresh[0]);
         }
       }
-    } elseif (is_object($camera->getCmd(null, 'SetScene'))) {
-      reolink::updateScenes($id);
+      if (is_object($camera->getCmd(null, 'QuickReplyPlay'))) {
+        reolink::updateQuickReplies($id);
+      }
+      if (is_object($camera->getCmd(null, 'SetDoorbellLed'))) {
+        reolink::applyDoorbellLedRange($camera, $cnx, $channel);
+      }
+      reolink::refreshDoorbellAndChimeState($camera);
+    } else {
+      if (is_object($camera->getCmd(null, 'SetScene'))) {
+        reolink::updateScenes($id);
+      }
+      reolink::refreshDoorbellAndChimeState($camera);
     }
     $cnx->batteryChannelMode = false;
 
@@ -4770,6 +5229,45 @@ class reolinkCmd extends cmd {
         break;
       case 'SetScene':
         reolink::setScene($EqId, intval($_options['select'] ?? -1));
+        break;
+      case 'GetQuickReplies':
+        reolink::updateQuickReplies($EqId);
+        break;
+      case 'QuickReplyPlay':
+        reolink::playQuickReply($EqId, intval($_options['select'] ?? 0));
+        break;
+      case 'SetAutoReplyEnable':
+        reolink::setAutoReplyField($EqId, 'enable', intval($_options['select'] ?? 0));
+        break;
+      case 'SetAutoReplyFile':
+        reolink::setAutoReplyField($EqId, 'fileId', intval($_options['select'] ?? 0));
+        break;
+      case 'SetAutoReplyTimeout':
+        reolink::setAutoReplyField($EqId, 'timeout', intval($_options['slider'] ?? 10));
+        break;
+      case 'SetTalkVolume':
+        reolink::setDoorbellAudioField($EqId, 'talkAndReplyVolume', max(0, min(100, intval($_options['slider'] ?? 80))));
+        break;
+      case 'SetVisitorVolume':
+        reolink::setDoorbellAudioField($EqId, 'visitorVolume', max(0, min(100, intval($_options['slider'] ?? 80))));
+        break;
+      case 'SetVisitorLoudspeaker':
+        reolink::setDoorbellAudioField($EqId, 'visitorLoudspeaker', intval($_options['select'] ?? 1) ? 1 : 0);
+        break;
+      case 'RingChime':
+        reolink::execChimeAction($EqId, 'ring', intval($_options['select'] ?? 0));
+        break;
+      case 'SetChimeVolume':
+        reolink::execChimeAction($EqId, 'volume', max(0, min(4, intval($_options['slider'] ?? 3))));
+        break;
+      case 'SetChimeLed':
+        reolink::execChimeAction($EqId, 'led', intval($_options['select'] ?? 1));
+        break;
+      case 'SetChimeVisitorTone':
+        reolink::execChimeAction($EqId, 'visitorTone', intval($_options['select'] ?? 0));
+        break;
+      case 'SetChimeSilent':
+        reolink::execChimeAction($EqId, 'silent', intval($_options['select'] ?? 0));
         break;
       case 'StartPtzPatrol':
         reolink::runPatrol($EqId, 'StartPatrol', $_options['select'] ?? null);
