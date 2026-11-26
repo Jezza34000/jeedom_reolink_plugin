@@ -3129,10 +3129,19 @@ class reolink extends eqLogic {
     if ($this->getConfiguration('password') == NULL) {
       throw new Exception(__('Le mot de passe ne peut pas être vide', __FILE__));
     }
+    if (intval($this->getIsEnable()) !== 1 && in_array(strval($this->getConfiguration('fwArchiveStatus', '')), array('update_available', 'up_to_date'), true)) {
+      $this->setConfiguration('fwArchiveStatus', 'inactive');
+    }
     // Champs OK
   }
 
   public function postSave() {
+    if (intval($this->getIsEnable()) !== 1) {
+      $inactiveFwCmd = $this->getCmd(null, 'NewFirmwareState');
+      if (is_object($inactiveFwCmd) && intval($inactiveFwCmd->execCmd()) !== 0) {
+        $this->checkAndUpdateCmd('NewFirmwareState', 0);
+      }
+    }
     self::syncBaichuanDaemonSubscriptions(false);
   }
 
@@ -4541,6 +4550,16 @@ class reolinkCmd extends cmd {
         }
         break;
       case 'CheckFirmware':
+        if (!is_object($eqLogic) || intval($eqLogic->getIsEnable()) !== 1) {
+          if (is_object($eqLogic) && reolink::isGithubFirmwareCheckEnabled()) {
+            try {
+              reolink::checkEquipmentFirmwareArchive($eqLogic, null, true);
+            } catch (Exception $e) {
+              log::add('reolink', 'debug', 'CheckFirmware inactif ignoré : ' . $e->getMessage());
+            }
+          }
+          break;
+        }
         $newFwVal = null;
         $isBaichuanOnly = is_object($eqLogic) && (strtolower(trim(strval($eqLogic->getConfiguration('cnxtype', '')))) === 'baichuan');
         if (is_object($eqLogic) && !$isBaichuanOnly && !$eqLogic->isChannelChild()) {

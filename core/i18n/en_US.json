@@ -593,7 +593,10 @@
         "Santé Reolink": "Reolink Health",
         "Affichage par défaut appliqué": "Default display applied",
         "commandes cochées. Vérifiez au besoin puis cliquez sur Sauvegarder.": "commands checked. Adjust if needed, then click Save.",
-        "Réinitialiser la case « Afficher » de toutes les commandes de cet équipement selon la sélection par défaut (commandes courantes) ? Les autres réglages (noms, icônes, historisation, inversions) seront conservés.": "Reset the \"Display\" checkbox on all commands of this equipment to the default preset (common commands)? Other settings (names, icons, history, invert) will be preserved."
+        "Réinitialiser la case « Afficher » de toutes les commandes de cet équipement selon la sélection par défaut (commandes courantes) ? Les autres réglages (noms, icônes, historisation, inversions) seront conservés.": "Reset the \"Display\" checkbox on all commands of this equipment to the default preset (common commands)? Other settings (names, icons, history, invert) will be preserved.",
+        "Équipement inactif : version locale non actualisée": "Inactive equipment: cached local version not refreshed",
+        "Inactif — données non actualisées": "Inactive — cached data not refreshed",
+        "Équipement inactif — données non actualisées": "Inactive equipment — cached data not refreshed"
     },
     "plugins/reolink/desktop/php/reolink.php": {
         "Retour": "Back",

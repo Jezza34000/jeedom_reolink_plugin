@@ -593,7 +593,10 @@
         "Santé Reolink": "Salud Reolink",
         "Affichage par défaut appliqué": "Visualización por defecto aplicada",
         "commandes cochées. Vérifiez au besoin puis cliquez sur Sauvegarder.": "comandos marcados. Ajuste si es necesario y haga clic en Guardar.",
-        "Réinitialiser la case « Afficher » de toutes les commandes de cet équipement selon la sélection par défaut (commandes courantes) ? Les autres réglages (noms, icônes, historisation, inversions) seront conservés.": "¿Restablecer la casilla «Mostrar» de todos los comandos de este equipo según la selección por defecto (comandos habituales)? Los demás ajustes (nombres, iconos, historial, inversión) se conservarán."
+        "Réinitialiser la case « Afficher » de toutes les commandes de cet équipement selon la sélection par défaut (commandes courantes) ? Les autres réglages (noms, icônes, historisation, inversions) seront conservés.": "¿Restablecer la casilla «Mostrar» de todos los comandos de este equipo según la selección por defecto (comandos habituales)? Los demás ajustes (nombres, iconos, historial, inversión) se conservarán.",
+        "Équipement inactif : version locale non actualisée": "Equipo inactivo: versión local no actualizada",
+        "Inactif — données non actualisées": "Inactivo — datos no actualizados",
+        "Équipement inactif — données non actualisées": "Equipo inactivo — datos no actualizados"
     },
     "plugins/reolink/desktop/php/reolink.php": {
         "Retour": "Volver",

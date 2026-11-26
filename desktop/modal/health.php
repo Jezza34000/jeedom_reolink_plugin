@@ -155,7 +155,7 @@ foreach ($eqLogics as $eq) {
 
       $firmVer = trim(strval($eqLogic->getConfiguration('firmVer', '')));
       $fwHtml = ($firmVer !== '') ? ('<code>' . htmlspecialchars($firmVer, ENT_QUOTES, 'UTF-8') . '</code>') : '-';
-      if ($fwCheckEnabled) {
+      if ($fwCheckEnabled && $enabled) {
         $fwStatus = trim(strval($eqLogic->getConfiguration('fwArchiveStatus', '')));
         $fwLatest = trim(strval($eqLogic->getConfiguration('fwArchiveLatestVer', '')));
         if ($fwStatus === 'update_available' && $fwLatest !== '') {

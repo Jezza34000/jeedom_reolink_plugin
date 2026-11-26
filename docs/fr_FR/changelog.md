@@ -7,6 +7,7 @@
 # 26/11/2026
 
 - Organisation des commandes par onglets & allègement du Dashboard par défaut : découpage des commandes en 6 onglets thématiques (**Détections & IA**, **PTZ & Rondes**, **Éclairage & Audio**, **Alertes & Enreg.**, **Image & Encodage**, **Système**, onglets vides masqués automatiquement), filtre rapide **Toutes / Infos (lecture) / Actions** + recherche texte, affichage par défaut allégé à la création sur le Dashboard (commandes courantes uniquement, sans modifier les équipements existants) et bouton **Affichage par défaut** (sur confirmation) pour réappliquer cette sélection sur une caméra déjà installée
+- Vérification des mises à jour firmware : affichage d'un état neutre `Inactif — données non actualisées` sur les équipements désactivés (fiche équipement, vérification unitaire, vue liste et modale **Santé**) et remise à zéro immédiate de `NewFirmwareState` lors de la désactivation afin d'éviter tout faux positif sur d'anciens équipements inactifs
 
 # 25/11/2026
 
