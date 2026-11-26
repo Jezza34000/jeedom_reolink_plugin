@@ -27,6 +27,9 @@ try {
         throw new Exception(__('401 - Accès non autorisé', __FILE__));
       }
       ajax::init();
+      if (!reolink::isWebrtcEnabled()) {
+        throw new Exception(__('WebRTC désactivé dans la configuration du plugin Reolink', __FILE__));
+      }
       $quality = reolink::sanitizeStreamKey(init('quality', 'sub'));
       if ($quality === 'jpeg') {
         $quality = 'sub';

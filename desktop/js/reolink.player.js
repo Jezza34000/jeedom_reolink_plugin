@@ -39,6 +39,7 @@
     this.quality = String(opts.initialQuality || Object.keys(this.streams)[0] || 'sub');
     this.mode = String(opts.mode || 'live'); // 'live' | 'snapshot_live' | 'live_auto'
     this.refreshSec = Math.max(5, parseInt(opts.refreshSec || 15, 10) || 15);
+    this.hasWebrtc = !!opts.hasWebrtc;
     this.isBattery = !!opts.isBattery;
     this.controls = opts.controls || {};
     this.i18n = opts.i18n || {};
@@ -267,7 +268,7 @@
       this.playJpeg();
       return;
     }
-    if (!window.RTCPeerConnection) {
+    if (!this.hasWebrtc || !window.RTCPeerConnection) {
       this.playMse(q);
       return;
     }
@@ -277,6 +278,14 @@
     if (this.jpegEl) { this.jpegEl.style.display = 'none'; }
     if (this.videoEl) { this.videoEl.style.display = ''; }
     var gen = this.playGen;
+    var gotTrack = false;
+    var fallbackDone = false;
+    var triggerFallback = function (errKey, defaultMsg) {
+      if (gotTrack || fallbackDone || gen !== self.playGen || !self._alive()) { return; }
+      fallbackDone = true;
+      self.playMse(q);
+      self.showErr(self._t(errKey, defaultMsg));
+    };
 
     var micPromise = Promise.resolve(null);
     if (withMic) {
@@ -303,7 +312,6 @@
       self._updateTalkUi();
       self._setInfo(q + (self.talkActive ? ' / WebRTC + Micro…' : ' / WebRTC…'));
 
-      var gotTrack = false;
       var pc = new RTCPeerConnection({iceServers: []});
       self.pc = pc;
       if (self.micStream && self.micStream.getAudioTracks().length > 0) {
@@ -329,18 +337,12 @@
       };
       pc.oniceconnectionstatechange = function () {
         var st = pc ? pc.iceConnectionState : '';
-        if (!gotTrack && (st === 'failed' || st === 'disconnected' || st === 'closed')) {
-          if (gen === self.playGen) {
-            self.playMse(q);
-            self.showErr(self._t('rtcFallback', 'WebRTC indisponible, bascule fMP4'));
-          }
+        if (st === 'failed') {
+          triggerFallback('rtcFallback', 'WebRTC indisponible, bascule fMP4');
         }
       };
       self.rtcTimer = setTimeout(function () {
-        if (!gotTrack && gen === self.playGen) {
-          self.playMse(q);
-          self.showErr(self._t('rtcTimeout', 'WebRTC timeout, bascule fMP4'));
-        }
+        triggerFallback('rtcTimeout', 'WebRTC timeout, bascule fMP4');
       }, 4500);
 
       return pc.createOffer().then(function (offer) {
@@ -368,13 +370,11 @@
         return pc.setRemoteDescription({type: 'answer', sdp: res.result.sdp});
       });
     }).catch(function (err) {
-      if (gen === self.playGen) {
-        var isPerm = err && (err.name === 'NotAllowedError' || err.name === 'NotFoundError');
-        self.playMse(q);
-        self.showErr(isPerm
-          ? self._t('micDenied', 'Accès au microphone refusé ou aucun microphone détecté')
-          : self._t('rtcFallback', 'WebRTC indisponible, bascule fMP4'));
-      }
+      var isPerm = err && (err.name === 'NotAllowedError' || err.name === 'NotFoundError');
+      triggerFallback(
+        isPerm ? 'micDenied' : 'rtcFallback',
+        isPerm ? 'Accès au microphone refusé ou aucun microphone détecté' : 'WebRTC indisponible, bascule fMP4'
+      );
     });
   };
 

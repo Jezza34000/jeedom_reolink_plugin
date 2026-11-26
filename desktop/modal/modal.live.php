@@ -27,6 +27,7 @@ if (empty($liveMeta['streams'])) {
 }
 $streamMetaJs = $liveMeta['streams'];
 $firstStreamKey = array_key_first($streamMetaJs);
+$hasWebrtc = !empty($liveMeta['hasWebrtc']);
 $hasTalk = $liveMeta['hasTalk'];
 $ctrls = $liveMeta['controls'];
 
@@ -43,7 +44,7 @@ $ptzButtons = array(
       <a class="btn btn-default btn-sm rlkQualityBtn<?php echo ($sKey === $firstStreamKey) ? ' active' : ''; ?>" data-quality="<?php echo htmlspecialchars($sKey, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($sMeta['label'], ENT_QUOTES, 'UTF-8'); ?></a>
 <?php } ?>
     </div>
-<?php if ($cnxType !== 'baichuan') { ?>
+<?php if ($hasWebrtc) { ?>
     <a class="btn btn-default btn-sm rlkWebRtcBtn" style="margin-left:6px;">{{WebRTC}}</a>
 <?php } ?>
 <?php if ($hasTalk) { ?>
@@ -143,6 +144,7 @@ $ptzButtons = array(
     streams: <?php echo json_encode($streamMetaJs); ?>,
     initialQuality: <?php echo json_encode($firstStreamKey); ?>,
     mode: 'live',
+    hasWebrtc: <?php echo $hasWebrtc ? 'true' : 'false'; ?>,
     isBattery: <?php echo $liveMeta['isBattery'] ? 'true' : 'false'; ?>,
     controls: <?php echo json_encode($ctrls); ?>,
     i18n: {
