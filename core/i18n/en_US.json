@@ -1,5 +1,7 @@
 {
     "plugins/reolink/core/class/reolink.class.php": {
+        "Caméra injoignable ou connexion impossible": "Camera unreachable or connection failed",
+        "Connexion à la caméra temporairement occupée, veuillez réessayer": "Camera connection temporarily busy, please try again",
         "Équipements actifs": "Active equipments",
         "Caméras en ligne": "Online cameras",
         "Un ou plusieurs canaux actifs sont hors ligne (ChannelOnline = 0)": "One or more active channels are offline (ChannelOnline = 0)",

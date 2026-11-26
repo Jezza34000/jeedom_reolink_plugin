@@ -534,7 +534,13 @@
           var minV = parseInt(zCfg.min || 0, 10) || 0;
           var maxV = parseInt(zCfg.max || 32, 10) || 32;
           self.zoomVal = Math.max(minV, Math.min(maxV, self.zoomVal + step));
-          self.execCmd(zCfg.cmdId, {slider: self.zoomVal});
+          if (self._zoomTimer) {
+            clearTimeout(self._zoomTimer);
+          }
+          self._zoomTimer = setTimeout(function () {
+            self._zoomTimer = null;
+            self.execCmd(zCfg.cmdId, {slider: self.zoomVal});
+          }, 180);
         });
       });
     }
@@ -548,7 +554,13 @@
           var minV = parseInt(fCfg.min || 0, 10) || 0;
           var maxV = parseInt(fCfg.max || 255, 10) || 255;
           self.focusVal = Math.max(minV, Math.min(maxV, self.focusVal + step));
-          self.execCmd(fCfg.cmdId, {slider: self.focusVal});
+          if (self._focusTimer) {
+            clearTimeout(self._focusTimer);
+          }
+          self._focusTimer = setTimeout(function () {
+            self._focusTimer = null;
+            self.execCmd(fCfg.cmdId, {slider: self.focusVal});
+          }, 180);
         });
       });
     }
@@ -712,6 +724,14 @@
   };
 
   ReolinkLivePlayer.prototype.destroy = function () {
+    if (this._zoomTimer) {
+      clearTimeout(this._zoomTimer);
+      this._zoomTimer = null;
+    }
+    if (this._focusTimer) {
+      clearTimeout(this._focusTimer);
+      this._focusTimer = null;
+    }
     this.stopLive(false);
     if (this.observer) {
       try { this.observer.disconnect(); } catch (e) {}

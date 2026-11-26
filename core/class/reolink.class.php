@@ -495,7 +495,102 @@ class reolink extends eqLogic {
     foreach ($candidates as $c) {
       cache::delete(self::buildHostCacheKey($c[0], $c[1], $c[2]));
     }
+    if (class_exists('reolinkAPI') && method_exists('reolinkAPI', 'invalidateHostSessions')) {
+      reolinkAPI::invalidateHostSessions($ip);
+    }
     self::resetConnectionCache($eqLogic);
+  }
+
+  public static function throwConnectionException($camcnx, $context = '') {
+    $suffix = ($context !== '') ? ' (' . $context . ')' : '';
+    if (is_object($camcnx) && method_exists($camcnx, 'isLoginBusy') && $camcnx->isLoginBusy()) {
+      throw new Exception(__('Connexion à la caméra temporairement occupée, veuillez réessayer', __FILE__) . $suffix);
+    }
+    throw new Exception(__('Caméra injoignable ou connexion impossible', __FILE__) . $suffix);
+  }
+
+  private static function readZoomFocusSeqFile($seqFile) {
+    if (!is_file($seqFile)) {
+      return 0;
+    }
+    $raw = @file_get_contents($seqFile);
+    if (!is_string($raw) || $raw === '') {
+      return 0;
+    }
+    $data = json_decode($raw, true);
+    return is_array($data) ? intval($data['seq'] ?? 0) : 0;
+  }
+
+  public static function beginZoomFocusCoalesce($eqId, $op, $pos) {
+    $dir = jeedom::getTmpFolder('reolink');
+    if (!is_dir($dir)) {
+      @mkdir($dir, 0770, true);
+    }
+    $safeOp = preg_replace('/[^a-zA-Z0-9_]/', '', strval($op));
+    $base = $dir . '/zf_' . intval($eqId) . '_' . $safeOp;
+    $seqFile = $base . '.json';
+    $lockFile = $base . '.lock';
+
+    $seq = 1;
+    $seqFp = @fopen($seqFile, 'c+');
+    if ($seqFp) {
+      if (@flock($seqFp, LOCK_EX)) {
+        $raw = stream_get_contents($seqFp);
+        $cur = is_string($raw) && $raw !== '' ? json_decode($raw, true) : null;
+        $seq = (is_array($cur) ? intval($cur['seq'] ?? 0) : 0) + 1;
+        @ftruncate($seqFp, 0);
+        @rewind($seqFp);
+        @fwrite($seqFp, json_encode(array('seq' => $seq, 'pos' => intval($pos), 'ts' => microtime(true))));
+        @fflush($seqFp);
+        @flock($seqFp, LOCK_UN);
+      }
+      @fclose($seqFp);
+    }
+
+    $runFp = @fopen($lockFile, 'c+');
+    $locked = false;
+    if ($runFp) {
+      // Wait up to 2.5s (25 x 100ms), aborting early as soon as a newer target supersedes us
+      for ($i = 0; $i < 25; $i++) {
+        if (self::readZoomFocusSeqFile($seqFile) > $seq) {
+          @fclose($runFp);
+          return array('superseded' => true, 'seq' => $seq, 'seqFile' => $seqFile, 'fp' => null);
+        }
+        if (@flock($runFp, LOCK_EX | LOCK_NB)) {
+          $locked = true;
+          break;
+        }
+        usleep(100000);
+      }
+      if (!$locked) {
+        @fclose($runFp);
+        $runFp = null;
+        if (self::readZoomFocusSeqFile($seqFile) > $seq) {
+          return array('superseded' => true, 'seq' => $seq, 'seqFile' => $seqFile, 'fp' => null);
+        }
+      } elseif (self::readZoomFocusSeqFile($seqFile) > $seq) {
+        @flock($runFp, LOCK_UN);
+        @fclose($runFp);
+        return array('superseded' => true, 'seq' => $seq, 'seqFile' => $seqFile, 'fp' => null);
+      }
+    }
+
+    return array('superseded' => false, 'seq' => $seq, 'seqFile' => $seqFile, 'fp' => $runFp);
+  }
+
+  public static function isZoomFocusLatest($ctx) {
+    if (!is_array($ctx) || empty($ctx['seqFile']) || empty($ctx['seq'])) {
+      return true;
+    }
+    return self::readZoomFocusSeqFile($ctx['seqFile']) <= intval($ctx['seq']);
+  }
+
+  public static function endZoomFocusCoalesce(&$ctx) {
+    if (is_array($ctx) && !empty($ctx['fp']) && is_resource($ctx['fp'])) {
+      @flock($ctx['fp'], LOCK_UN);
+      @fclose($ctx['fp']);
+      $ctx['fp'] = null;
+    }
   }
 
   public static function resetConnectionCache($eqLogic) {
@@ -2605,7 +2700,7 @@ class reolink extends eqLogic {
     }
     $cnx = reolink::getReolinkConnection($id);
     if (!is_object($cnx) || !$cnx->is_loggedin) {
-      throw new Exception(__('Caméra injoignable ou connexion impossible', __FILE__));
+      reolink::throwConnectionException($cnx);
     }
     $channel = $camera->getChannel();
     $res = $cnx->SendCMD('[{"cmd":"GetPtzPreset","action":1,"param":{"channel":' . $channel . '}},{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
@@ -2647,7 +2742,7 @@ class reolink extends eqLogic {
     }
     $cnx = reolink::getReolinkConnection($id);
     if (!is_object($cnx) || !$cnx->is_loggedin) {
-      throw new Exception(__('Caméra injoignable ou connexion impossible', __FILE__));
+      reolink::throwConnectionException($cnx);
     }
     $channel = $camera->getChannel();
     $patrolId = intval($patrolId);
@@ -2733,7 +2828,7 @@ class reolink extends eqLogic {
     }
     $cnx = reolink::getReolinkConnection($id);
     if (!is_object($cnx) || !$cnx->is_loggedin) {
-      throw new Exception(__('Caméra injoignable ou connexion impossible', __FILE__));
+      reolink::throwConnectionException($cnx);
     }
     $channel = $camera->getChannel();
     $op = ($op === 'StopPatrol') ? 'StopPatrol' : 'StartPatrol';
@@ -4133,10 +4228,34 @@ class reolink extends eqLogic {
     if (intval($this->getIsEnable()) !== 1 && in_array(strval($this->getConfiguration('fwArchiveStatus', '')), array('update_available', 'up_to_date'), true)) {
       $this->setConfiguration('fwArchiveStatus', 'inactive');
     }
+    if ($this->getId()) {
+      $prevEq = self::byId($this->getId());
+      if (is_object($prevEq)) {
+        $prevSig = implode('|', array(
+          strval($prevEq->getConfiguration('cnxtype', '')),
+          strval($prevEq->getConfiguration('adresseip', '')),
+          strval($prevEq->getConfiguration('port', '')),
+          strval($prevEq->getConfiguration('login', '')),
+          strval($prevEq->getConfiguration('password', '')),
+        ));
+        $newSig = implode('|', array(
+          strval($this->getConfiguration('cnxtype', '')),
+          strval($this->getConfiguration('adresseip', '')),
+          strval($this->getConfiguration('port', '')),
+          strval($this->getConfiguration('login', '')),
+          strval($this->getConfiguration('password', '')),
+        ));
+        if ($prevSig !== $newSig) {
+          self::clearHostCooldown($prevEq);
+          self::clearHostCooldown($this);
+        }
+      }
+    }
     // Champs OK
   }
 
   public function postSave() {
+    self::resetConnectionCache($this);
     if (intval($this->getIsEnable()) !== 1) {
       $inactiveFwCmd = $this->getCmd(null, 'NewFirmwareState');
       if (is_object($inactiveFwCmd) && intval($inactiveFwCmd->execCmd()) !== 0) {
@@ -5565,7 +5684,7 @@ class reolinkCmd extends cmd {
       case 'GetPtzPreset':
         $camcnx = reolink::getReolinkConnection($EqId);
         if (!is_object($camcnx) || !$camcnx->is_loggedin) {
-          throw new Exception(__('Caméra injoignable ou connexion impossible', __FILE__));
+          reolink::throwConnectionException($camcnx);
         }
         $data = $camcnx->SendCMD('[{"cmd":"GetPtzPreset","action":1,"param":{"channel":' . $channel . '}}]');
         if (is_array($data) && isset($data[0])) {
@@ -5575,7 +5694,7 @@ class reolinkCmd extends cmd {
       case 'GetPtzPatrol':
         $camcnx = reolink::getReolinkConnection($EqId);
         if (!is_object($camcnx) || !$camcnx->is_loggedin) {
-          throw new Exception(__('Caméra injoignable ou connexion impossible', __FILE__));
+          reolink::throwConnectionException($camcnx);
         }
         $data = $camcnx->SendCMD('[{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . $channel . '}}]');
         if (is_array($data) && isset($data[0])) {
@@ -5740,14 +5859,14 @@ class reolinkCmd extends cmd {
       case 'UpgradeFirmware':
         $camcnx = reolink::getReolinkConnection($EqId);
         if (!is_object($camcnx) || !$camcnx->is_loggedin) {
-          throw new Exception(__('Caméra injoignable ou connexion impossible', __FILE__));
+          reolink::throwConnectionException($camcnx);
         }
         $camcnx->SendCMD('[{"cmd":"UpgradeOnline"}]');
         break;
       case 'SyncTime':
         $camcnx = reolink::getReolinkConnection($EqId);
         if (!is_object($camcnx) || !$camcnx->is_loggedin) {
-          throw new Exception(__('Caméra injoignable ou connexion impossible', __FILE__));
+          reolink::throwConnectionException($camcnx);
         }
         $tres = $camcnx->SendCMD('[{"cmd":"GetTime"}]');
         if (!is_array($tres) || !isset($tres[0]['value']) || !is_array($tres[0]['value'])) {
@@ -5772,10 +5891,6 @@ class reolinkCmd extends cmd {
         if ($actionAPI === 'Reboot' && is_object($eqLogic)) {
           reolink::clearHostCooldown($eqLogic);
         }
-        $camcnx = reolink::getReolinkConnection($EqId);
-        if (is_object($camcnx) && is_object($eqLogic) && $eqLogic->hasBattery()) {
-          $camcnx->batteryChannelMode = true;
-        }
         // Speed NFO
         $cmd = reolinkCmd::byEqLogicIdAndLogicalId($EqId, "SetSpeed");
         if (is_object($cmd)) {
@@ -5793,17 +5908,21 @@ class reolinkCmd extends cmd {
         $encSelectCmds = array('SetResolutionst1', 'SetResolutionst2', 'SetFPSst1', 'SetFPSst2', 'SetBitratest1', 'SetBitratest2', 'SetEncodingst1', 'SetEncodingst2');
         $isEncSelect = in_array($this->getLogicalId(), $encSelectCmds, true);
 
+        $camcnx = null;
         $effectiveVal = null;
         if ($subtype === 'select' || $needsSelect) {
           if (array_key_exists('select', $_options)) {
             $effectiveVal = $_options['select'];
           }
-          if ($isEncSelect && is_object($eqLogic) && is_object($camcnx) && strval($this->getConfiguration('listValue', '')) === '') {
-            reolink::applyEncListValues($eqLogic, $camcnx, $channel);
-            $this->setConfiguration('listValue', $this->getConfiguration('listValue'));
-            $refreshed = reolinkCmd::byEqLogicIdAndLogicalId($EqId, $this->getLogicalId());
-            if (is_object($refreshed)) {
-              $this->setConfiguration('listValue', $refreshed->getConfiguration('listValue'));
+          if ($isEncSelect && is_object($eqLogic) && strval($this->getConfiguration('listValue', '')) === '') {
+            $camcnx = reolink::getReolinkConnection($EqId);
+            if (is_object($camcnx)) {
+              reolink::applyEncListValues($eqLogic, $camcnx, $channel);
+              $this->setConfiguration('listValue', $this->getConfiguration('listValue'));
+              $refreshed = reolinkCmd::byEqLogicIdAndLogicalId($EqId, $this->getLogicalId());
+              if (is_object($refreshed)) {
+                $this->setConfiguration('listValue', $refreshed->getConfiguration('listValue'));
+              }
             }
           }
           if ($effectiveVal === null || $effectiveVal === '') {
@@ -5844,121 +5963,142 @@ class reolinkCmd extends cmd {
           }
         }
 
-        if ($actionAPI != NULL) {
-          if (!is_object($camcnx) || !$camcnx->is_loggedin) {
-            if (is_object($camcnx)) {
-              $camcnx->batteryChannelMode = false;
-            }
-            throw new Exception(__('Caméra injoignable ou connexion impossible', __FILE__) . ' (' . $actionAPI . ')');
+        $zfCtx = null;
+        if ($actionAPI === 'StartZoomFocus') {
+          $zfOp = (strpos($payloadTpl, 'FocusPos') !== false) ? 'FocusPos' : 'ZoomPos';
+          $zfCtx = reolink::beginZoomFocusCoalesce($EqId, $zfOp, intval($effectiveVal ?? 0));
+          if (!empty($zfCtx['superseded'])) {
+            log::add('reolink', 'debug', 'StartZoomFocus (' . $zfOp . '=' . intval($effectiveVal ?? 0) . ') ignoré car supplanté par une consigne plus récente');
+            return;
           }
-          if ($actionAPI === 'Reboot') {
-            $payload = '[{"cmd":"Reboot"}]';
-          } else {
-            $selectInt = ($effectiveVal !== null && ($subtype === 'select' || $needsSelect)) ? intval($effectiveVal) : 0;
-            $selectStr = ($effectiveVal !== null && ($subtype === 'select' || $needsSelect)) ? strval($effectiveVal) : '';
-            $sliderVal = ($effectiveVal !== null && ($subtype === 'slider' || $needsSlider)) ? intval($effectiveVal) : intval($_options['slider'] ?? 0);
-            $patchJson = $payloadTpl;
-            $patchJson = str_replace('#OPTSELECTEDINT#', $selectInt, $patchJson);
-            $patchJson = str_replace('#OPTSELECTEDSTR#', json_encode($selectStr), $patchJson);
-            $patchJson = str_replace('#OPTSLIDER#', $sliderVal, $patchJson);
-            $patchJson = str_replace('#OPTR_SLIDER#', abs($revert_value - $sliderVal), $patchJson);
-            $patchJson = str_replace('#CHANNEL#', $channel, $patchJson);
-            $patchJson = str_replace('#SPEED#', $speed, $patchJson);
-            $patch = json_decode($patchJson, true);
-            list($patch, $skipRmw) = reolink::normalizeStandaloneV20SwitchPatch($eqLogic, $actionAPI, $patch);
-            if ($skipRmw && is_array($patch)) {
-              $patchJson = json_encode($patch);
+        }
+
+        try {
+          if ($camcnx === null) {
+            $camcnx = reolink::getReolinkConnection($EqId);
+          }
+          if (is_object($camcnx) && is_object($eqLogic) && $eqLogic->hasBattery()) {
+            $camcnx->batteryChannelMode = true;
+          }
+
+          if ($actionAPI != NULL) {
+            if (!is_object($camcnx) || !$camcnx->is_loggedin) {
+              if (is_object($camcnx)) {
+                $camcnx->batteryChannelMode = false;
+              }
+              reolink::throwConnectionException($camcnx, $actionAPI);
             }
-            $rmwApis = array('SetRecV20', 'SetEnc', 'SetIsp', 'SetOsd', 'SetAiCfg', 'SetAlarm', 'SetNtp', 'SetWhiteLed', 'SetBuzzerAlarmV20', 'SetAiAlarm');
-            if (!$skipRmw && in_array($actionAPI, $rmwApis, true) && is_array($patch)) {
-              if ($actionAPI === 'SetEnc') {
-                foreach (array('mainStream', 'subStream') as $stream) {
-                  if (!empty($patch['Enc'][$stream]['size']) && strpos($patch['Enc'][$stream]['size'], '*') !== false) {
-                    list($w, $h) = explode('*', $patch['Enc'][$stream]['size'], 2);
-                    $patch['Enc'][$stream]['width'] = intval($w);
-                    $patch['Enc'][$stream]['height'] = intval($h);
+            if ($actionAPI === 'Reboot') {
+              $payload = '[{"cmd":"Reboot"}]';
+            } else {
+              $selectInt = ($effectiveVal !== null && ($subtype === 'select' || $needsSelect)) ? intval($effectiveVal) : 0;
+              $selectStr = ($effectiveVal !== null && ($subtype === 'select' || $needsSelect)) ? strval($effectiveVal) : '';
+              $sliderVal = ($effectiveVal !== null && ($subtype === 'slider' || $needsSlider)) ? intval($effectiveVal) : intval($_options['slider'] ?? 0);
+              $patchJson = $payloadTpl;
+              $patchJson = str_replace('#OPTSELECTEDINT#', $selectInt, $patchJson);
+              $patchJson = str_replace('#OPTSELECTEDSTR#', json_encode($selectStr), $patchJson);
+              $patchJson = str_replace('#OPTSLIDER#', $sliderVal, $patchJson);
+              $patchJson = str_replace('#OPTR_SLIDER#', abs($revert_value - $sliderVal), $patchJson);
+              $patchJson = str_replace('#CHANNEL#', $channel, $patchJson);
+              $patchJson = str_replace('#SPEED#', $speed, $patchJson);
+              $patch = json_decode($patchJson, true);
+              list($patch, $skipRmw) = reolink::normalizeStandaloneV20SwitchPatch($eqLogic, $actionAPI, $patch);
+              if ($skipRmw && is_array($patch)) {
+                $patchJson = json_encode($patch);
+              }
+              $rmwApis = array('SetRecV20', 'SetEnc', 'SetIsp', 'SetOsd', 'SetAiCfg', 'SetAlarm', 'SetNtp', 'SetWhiteLed', 'SetBuzzerAlarmV20', 'SetAiAlarm');
+              if (!$skipRmw && in_array($actionAPI, $rmwApis, true) && is_array($patch)) {
+                if ($actionAPI === 'SetEnc') {
+                  foreach (array('mainStream', 'subStream') as $stream) {
+                    if (!empty($patch['Enc'][$stream]['size']) && strpos($patch['Enc'][$stream]['size'], '*') !== false) {
+                      list($w, $h) = explode('*', $patch['Enc'][$stream]['size'], 2);
+                      $patch['Enc'][$stream]['width'] = intval($w);
+                      $patch['Enc'][$stream]['height'] = intval($h);
+                    }
                   }
                 }
-              }
-              $merged = reolink::buildRmwPayload($camcnx, $actionAPI, $channel, $patch);
-              if ($merged === null) {
-                throw new Exception(__('Echec lecture état courant pour Read-Modify-Write', __FILE__));
-              }
-              if ($actionAPI === 'SetEnc') {
-                $changedStream = null;
-                if (!empty($patch['Enc']['mainStream']['size'])) {
-                  $changedStream = 'mainStream';
-                } elseif (!empty($patch['Enc']['subStream']['size'])) {
-                  $changedStream = 'subStream';
+                $merged = reolink::buildRmwPayload($camcnx, $actionAPI, $channel, $patch);
+                if ($merged === null) {
+                  throw new Exception(__('Echec lecture état courant pour Read-Modify-Write', __FILE__));
                 }
-                if ($changedStream !== null) {
-                  $merged = reolink::clampEncToRange($camcnx, $channel, $merged, $changedStream);
+                if ($actionAPI === 'SetEnc') {
+                  $changedStream = null;
+                  if (!empty($patch['Enc']['mainStream']['size'])) {
+                    $changedStream = 'mainStream';
+                  } elseif (!empty($patch['Enc']['subStream']['size'])) {
+                    $changedStream = 'subStream';
+                  }
+                  if ($changedStream !== null) {
+                    $merged = reolink::clampEncToRange($camcnx, $channel, $merged, $changedStream);
+                  }
+                }
+                $payload = json_encode(array(array('cmd' => $actionAPI, 'action' => 0, 'param' => $merged)));
+              } elseif ($actionAPI === 'SetManualRec' && is_array($patch)) {
+                if (intval($patch['Rec']['enable'] ?? 0) === 1) {
+                  $patch['Rec']['duration'] = 600;
+                }
+                if (!isset($patch['Rec']['channel'])) {
+                  $patch['Rec']['channel'] = $channel;
+                }
+                $payload = json_encode(array(array('cmd' => $actionAPI, 'action' => 0, 'param' => $patch)));
+              } elseif ($actionAPI === 'SetMask' && is_array($patch)) {
+                $maskParam = reolink::buildSetMaskParam($camcnx, $channel, $patch);
+                $payload = json_encode(array(array('cmd' => $actionAPI, 'action' => 0, 'param' => $maskParam)));
+              } else {
+                $payload = '[{"cmd":"' . $actionAPI . '","action":0,"param":' . $patchJson . '}]';
+              }
+            }
+
+            log::add('reolink', 'debug', 'Payload avec paramètre utilisateur demandé = ' . $payload);
+
+            try {
+              $camresp = $camcnx->SendCMD($payload);
+            } finally {
+              if (is_object($camcnx)) {
+                $camcnx->batteryChannelMode = false;
+              }
+            }
+            $ok = is_array($camresp) && intval($camresp[0]['code'] ?? -1) === 0;
+            if ($ok && array_key_exists('rspCode', $camresp[0]['value'] ?? array())) {
+              $ok = intval($camresp[0]['value']['rspCode']) === 200;
+            }
+            if ($ok) {
+              log::add('reolink', 'debug', 'OK > Action réalisé avec succès sur la caméra');
+
+              if (!empty($linkedvalue) && $effectiveVal !== null && reolink::isZoomFocusLatest($zfCtx)) {
+                $camcmd = reolink::byId($EqId, 'reolink');
+                if (is_object($camcmd)) {
+                  $camcmd->checkAndUpdateCmd($linkedvalue, $effectiveVal);
+                  log::add('reolink', 'debug', 'Mise à jour de l\'info liée : ' . $linkedvalue . " Valeur=" . $effectiveVal);
                 }
               }
-              $payload = json_encode(array(array('cmd' => $actionAPI, 'action' => 0, 'param' => $merged)));
-            } elseif ($actionAPI === 'SetManualRec' && is_array($patch)) {
-              if (intval($patch['Rec']['enable'] ?? 0) === 1) {
-                $patch['Rec']['duration'] = 600;
+              if ($actionAPI === 'SetEnc' && is_object($eqLogic) && is_object($camcnx)) {
+                reolink::applyEncListValues($eqLogic, $camcnx, $channel);
               }
-              if (!isset($patch['Rec']['channel'])) {
-                $patch['Rec']['channel'] = $channel;
-              }
-              $payload = json_encode(array(array('cmd' => $actionAPI, 'action' => 0, 'param' => $patch)));
-            } elseif ($actionAPI === 'SetMask' && is_array($patch)) {
-              $maskParam = reolink::buildSetMaskParam($camcnx, $channel, $patch);
-              $payload = json_encode(array(array('cmd' => $actionAPI, 'action' => 0, 'param' => $maskParam)));
             } else {
-              $payload = '[{"cmd":"' . $actionAPI . '","action":0,"param":' . $patchJson . '}]';
-            }
-          }
-
-          log::add('reolink', 'debug', 'Payload avec paramètre utilisateur demandé = ' . $payload);
-
-          try {
-            $camresp = $camcnx->SendCMD($payload);
-          } finally {
-            if (is_object($camcnx)) {
-              $camcnx->batteryChannelMode = false;
-            }
-          }
-          $ok = is_array($camresp) && intval($camresp[0]['code'] ?? -1) === 0;
-          if ($ok && array_key_exists('rspCode', $camresp[0]['value'] ?? array())) {
-            $ok = intval($camresp[0]['value']['rspCode']) === 200;
-          }
-          if ($ok) {
-            log::add('reolink', 'debug', 'OK > Action réalisé avec succès sur la caméra');
-
-            if (!empty($linkedvalue) && $effectiveVal !== null) {
-              $camcmd = reolink::byId($EqId, 'reolink');
-              if (is_object($camcmd)) {
-                $camcmd->checkAndUpdateCmd($linkedvalue, $effectiveVal);
-                log::add('reolink', 'debug', 'Mise à jour de l\'info liée : ' . $linkedvalue . " Valeur=" . $effectiveVal);
+              $apiErr = is_object($camcnx) ? $camcnx->getLastApiError() : '';
+              $rspCode = intval($camcnx->lastResponseData[0]['error']['rspCode'] ?? 0);
+              if ($rspCode === -13) {
+                $ctx = ($actionAPI !== '' && $apiErr !== '')
+                  ? $actionAPI . ' — ' . $apiErr
+                  : ($apiErr !== '' ? $apiErr : $actionAPI);
+                throw new Exception(
+                  __('Réglage refusé par le firmware de la caméra / NVR', __FILE__)
+                  . ($ctx !== '' ? ' (' . $ctx . ')' : '')
+                );
               }
+              if ($apiErr !== '') {
+                throw new Exception(
+                  __('Échec d\'exécution de la commande', __FILE__)
+                  . ($actionAPI !== '' ? ' ' . $actionAPI : '')
+                  . ' : ' . $apiErr
+                );
+              }
+              throw new Exception(__('Echec d\'execution de la commande (consultez le log pour plus de détails)', __FILE__));
             }
-            if ($actionAPI === 'SetEnc' && is_object($eqLogic) && is_object($camcnx)) {
-              reolink::applyEncListValues($eqLogic, $camcnx, $channel);
-            }
-          } else {
-            $apiErr = is_object($camcnx) ? $camcnx->getLastApiError() : '';
-            $rspCode = intval($camcnx->lastResponseData[0]['error']['rspCode'] ?? 0);
-            if ($rspCode === -13) {
-              $ctx = ($actionAPI !== '' && $apiErr !== '')
-                ? $actionAPI . ' — ' . $apiErr
-                : ($apiErr !== '' ? $apiErr : $actionAPI);
-              throw new Exception(
-                __('Réglage refusé par le firmware de la caméra / NVR', __FILE__)
-                . ($ctx !== '' ? ' (' . $ctx . ')' : '')
-              );
-            }
-            if ($apiErr !== '') {
-              throw new Exception(
-                __('Échec d\'exécution de la commande', __FILE__)
-                . ($actionAPI !== '' ? ' ' . $actionAPI : '')
-                . ' : ' . $apiErr
-              );
-            }
-            throw new Exception(__('Echec d\'execution de la commande (consultez le log pour plus de détails)', __FILE__));
           }
+        } finally {
+          reolink::endZoomFocusCoalesce($zfCtx);
         }
     }
   }
