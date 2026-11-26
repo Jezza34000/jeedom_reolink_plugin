@@ -1241,6 +1241,7 @@
 			},
 			"IsHistorized": 0,
 			"isVisible": 1,
+			"generic_type": "CAMERA_PRESET",
 			"logicalId": "SetPtzByPreset",
 			"scope": "channel",
 			"category": "ptz"
@@ -4163,6 +4164,24 @@
 				"valuesHelp": "0 = Réactiver, 15..240 = Durée en minutes"
 			},
 			"category": "light_audio"
+		},
+		{
+			"abilityneed": "none",
+			"name": "Envoyer une capture",
+			"type": "action",
+			"subtype": "message",
+			"IsHistorized": 0,
+			"isVisible": 0,
+			"generic_type": "CAMERA_TAKE",
+			"logicalId": "SendSnapshot",
+			"scope": "channel",
+			"configuration": {
+				"snapQuality": "main",
+				"targetMsgCmd": "",
+				"help": "Capture un cliché JPEG instantané de la caméra et l'envoie vers une commande de notification Jeedom (Telegram, Mail, Discord, JeedomConnect…) sans nécessiter le plugin Caméra.",
+				"valuesHelp": "Titre (scénario) : titre du message (ou #[Objet][Équipement][Commande]# pour cibler dynamiquement une autre commande de notification) | Message : texte accompagnant la photo"
+			},
+			"category": "notif_rec"
 		}
 	]
 }

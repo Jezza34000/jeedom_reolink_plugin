@@ -630,6 +630,161 @@ class reolink extends eqLogic {
     return $withBackchannelParam ? ($url . '#backchannel=1') : $url;
   }
 
+  public function getOrCreateLiveToken() {
+    $tok = trim(strval($this->getConfiguration('live_token', '')));
+    if (!preg_match('/^[A-Za-z0-9_-]{24,80}$/', $tok)) {
+      $tok = bin2hex(random_bytes(20));
+      $this->setConfiguration('live_token', $tok);
+      if ($this->getId() > 0) {
+        $this->save(true);
+      }
+    }
+    return $tok;
+  }
+
+  public function regenerateLiveToken() {
+    $tok = bin2hex(random_bytes(20));
+    $this->setConfiguration('live_token', $tok);
+    if ($this->getId() > 0) {
+      $this->save(true);
+    }
+    return $tok;
+  }
+
+  public function getWebViewLiveUrl($preferExternal = true) {
+    $base = '';
+    if ($preferExternal) {
+      $base = rtrim(trim(strval(network::getNetworkAccess('external'))), '/');
+    }
+    if ($base === '' || strpos($base, 'http') !== 0) {
+      $base = rtrim(trim(strval(network::getNetworkAccess('internal'))), '/');
+    }
+    $tok = $this->getOrCreateLiveToken();
+    return $base . '/plugins/reolink/core/php/live.php?id=' . intval($this->getId()) . '&token=' . rawurlencode($tok);
+  }
+
+  public static function isAuthorizedForLive($eqLogic, $token = '') {
+    if (function_exists('isConnect') && isConnect()) {
+      return true;
+    }
+    if (!is_object($eqLogic) || $eqLogic->isNvrParent()) {
+      return false;
+    }
+    $tok = trim(strval($token));
+    if ($tok === '') {
+      return false;
+    }
+    return hash_equals($eqLogic->getOrCreateLiveToken(), $tok);
+  }
+
+  private static function parseCmdSelectList($cmd) {
+    $out = array();
+    if (!is_object($cmd)) {
+      return $out;
+    }
+    $raw = trim(strval($cmd->getConfiguration('listValue', '')));
+    if ($raw === '') {
+      return $out;
+    }
+    foreach (explode(';', $raw) as $pair) {
+      $bits = explode('|', $pair, 2);
+      $id = trim($bits[0] ?? '');
+      $lbl = trim($bits[1] ?? $id);
+      if ($id === '' || strpos($lbl, '(Cliquez sur') !== false) {
+        continue;
+      }
+      $out[] = array('id' => $id, 'label' => $lbl);
+    }
+    return $out;
+  }
+
+  public function buildLiveControlsMeta() {
+    $cnxType = strtolower(trim(strval($this->getConfiguration('cnxtype', ''))));
+    $availableStreams = $this->getAvailableStreams();
+    $streamsJs = array();
+    foreach ($availableStreams as $sKey => $sMeta) {
+      $streamsJs[$sKey] = array(
+        'key' => $sKey,
+        'label' => $sMeta['label'],
+        'type' => $sMeta['type'],
+      );
+    }
+    $hasTalk = (intval($this->getConfiguration('hasAudioTalk', 0)) === 1) && ($cnxType !== 'baichuan');
+
+    $cmdPtz = $this->getCmd(null, 'SetPTZmoove');
+    $ptzDirs = array();
+    if (is_object($cmdPtz)) {
+      $rawPtz = strval($cmdPtz->getConfiguration('listValue', ''));
+      if ($rawPtz === '') {
+        $ptzDirs = array('Up' => true, 'Left' => true, 'Right' => true, 'Down' => true);
+      } else {
+        foreach (explode(';', $rawPtz) as $pair) {
+          $bits = explode('|', $pair, 2);
+          $dk = trim($bits[0]);
+          if ($dk !== '' && $dk !== 'Stop') {
+            $ptzDirs[$dk] = true;
+          }
+        }
+      }
+    }
+
+    $cmdZoom = $this->getCmd(null, 'SetZoom');
+    $cmdZoomState = $this->getCmd(null, 'SetZoomState');
+    $cmdFocus = $this->getCmd(null, 'SetFocus');
+    $cmdFocusState = $this->getCmd(null, 'SetFocusState');
+    $cmdPreset = $this->getCmd(null, 'SetPtzByPreset');
+    $cmdPatrolStart = $this->getCmd(null, 'StartPtzPatrol');
+    $cmdPatrolStop = $this->getCmd(null, 'StopPtzPatrol');
+    $cmdQuickReply = $this->getCmd(null, 'QuickReplyPlay');
+    $cmdWhite = $this->getCmd(null, 'SetWhitLed');
+    $cmdWhiteState = $this->getCmd(null, 'SetWhitLedState');
+    $cmdSiren = $this->getCmd(null, 'AudioAlarmPlayTimes');
+    if (!is_object($cmdSiren)) {
+      $cmdSiren = $this->getCmd(null, 'SetAudioAlarm');
+    }
+
+    return array(
+      'cnxType' => $cnxType,
+      'hasTalk' => $hasTalk,
+      'isBattery' => $this->hasBattery(),
+      'streams' => $streamsJs,
+      'controls' => array(
+        'ptz' => is_object($cmdPtz) ? array('cmdId' => strval($cmdPtz->getId()), 'dirs' => $ptzDirs) : null,
+        'zoom' => is_object($cmdZoom) ? array(
+          'cmdId' => strval($cmdZoom->getId()),
+          'cur' => is_object($cmdZoomState) ? intval($cmdZoomState->execCmd()) : 0,
+          'min' => intval($cmdZoom->getConfiguration('minValue', 0)),
+          'max' => max(1, intval($cmdZoom->getConfiguration('maxValue', 32))),
+        ) : null,
+        'focus' => is_object($cmdFocus) ? array(
+          'cmdId' => strval($cmdFocus->getId()),
+          'cur' => is_object($cmdFocusState) ? intval($cmdFocusState->execCmd()) : 0,
+          'min' => intval($cmdFocus->getConfiguration('minValue', 0)),
+          'max' => max(1, intval($cmdFocus->getConfiguration('maxValue', 255))),
+        ) : null,
+        'presets' => is_object($cmdPreset) ? array(
+          'cmdId' => strval($cmdPreset->getId()),
+          'list' => self::parseCmdSelectList($cmdPreset),
+          'canSave' => true,
+        ) : null,
+        'patrols' => (is_object($cmdPatrolStart) || is_object($cmdPatrolStop)) ? array(
+          'startCmdId' => is_object($cmdPatrolStart) ? strval($cmdPatrolStart->getId()) : '',
+          'stopCmdId' => is_object($cmdPatrolStop) ? strval($cmdPatrolStop->getId()) : '',
+          'list' => self::parseCmdSelectList($cmdPatrolStart),
+        ) : null,
+        'quickReplies' => is_object($cmdQuickReply) ? array(
+          'cmdId' => strval($cmdQuickReply->getId()),
+          'list' => self::parseCmdSelectList($cmdQuickReply),
+        ) : null,
+        'whiteLed' => is_object($cmdWhite) ? array(
+          'cmdId' => strval($cmdWhite->getId()),
+          'state' => is_object($cmdWhiteState) ? (intval($cmdWhiteState->execCmd()) === 1) : false,
+        ) : null,
+        'siren' => is_object($cmdSiren) ? array('cmdId' => strval($cmdSiren->getId())) : null,
+      ),
+    );
+  }
+
   public function buildFlvStreamUrl($streamSuffix) {
     $cnxType = strtolower(trim(strval($this->getConfiguration('cnxtype', ''))));
     if ($cnxType === 'baichuan') {
@@ -1115,7 +1270,7 @@ class reolink extends eqLogic {
     return reolink::captureSnapshotSafe($reolinkEq, 'sub');
   }
 
-  public static function captureSnapshotSafe($reolinkEq, $quality = 'sub') {
+  public static function captureSnapshotSafe($reolinkEq, $quality = 'sub', $noWake = false) {
     if (!self::isPluginActiveFast() || !is_object($reolinkEq) || intval($reolinkEq->getIsEnable()) !== 1 || $reolinkEq->isNvrParent()) {
       return '';
     }
@@ -1124,7 +1279,7 @@ class reolink extends eqLogic {
     }
     $quality = ($quality === 'main') ? 'main' : 'sub';
     $snapCacheKey = 'reolink::last_snap::' . $reolinkEq->getId() . '::' . $quality;
-    if ($reolinkEq->hasBattery() && $reolinkEq->isBatterySleeping()) {
+    if ($reolinkEq->hasBattery() && ($noWake || $reolinkEq->isBatterySleeping())) {
       $cachedB64 = strval(cache::byKey($snapCacheKey)->getValue(''));
       if ($cachedB64 !== '') {
         $decoded = base64_decode($cachedB64, true);
@@ -1145,10 +1300,65 @@ class reolink extends eqLogic {
     if ($jpeg === false || $jpeg === '') {
       return '';
     }
-    if ($reolinkEq->hasBattery()) {
+    if ($reolinkEq->hasBattery() || $quality === 'sub') {
       cache::set($snapCacheKey, base64_encode($jpeg));
     }
     return $jpeg;
+  }
+
+  public static function sendSnapshotNotification($id, $cmdObj, $_options = array()) {
+    $eqLogic = reolink::byId($id, 'reolink');
+    if (!is_object($eqLogic) || $eqLogic->isNvrParent()) {
+      throw new Exception(__('Équipement caméra invalide pour SendSnapshot', __FILE__));
+    }
+    $rawTitle = trim(strval($_options['title'] ?? ''));
+    $rawMessage = strval($_options['message'] ?? '');
+    $targetSpec = '';
+    $msgTitle = $rawTitle;
+    if ($rawTitle !== '' && preg_match('/^#[^#]+#$/', $rawTitle)) {
+      $targetSpec = $rawTitle;
+      $msgTitle = $eqLogic->getName();
+    } else {
+      $targetSpec = trim(strval(is_object($cmdObj) ? $cmdObj->getConfiguration('targetMsgCmd', '') : ''));
+      if ($msgTitle === '') {
+        $msgTitle = $eqLogic->getName();
+      }
+    }
+    if ($targetSpec === '') {
+      throw new Exception(__('Veuillez configurer la commande de notification cible (ex: #[Maison][Telegram][Envoyer]#) sur la commande Envoyer une capture, ou la passer dans le champ Titre du scénario.', __FILE__));
+    }
+    $targetCmd = (strpos($targetSpec, '#') !== false)
+      ? cmd::byString($targetSpec)
+      : cmd::byId(intval($targetSpec));
+    if (!is_object($targetCmd)) {
+      throw new Exception(__('Commande de notification introuvable : ', __FILE__) . $targetSpec);
+    }
+    $snapQuality = is_object($cmdObj) && strval($cmdObj->getConfiguration('snapQuality', 'main')) === 'sub' ? 'sub' : 'main';
+    $jpeg = self::captureSnapshotSafe($eqLogic, $snapQuality);
+    if ($jpeg === '' && $snapQuality === 'main') {
+      $jpeg = self::captureSnapshotSafe($eqLogic, 'sub');
+    }
+    if ($jpeg === '') {
+      throw new Exception(__('Impossible de capturer un cliché sur la caméra ', __FILE__) . $eqLogic->getName());
+    }
+    $tmpDir = jeedom::getTmpFolder('reolink');
+    if (!is_dir($tmpDir)) {
+      @mkdir($tmpDir, 0770, true);
+    }
+    $tmpFile = rtrim($tmpDir, '/') . '/snap_' . intval($eqLogic->getId()) . '_' . uniqid('', true) . '.jpg';
+    if (@file_put_contents($tmpFile, $jpeg) === false) {
+      throw new Exception(__('Impossible d\'écrire le cliché temporaire', __FILE__));
+    }
+    @chmod($tmpFile, 0640);
+    try {
+      $targetCmd->execCmd(array(
+        'title' => $msgTitle,
+        'message' => $rawMessage,
+        'files' => array($tmpFile),
+      ));
+    } finally {
+      @unlink($tmpFile);
+    }
   }
 
   public static function extractPopulatedNvrChannels($statusList) {
@@ -2183,6 +2393,44 @@ class reolink extends eqLogic {
     } else {
       return false;
     }
+  }
+
+  public static function savePtzPreset($id, $presetId, $name, $enable = 1) {
+    $camera = reolink::byId($id, 'reolink');
+    if (!is_object($camera) || $camera->isNvrParent()) {
+      throw new Exception(__('Équipement caméra invalide', __FILE__));
+    }
+    $camcnx = reolink::getReolinkConnection($id);
+    if (!is_object($camcnx) || !$camcnx->is_loggedin) {
+      throw new Exception(__('Caméra injoignable ou connexion impossible', __FILE__));
+    }
+    $ch = $camera->getChannel();
+    $pid = max(0, min(63, intval($presetId)));
+    $cleanName = substr(trim(strval($name)), 0, 31);
+    if ($cleanName === '') {
+      $cleanName = 'Preset ' . $pid;
+    }
+    $en = intval($enable) ? 1 : 0;
+    $payload = json_encode(array(array(
+      'cmd' => 'SetPtzPreset',
+      'action' => 0,
+      'param' => array('PtzPreset' => array(
+        'channel' => $ch,
+        'enable' => $en,
+        'id' => $pid,
+        'name' => $cleanName,
+      )),
+    )));
+    $resp = $camcnx->SendCMD($payload);
+    if (!is_array($resp) || intval($resp[0]['code'] ?? -1) !== 0) {
+      throw new Exception(__('Échec d\'enregistrement du preset PTZ', __FILE__));
+    }
+    $data = $camcnx->SendCMD('[{"cmd":"GetPtzPreset","action":1,"param":{"channel":' . $ch . '}}]');
+    if (is_array($data) && isset($data[0])) {
+      self::updatePTZpreset($id, $data[0]);
+    }
+    $camera = reolink::byId($id, 'reolink');
+    return self::parseCmdSelectList(is_object($camera) ? $camera->getCmd(null, 'SetPtzByPreset') : null);
   }
 
   public static function updatePTZpatrol($id, $data) {
@@ -3867,6 +4115,81 @@ class reolink extends eqLogic {
       }
     }
     self::syncBaichuanDaemonSubscriptions(false);
+    $this->emptyCacheWidget();
+    $this->refreshWidget();
+  }
+
+  public function postToHtml($_version, $_html) {
+    if ($_html === '' || $this->isNvrParent() || intval($this->getIsEnable()) !== 1) {
+      return $_html;
+    }
+    $mode = trim(strval($this->getConfiguration('dashboard_mode', 'commands')));
+    if ($mode !== 'snapshot_live' && $mode !== 'live_auto') {
+      return $_html;
+    }
+    if ($this->hasBattery() && $mode === 'live_auto') {
+      $mode = 'snapshot_live';
+    }
+    $meta = $this->buildLiveControlsMeta();
+    if (empty($meta['streams'])) {
+      return $_html;
+    }
+    $refreshSec = max(5, min(3600, intval($this->getConfiguration('dashboard_snap_interval', 15)) ?: 15));
+    $firstStreamKey = array_key_first($meta['streams']);
+    $domUid = 'rlkDash_' . intval($this->getId()) . '_' . substr(md5(uniqid('', true)), 0, 6);
+    $safeTitle = htmlspecialchars($this->getName(), ENT_QUOTES, 'UTF-8');
+
+    $optsHtml = '';
+    foreach ($meta['streams'] as $sKey => $sMeta) {
+      $sel = ($sKey === $firstStreamKey) ? ' selected' : '';
+      $optsHtml .= '<option value="' . htmlspecialchars($sKey, ENT_QUOTES, 'UTF-8') . '"' . $sel . '>'
+        . htmlspecialchars($sMeta['label'], ENT_QUOTES, 'UTF-8') . '</option>';
+    }
+
+    $mediaHtml = '<div id="' . $domUid . '" class="reolinkDashMedia" style="position:relative;margin:4px 6px 6px 6px;background:#000;border-radius:4px;overflow:hidden;">'
+      . '<div style="position:relative;width:100%;min-height:140px;display:flex;align-items:center;justify-content:center;background:#000;">'
+      . '<video class="rlkVideo" autoplay muted playsinline controls style="width:100%;max-height:240px;background:#000;' . ($mode === 'snapshot_live' || $firstStreamKey === 'jpeg' ? 'display:none;' : '') . '"></video>'
+      . '<img class="rlkJpeg" alt="' . $safeTitle . '" style="width:100%;max-height:240px;object-fit:contain;background:#000;' . ($mode === 'snapshot_live' || $firstStreamKey === 'jpeg' ? '' : 'display:none;') . '" />'
+      . '<a href="#" class="rlkPlayOverlay" title="' . htmlspecialchars(__('Démarrer le direct', __FILE__), ENT_QUOTES, 'UTF-8') . '" style="position:absolute;inset:0;display:' . ($mode === 'snapshot_live' ? 'flex' : 'none') . ';align-items:center;justify-content:center;background:rgba(0,0,0,0.28);color:#fff;font-size:38px;text-decoration:none;"><i class="fas fa-play-circle"></i></a>'
+      . '</div>'
+      . '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;padding:3px 6px;background:rgba(0,0,0,0.75);font-size:11px;flex-wrap:wrap;">'
+      . '<select class="rlkQualitySel form-control input-xs" style="width:auto;height:22px;padding:1px 4px;font-size:11px;">' . $optsHtml . '</select>'
+      . '<div style="display:flex;align-items:center;gap:3px;">'
+      . ($meta['cnxType'] !== 'baichuan' ? '<a class="btn btn-default btn-xs rlkWebRtcBtn" title="WebRTC">RTC</a>' : '')
+      . ($meta['hasTalk'] ? '<a class="btn btn-default btn-xs rlkTalkBtn" title="' . htmlspecialchars(__('Parler', __FILE__), ENT_QUOTES, 'UTF-8') . '"><i class="fas fa-microphone-slash"></i></a>' : '')
+      . '<a class="btn btn-default btn-xs rlkSnapBtn" title="' . htmlspecialchars(__('Capture', __FILE__), ENT_QUOTES, 'UTF-8') . '"><i class="fas fa-camera"></i></a>'
+      . '<a class="btn btn-warning btn-xs rlkStopBtn" style="display:none;" title="' . htmlspecialchars(__('Arrêter le direct', __FILE__), ENT_QUOTES, 'UTF-8') . '"><i class="fas fa-stop"></i></a>'
+      . '<a class="btn btn-default btn-xs rlkOpenModalBtn" data-title="' . $safeTitle . '" title="' . htmlspecialchars(__('Ouvrir en grand avec contrôles PTZ / Audio', __FILE__), ENT_QUOTES, 'UTF-8') . '"><i class="fas fa-expand"></i></a>'
+      . '</div>'
+      . '</div>'
+      . '<div class="rlkErr alert alert-warning" style="display:none;margin:2px;padding:2px 6px;font-size:11px;"></div>'
+      . '</div>'
+      . '<script>(function(){'
+      . 'var cfg=' . json_encode(array(
+        'root' => '#' . $domUid,
+        'eqId' => strval($this->getId()),
+        'streams' => $meta['streams'],
+        'initialQuality' => $firstStreamKey,
+        'mode' => $mode,
+        'refreshSec' => $refreshSec,
+        'isBattery' => $meta['isBattery'],
+        'controls' => $meta['controls'],
+      )) . ';'
+      . 'function boot(){if(window.ReolinkLivePlayer){new window.ReolinkLivePlayer(cfg);}}'
+      . 'if(window.ReolinkLivePlayer){boot();}else{'
+      . 'var s=document.getElementById("reolinkPlayerJsTag");'
+      . 'if(!s){s=document.createElement("script");s.id="reolinkPlayerJsTag";s.src="plugins/reolink/desktop/js/reolink.player.js";document.head.appendChild(s);}'
+      . 's.addEventListener("load",boot);'
+      . '}'
+      . '})();</script>';
+
+    if (strpos($_html, '<div class="cmds') !== false) {
+      return preg_replace('/<div class="cmds\b/', $mediaHtml . '<div class="cmds', $_html, 1);
+    }
+    if (strpos($_html, '<div style="padding: 5px;">') !== false) {
+      return str_replace('<div style="padding: 5px;">', $mediaHtml . '<div style="padding: 5px;">', $_html);
+    }
+    return $_html;
   }
 
   public function postRemove() {
@@ -4666,6 +4989,11 @@ class reolink extends eqLogic {
           $cmd->setUnite($expectedUnite);
           $dirty = true;
         }
+        $expectedGeneric = strval($command['generic_type'] ?? '');
+        if ($expectedGeneric !== '' && strval($cmd->getGeneric_type()) === '') {
+          $cmd->setGeneric_type($expectedGeneric);
+          $dirty = true;
+        }
         if ($valueFrom !== '' && strval($cmd->getValue()) === '') {
           $cmdlogic = reolinkCmd::byEqLogicIdAndLogicalId($camera->getId(), $valueFrom);
           if (is_object($cmdlogic)) {
@@ -5268,6 +5596,9 @@ class reolinkCmd extends cmd {
         break;
       case 'SetChimeSilent':
         reolink::execChimeAction($EqId, 'silent', intval($_options['select'] ?? 0));
+        break;
+      case 'SendSnapshot':
+        reolink::sendSnapshotNotification($EqId, $this, $_options);
         break;
       case 'StartPtzPatrol':
         reolink::runPatrol($EqId, 'StartPatrol', $_options['select'] ?? null);

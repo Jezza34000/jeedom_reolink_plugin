@@ -415,6 +415,9 @@ class reolinkBaichuanAdapter {
       case 'GetPtzPreset':
         return $this->handleGetPtzPreset($ch);
 
+      case 'SetPtzPreset':
+        return $this->handleSetPtzPreset($ch, $param);
+
       case 'GetPtzPatrol':
         return $this->handleGetPtzPatrol($ch);
 
@@ -1507,6 +1510,29 @@ class reolinkBaichuanAdapter {
       }
     }
     return self::ok('GetPtzPreset', array('PtzPreset' => $presets));
+  }
+
+  private function handleSetPtzPreset($ch, $param) {
+    $p = isset($param['PtzPreset']) && is_array($param['PtzPreset']) ? $param['PtzPreset'] : $param;
+    $pid = max(0, min(63, intval($p['id'] ?? 0)));
+    $enable = intval($p['enable'] ?? 1) ? 1 : 0;
+    $name = trim(strval($p['name'] ?? ('Preset ' . $pid)));
+    $cmdOp = $enable ? 'setPos' : 'delPos';
+    $body = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+      . '<body>' . "\n"
+      . '<PtzPreset version="1.1">' . "\n"
+      . '<channelId>' . $ch . '</channelId>' . "\n"
+      . '<presetList>' . "\n"
+      . '<preset>' . "\n"
+      . '<id>' . $pid . '</id>' . "\n"
+      . ($enable ? ('<name>' . htmlspecialchars($name, ENT_XML1) . '</name>' . "\n") : '')
+      . '<command>' . $cmdOp . '</command>' . "\n"
+      . '</preset>' . "\n"
+      . '</presetList>' . "\n"
+      . '</PtzPreset>' . "\n"
+      . '</body>';
+    $this->bc->requestXml(19, $ch, $body);
+    return self::okWrite('SetPtzPreset');
   }
 
   private function handleGetPtzPatrol($ch) {

@@ -588,14 +588,27 @@
         "On = Activer, Off = Désactiver": "On = Activer, Off = Désactiver",
         "Other = Autre, 50HZ = 50Hz, 60HZ = 60Hz, Off = Désactiver": "Other = Otro, 50HZ = 50Hz, 60HZ = 60Hz, Off = Desactivar",
         "REQUISE = Calibration nécessaire, EN COURS = Calibration en cours, TERMINEE = Calibration terminée": "REQUISE = Calibración necesaria, EN COURS = Calibración en curso, TERMINEE = Calibración terminada",
-        "Stop = Stop, Left = Gauche, Right = Droite, Up = Haut, Down = Bas": "Stop = Stop, Left = Izquierda, Right = Derecha, Up = Arriba, Down = Abajo",
         "Texte libre (lecture seule)": "Texto libre (solo lectura)",
         "Texte libre : détail brut du dernier message ONVIF": "Texto libre: detalle bruto del último mensaje ONVIF",
         "Texte libre : nom du dernier événement ONVIF reçu": "Texto libre: nombre del último evento ONVIF recibido",
         "Upper Left = Haut-Gauche, Top Center = Haut-Milieu, Upper Right = Haut-Droit, Lower Left = Bas-Gauche, Bottom Center = Bas-Milieu, Lower Right = Bas-Droite": "Upper Left = Haut-Gauche, Top Center = Haut-Milieu, Upper Right = Haut-Droit, Lower Left = Bas-Gauche, Bottom Center = Bas-Milieu, Lower Right = Bas-Droite",
         "Utilisation CPU en % (lecture seule)": "Uso de CPU en % (solo lectura)",
         "Valeur numérique (lecture seule)": "Valor numérico (solo lectura)",
-        "Valeur numérique (s) (lecture seule)": "Valor numérico (s) (solo lectura)"
+        "Valeur numérique (s) (lecture seule)": "Valor numérico (s) (solo lectura)",
+        "Envoyer une capture": "Enviar una captura",
+        "Capture un cliché JPEG instantané de la caméra et l'envoie vers une commande de notification Jeedom (Telegram, Mail, Discord, JeedomConnect…) sans nécessiter le plugin Caméra.": "Captura una imagen JPEG instantánea de la cámara y la envía a un comando de notificación de Jeedom (Telegram, Correo, Discord, JeedomConnect…) sin requerir el plugin Cámara.",
+        "Titre (scénario) : titre du message (ou #[Objet][Équipement][Commande]# pour cibler dynamiquement une autre commande de notification) | Message : texte accompagnant la photo": "Título (escenario): título del mensaje (o #[Objeto][Equipo][Comando]# para dirigir dinámicamente a otro comando de notificación) | Mensaje: texto adjunto a la foto",
+        "Équipement caméra invalide pour SendSnapshot": "Equipo de cámara no válido para SendSnapshot",
+        "Veuillez configurer la commande de notification cible (ex: #[Maison][Telegram][Envoyer]#) sur la commande Envoyer une capture, ou la passer dans le champ Titre du scénario.": "Configure el comando de notificación de destino (ej: #[Casa][Telegram][Enviar]#) en el comando Enviar una captura, o páselo en el campo Título del escenario.",
+        "Commande de notification introuvable : ": "Comando de notificación no encontrado: ",
+        "Impossible de capturer un cliché sur la caméra ": "No se pudo capturar una imagen en la cámara ",
+        "Impossible d'écrire le cliché temporaire": "No se pudo escribir la captura temporal",
+        "Échec d'enregistrement du preset PTZ": "Error al guardar el preset PTZ",
+        "Démarrer le direct": "Iniciar directo",
+        "Parler": "Hablar",
+        "Capture": "Captura",
+        "Arrêter le direct": "Detener directo",
+        "Ouvrir en grand avec contrôles PTZ / Audio": "Abrir vista completa con controles PTZ / Audio"
     },
     "plugins/reolink/desktop/js/reolink.js": {
         "Assistant cron": "Asistente cron",
@@ -647,7 +660,14 @@
         "Réinitialiser la case « Afficher » de toutes les commandes de cet équipement selon la sélection par défaut (commandes courantes) ? Les autres réglages (noms, icônes, historisation, inversions) seront conservés.": "¿Restablecer la casilla «Mostrar» de todos los comandos de este equipo según la selección por defecto (comandos habituales)? Los demás ajustes (nombres, iconos, historial, inversión) se conservarán.",
         "Équipement inactif : version locale non actualisée": "Equipo inactivo: versión local no actualizada",
         "Inactif — données non actualisées": "Inactivo — datos no actualizados",
-        "Équipement inactif — données non actualisées": "Equipo inactivo — datos no actualizados"
+        "Équipement inactif — données non actualisées": "Equipo inactivo — datos no actualizados",
+        "URL WebView copiée": "URL WebView copiada",
+        "URL RTSP Talk copiée": "URL RTSP Talk copiada",
+        "Nouveau jeton WebView généré": "Nuevo token WebView generado",
+        "#[Objet][Notif][Envoyer]#": "#[Objeto][Notif][Enviar]#",
+        "Choisir une commande de notification": "Seleccionar un comando de notificación",
+        "Qualité High (main)": "Calidad High (main)",
+        "Qualité Low (sub)": "Calidad Low (sub)"
     },
     "plugins/reolink/desktop/php/reolink.php": {
         "Retour": "Volver",
@@ -693,7 +713,21 @@
         "Aucune aide disponible pour cette commande": "No hay ayuda disponible para este comando",
         "Équipement visible": "Equipo visible",
         "Équipement non visible": "Equipo no visible",
-        "Numéro de canal si la caméra est derrière un NVR (0 = premier canal). Laissez vide pour un NVR parent ou une caméra autonome.": "Número de canal si la cámara está detrás de un NVR (0 = primer canal). Déjelo vacío para un NVR padre o una cámara autónoma."
+        "Numéro de canal si la caméra est derrière un NVR (0 = premier canal). Laissez vide pour un NVR parent ou une caméra autonome.": "Número de canal si la cámara está detrás de un NVR (0 = primer canal). Déjelo vacío para un NVR padre o una cámara autónoma.",
+        "Tuile Dashboard / Design": "Mosaico Dashboard / Diseño",
+        "Mode d'affichage de la tuile Reolink sur le Dashboard, les Designs et le Mobile. Choisissez Commandes seules si vous affichez déjà le flux via le plugin Caméra.": "Modo de visualización del mosaico Reolink en Dashboard, Diseños y Móvil. Elija Solo comandos si ya muestra el flujo mediante el plugin Cámara.",
+        "Commandes seules (défaut / usage avec plugin Caméra)": "Solo comandos (por defecto / uso con plugin Cámara)",
+        "Vignette périodique + Live / Interphone au clic": "Miniatura periódica + Directo / Interfono al hacer clic",
+        "Live direct automatique (caméras secteur uniquement)": "Directo automático (solo cámaras con alimentación continua)",
+        "Rafraîchissement vignette (s)": "Actualización miniatura (s)",
+        "Intervalle de rafraîchissement du cliché sur le Dashboard (5 s min, sans réveiller les caméras sur batterie).": "Intervalo de actualización de la captura en el Dashboard (mín. 5 s, sin despertar cámaras con batería).",
+        "WebView Live + Micro": "WebView Directo + Micro",
+        "URL autonome avec jeton révocable pour afficher le Live et l'interphone WebRTC dans un widget WebView JeedomConnect (nécessite HTTPS pour le microphone).": "URL autónoma con token revocable para mostrar el directo y el interfono WebRTC en un widget WebView de JeedomConnect (requiere HTTPS para el micrófono).",
+        "Copier l'URL": "Copiar URL",
+        "Ouvrir dans un nouvel onglet": "Abrir en nueva pestaña",
+        "Régénérer le jeton d'accès": "Regenerar token de acceso",
+        "RTSP Talk local": "RTSP Talk local",
+        "URL RTSP backchannel locale (127.0.0.1) exposant l'audio bidirectionnel Baichuan universel à go2rtc / JeedomConnect.": "URL RTSP backchannel local (127.0.0.1) que expone el audio bidireccional Baichuan universal a go2rtc / JeedomConnect."
     },
     "plugins/reolink/desktop/modal/health.php": {
         "401 - Accès non autorisé": "401 - Acceso no autorizado",
@@ -786,6 +820,25 @@
         "WebRTC indisponible, bascule fMP4": "WebRTC no disponible, cambiando a fMP4",
         "WebRTC timeout, bascule fMP4": "Tiempo de espera WebRTC agotado, cambiando a fMP4",
         "Lecture impossible (codec High H.265 non supporté par ce navigateur ? Essayez Low ou Fluent).": "Reproducción imposible (¿códec High H.265 no compatible con este navegador? Pruebe Low o Fluent).",
-        "Erreur de lecture du flux fMP4": "Error de reproducción del flujo fMP4"
+        "Erreur de lecture du flux fMP4": "Error de reproducción del flujo fMP4",
+        "Capture JPEG": "Captura JPEG",
+        "Plein écran": "Pantalla completa",
+        "Zoom optique": "Zoom óptico",
+        "Mise au point (Focus)": "Enfoque (Focus)",
+        "— Preset PTZ —": "— Preset PTZ —",
+        "Aller au preset": "Ir al preset",
+        "Enregistrer la position actuelle comme preset PTZ": "Guardar posición actual como preset PTZ",
+        "Démarrer la ronde PTZ": "Iniciar ronda PTZ",
+        "Arrêter la ronde PTZ": "Detener ronda PTZ",
+        "Diffuser ce message vocal sur la sonnette": "Reproducir este mensaje de voz en el timbre",
+        "Répondre": "Responder",
+        "Échec de capture JPEG": "Error de captura JPEG",
+        "Numéro du preset PTZ à enregistrer (0..63) :": "Número de preset PTZ a guardar (0..63):",
+        "Nom du preset PTZ :": "Nombre del preset PTZ:"
+    },
+    "plugins/reolink/core/php/live.php": {
+        "Commande non autorisée": "Comando no autorizado",
+        "Parler": "Hablar",
+        "Répondre": "Responder"
     }
 }

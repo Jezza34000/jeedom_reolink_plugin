@@ -2,12 +2,6 @@
 require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 include_file('core', 'authentification', 'php');
 
-if (!isConnect()) {
-  http_response_code(401);
-  echo 'Unauthorized';
-  exit;
-}
-
 if (!reolink::isPluginActiveFast()) {
   http_response_code(503);
   echo 'Plugin Reolink disabled';
@@ -22,6 +16,11 @@ $camera = reolink::byId($id, 'reolink');
 if (!is_object($camera) || $camera->isNvrParent()) {
   http_response_code(404);
   echo 'Camera not found';
+  exit;
+}
+if (!reolink::isAuthorizedForLive($camera, init('token', ''))) {
+  http_response_code(401);
+  echo 'Unauthorized';
   exit;
 }
 if (intval($camera->getIsEnable()) !== 1 || reolink::isEquipmentHostInCooldown($camera)) {
