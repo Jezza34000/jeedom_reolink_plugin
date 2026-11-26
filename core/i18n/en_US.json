@@ -596,6 +596,9 @@
         "Réinitialiser la case « Afficher » de toutes les commandes de cet équipement selon la sélection par défaut (commandes courantes) ? Les autres réglages (noms, icônes, historisation, inversions) seront conservés.": "Reset the \"Display\" checkbox on all commands of this equipment to the default preset (common commands)? Other settings (names, icons, history, invert) will be preserved."
     },
     "plugins/reolink/desktop/php/reolink.php": {
+        "Retour": "Back",
+        "Configuration avancée": "Advanced configuration",
+        "Dupliquer": "Duplicate",
         "Détections & IA": "Detections & AI",
         "PTZ & Rondes": "PTZ & Patrols",
         "Éclairage & Audio": "Lighting & Audio",
