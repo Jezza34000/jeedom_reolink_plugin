@@ -4,6 +4,10 @@
 >
 >Pour rappel s'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 26/11/2026
+
+- Organisation des commandes par onglets & allègement du Dashboard par défaut : découpage des commandes en 6 onglets thématiques (**Détections & IA**, **PTZ & Rondes**, **Éclairage & Audio**, **Alertes & Enreg.**, **Image & Encodage**, **Système**, onglets vides masqués automatiquement), filtre rapide **Toutes / Infos (lecture) / Actions** + recherche texte, affichage par défaut allégé à la création sur le Dashboard (commandes courantes uniquement, sans modifier les équipements existants) et bouton **Affichage par défaut** (sur confirmation) pour réappliquer cette sélection sur une caméra déjà installée
+
 # 25/11/2026
 
 - Correction du plantage MySQL `1054` à l'ajout et à la sauvegarde d'une caméra (`Unknown column 'lastBaichuanSyncHash' in 'INSERT INTO'` / `UPDATE`) : préfixage de la propriété statique interne `$_lastBaichuanSyncHash` conformément à l'ORM Jeedom (`utils::o2a()` / `DB::buildField()`)

@@ -7,6 +7,14 @@ $plugin = plugin::byId('reolink');
 $fwCheckEnabled = intval(config::byKey('check_fw_github', 'reolink', 1)) === 1;
 sendVarToJS('eqType', $plugin->getId());
 sendVarToJS('reolinkFwCheckEnabled', $fwCheckEnabled ? 1 : 0);
+$reolinkCmdCategories = array(
+	'detection' => array('pane' => 'commandtabDetection', 'icon' => 'fas fa-shield-alt', 'label' => '{{Détections & IA}}'),
+	'ptz' => array('pane' => 'commandtabPtz', 'icon' => 'fas fa-arrows-alt', 'label' => '{{PTZ & Rondes}}'),
+	'light_audio' => array('pane' => 'commandtabLightAudio', 'icon' => 'fas fa-lightbulb', 'label' => '{{Éclairage & Audio}}'),
+	'notif_rec' => array('pane' => 'commandtabNotifRec', 'icon' => 'fas fa-bell', 'label' => '{{Alertes & Enreg.}}'),
+	'image_enc' => array('pane' => 'commandtabImageEnc', 'icon' => 'fas fa-sliders-h', 'label' => '{{Image & Encodage}}'),
+	'system' => array('pane' => 'commandtabSystem', 'icon' => 'fas fa-microchip', 'label' => '{{Système}}'),
+);
 $eqLogics = eqLogic::byType($plugin->getId());
 $nvrs = array();
 $cameras = array();
@@ -127,10 +135,12 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 			</span>
 		</div>
 		<!-- Onglets -->
-		<ul class="nav nav-tabs" role="tablist">
+		<ul class="nav nav-tabs reolinkEqTabs" role="tablist">
 			<li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fas fa-arrow-circle-left"></i></a></li>
-			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i> {{Équipement}}</a></li>
-			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i> {{Commandes}}</a></li>
+			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i><span class="hidden-xs"> {{Équipement}}</span></a></li>
+			<?php foreach ($reolinkCmdCategories as $catKey => $catMeta) { ?>
+			<li role="presentation" class="reolinkCmdTabLi" data-cmd-cat="<?php echo $catKey; ?>" style="display:none;"><a href="#<?php echo $catMeta['pane']; ?>" class="reolinkCmdTabLink" aria-controls="<?php echo $catMeta['pane']; ?>" role="tab" data-toggle="tab"><i class="<?php echo $catMeta['icon']; ?>"></i><span class="hidden-xs"> <?php echo $catMeta['label']; ?></span> <span class="badge reolinkCmdTabCount">0</span></a></li>
+			<?php } ?>
 		</ul>
 		<div class="tab-content">
 			<!-- Onglet de configuration de l'équipement -->
@@ -451,11 +461,27 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 				<hr>
 			</div><!-- /.tabpanel #eqlogictab-->
 
-			<!-- Onglet des commandes de l'équipement -->
-			<div role="tabpanel" class="tab-pane" id="commandtab">
-				<br/><br/>
+			<!-- Onglets des commandes par catégorie -->
+			<?php foreach ($reolinkCmdCategories as $catKey => $catMeta) { ?>
+			<div role="tabpanel" class="tab-pane reolinkCmdPane" id="<?php echo $catMeta['pane']; ?>" data-cmd-cat="<?php echo $catKey; ?>">
+				<div class="reolinkCmdToolbar">
+					<div class="btn-group reolinkCmdTypeFilterGroup" role="group">
+						<a class="btn btn-sm btn-primary reolinkCmdTypeFilterBtn" data-filter-type="all">{{Toutes}} <span class="badge reolinkTypeCount" data-count-type="all">0</span></a>
+						<a class="btn btn-sm btn-default reolinkCmdTypeFilterBtn" data-filter-type="info" title="{{Commandes de lecture d'état ou de valeur (Get / événements)}}"><i class="fas fa-info-circle"></i> {{Infos (lecture)}} <span class="badge reolinkTypeCount" data-count-type="info">0</span></a>
+						<a class="btn btn-sm btn-default reolinkCmdTypeFilterBtn" data-filter-type="action" title="{{Commandes d'action ou de réglage (Set / exécution)}}"><i class="fas fa-play-circle"></i> {{Actions}} <span class="badge reolinkTypeCount" data-count-type="action">0</span></a>
+					</div>
+					<div class="input-group input-group-sm reolinkCmdSearchGroup">
+						<input type="text" class="form-control roundedLeft in_reolinkCmdSearch" placeholder="{{Filtrer les commandes...}}"/>
+						<span class="input-group-btn">
+							<a class="btn btn-default roundedRight bt_reolinkResetCmdSearch" title="{{Effacer le filtre}}"><i class="fas fa-times"></i></a>
+						</span>
+					</div>
+					<div class="reolinkCmdToolbarRight">
+						<a class="btn btn-sm btn-default bt_reolinkResetDefaultVisible" title="{{Réinitialise la case Afficher de toutes les commandes de cet équipement selon la sélection par défaut (commandes courantes)}}"><i class="fas fa-eye"></i> {{Affichage par défaut}}</a>
+					</div>
+				</div>
 				<div class="table-responsive">
-					<table id="table_cmd" class="table table-bordered table-condensed">
+					<table id="table_cmd_<?php echo $catKey; ?>" class="table table-bordered table-condensed reolinkCmdTable" data-cmd-cat="<?php echo $catKey; ?>">
 						<thead>
 							<tr>
 								<th class="hidden-xs" style="min-width:50px;width:70px;">{{Id}}</th>
@@ -472,20 +498,28 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 						</tbody>
 					</table>
 				</div>
-			</div><!-- /.tabpanel #commandtab-->
+			</div><!-- /.tabpanel #<?php echo $catMeta['pane']; ?>-->
+			<?php } ?>
 
 		</div><!-- /.tab-content -->
 	</div><!-- /.eqLogic -->
 </div><!-- /.row row-overflow -->
 
 <?php
-$reolinkCmdHelp = array();
+$i18nFile = 'plugins/reolink/core/class/reolink.class.php';
+$reolinkCmdHelp = array(
+	'LatestFirmware' => array(
+		'help' => __('Dernière version de firmware officielle référencée pour ce modèle et cette révision matérielle.', $i18nFile),
+		'valuesHelp' => '',
+		'category' => 'system',
+		'defaultVisible' => 0,
+	),
+);
 $reolinkCmdConf = dirname(__FILE__) . '/../../core/config/reolinkapicmd.json';
 if (is_readable($reolinkCmdConf)) {
 	$raw = file_get_contents($reolinkCmdConf);
 	$decoded = json_decode($raw, true);
 	if (is_array($decoded) && isset($decoded['commands']) && is_array($decoded['commands'])) {
-		$i18nFile = 'plugins/reolink/core/class/reolink.class.php';
 		foreach ($decoded['commands'] as $command) {
 			$lid = strval($command['logicalId'] ?? '');
 			if ($lid === '') {
@@ -497,15 +531,44 @@ if (is_readable($reolinkCmdConf)) {
 			$reolinkCmdHelp[$lid] = array(
 				'help' => ($help !== '') ? __($help, $i18nFile) : '',
 				'valuesHelp' => ($valuesHelp !== '') ? __($valuesHelp, $i18nFile) : '',
+				'category' => strval($command['category'] ?? 'system'),
+				'defaultVisible' => intval($command['isVisible'] ?? 0),
 			);
 		}
 	}
 }
 ?>
 <style>
-#table_cmd tbody tr.cmd {
+.reolinkEqTabs > li > a {
+	padding: 8px 10px;
+}
+.reolinkEqTabs .reolinkCmdTabCount,
+.reolinkCmdToolbar .reolinkTypeCount {
+	font-size: 10px;
+	padding: 2px 5px;
+	margin-left: 3px;
+	vertical-align: middle;
+}
+.reolinkCmdToolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 12px 0 10px 0;
+}
+.reolinkCmdSearchGroup {
+	width: 260px;
+	max-width: 100%;
+}
+.reolinkCmdToolbarRight {
+	margin-left: auto;
+}
+.reolinkCmdTable tbody tr.cmd {
 	content-visibility: auto;
 	contain-intrinsic-size: auto 42px;
+}
+.reolinkCmdTable tbody tr.cmd.reolinkCmdFilteredOut {
+	display: none !important;
 }
 </style>
 <script>
