@@ -34,7 +34,7 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 	if ($channel !== '' && $channel !== null) {
 		$info = trim($ip . ' · Canal ' . $channel);
 	}
-	$hasFwUpdate = $fwCheckEnabled && strval($eqLogic->getConfiguration('fwArchiveStatus', '')) === 'update_available';
+	$hasFwUpdate = $fwCheckEnabled && intval($eqLogic->getIsEnable()) === 1 && strval($eqLogic->getConfiguration('fwArchiveStatus', '')) === 'update_available';
 	echo '<div class="eqLogicDisplayCard cursor ' . $opacity . '" data-eqLogic_id="' . $eqLogic->getId() . '">';
 	echo '<img src="' . $eqLogic->getImage() . '" loading="lazy" decoding="async"/>';
 	echo '<br>';

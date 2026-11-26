@@ -3,6 +3,7 @@
 26/11/2026
 
 - Organisation des commandes par onglets thématiques & allègement de la tuile Dashboard par défaut : remplacement de la liste unique **Commandes** par 6 onglets de premier niveau adaptés dynamiquement aux capacités de l'équipement (**Détections & IA**, **PTZ & Rondes**, **Éclairage & Audio**, **Alertes & Enreg.**, **Image & Encodage**, **Système**, avec masquage automatique des catégories vides et compteurs), ajout d'une barre de filtrage instantané par type (**Toutes** · **Infos (lecture)** · **Actions**) et par recherche texte, réduction de la sélection `isVisible` initiale à la création aux seules commandes courantes (~12–16 commandes sur une caméra PTZ + IA au lieu de plus de 70, sans écraser les choix existants lors des mises à jour ou resynchronisations), et ajout d'un bouton **Affichage par défaut** (sur confirmation) permettant d'appliquer ce profil allégé en un clic sur les équipements déjà créés
+- Vérification des mises à jour firmware : exclusion complète des équipements désactivés (`isEnable != 1`) dans l'interface (fiche équipement, modale de vérification unitaire, vue liste et modale **Santé**), remise immédiate à zéro de `NewFirmwareState` à la désactivation et affichage explicite de l'état neutre `Inactif — données non actualisées` sur vérification unitaire d'une fiche désactivée afin d'éviter les faux positifs sur d'anciens équipements de test (#152056)
 
 25/11/2026
 

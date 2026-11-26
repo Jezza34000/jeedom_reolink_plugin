@@ -280,6 +280,8 @@ function reolinkRenderEqFirmwareBadge(cfg) {
   var badgeEl = document.getElementById('span_fwArchiveBadge')
   if (!badgeEl) return
   cfg = cfg || {}
+  var enableEl = document.querySelector('.eqLogicAttr[data-l1key=isEnable]')
+  var isEnable = enableEl ? !!enableEl.checked : true
   var status = String(cfg.fwArchiveStatus || '').trim()
   var latest = String(cfg.fwArchiveLatestVer || '').trim()
   var buildDate = String(cfg.fwArchiveBuildDate || '').trim()
@@ -287,6 +289,15 @@ function reolinkRenderEqFirmwareBadge(cfg) {
   var checkedAt = String(cfg.fwArchiveCheckedAt || '').trim()
   var changelog = String(cfg.fwArchiveChangelog || '').trim()
   var safeDl = /^https:\/\//i.test(dlUrl) ? dlUrl : ''
+
+  if (!isEnable || status === 'inactive') {
+    if (latest !== '') {
+      badgeEl.innerHTML = '<span class="label label-default" title="{{Équipement inactif : version locale non actualisée}}">{{Inactif — données non actualisées}} (' + reolinkEscapeHtml(latest) + ')</span>'
+    } else {
+      badgeEl.innerHTML = '<span class="label label-default" title="{{Équipement inactif : version locale non actualisée}}">{{Inactif — données non actualisées}}</span>'
+    }
+    return
+  }
 
   if (status === 'update_available' && latest !== '') {
     var tip = '{{Dernier firmware officiel}} : ' + latest
@@ -313,6 +324,9 @@ function updateNvrParentHint() {
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=defined_channel]').on('change keyup', updateNvrParentHint)
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=cnxtype]').on('change', updateNvrParentHint)
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=event_mode]').on('change', updateNvrParentHint)
+$('.eqLogicAttr[data-l1key=isEnable]').on('change', function () {
+  reolinkRenderEqFirmwareBadge(reolinkCurrentEqCfg)
+})
 
 function reolinkFireChange(el) {
   if (!el) return
@@ -526,6 +540,8 @@ function reolinkOpenFirmwareModal(report) {
   html += '<p>'
   if (updatesCount > 0) {
     html += '<span class="label label-warning" style="font-size:0.95em;"><i class="fas fa-arrow-circle-up"></i> ' + updatesCount + ' {{mise(s) à jour disponible(s)}}</span>'
+  } else if (devices.length === 1 && (devices[0].isEnable === false || devices[0].status === 'inactive')) {
+    html += '<span class="label label-default" style="font-size:0.95em;">{{Équipement inactif — données non actualisées}}</span>'
   } else {
     html += '<span class="label label-success" style="font-size:0.95em;"><i class="fas fa-check"></i> {{Tous les équipements référencés sont à jour}}</span>'
   }
@@ -547,8 +563,11 @@ function reolinkOpenFirmwareModal(report) {
 
   for (var i = 0; i < devices.length; i++) {
     var d = devices[i] || {}
+    var isInactiveRow = (d.isEnable === false || d.status === 'inactive')
     var stBadge = ''
-    if (d.status === 'update_available') {
+    if (isInactiveRow) {
+      stBadge = '<span class="label label-default">{{Inactif — données non actualisées}}</span>'
+    } else if (d.status === 'update_available') {
       stBadge = '<span class="label label-warning"><i class="fas fa-arrow-circle-up"></i> {{MAJ disponible}}</span>'
     } else if (d.status === 'up_to_date') {
       stBadge = '<span class="label label-success"><i class="fas fa-check"></i> {{À jour}}</span>'
@@ -569,7 +588,7 @@ function reolinkOpenFirmwareModal(report) {
     var safeDl = (d.downloadUrl && /^https:\/\//i.test(d.downloadUrl)) ? d.downloadUrl : ''
     var dlHtml = '-'
     if (safeDl !== '') {
-      var btnClass = (d.status === 'update_available') ? 'btn-success' : 'btn-default'
+      var btnClass = (!isInactiveRow && d.status === 'update_available') ? 'btn-success' : 'btn-default'
       dlHtml = '<a class="btn btn-xs ' + btnClass + '" href="' + reolinkEscapeHtml(safeDl) + '" target="_blank" rel="noopener noreferrer"><i class="fas fa-download"></i> {{Télécharger (.zip)}}</a>'
     }
 
@@ -665,7 +684,10 @@ $('#btCheckEqFirmware').on('click', function () {
         reolinkCurrentEqCfg.fwArchiveCheckedAt = dev.checkedAt || ''
         reolinkCurrentEqCfg.fwArchiveChangelog = Array.isArray(dev.changelog) ? dev.changelog.join('\n') : ''
         reolinkRenderEqFirmwareBadge(reolinkCurrentEqCfg)
-        if (dev.status === 'update_available') {
+        if (dev.isEnable === false || dev.status === 'inactive') {
+          $('#div_alert').hideAlert()
+          reolinkOpenFirmwareModal(res)
+        } else if (dev.status === 'update_available') {
           $('#div_alert').hideAlert()
           reolinkOpenFirmwareModal(res)
         } else if (dev.status === 'up_to_date') {
