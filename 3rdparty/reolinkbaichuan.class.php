@@ -1127,6 +1127,403 @@ class reolinkBaichuan {
     }
   }
 
+  public static function mapBcToCgiDoorbellLight($bcVal) {
+    $map = array(
+      'keepoff' => 'KeepOff',
+      'close' => 'Off',
+      'off' => 'Off',
+      'open' => 'On',
+      'on' => 'On',
+      'keepon' => 'KeepOn',
+      'always' => 'Always',
+    );
+    $k = strtolower(trim(strval($bcVal)));
+    return $map[$k] ?? null;
+  }
+
+  public static function mapCgiToBcDoorbellLight($cgiVal) {
+    $map = array(
+      'keepoff' => 'keepOff',
+      'off' => 'close',
+      'close' => 'close',
+      'on' => 'open',
+      'open' => 'open',
+      'keepon' => 'keepOn',
+      'always' => 'always',
+    );
+    $k = strtolower(trim(strval($cgiVal)));
+    return $map[$k] ?? 'open';
+  }
+
+  public static function parseAudioFileListXml($xml) {
+    $xml = strval($xml);
+    if ($xml === '') {
+      return array();
+    }
+    $items = array();
+    if (preg_match_all('/<audioFileInfo\b[^>]*>(.*?)<\/audioFileInfo>/is', $xml, $matches)) {
+      foreach ($matches[1] as $block) {
+        if (!preg_match('/<id>\s*(\d+)\s*<\/id>/i', $block, $mId)) {
+          continue;
+        }
+        $id = intval($mId[1]);
+        $name = '';
+        if (preg_match('/<fileName>\s*([^<]*?)\s*<\/fileName>/i', $block, $mName)) {
+          $name = html_entity_decode(trim($mName[1]), ENT_QUOTES | ENT_XML1, 'UTF-8');
+        }
+        if ($name === '') {
+          $name = 'Message ' . ($id + 1);
+        }
+        $items[] = array('id' => $id, 'fileName' => $name);
+      }
+    }
+    return $items;
+  }
+
+  public static function buildQuickReplyPlayXml($channel, $fileId) {
+    return '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+      . '<body>' . "\n"
+      . '<audioFileInfo version="1.1">' . "\n"
+      . '<channelId>' . intval($channel) . '</channelId>' . "\n"
+      . '<id>' . intval($fileId) . '</id>' . "\n"
+      . '<timeout>0</timeout>' . "\n"
+      . '</audioFileInfo>' . "\n"
+      . '</body>';
+  }
+
+  public static function parseAutoReplyXml($xml) {
+    $xml = strval($xml);
+    if ($xml === '' || stripos($xml, '<autoReply') === false) {
+      return null;
+    }
+    $en = preg_match('/<enable>\s*(\d+)\s*<\/enable>/i', $xml, $m1) ? intval($m1[1]) : 0;
+    // Baichuan cmd 427/428 uses <audioId> where CGI uses fileId
+    $fid = 0;
+    if (preg_match('/<audioId>\s*(-?\d+)\s*<\/audioId>/i', $xml, $m2)) {
+      $fid = intval($m2[1]);
+    } elseif (preg_match('/<fileId>\s*(-?\d+)\s*<\/fileId>/i', $xml, $m2b)) {
+      $fid = intval($m2b[1]);
+    }
+    $to = preg_match('/<timeout>\s*(\d+)\s*<\/timeout>/i', $xml, $m3) ? intval($m3[1]) : 10;
+    return array(
+      'enable' => $en ? 1 : 0,
+      'fileId' => $fid,
+      'timeout' => max(1, min(60, $to)),
+    );
+  }
+
+  public static function buildAutoReplySetXml($channel, $enable, $fileId, $timeout) {
+    return '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+      . '<body>' . "\n"
+      . '<autoReply version="1.1">' . "\n"
+      . '<channelId>' . intval($channel) . '</channelId>' . "\n"
+      . '<enable>' . (intval($enable) ? 1 : 0) . '</enable>' . "\n"
+      . '<audioId>' . intval($fileId) . '</audioId>' . "\n"
+      . '<timeout>' . max(1, min(60, intval($timeout))) . '</timeout>' . "\n"
+      . '</autoReply>' . "\n"
+      . '</body>';
+  }
+
+  public static function parseAudioCfgXml($xml) {
+    $xml = strval($xml);
+    if ($xml === '' || stripos($xml, '<audioCfg') === false) {
+      return null;
+    }
+    $out = array();
+    foreach (array('volume', 'talkAndReplyVolume', 'visitorVolume', 'visitorLoudspeaker') as $tag) {
+      if (preg_match('/<' . $tag . '>\s*(-?\d+)\s*<\/' . $tag . '>/i', $xml, $m)) {
+        $out[$tag] = intval($m[1]);
+      }
+    }
+    return empty($out) ? null : $out;
+  }
+
+  public function getDoorbellAudioCfg($channel) {
+    try {
+      $this->ensureLogin();
+      $xml = $this->requestXml(264, intval($channel));
+      return self::parseAudioCfgXml($xml);
+    } catch (Exception $e) {
+      log::add('reolink', 'debug', 'Baichuan getDoorbellAudioCfg: ' . $e->getMessage());
+      return null;
+    } finally {
+      $this->logout();
+    }
+  }
+
+  public function setDoorbellAudioCfg($channel, $fields) {
+    try {
+      $this->ensureLogin();
+      $ch = intval($channel);
+      $xml = $this->requestXml(264, $ch);
+      $sx = @simplexml_load_string($xml);
+      if ($sx === false) {
+        throw new Exception('Invalid audioCfg XML');
+      }
+      $root = isset($sx->audioCfg) ? $sx->audioCfg : $sx;
+      foreach (array('volume', 'talkAndReplyVolume', 'visitorVolume', 'visitorLoudspeaker') as $tag) {
+        if (!array_key_exists($tag, $fields) || $fields[$tag] === null) {
+          continue;
+        }
+        $val = intval($fields[$tag]);
+        $nodes = $sx->xpath('.//' . $tag);
+        if ($nodes && isset($nodes[0])) {
+          $nodes[0][0] = $val;
+        } else {
+          $root->addChild($tag, strval($val));
+        }
+      }
+      $this->requestXml(265, $ch, $sx->asXML());
+      return true;
+    } catch (Exception $e) {
+      log::add('reolink', 'warning', 'Baichuan setDoorbellAudioCfg: ' . $e->getMessage());
+      return false;
+    } finally {
+      $this->logout();
+    }
+  }
+
+  public static function parseDingDongListXml($xml) {
+    $xml = strval($xml);
+    if ($xml === '') {
+      return array();
+    }
+    $chimes = array();
+    $pattern = '/<(?:device|dingdongDeviceInfo)\b[^>]*>(.*?)<\/(?:device|dingdongDeviceInfo)>/is';
+    if (preg_match_all($pattern, $xml, $matches)) {
+      foreach ($matches[1] as $block) {
+        if (preg_match('/<deviceType>\s*([^<]*?)\s*<\/deviceType>/i', $block, $mType)) {
+          if (strcasecmp(trim($mType[1]), 'BatteryDB') === 0) {
+            continue;
+          }
+        }
+        $id = null;
+        if (preg_match('/<(?:deviceId|id)>\s*(\d+)\s*<\/(?:deviceId|id)>/i', $block, $mId)) {
+          $id = intval($mId[1]);
+        }
+        if ($id === null) {
+          continue;
+        }
+        $name = 'Reolink Chime';
+        if (preg_match('/<(?:deviceName|name)>\s*([^<]*?)\s*<\/(?:deviceName|name)>/i', $block, $mName) && trim($mName[1]) !== '') {
+          $name = html_entity_decode(trim($mName[1]), ENT_QUOTES | ENT_XML1, 'UTF-8');
+        }
+        $net = 2;
+        if (preg_match('/<netState>\s*(-?\d+)\s*<\/netState>/i', $block, $mNet)) {
+          $net = intval($mNet[1]);
+        }
+        $chimes[] = array(
+          'id' => $id,
+          'name' => $name,
+          'netState' => $net,
+        );
+      }
+    }
+    return $chimes;
+  }
+
+  public static function parseDingDongParamXml($xml) {
+    $xml = strval($xml);
+    if ($xml === '') {
+      return null;
+    }
+    $out = array();
+    if (preg_match('/<volLevel>\s*(\d+)\s*<\/volLevel>/i', $xml, $m1)) {
+      $out['volLevel'] = max(0, min(4, intval($m1[1])));
+    }
+    if (preg_match('/<ledState>\s*(\d+)\s*<\/ledState>/i', $xml, $m2)) {
+      $out['ledState'] = intval($m2[1]) ? 1 : 0;
+    }
+    if (preg_match('/<name>\s*([^<]*?)\s*<\/name>/i', $xml, $m3)) {
+      $out['name'] = html_entity_decode(trim($m3[1]), ENT_QUOTES | ENT_XML1, 'UTF-8');
+    }
+    return empty($out) ? null : $out;
+  }
+
+  public static function parseDingDongVisitorToneXml($xml, $chimeId) {
+    $xml = strval($xml);
+    if ($xml === '') {
+      return null;
+    }
+    if (preg_match_all('/<deviceCfg\b[^>]*>(.*?)<\/deviceCfg>/is', $xml, $devMatches)) {
+      foreach ($devMatches[1] as $devBlock) {
+        if (preg_match('/<id>\s*(\d+)\s*<\/id>/i', $devBlock, $mId) && intval($mId[1]) !== intval($chimeId)) {
+          continue;
+        }
+        if (preg_match_all('/<alarminCfg\b[^>]*>(.*?)<\/alarminCfg>/is', $devBlock, $alMatches)) {
+          foreach ($alMatches[1] as $alBlock) {
+            if (!preg_match('/<type>\s*visitor\s*<\/type>/i', $alBlock)) {
+              continue;
+            }
+            $valid = preg_match('/<valid>\s*(\d+)\s*<\/valid>/i', $alBlock, $mV) ? intval($mV[1]) : 1;
+            $music = preg_match('/<musicId>\s*(\d+)\s*<\/musicId>/i', $alBlock, $mM) ? intval($mM[1]) : 0;
+            return ($valid === 0) ? -1 : max(0, min(9, $music));
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  public static function parseDingDongSilentXml($xml, $chimeId = null) {
+    $xml = strval($xml);
+    if ($xml === '' || stripos($xml, '<dingdongSilentMode') === false) {
+      return null;
+    }
+    if (preg_match('/<time>\s*(\d+)\s*<\/time>/i', $xml, $m)) {
+      return intval(ceil(intval($m[1]) / 60.0));
+    }
+    return null;
+  }
+
+  public function getChimeStatus($channelOrNull) {
+    try {
+      $this->ensureLogin();
+      $ch = ($channelOrNull === null) ? null : intval($channelOrNull);
+      $listXml = $this->requestXml(484, $ch);
+      $chimes = self::parseDingDongListXml($listXml);
+      if (empty($chimes)) {
+        return array('chimes' => array());
+      }
+      $primary = $chimes[0];
+      $cid = intval($primary['id']);
+      $state = array(
+        'chimes' => $chimes,
+        'id' => $cid,
+        'name' => $primary['name'],
+        'online' => (intval($primary['netState']) === 2) ? 1 : 0,
+      );
+      try {
+        $optXml = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+          . '<body><dingdongOpt version="1.1">'
+          . ($ch !== null ? '<channelId>' . $ch . '</channelId>' : '')
+          . '<id>' . $cid . '</id><opt>getParam</opt></dingdongOpt></body>';
+        $paramResp = $this->requestXml(485, $ch, $optXml);
+        $params = self::parseDingDongParamXml($paramResp);
+        if (is_array($params)) {
+          $state = array_merge($state, $params);
+        }
+      } catch (Exception $inner) {
+        log::add('reolink', 'debug', 'Baichuan chime getParam: ' . $inner->getMessage());
+      }
+      try {
+        $cfgResp = $this->requestXml(486, $ch);
+        $vTone = self::parseDingDongVisitorToneXml($cfgResp, $cid);
+        if ($vTone !== null) {
+          $state['visitorTone'] = $vTone;
+        }
+      } catch (Exception $inner) {
+        log::add('reolink', 'debug', 'Baichuan chime cmd 486: ' . $inner->getMessage());
+      }
+      try {
+        $silReq = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+          . '<body><dingdongSilentMode version="1.1"><id>' . $cid . '</id></dingdongSilentMode></body>';
+        $silResp = $this->requestXml(609, $ch, $silReq);
+        $silMin = self::parseDingDongSilentXml($silResp, $cid);
+        if ($silMin !== null) {
+          $state['silentMinutes'] = $silMin;
+        }
+      } catch (Exception $inner) {
+        log::add('reolink', 'debug', 'Baichuan chime cmd 609: ' . $inner->getMessage());
+      }
+      return $state;
+    } catch (Exception $e) {
+      log::add('reolink', 'debug', 'Baichuan getChimeStatus: ' . $e->getMessage());
+      return null;
+    } finally {
+      $this->logout();
+    }
+  }
+
+  public function ringChime($channelOrNull, $chimeId, $musicId) {
+    try {
+      $this->ensureLogin();
+      $ch = ($channelOrNull === null) ? null : intval($channelOrNull);
+      $music = max(0, min(9, intval($musicId)));
+      $xml = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+        . '<body><dingdongOpt version="1.1">'
+        . ($ch !== null ? '<channelId>' . $ch . '</channelId>' : '')
+        . '<id>' . intval($chimeId) . '</id>'
+        . '<opt>ringWithMusic</opt>'
+        . '<musicId>' . $music . '</musicId>'
+        . '</dingdongOpt></body>';
+      $this->requestXml(485, $ch, $xml);
+      return true;
+    } finally {
+      $this->logout();
+    }
+  }
+
+  public function setChimeParam($channelOrNull, $chimeId, $fields) {
+    try {
+      $this->ensureLogin();
+      $ch = ($channelOrNull === null) ? null : intval($channelOrNull);
+      $cid = intval($chimeId);
+      $getXml = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+        . '<body><dingdongOpt version="1.1">'
+        . ($ch !== null ? '<channelId>' . $ch . '</channelId>' : '')
+        . '<id>' . $cid . '</id><opt>getParam</opt></dingdongOpt></body>';
+      $cur = self::parseDingDongParamXml($this->requestXml(485, $ch, $getXml)) ?? array();
+      $vol = array_key_exists('volLevel', $fields) ? max(0, min(4, intval($fields['volLevel']))) : intval($cur['volLevel'] ?? 3);
+      $led = array_key_exists('ledState', $fields) ? (intval($fields['ledState']) ? 1 : 0) : intval($cur['ledState'] ?? 1);
+      $name = htmlspecialchars(strval($cur['name'] ?? 'Reolink Chime'), ENT_XML1, 'UTF-8');
+      $setXml = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+        . '<body><dingdongOpt version="1.1">'
+        . ($ch !== null ? '<channelId>' . $ch . '</channelId>' : '')
+        . '<id>' . $cid . '</id>'
+        . '<opt>setParam</opt>'
+        . '<volLevel>' . $vol . '</volLevel>'
+        . '<ledState>' . $led . '</ledState>'
+        . '<name>' . $name . '</name>'
+        . '</dingdongOpt></body>';
+      $this->requestXml(485, $ch, $setXml);
+      return true;
+    } finally {
+      $this->logout();
+    }
+  }
+
+  public function setChimeVisitorTone($channelOrNull, $chimeId, $musicId) {
+    try {
+      $this->ensureLogin();
+      $ch = ($channelOrNull === null) ? null : intval($channelOrNull);
+      $cid = intval($chimeId);
+      $valid = (intval($musicId) < 0) ? 0 : 1;
+      $music = ($valid === 1) ? max(0, min(9, intval($musicId))) : 0;
+      $xml = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+        . '<body><dingdongCfg version="1.1"><deviceCfg>'
+        . '<id>' . $cid . '</id>'
+        . '<alarminCfg>'
+        . '<valid>' . $valid . '</valid>'
+        . ($valid === 1 ? '<musicId>' . $music . '</musicId>' : '')
+        . '<type>visitor</type>'
+        . '</alarminCfg>'
+        . '</deviceCfg></dingdongCfg></body>';
+      $this->requestXml(487, $ch, $xml);
+      return true;
+    } finally {
+      $this->logout();
+    }
+  }
+
+  public function setChimeSilent($channelOrNull, $chimeId, $minutes) {
+    try {
+      $this->ensureLogin();
+      $ch = ($channelOrNull === null) ? null : intval($channelOrNull);
+      $sec = max(0, min(43200, intval($minutes) * 60));
+      $xml = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n"
+        . '<body><dingdongSilentMode version="1.1">'
+        . '<id>' . intval($chimeId) . '</id>'
+        . '<time>' . $sec . '</time>'
+        . '<type>63</type>'
+        . '</dingdongSilentMode></body>';
+      $this->requestXml(610, $ch, $xml);
+      return true;
+    } finally {
+      $this->logout();
+    }
+  }
+
   /**
    * Redact sensitive tags from Baichuan XML prior to diagnostic export.
    */
