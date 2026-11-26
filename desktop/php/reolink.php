@@ -123,25 +123,26 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 
 	<!-- Page de présentation de l'équipement -->
 	<div class="col-xs-12 eqLogic" style="display: none;">
-		<!-- barre de gestion de l'équipement -->
-		<div class="input-group pull-right" style="display:inline-flex;">
-			<span class="input-group-btn">
-				<!-- Les balises <a></a> sont volontairement fermées à la ligne suivante pour éviter les espaces entre les boutons. Ne pas modifier -->
-				<a class="btn btn-sm btn-default eqLogicAction roundedLeft" data-action="configure"><i class="fas fa-cogs"></i><span class="hidden-xs"> {{Configuration avancée}}</span>
-				</a><a class="btn btn-sm btn-default eqLogicAction" data-action="copy"><i class="fas fa-copy"></i><span class="hidden-xs">  {{Dupliquer}}</span>
-				</a><a class="btn btn-sm btn-success eqLogicAction" data-action="save"><i class="fas fa-check-circle"></i> {{Sauvegarder}}
-				</a><a class="btn btn-sm btn-danger eqLogicAction roundedRight" data-action="remove"><i class="fas fa-minus-circle"></i> {{Supprimer}}
-				</a>
-			</span>
+		<!-- Barre d'onglets et d'actions alignée -->
+		<div class="reolinkEqHeaderBar">
+			<ul class="nav nav-tabs reolinkEqTabs" role="tablist">
+				<li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay" title="{{Retour}}"><i class="fas fa-arrow-circle-left"></i></a></li>
+				<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i><span class="hidden-xs">{{Équipement}}</span></a></li>
+				<?php foreach ($reolinkCmdCategories as $catKey => $catMeta) { ?>
+				<li role="presentation" class="reolinkCmdTabLi" data-cmd-cat="<?php echo $catKey; ?>" style="display:none;"><a href="#<?php echo $catMeta['pane']; ?>" class="reolinkCmdTabLink" aria-controls="<?php echo $catMeta['pane']; ?>" role="tab" data-toggle="tab"><i class="<?php echo $catMeta['icon']; ?>"></i><span class="hidden-xs"><?php echo $catMeta['label']; ?></span><span class="badge reolinkCmdTabCount">0</span></a></li>
+				<?php } ?>
+			</ul>
+			<div class="input-group reolinkEqActions">
+				<span class="input-group-btn">
+					<!-- Les balises <a></a> sont volontairement fermées à la ligne suivante pour éviter les espaces entre les boutons. Ne pas modifier -->
+					<a class="btn btn-sm btn-default eqLogicAction roundedLeft" data-action="configure" title="{{Configuration avancée}}"><i class="fas fa-cogs"></i><span class="hidden-xs reolinkSecondaryActionLabel">{{Configuration avancée}}</span>
+					</a><a class="btn btn-sm btn-default eqLogicAction" data-action="copy" title="{{Dupliquer}}"><i class="fas fa-copy"></i><span class="hidden-xs reolinkSecondaryActionLabel">{{Dupliquer}}</span>
+					</a><a class="btn btn-sm btn-success eqLogicAction" data-action="save"><i class="fas fa-check-circle"></i><span>{{Sauvegarder}}</span>
+					</a><a class="btn btn-sm btn-danger eqLogicAction roundedRight" data-action="remove"><i class="fas fa-minus-circle"></i><span>{{Supprimer}}</span>
+					</a>
+				</span>
+			</div>
 		</div>
-		<!-- Onglets -->
-		<ul class="nav nav-tabs reolinkEqTabs" role="tablist">
-			<li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fas fa-arrow-circle-left"></i></a></li>
-			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i><span class="hidden-xs"> {{Équipement}}</span></a></li>
-			<?php foreach ($reolinkCmdCategories as $catKey => $catMeta) { ?>
-			<li role="presentation" class="reolinkCmdTabLi" data-cmd-cat="<?php echo $catKey; ?>" style="display:none;"><a href="#<?php echo $catMeta['pane']; ?>" class="reolinkCmdTabLink" aria-controls="<?php echo $catMeta['pane']; ?>" role="tab" data-toggle="tab"><i class="<?php echo $catMeta['icon']; ?>"></i><span class="hidden-xs"> <?php echo $catMeta['label']; ?></span> <span class="badge reolinkCmdTabCount">0</span></a></li>
-			<?php } ?>
-		</ul>
 		<div class="tab-content">
 			<!-- Onglet de configuration de l'équipement -->
 			<div role="tabpanel" class="tab-pane active" id="eqlogictab">
@@ -466,18 +467,18 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 			<div role="tabpanel" class="tab-pane reolinkCmdPane" id="<?php echo $catMeta['pane']; ?>" data-cmd-cat="<?php echo $catKey; ?>">
 				<div class="reolinkCmdToolbar">
 					<div class="btn-group reolinkCmdTypeFilterGroup" role="group">
-						<a class="btn btn-sm btn-primary reolinkCmdTypeFilterBtn" data-filter-type="all">{{Toutes}} <span class="badge reolinkTypeCount" data-count-type="all">0</span></a>
-						<a class="btn btn-sm btn-default reolinkCmdTypeFilterBtn" data-filter-type="info" title="{{Commandes de lecture d'état ou de valeur (Get / événements)}}"><i class="fas fa-info-circle"></i> {{Infos (lecture)}} <span class="badge reolinkTypeCount" data-count-type="info">0</span></a>
-						<a class="btn btn-sm btn-default reolinkCmdTypeFilterBtn" data-filter-type="action" title="{{Commandes d'action ou de réglage (Set / exécution)}}"><i class="fas fa-play-circle"></i> {{Actions}} <span class="badge reolinkTypeCount" data-count-type="action">0</span></a>
+						<a class="btn btn-sm btn-primary roundedLeft reolinkCmdTypeFilterBtn" data-filter-type="all"><span>{{Toutes}}</span><span class="badge reolinkTypeCount" data-count-type="all">0</span></a>
+						<a class="btn btn-sm btn-default reolinkCmdTypeFilterBtn" data-filter-type="info" title="{{Commandes de lecture d'état ou de valeur (Get / événements)}}"><i class="fas fa-info-circle"></i><span>{{Infos (lecture)}}</span><span class="badge reolinkTypeCount" data-count-type="info">0</span></a>
+						<a class="btn btn-sm btn-default roundedRight reolinkCmdTypeFilterBtn" data-filter-type="action" title="{{Commandes d'action ou de réglage (Set / exécution)}}"><i class="fas fa-play-circle"></i><span>{{Actions}}</span><span class="badge reolinkTypeCount" data-count-type="action">0</span></a>
 					</div>
-					<div class="input-group input-group-sm reolinkCmdSearchGroup">
+					<div class="input-group reolinkCmdSearchGroup">
 						<input type="text" class="form-control roundedLeft in_reolinkCmdSearch" placeholder="{{Filtrer les commandes...}}"/>
 						<span class="input-group-btn">
-							<a class="btn btn-default roundedRight bt_reolinkResetCmdSearch" title="{{Effacer le filtre}}"><i class="fas fa-times"></i></a>
+							<a class="btn btn-sm btn-default roundedRight bt_reolinkResetCmdSearch" title="{{Effacer le filtre}}"><i class="fas fa-times"></i></a>
 						</span>
 					</div>
 					<div class="reolinkCmdToolbarRight">
-						<a class="btn btn-sm btn-default bt_reolinkResetDefaultVisible" title="{{Réinitialise la case Afficher de toutes les commandes de cet équipement selon la sélection par défaut (commandes courantes)}}"><i class="fas fa-eye"></i> {{Affichage par défaut}}</a>
+						<a class="btn btn-sm btn-default rounded bt_reolinkResetDefaultVisible" title="{{Réinitialise la case Afficher de toutes les commandes de cet équipement selon la sélection par défaut (commandes courantes)}}"><i class="fas fa-eye"></i><span>{{Affichage par défaut}}</span></a>
 					</div>
 				</div>
 				<div class="table-responsive">
@@ -539,29 +540,136 @@ if (is_readable($reolinkCmdConf)) {
 }
 ?>
 <style>
-.reolinkEqTabs > li > a {
-	padding: 8px 10px;
+.reolinkEqHeaderBar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 0;
+}
+#div_pageContainer ul.nav.nav-tabs.reolinkEqTabs {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	flex: 1 1 auto;
+	min-width: 0;
+	margin: 0;
+}
+#div_pageContainer ul.nav.nav-tabs.reolinkEqTabs > li {
+	float: none;
+	margin-bottom: 0;
+}
+#div_pageContainer ul.nav.nav-tabs.reolinkEqTabs > li > a {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	height: 34px;
+	padding: 0 10px !important;
+	font-size: 13px;
+	line-height: 1;
+	white-space: nowrap;
+}
+.reolinkEqActions {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	margin: 0 !important;
+}
+.reolinkEqActions .input-group-btn {
+	display: inline-flex;
+	align-items: center;
+	width: auto;
+}
+.reolinkEqActions .btn-sm {
+	height: 28px !important;
+	padding: 0 10px !important;
+	font-size: 12px;
+	line-height: 1;
+	display: inline-flex !important;
+	align-items: center;
+	gap: 5px;
+}
+.reolinkEqActions .roundedRight,
+.reolinkCmdSearchGroup .roundedRight {
+	margin-right: 0 !important;
+}
+@media (max-width: 1560px) {
+	#div_pageContainer ul.nav.nav-tabs.reolinkEqTabs > li > a {
+		padding: 0 7px !important;
+		font-size: 12px;
+		gap: 4px;
+	}
+	.reolinkEqActions .reolinkSecondaryActionLabel {
+		display: none !important;
+	}
 }
 .reolinkEqTabs .reolinkCmdTabCount,
 .reolinkCmdToolbar .reolinkTypeCount {
 	font-size: 10px;
+	line-height: 1;
 	padding: 2px 5px;
-	margin-left: 3px;
-	vertical-align: middle;
+	margin: 0;
 }
 .reolinkCmdToolbar {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
-	margin: 12px 0 10px 0;
+	margin: 10px 0;
+}
+.reolinkCmdTypeFilterGroup {
+	display: inline-flex;
+	align-items: center;
+}
+.reolinkCmdTypeFilterGroup > .btn:first-child {
+	border-radius: var(--border-radius) 0 0 var(--border-radius) !important;
+}
+.reolinkCmdTypeFilterGroup > .btn:not(:first-child):not(:last-child) {
+	border-radius: 0 !important;
+}
+.reolinkCmdTypeFilterGroup > .btn:last-child {
+	border-radius: 0 var(--border-radius) var(--border-radius) 0 !important;
+}
+.reolinkCmdTypeFilterGroup > .btn,
+.bt_reolinkResetDefaultVisible {
+	height: 28px !important;
+	padding: 0 10px !important;
+	font-size: 12px;
+	line-height: 1;
+	display: inline-flex !important;
+	align-items: center;
+	gap: 5px;
 }
 .reolinkCmdSearchGroup {
-	width: 260px;
+	display: inline-flex;
+	align-items: center;
+	width: 240px;
 	max-width: 100%;
+	margin: 0 !important;
+}
+.reolinkCmdSearchGroup .in_reolinkCmdSearch {
+	height: 28px !important;
+	min-height: 28px !important;
+	padding: 2px 8px !important;
+	font-size: 12px;
+	line-height: 24px;
+}
+.reolinkCmdSearchGroup .input-group-btn {
+	display: inline-flex;
+	align-items: center;
+	width: auto;
+}
+.reolinkCmdSearchGroup .bt_reolinkResetCmdSearch {
+	height: 28px !important;
+	padding: 0 9px !important;
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
 }
 .reolinkCmdToolbarRight {
 	margin-left: auto;
+	display: inline-flex;
+	align-items: center;
 }
 .reolinkCmdTable tbody tr.cmd {
 	content-visibility: auto;

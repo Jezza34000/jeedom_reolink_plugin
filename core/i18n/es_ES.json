@@ -596,6 +596,9 @@
         "Réinitialiser la case « Afficher » de toutes les commandes de cet équipement selon la sélection par défaut (commandes courantes) ? Les autres réglages (noms, icônes, historisation, inversions) seront conservés.": "¿Restablecer la casilla «Mostrar» de todos los comandos de este equipo según la selección por defecto (comandos habituales)? Los demás ajustes (nombres, iconos, historial, inversión) se conservarán."
     },
     "plugins/reolink/desktop/php/reolink.php": {
+        "Retour": "Volver",
+        "Configuration avancée": "Configuración avanzada",
+        "Dupliquer": "Duplicar",
         "Détections & IA": "Detecciones e IA",
         "PTZ & Rondes": "PTZ y Rondas",
         "Éclairage & Audio": "Iluminación y Audio",
