@@ -162,10 +162,12 @@ try {
 
     if (init('action') == 'GetLiveUrls') {
       if ($camera->isNvrParent()) {
-        ajax::success(array('webviewUrl' => '', 'talkRtspUrl' => ''));
+        ajax::success(array('webviewUrl' => '', 'localStreamRtspUrl' => '', 'talkRtspUrl' => ''));
       }
+      reolink::registerStoredStreamsNonWaking($camera);
       ajax::success(array(
         'webviewUrl' => $camera->getWebViewLiveUrl(true),
+        'localStreamRtspUrl' => $camera->getLocalOpusRtspUrl('sub'),
         'talkRtspUrl' => $camera->getLocalTalkRtspUrl(true),
       ));
     }

@@ -272,8 +272,10 @@ function updateEqLogicRoleUi(_eqLogic) {
       success: function (res) {
         if (res && res.state === 'ok' && res.result) {
           var wInp = document.getElementById('inp_rlkWebViewUrl')
+          var sInp = document.getElementById('inp_rlkLocalStreamRtspUrl')
           var tInp = document.getElementById('inp_rlkTalkRtspUrl')
           if (wInp) wInp.value = String(res.result.webviewUrl || '')
+          if (sInp) sInp.value = String(res.result.localStreamRtspUrl || '')
           if (tInp) tInp.value = String(res.result.talkRtspUrl || '')
         }
       }
@@ -354,6 +356,13 @@ $('#btCopyWebViewUrl').on('click', function () {
   if (inp && inp.value && navigator.clipboard) {
     navigator.clipboard.writeText(inp.value)
     $('#div_alert').showAlert({message: '{{URL WebView copiée}}', level: 'success'})
+  }
+})
+$('#btCopyLocalStreamRtspUrl').on('click', function () {
+  var inp = document.getElementById('inp_rlkLocalStreamRtspUrl')
+  if (inp && inp.value && navigator.clipboard) {
+    navigator.clipboard.writeText(inp.value)
+    $('#div_alert').showAlert({message: '{{URL RTSP Flux local copiée}}', level: 'success'})
   }
 })
 $('#btCopyTalkRtspUrl').on('click', function () {
