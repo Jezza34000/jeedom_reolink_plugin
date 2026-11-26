@@ -864,6 +864,8 @@ class reolinkBaichuanAdapter {
       'alarmAudio' => $permit($audioVer > 0 || $v('ipcAudioTalk', 0) > 0 || $v('audioAlarm', 0) > 0),
       'supportAudioAlarm' => $permit($v('audioAlarm', 0) > 0 || (($audioVer >> 1) & 1) === 1),
       'supportAudioCfg' => $permit($audioVer > 0 || $v('ipcAudioTalk', 0) > 0 || $v('audioCfg', 0) > 0),
+      'talk' => $permit($v('ipcAudioTalk', 0) > 0 || $v('audioTalk', 0) > 0 || (($audioVer & 1) === 1)),
+      'supportAutoTrackStream' => $permit($v('supportAutoTrackStream', 0) > 0 || $v('autoTrackStream', 0) > 0),
       'supportAi' => $permit($aiBits > 0),
       'supportAiPeople' => $permit((($aiBits >> 1) & 1) === 1),
       'supportAiVehicle' => $permit((($aiBits >> 2) & 1) === 1),

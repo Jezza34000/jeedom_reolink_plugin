@@ -20,6 +20,38 @@ try {
     require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
     include_file('core', 'authentification', 'php');
 
+    if (init('action') == 'webrtcOffer') {
+      if (!isConnect()) {
+        throw new Exception(__('401 - Accès non autorisé', __FILE__));
+      }
+      ajax::init();
+      $id = intval(init('id', 0));
+      $quality = reolink::sanitizeStreamKey(init('quality', 'sub'));
+      if ($quality === 'jpeg') {
+        $quality = 'sub';
+      }
+      $sdp = strval(init('sdp', ''));
+      if ($sdp === '') {
+        throw new Exception(__('SDP manquant', __FILE__));
+      }
+      reolink::ensureGo2rtcStreams($id);
+      $src = 'reolink_' . $id . '_' . $quality;
+      $ch = curl_init('http://127.0.0.1:' . reolink::getGo2rtcApiPort() . '/api/webrtc?src=' . rawurlencode($src));
+      curl_setopt($ch, CURLOPT_POST, true);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $sdp);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/sdp'));
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+      $answer = curl_exec($ch);
+      $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+      curl_close($ch);
+      if ($code < 200 || $code >= 300 || $answer === false || $answer === '') {
+        throw new Exception(__('WebRTC go2rtc indisponible', __FILE__));
+      }
+      ajax::success(array('sdp' => $answer));
+    }
+
     if (!isConnect('admin')) {
         throw new Exception(__('401 - Accès non autorisé', __FILE__));
     }
@@ -49,31 +81,6 @@ try {
       $force = intval(init('force', 1)) === 1;
       $targetId = ($id === '' || $id === null) ? null : intval($id);
       ajax::success(reolink::checkAllFirmwareUpdates($targetId, $force));
-    }
-
-    if (init('action') == 'webrtcOffer') {
-      $id = intval(init('id', 0));
-      $quality = (init('quality', 'sub') === 'main') ? 'main' : 'sub';
-      $sdp = strval(init('sdp', ''));
-      if ($sdp === '') {
-        throw new Exception(__('SDP manquant', __FILE__));
-      }
-      reolink::ensureGo2rtcStreams($id);
-      $src = 'reolink_' . $id . '_' . $quality;
-      $ch = curl_init('http://127.0.0.1:1984/api/webrtc?src=' . rawurlencode($src));
-      curl_setopt($ch, CURLOPT_POST, true);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, $sdp);
-      curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/sdp'));
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
-      curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-      $answer = curl_exec($ch);
-      $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-      curl_close($ch);
-      if ($code < 200 || $code >= 300 || $answer === false || $answer === '') {
-        throw new Exception(__('WebRTC go2rtc indisponible', __FILE__));
-      }
-      ajax::success(array('sdp' => $answer));
     }
 
     $camera = reolink::byId(init('id'));

@@ -28,6 +28,7 @@ from multiprocessing import Process
 import subscription_manager
 import uvicorn
 from baichuan_push import BaichuanPushManager
+from baichuan_talk import DEFAULT_TALK_PORT, BaichuanTalkRtspServer
 from jeedom.jeedom import JEEDOM_SOCKET_MESSAGE, jeedom_com, jeedom_socket, jeedom_utils
 
 _ENV_CALLBACK = 'REOLINK_JEEDOM_CALLBACK'
@@ -36,16 +37,14 @@ _ENV_APIKEY = 'REOLINK_JEEDOM_APIKEY'
 proc = None
 go2rtc_proc = None
 bc_push_manager = None
+bc_talk_server = None
 _GO2RTC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'bin'))
 _GO2RTC_BIN = os.path.join(_GO2RTC_DIR, 'go2rtc')
 _GO2RTC_CFG = os.path.join(_GO2RTC_DIR, 'go2rtc.yaml')
-# Inline config: no go2rtc.yaml on disk (avoids RTSP passwords + :8554 LAN expose)
-_GO2RTC_INLINE_CFG = (
-    '{"api":{"listen":"127.0.0.1:1984"},'
-    '"rtsp":{"listen":""},'
-    '"webrtc":{"listen":":8555"},'
-    '"log":{"level":"warn"}}'
-)
+_go2rtc_api_port = 44011
+_go2rtc_webrtc_port = 44012
+_go2rtc_rtsp_port = 44014
+_talk_port = DEFAULT_TALK_PORT
 _go2rtc_check_at = 0.0
 
 
@@ -61,6 +60,23 @@ def read_socket():
             if action == "syncbaichuan":
                 if bc_push_manager is not None:
                     bc_push_manager.sync_cameras(message.get('cameras') or [])
+                continue
+
+            if action == "preparetalk":
+                if bc_talk_server is not None:
+                    routes = message.get('routes')
+                    if routes is None and message.get('eq_id') is not None:
+                        routes = [message]
+                    for r in routes or []:
+                        bc_talk_server.register_route(
+                            r.get('eq_id'),
+                            r.get('ip'),
+                            r.get('port', 9000),
+                            r.get('channel', 0),
+                            r.get('user', 'admin'),
+                            r.get('pwd', ''),
+                            r.get('token', ''),
+                        )
                 continue
 
             if action != "sethook":
@@ -200,14 +216,30 @@ def start_go2rtc():
             os.remove(_GO2RTC_CFG)
     except OSError as e:
         logging.warning("Unable to remove legacy go2rtc.yaml: %s", e)
+    # Loopback-only RTSP (127.0.0.1) is required by go2rtc's internal ffmpeg:...#audio=opus pipeline (zero LAN exposure)
+    inline_cfg = json.dumps(
+        {
+            "api": {"listen": f"127.0.0.1:{_go2rtc_api_port}", "origin": "*"},
+            "rtsp": {"listen": f"127.0.0.1:{_go2rtc_rtsp_port}"},
+            "webrtc": {"listen": f":{_go2rtc_webrtc_port}"},
+            "log": {"level": "warn"},
+        },
+        separators=(",", ":"),
+    )
     try:
+        # -c /dev/null enables PUT /api/streams multi-source updates while writing zero bytes to disk
         go2rtc_proc = subprocess.Popen(
-            [_GO2RTC_BIN, '-c', _GO2RTC_INLINE_CFG],
+            [_GO2RTC_BIN, '-c', '/dev/null', '-c', inline_cfg],
             cwd=_GO2RTC_DIR,
             stdout=subprocess.DEVNULL,
             stderr=None,
         )
-        logging.info("go2rtc started pid=%s", go2rtc_proc.pid)
+        logging.info(
+            "go2rtc started pid=%s (api=127.0.0.1:%s webrtc=:%s)",
+            go2rtc_proc.pid,
+            _go2rtc_api_port,
+            _go2rtc_webrtc_port,
+        )
     except Exception as e:
         logging.error("Unable to start go2rtc: %s", e)
         go2rtc_proc = None
@@ -264,6 +296,11 @@ def shutdown():
             bc_push_manager.stop_all()
         except Exception:
             pass
+    if bc_talk_server is not None:
+        try:
+            bc_talk_server.stop()
+        except Exception:
+            pass
     stop_uvicorn()
     stop_go2rtc()
     logging.debug("Exit 0")
@@ -306,6 +343,9 @@ parser.add_argument("--pid", help="Pid file", type=str)
 parser.add_argument("--socketport", help="Port for server", type=str)
 parser.add_argument("--webhook_ip", help="IP for webhook", type=str)
 parser.add_argument("--webhook_port", help="Port for webhook", type=str)
+parser.add_argument("--go2rtc_api_port", help="Local API port for go2rtc", type=int)
+parser.add_argument("--go2rtc_webrtc_port", help="WebRTC ICE port for go2rtc", type=int)
+parser.add_argument("--talk_port", help="Local RTSP port for Baichuan talk bridge", type=int)
 args = parser.parse_args()
 
 if args.device:
@@ -326,10 +366,17 @@ if args.webhook_ip:
     _webhook_ip = str(args.webhook_ip)
 if args.webhook_port:
     _webhook_port = int(args.webhook_port)
+if args.go2rtc_api_port:
+    _go2rtc_api_port = int(args.go2rtc_api_port)
+if args.go2rtc_webrtc_port:
+    _go2rtc_webrtc_port = int(args.go2rtc_webrtc_port)
+if args.talk_port:
+    _talk_port = int(args.talk_port)
 
 jeedom_utils.set_log_level(_log_level)
 jeedom_cnx = jeedom_com(_apikey, _callback, _cycle)
 bc_push_manager = BaichuanPushManager(jeedom_cnx)
+bc_talk_server = BaichuanTalkRtspServer("127.0.0.1", _talk_port)
 
 logging.info('Start demond')
 logging.info('Log level: %s', _log_level)
@@ -345,6 +392,10 @@ os.environ[_ENV_CALLBACK] = _callback or ''
 os.environ[_ENV_APIKEY] = _apikey or ''
 
 start_go2rtc()
+try:
+    bc_talk_server.start()
+except Exception as e:
+    logging.error("Unable to start Baichuan talk RTSP server: %s", e)
 start_uvicorn()
 
 signal.signal(signal.SIGINT, handler)
