@@ -728,6 +728,8 @@
         "Copier l'URL": "Copiar URL",
         "Ouvrir dans un nouvel onglet": "Abrir en nueva pestaña",
         "Régénérer le jeton d'accès": "Regenerar token de acceso",
+        "RTSP Flux local (Opus)": "RTSP Flujo local (Opus)",
+        "URL RTSP locale (127.0.0.1:44014) à renseigner dans URL flux du widget Caméra JeedomConnect pour disposer à la fois de la vidéo H.264 et du son ambiant entrant transcodé à la demande en Opus pour WebRTC (les caméras Reolink diffusant nativement leur piste audio en AAC, ignorée en WebRTC).": "URL RTSP local (127.0.0.1:44014) para introducir en URL flujo del widget Cámara de JeedomConnect y disponer tanto de vídeo H.264 como del audio entrante transcodificado bajo demanda a Opus para WebRTC (las cámaras Reolink emiten audio nativo en AAC, ignorado en WebRTC).",
         "RTSP Talk local": "RTSP Talk local",
         "URL RTSP backchannel locale (127.0.0.1) exposant l'audio bidirectionnel Baichuan universel au moteur go2rtc de JeedomConnect (reste active même lorsque l'option Live WebRTC du navigateur Reolink est désactivée).": "URL RTSP backchannel local (127.0.0.1) que expone el audio bidireccional Baichuan universal al motor go2rtc de JeedomConnect (permanece activa incluso cuando la opción Live WebRTC del navegador Reolink está desactivada)."
     },

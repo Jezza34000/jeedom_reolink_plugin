@@ -489,6 +489,19 @@ $renderCard = function ($eqLogic) use ($fwCheckEnabled) {
 													</div>
 												</div>
 												<div class="form-group">
+													<label class="col-sm-4 control-label">{{RTSP Flux local (Opus)}}
+														<sup><i class="fas fa-question-circle tooltips" title="{{URL RTSP locale (127.0.0.1:44014) à renseigner dans URL flux du widget Caméra JeedomConnect pour disposer à la fois de la vidéo H.264 et du son ambiant entrant transcodé à la demande en Opus pour WebRTC (les caméras Reolink diffusant nativement leur piste audio en AAC, ignorée en WebRTC).}}"></i></sup>
+													</label>
+													<div class="col-sm-8">
+														<div class="input-group">
+															<input type="text" class="form-control input-sm" id="inp_rlkLocalStreamRtspUrl" readonly/>
+															<span class="input-group-btn">
+																<a class="btn btn-default btn-sm" id="btCopyLocalStreamRtspUrl" title="{{Copier l'URL}}"><i class="fas fa-copy"></i></a>
+															</span>
+														</div>
+													</div>
+												</div>
+												<div class="form-group">
 													<label class="col-sm-4 control-label">{{RTSP Talk local}}
 														<sup><i class="fas fa-question-circle tooltips" title="{{URL RTSP backchannel locale (127.0.0.1) exposant l'audio bidirectionnel Baichuan universel au moteur go2rtc de JeedomConnect (reste active même lorsque l'option Live WebRTC du navigateur Reolink est désactivée).}}"></i></sup>
 													</label>

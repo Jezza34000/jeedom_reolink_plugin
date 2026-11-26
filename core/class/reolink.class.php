@@ -720,6 +720,20 @@ class reolink extends eqLogic {
     return ($p > 0 && $p <= 65535) ? $p : 44013;
   }
 
+  public static function getGo2rtcRtspPort() {
+    $p = intval(config::byKey('go2rtc_rtsp_port', __CLASS__, 44014));
+    return ($p > 0 && $p <= 65535) ? $p : 44014;
+  }
+
+  public function getLocalOpusRtspUrl($streamKey = 'sub') {
+    $cnxType = strtolower(trim(strval($this->getConfiguration('cnxtype', ''))));
+    if ($this->isNvrParent() || $cnxType === 'baichuan') {
+      return '';
+    }
+    $key = self::sanitizeStreamKey($streamKey);
+    return 'rtsp://127.0.0.1:' . self::getGo2rtcRtspPort() . '/reolink_' . intval($this->getId()) . '_' . $key . '?video=h264&audio=opus';
+  }
+
   public static function sanitizeStreamKey($key) {
     $key = strtolower(trim(strval($key)));
     $allowed = array('sub', 'ext', 'main', 'autotrack_sub', 'autotrack_main', 'jpeg');
@@ -2178,14 +2192,11 @@ class reolink extends eqLogic {
     }
 
     $available = $camera->getAvailableStreams();
-    $webrtcEnabled = self::isWebrtcEnabled();
     $hasTalk = (intval($camera->getConfiguration('hasAudioTalk', 0)) === 1);
     $talkUrl = '';
     if ($hasTalk) {
       self::syncTalkRoutesToDaemon($camera, true);
-      if ($webrtcEnabled) {
-        $talkUrl = $camera->getLocalTalkRtspUrl(true);
-      }
+      $talkUrl = $camera->getLocalTalkRtspUrl(true);
     }
 
     $apiPort = self::getGo2rtcApiPort();
@@ -2195,12 +2206,9 @@ class reolink extends eqLogic {
         continue;
       }
       $name = 'reolink_' . intval($id) . '_' . $key;
-      $sources = array($meta['url']);
-      if ($webrtcEnabled) {
-        $sources[] = 'ffmpeg:' . $name . '#audio=opus';
-        if ($talkUrl !== '') {
-          $sources[] = $talkUrl;
-        }
+      $sources = array($meta['url'], 'ffmpeg:' . $name . '#audio=opus');
+      if ($talkUrl !== '') {
+        $sources[] = $talkUrl;
       }
       $query = 'name=' . rawurlencode($name);
       foreach ($sources as $src) {
@@ -4141,7 +4149,52 @@ class reolink extends eqLogic {
     message::removeAll(__CLASS__, 'unableStartDeamon');
     usleep(600000);
     self::syncBaichuanDaemonSubscriptions(true);
+    self::registerStoredStreamsNonWaking();
     return true;
+  }
+
+  public static function registerStoredStreamsNonWaking($targetCamera = null) {
+    $deamon_info = self::deamon_info();
+    if (($deamon_info['state'] ?? '') !== 'ok') {
+      return;
+    }
+    $apiPort = self::getGo2rtcApiPort();
+    $targets = is_object($targetCamera) ? array($targetCamera) : eqLogic::byType('reolink', true);
+    foreach ($targets as $camera) {
+      if (!is_object($camera) || $camera->isNvrParent() || intval($camera->getIsEnable()) !== 1) {
+        continue;
+      }
+      $cnxType = strtolower(trim(strval($camera->getConfiguration('cnxtype', ''))));
+      if ($cnxType === 'baichuan') {
+        continue;
+      }
+      $available = $camera->getAvailableStreams();
+      if (empty($available)) {
+        continue;
+      }
+      $talkUrl = (intval($camera->getConfiguration('hasAudioTalk', 0)) === 1) ? $camera->getLocalTalkRtspUrl(true) : '';
+      foreach ($available as $key => $meta) {
+        if (($meta['type'] ?? '') !== 'go2rtc' || empty($meta['url'])) {
+          continue;
+        }
+        $name = 'reolink_' . intval($camera->getId()) . '_' . $key;
+        $sources = array($meta['url'], 'ffmpeg:' . $name . '#audio=opus');
+        if ($talkUrl !== '') {
+          $sources[] = $talkUrl;
+        }
+        $query = 'name=' . rawurlencode($name);
+        foreach ($sources as $src) {
+          $query .= '&src=' . rawurlencode($src);
+        }
+        $ch = curl_init('http://127.0.0.1:' . $apiPort . '/api/streams?' . $query);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+        @curl_exec($ch);
+        curl_close($ch);
+      }
+    }
   }
 
   public static function deamon_stop() {
@@ -4263,6 +4316,7 @@ class reolink extends eqLogic {
       }
     }
     self::syncBaichuanDaemonSubscriptions(false);
+    self::registerStoredStreamsNonWaking($this);
     $this->emptyCacheWidget();
     $this->refreshWidget();
   }
