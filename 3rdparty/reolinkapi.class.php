@@ -6,6 +6,7 @@ class reolinkAPI {
   private $token;
   private $tokenexp;
   private $tagtoken;
+  private $sessionKey;
   private $user;
   private $password;
   private $cnxtype;
@@ -15,6 +16,7 @@ class reolinkAPI {
   private $privacyWakeRetry = false;
   private $transportFailed = false;
   private $loginAttempted = false;
+  private $loginBusy = false;
 
   public $is_loggedin;
   public $lastResponseData = null;
@@ -24,6 +26,10 @@ class reolinkAPI {
 
   public function hasTransportFailed() {
     return $this->transportFailed;
+  }
+
+  public function isLoginBusy() {
+    return $this->loginBusy;
   }
 
   const CAM_GET_ABILITY = 'GetAbility';
@@ -191,6 +197,7 @@ class reolinkAPI {
     $this->user = trim(strval($cnxinfo['username'] ?? ''));
     $this->password = trim(strval($cnxinfo['password'] ?? ''));
     $this->tagtoken = str_replace(".", "", $this->ip);
+    $this->sessionKey = substr(hash('sha256', $this->cnxtype . '|' . $this->ip . '|' . $this->port . '|' . $this->user . '|' . $this->password), 0, 24);
     $this->authmethod = intval(config::byKey("authmethod", 'reolink', 0));
 
     if ($this->authmethod == 0) {
@@ -206,7 +213,6 @@ class reolinkAPI {
   }
 
   public function __destruct() {
-    $this->logout();
     log::add('reolink', 'debug', str_repeat("=", 60));
   }
 
@@ -281,6 +287,7 @@ class reolinkAPI {
       }
 
       // Do not retry synchronously on transport failure (HTTP 0) or camera gateway/HTTP errors (502/503/504/4xx)
+      $prevTok = strval($this->token ?? '');
       $this->transportFailed = true;
       $this->skipRetry = true;
       $this->is_loggedin = false;
@@ -288,6 +295,9 @@ class reolinkAPI {
       unset($this->tokenexp);
 
       if (($httpcode === 0 || $httpcode >= 500) && class_exists('reolink')) {
+        if ($prevTok !== '') {
+          $this->invalidateCachedToken($prevTok);
+        }
         reolink::recordHostFailure($this->cnxtype, $this->ip, $this->port, $summary);
       } else {
         log::add('reolink', 'warning', 'Requête caméra ' . $this->ip . ':' . $this->port . ' en échec (' . $summary . ')');
@@ -302,10 +312,124 @@ class reolinkAPI {
   }
 
   private function loginLockPath() {
-    return jeedom::getTmpFolder('reolink') . '/login_' . $this->tagtoken . '.lock';
+    return jeedom::getTmpFolder('reolink') . '/login_' . $this->sessionKey . '.lock';
   }
 
-  private function login() {
+  private function sessionCachePath() {
+    return jeedom::getTmpFolder('reolink') . '/session_' . $this->sessionKey . '.json';
+  }
+
+  private function readSessionFile() {
+    $path = $this->sessionCachePath();
+    if (!is_file($path)) {
+      return null;
+    }
+    $raw = @file_get_contents($path);
+    if ($raw === false || $raw === '') {
+      return null;
+    }
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : null;
+  }
+
+  private function loadCachedToken($minRemainingSec = 120, $excludeToken = '') {
+    $entry = $this->readSessionFile();
+    if (!is_array($entry) || !empty($entry['forceRotate'])) {
+      return false;
+    }
+    $tok = trim(strval($entry['token'] ?? ''));
+    $exp = intval($entry['expiresAt'] ?? 0);
+    if ($tok === '' || ($excludeToken !== '' && $tok === $excludeToken) || $exp <= (time() + $minRemainingSec)) {
+      return false;
+    }
+    $this->token = $tok;
+    $this->tokenexp = $exp;
+    $this->is_loggedin = true;
+    $this->transportFailed = false;
+    $this->loginBusy = false;
+    return true;
+  }
+
+  private function saveCachedToken($token, $expiresAt) {
+    $dir = jeedom::getTmpFolder('reolink');
+    if (!is_dir($dir)) {
+      @mkdir($dir, 0770, true);
+    }
+    $path = $this->sessionCachePath();
+    $tmp = $path . '.' . getmypid() . '.' . substr(md5(uniqid('', true)), 0, 6) . '.tmp';
+    $payload = json_encode(array(
+      'token' => strval($token),
+      'expiresAt' => intval($expiresAt),
+      'ip' => $this->ip,
+    ));
+    if (@file_put_contents($tmp, $payload) !== false) {
+      @chmod($tmp, 0600);
+      @rename($tmp, $path);
+    } else {
+      @unlink($tmp);
+    }
+  }
+
+  public function invalidateCachedToken($expectedToken = '') {
+    $path = $this->sessionCachePath();
+    if (!is_file($path)) {
+      return;
+    }
+    if ($expectedToken !== '') {
+      $entry = $this->readSessionFile();
+      if (is_array($entry) && strval($entry['token'] ?? '') !== $expectedToken) {
+        return;
+      }
+    }
+    @unlink($path);
+  }
+
+  private function logoutTokenQuiet($tok) {
+    $tok = trim(strval($tok));
+    if ($tok === '' || $this->ip === '') {
+      return;
+    }
+    $url = $this->cnxtype . '://' . $this->ip . ':' . $this->port . '/cgi-bin/api.cgi?cmd=Logout&token=' . urlencode($tok);
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, '[{"cmd":"Logout","param":{}}]');
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 1200);
+    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 1500);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+    @curl_exec($ch);
+    curl_close($ch);
+  }
+
+  public static function invalidateHostSessions($ip = '') {
+    $dir = jeedom::getTmpFolder('reolink');
+    if (!is_dir($dir)) {
+      return;
+    }
+    $normIp = trim(strval($ip));
+    foreach (glob($dir . '/session_*.json') ?: array() as $file) {
+      $raw = @file_get_contents($file);
+      $data = is_string($raw) ? json_decode($raw, true) : null;
+      if ($normIp !== '' && (!is_array($data) || strval($data['ip'] ?? '') !== $normIp)) {
+        continue;
+      }
+      if (is_array($data) && !empty($data['token']) && intval($data['expiresAt'] ?? 0) > time()) {
+        $data['forceRotate'] = 1;
+        $tmp = $file . '.' . getmypid() . '.rot.tmp';
+        if (@file_put_contents($tmp, json_encode($data)) !== false) {
+          @chmod($tmp, 0600);
+          @rename($tmp, $file);
+          continue;
+        }
+        @unlink($tmp);
+      }
+      @unlink($file);
+    }
+  }
+
+  private function login($forceFresh = false, $staleToken = '') {
     if ($this->authmethod != 0) {
       $this->is_loggedin = true;
       return true;
@@ -314,6 +438,7 @@ class reolinkAPI {
       return false;
     }
     $this->loginAttempted = true;
+    $this->loginBusy = false;
 
     if (!$this->bypassCooldown && class_exists('reolink') && reolink::isHostInCooldown($this->cnxtype, $this->ip, $this->port)) {
       $this->is_loggedin = false;
@@ -322,12 +447,20 @@ class reolinkAPI {
       return false;
     }
 
+    if (!$forceFresh && $this->loadCachedToken(120)) {
+      return true;
+    }
+
+    $lockDir = jeedom::getTmpFolder('reolink');
+    if (!is_dir($lockDir)) {
+      @mkdir($lockDir, 0770, true);
+    }
     $lockPath = $this->loginLockPath();
     $lockFp = @fopen($lockPath, 'c+');
     $locked = false;
     if ($lockFp) {
-      // Bounded non-blocking lock (max 2.0s = 10 x 200ms) to prevent PHP/SQL worker pile-up
-      for ($attempt = 0; $attempt < 10; $attempt++) {
+      // Bounded non-blocking lock (max 3.0s = 15 x 200ms) to prevent PHP/SQL worker pile-up
+      for ($attempt = 0; $attempt < 15; $attempt++) {
         if (@flock($lockFp, LOCK_EX | LOCK_NB)) {
           $locked = true;
           break;
@@ -344,8 +477,8 @@ class reolinkAPI {
       if (!$locked) {
         fclose($lockFp);
         $this->is_loggedin = false;
-        $this->transportFailed = true;
-        log::add('reolink', 'debug', 'Login reporté (verrou occupé > 2s) pour ' . $this->ip . ':' . $this->port);
+        $this->loginBusy = true;
+        log::add('reolink', 'debug', 'Login reporté (verrou occupé > 3s) pour ' . $this->ip . ':' . $this->port);
         return false;
       }
     }
@@ -357,6 +490,21 @@ class reolinkAPI {
         $this->transportFailed = true;
         log::add('reolink', 'debug', 'Login ignoré après obtention du verrou (disjoncteur actif) pour ' . $this->ip . ':' . $this->port);
         return false;
+      }
+
+      // Double-check after acquiring lock: reuse if another worker already minted a fresh token
+      if ($this->loadCachedToken(120, $staleToken)) {
+        return true;
+      }
+
+      // Cleanly Logout any previous still-unexpired token before minting its replacement (prevents NVR max-session -5)
+      $prevEntry = $this->readSessionFile();
+      $prevTok = is_array($prevEntry) ? trim(strval($prevEntry['token'] ?? '')) : '';
+      $prevExp = is_array($prevEntry) ? intval($prevEntry['expiresAt'] ?? 0) : 0;
+      @unlink($this->sessionCachePath());
+      if ($prevTok !== '' && ($staleToken === '' || $prevTok !== $staleToken) && $prevExp > time()) {
+        log::add('reolink', 'debug', 'Rotation token CGI : fermeture préalable de la session précédente');
+        $this->logoutTokenQuiet($prevTok);
       }
 
       log::add('reolink', 'debug', 'Camera login...');
@@ -378,10 +526,11 @@ class reolinkAPI {
       }
 
       $this->token = $response[0]['value']['Token']['name'];
-      $date_utc = new DateTime("now", new DateTimeZone("UTC"));
-      $this->tokenexp = intval($response[0]['value']['Token']['leaseTime']) + $date_utc->getTimestamp();
+      $leaseSec = max(60, intval($response[0]['value']['Token']['leaseTime'] ?? 3600));
+      $this->tokenexp = time() + $leaseSec;
       $this->is_loggedin = true;
       $this->transportFailed = false;
+      $this->saveCachedToken($this->token, $this->tokenexp);
       log::add('reolink', 'debug', 'Token session OK (leaseUntil=' . $this->tokenexp . ')');
       return true;
     } finally {
@@ -394,7 +543,11 @@ class reolinkAPI {
   }
 
   public function logout() {
-    if ($this->authmethod != 0 || empty($this->token) || $this->transportFailed) {
+    $tok = strval($this->token ?? '');
+    if ($tok !== '') {
+      $this->invalidateCachedToken($tok);
+    }
+    if ($this->authmethod != 0 || $tok === '' || $this->transportFailed) {
       $this->is_loggedin = false;
       unset($this->token);
       unset($this->tokenexp);
@@ -403,7 +556,7 @@ class reolinkAPI {
 
     log::add('reolink', 'debug', 'Camera logout...');
     $payload = '[{"cmd":"Logout","param":{}}]';
-    $this->request('cmd=Logout&token=' . $this->token, $payload);
+    $this->request('cmd=Logout&token=' . urlencode($tok), $payload);
     $this->is_loggedin = false;
     unset($this->token);
     unset($this->tokenexp);
@@ -416,56 +569,73 @@ class reolinkAPI {
     }
     if ($this->authmethod == 0 && !$this->is_loggedin) {
       // Avoid a second login attempt if constructor already tried and failed
-      if ($this->loginAttempted || $this->transportFailed) {
+      if ($this->loginAttempted || $this->transportFailed || $this->loginBusy) {
         return false;
       }
       if (!$this->login()) {
         return false;
       }
     }
-    if ($this->authmethod == 0) {
-      $auth = 'token=' . urlencode($this->token);
-    } else {
-      $auth = 'user=' . urlencode($this->user) . '&password=' . urlencode($this->password);
-    }
     $snapType = ($snapType === 'main') ? 'main' : 'sub';
-    $url = $this->cnxtype . '://' . $this->ip . ':' . $this->port
-      . '/cgi-bin/api.cgi?cmd=Snap&channel=' . intval($channel)
-      . '&snapType=' . $snapType . '&' . $auth;
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 6);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-    $data = curl_exec($ch);
-    $code = intval(curl_getinfo($ch, CURLINFO_HTTP_CODE));
-    $ctype = strval(curl_getinfo($ch, CURLINFO_CONTENT_TYPE));
-    $snapErr = curl_error($ch);
-    curl_close($ch);
-    if ($code === 0 || $code >= 500) {
-      $this->transportFailed = true;
-      $this->is_loggedin = false;
-      unset($this->token);
-      unset($this->tokenexp);
-      if (class_exists('reolink')) {
-        reolink::recordHostFailure(
-          $this->cnxtype,
-          $this->ip,
-          $this->port,
-          self::summarizeHttpFailure($code, $snapErr, is_string($data) ? substr($data, 0, 200) : '')
-        );
+    for ($snapAttempt = 0; $snapAttempt < 2; $snapAttempt++) {
+      if ($this->authmethod == 0) {
+        $auth = 'token=' . urlencode(strval($this->token ?? ''));
+      } else {
+        $auth = 'user=' . urlencode($this->user) . '&password=' . urlencode($this->password);
       }
-      return false;
-    }
-    if ($code !== 200 || $data === false || $data === '' || stripos($ctype, 'image/') === false) {
+      $url = $this->cnxtype . '://' . $this->ip . ':' . $this->port
+        . '/cgi-bin/api.cgi?cmd=Snap&channel=' . intval($channel)
+        . '&snapType=' . $snapType . '&' . $auth;
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+      curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+      $data = curl_exec($ch);
+      $code = intval(curl_getinfo($ch, CURLINFO_HTTP_CODE));
+      $ctype = strval(curl_getinfo($ch, CURLINFO_CONTENT_TYPE));
+      $snapErr = curl_error($ch);
+      curl_close($ch);
+      if ($code === 0 || $code >= 500) {
+        $staleTok = strval($this->token ?? '');
+        $this->transportFailed = true;
+        $this->is_loggedin = false;
+        unset($this->token);
+        unset($this->tokenexp);
+        if ($staleTok !== '') {
+          $this->invalidateCachedToken($staleTok);
+        }
+        if (class_exists('reolink')) {
+          reolink::recordHostFailure(
+            $this->cnxtype,
+            $this->ip,
+            $this->port,
+            self::summarizeHttpFailure($code, $snapErr, is_string($data) ? substr($data, 0, 200) : '')
+          );
+        }
+        return false;
+      }
+      if ($code === 200 && $data !== false && $data !== '' && stripos($ctype, 'image/') !== false) {
+        if (class_exists('reolink')) {
+          reolink::recordHostSuccess($this->cnxtype, $this->ip, $this->port);
+        }
+        return $data;
+      }
+      if ($snapAttempt === 0 && $this->authmethod == 0 && $code === 200) {
+        $staleTok = strval($this->token ?? '');
+        $this->invalidateCachedToken($staleTok);
+        $this->is_loggedin = false;
+        unset($this->token);
+        unset($this->tokenexp);
+        if ($this->login(true, $staleTok)) {
+          continue;
+        }
+      }
       log::add('reolink', 'debug', 'SendSnap failed HTTP=' . $code . ' ctype=' . $ctype . ' len=' . strlen(strval($data)));
       return false;
     }
-    if (class_exists('reolink')) {
-      reolink::recordHostSuccess($this->cnxtype, $this->ip, $this->port);
-    }
-    return $data;
+    return false;
   }
 
   public function SendCMD($POSTparameters, $URLrequest = NULL) {
@@ -564,6 +734,10 @@ class reolinkAPI {
       }
     }
 
+    if (strpos($POSTparameters, '"Reboot"') !== false && $checkedresponse !== false) {
+      $this->invalidateCachedToken(strval($this->token ?? ''));
+    }
+
     return $checkedresponse;
   }
 
@@ -600,12 +774,17 @@ class reolinkAPI {
         continue;
       }
       $rsp = intval($item['error']['rspCode']);
-      if ($rsp == -6) {
+      if ($rsp == -6 || $rsp == -21) {
+        $staleTok = strval($this->token ?? '');
+        $this->invalidateCachedToken($staleTok);
         $this->is_loggedin = false;
         unset($this->token);
         unset($this->tokenexp);
-        $this->login();
-        $this->skipRetry = false;
+        if ($this->login(true, $staleTok)) {
+          $this->skipRetry = false;
+        } else {
+          $this->skipRetry = true;
+        }
         return false;
       }
       if (!in_array($rsp, $noRetryCodes, true)) {

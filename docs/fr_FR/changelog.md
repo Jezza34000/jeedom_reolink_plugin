@@ -6,6 +6,7 @@
 
 # 26/11/2026
 
+- Cache de session HTTP CGI & fluidité des rafales Zoom/Focus : conservation en mémoire vive du token de session Reolink (`3600 s`) avec rotation propre sous verrou exclusif (`Logout` préalable de l'ancien token avant renouvellement pour n'occuper qu'une seule session sur le NVR, renouvellement automatique sur expiration ou redémarrage caméra/NVR) et fusion côté serveur des consignes `StartZoomFocus` intermédiaires afin de supprimer les erreurs `Caméra injoignable ou connexion impossible (StartZoomFocus)` et les allers-retours du moteur optique lors de clics rapides sur Zoom `+`/`-` ou Focus
 - Organisation des commandes par onglets & allègement du Dashboard par défaut : découpage des commandes en 6 onglets thématiques (**Détections & IA**, **PTZ & Rondes**, **Éclairage & Audio**, **Alertes & Enreg.**, **Image & Encodage**, **Système**, onglets vides masqués automatiquement), filtre rapide **Toutes / Infos (lecture) / Actions** + recherche texte, affichage par défaut allégé à la création sur le Dashboard (commandes courantes uniquement, sans modifier les équipements existants) et bouton **Affichage par défaut** (sur confirmation) pour réappliquer cette sélection sur une caméra déjà installée
 - Vérification des mises à jour firmware : affichage d'un état neutre `Inactif — données non actualisées` sur les équipements désactivés (fiche équipement, vérification unitaire, vue liste et modale **Santé**) et remise à zéro immédiate de `NewFirmwareState` lors de la désactivation afin d'éviter tout faux positif sur d'anciens équipements inactifs
 
