@@ -38,11 +38,11 @@ class reolinkBaichuanAdapter {
     $this->port = $port;
     $this->bc = new reolinkBaichuan($ip, $user, $pass, $port, 3, 5);
 
-    if (!$bypass && class_exists('reolink') && reolink::isHostInCooldown('baichuan', $ip, $port)) {
+    if (class_exists('reolink') && reolink::shouldBlockHost('baichuan', $ip, $port, $bypass)) {
       $this->is_loggedin = false;
       $this->transportFailed = true;
       $this->loginAttempted = true;
-      $this->lastError = 'Caméra en pause (disjoncteur actif)';
+      $this->lastError = reolink::formatHostCooldownReason('baichuan', $ip, $port);
       return;
     }
 
