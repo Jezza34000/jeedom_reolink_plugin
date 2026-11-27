@@ -17,6 +17,7 @@ class reolinkAPI {
   private $transportFailed = false;
   private $loginAttempted = false;
   private $loginBusy = false;
+  private $lastTransportError = '';
 
   public $is_loggedin;
   public $lastResponseData = null;
@@ -209,9 +210,10 @@ class reolinkAPI {
     if ($this->authmethod == 0) {
       $this->login();
     } else {
-      if (!$this->bypassCooldown && class_exists('reolink') && reolink::isHostInCooldown($this->cnxtype, $this->ip, $this->port)) {
+      if (class_exists('reolink') && reolink::shouldBlockHost($this->cnxtype, $this->ip, $this->port, $this->bypassCooldown)) {
         $this->is_loggedin = false;
         $this->transportFailed = true;
+        $this->lastTransportError = reolink::formatHostCooldownReason($this->cnxtype, $this->ip, $this->port);
       } else {
         $this->is_loggedin = true;
       }
@@ -224,11 +226,12 @@ class reolinkAPI {
 
   private static function summarizeHttpFailure($httpcode, $curlErr, $bodySnippet) {
     $parts = array('HTTP ' . intval($httpcode));
-    $cleanErr = trim(preg_replace('/\s+/', ' ', strval($curlErr)));
+    $cleanErr = preg_replace('/(password|token)=[^&\s"\']*/i', '$1=******', trim(preg_replace('/\s+/', ' ', strval($curlErr))));
     if ($cleanErr !== '') {
       $parts[] = $cleanErr;
     }
-    $cleanBody = trim(preg_replace('/\s+/', ' ', strip_tags(strval($bodySnippet))));
+    $cleanBody = preg_replace('/(password|token)=[^&\s"\']*/i', '$1=******', trim(preg_replace('/\s+/', ' ', strip_tags(strval($bodySnippet)))));
+    $cleanBody = preg_replace('/"password"\s*:\s*"(?:\\\\.|[^"\\\\])*"/i', '"password":"******"', $cleanBody);
     if ($cleanBody !== '' && stripos($cleanErr, $cleanBody) === false) {
       if (strlen($cleanBody) > 90) {
         $cleanBody = substr($cleanBody, 0, 90) . '...';
@@ -239,9 +242,10 @@ class reolinkAPI {
   }
 
   private function request($cmd, $payload) {
-    if (!$this->bypassCooldown && class_exists('reolink') && reolink::isHostInCooldown($this->cnxtype, $this->ip, $this->port)) {
+    if (class_exists('reolink') && reolink::shouldBlockHost($this->cnxtype, $this->ip, $this->port, $this->bypassCooldown)) {
       $this->skipRetry = true;
       $this->transportFailed = true;
+      $this->lastTransportError = reolink::formatHostCooldownReason($this->cnxtype, $this->ip, $this->port);
       log::add('reolink', 'debug', 'Requête ignorée (disjoncteur actif) vers ' . $this->ip . ':' . $this->port);
       return false;
     }
@@ -249,9 +253,9 @@ class reolinkAPI {
     $ch = curl_init();
     $url = "$this->cnxtype://$this->ip:$this->port/cgi-bin/api.cgi?$cmd";
     // Debug REMOVE PWD
-    $urldebug = preg_replace('/password=(.*?)$/', 'password=******', $url);
+    $urldebug = preg_replace('/(password|token)=[^&\s]*/i', '$1=******', $url);
     // Debug REMOVE PWD
-    $payloadLOG = preg_replace('/password":"(.*?)"}}}/', 'password":"******"}}}', $payload);
+    $payloadLOG = preg_replace('/"password"\s*:\s*"(?:\\\\.|[^"\\\\])*"/', '"password":"******"', $payload);
     log::add('reolink', 'debug', 'URL de requête => ' . $urldebug);
     log::add('reolink', 'debug', 'Payload => ' . $payloadLOG);
     $reqTimeout = $this->probeMode ? 8 : 6;
@@ -278,6 +282,7 @@ class reolinkAPI {
 
     if ($httpcode === 200) {
       $this->transportFailed = false;
+      $this->lastTransportError = '';
       if (class_exists('reolink')) {
         reolink::recordHostSuccess($this->cnxtype, $this->ip, $this->port);
       }
@@ -295,6 +300,7 @@ class reolinkAPI {
       // Do not retry synchronously on transport failure (HTTP 0) or camera gateway/HTTP errors (502/503/504/4xx)
       $prevTok = strval($this->token ?? '');
       $this->transportFailed = true;
+      $this->lastTransportError = $summary;
       $this->skipRetry = true;
       $this->is_loggedin = false;
       unset($this->token);
@@ -446,9 +452,10 @@ class reolinkAPI {
     $this->loginAttempted = true;
     $this->loginBusy = false;
 
-    if (!$this->bypassCooldown && class_exists('reolink') && reolink::isHostInCooldown($this->cnxtype, $this->ip, $this->port)) {
+    if (class_exists('reolink') && reolink::shouldBlockHost($this->cnxtype, $this->ip, $this->port, $this->bypassCooldown)) {
       $this->is_loggedin = false;
       $this->transportFailed = true;
+      $this->lastTransportError = reolink::formatHostCooldownReason($this->cnxtype, $this->ip, $this->port);
       log::add('reolink', 'debug', 'Login ignoré (disjoncteur actif) pour ' . $this->ip . ':' . $this->port);
       return false;
     }
@@ -472,10 +479,11 @@ class reolinkAPI {
           break;
         }
         usleep(200000);
-        if (!$this->bypassCooldown && class_exists('reolink') && reolink::isHostInCooldown($this->cnxtype, $this->ip, $this->port)) {
+        if (class_exists('reolink') && reolink::shouldBlockHost($this->cnxtype, $this->ip, $this->port, $this->bypassCooldown)) {
           fclose($lockFp);
           $this->is_loggedin = false;
           $this->transportFailed = true;
+          $this->lastTransportError = reolink::formatHostCooldownReason($this->cnxtype, $this->ip, $this->port);
           log::add('reolink', 'debug', 'Login annulé pendant attente verrou (disjoncteur activé) pour ' . $this->ip . ':' . $this->port);
           return false;
         }
@@ -491,9 +499,10 @@ class reolinkAPI {
 
     $this->loginInProgress = true;
     try {
-      if (!$this->bypassCooldown && class_exists('reolink') && reolink::isHostInCooldown($this->cnxtype, $this->ip, $this->port)) {
+      if (class_exists('reolink') && reolink::shouldBlockHost($this->cnxtype, $this->ip, $this->port, $this->bypassCooldown)) {
         $this->is_loggedin = false;
         $this->transportFailed = true;
+        $this->lastTransportError = reolink::formatHostCooldownReason($this->cnxtype, $this->ip, $this->port);
         log::add('reolink', 'debug', 'Login ignoré après obtention du verrou (disjoncteur actif) pour ' . $this->ip . ':' . $this->port);
         return false;
       }
@@ -518,7 +527,10 @@ class reolinkAPI {
       unset($this->token);
       unset($this->tokenexp);
 
-      $loginParameters = '[{"cmd":"Login","param":{"User":{"userName":"' . $this->user . '","password":"' . $this->password . '"}}}]';
+      $loginParameters = json_encode(
+        array(array('cmd' => 'Login', 'param' => array('User' => array('userName' => strval($this->user), 'password' => strval($this->password))))),
+        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+      );
       $response = $this->SendCMD($loginParameters, "Login");
 
       if (!is_array($response) || empty($response[0]['value']['Token']['name'])) {
@@ -570,7 +582,8 @@ class reolinkAPI {
   }
 
   public function SendSnap($channel = 0, $snapType = 'sub') {
-    if (!$this->bypassCooldown && class_exists('reolink') && reolink::isHostInCooldown($this->cnxtype, $this->ip, $this->port)) {
+    if (class_exists('reolink') && reolink::shouldBlockHost($this->cnxtype, $this->ip, $this->port, $this->bypassCooldown)) {
+      $this->lastTransportError = reolink::formatHostCooldownReason($this->cnxtype, $this->ip, $this->port);
       return false;
     }
     if ($this->authmethod == 0 && !$this->is_loggedin) {
@@ -605,7 +618,9 @@ class reolinkAPI {
       curl_close($ch);
       if ($code === 0 || $code >= 500) {
         $staleTok = strval($this->token ?? '');
+        $snapSummary = self::summarizeHttpFailure($code, $snapErr, is_string($data) ? substr($data, 0, 200) : '');
         $this->transportFailed = true;
+        $this->lastTransportError = $snapSummary;
         $this->is_loggedin = false;
         unset($this->token);
         unset($this->tokenexp);
@@ -617,7 +632,7 @@ class reolinkAPI {
             $this->cnxtype,
             $this->ip,
             $this->port,
-            self::summarizeHttpFailure($code, $snapErr, is_string($data) ? substr($data, 0, 200) : '')
+            $snapSummary
           );
         }
         return false;
@@ -834,18 +849,17 @@ class reolinkAPI {
   }
 
   public function getLastApiError() {
-    if (!is_array($this->lastResponseData)) {
-      return '';
-    }
-    foreach ($this->lastResponseData as $item) {
-      if (isset($item['error']['rspCode'])) {
-        return $this->formatApiError($item);
+    if (is_array($this->lastResponseData)) {
+      foreach ($this->lastResponseData as $item) {
+        if (isset($item['error']['rspCode'])) {
+          return $this->formatApiError($item);
+        }
+        if (isset($item['value']['rspCode']) && intval($item['value']['rspCode']) !== 200) {
+          return 'rspCode ' . intval($item['value']['rspCode']);
+        }
       }
-      if (isset($item['value']['rspCode']) && intval($item['value']['rspCode']) !== 200) {
-        return 'rspCode ' . intval($item['value']['rspCode']);
-      }
     }
-    return '';
+    return $this->lastTransportError;
   }
 
   private function GetErrorNFO($errorCode) {

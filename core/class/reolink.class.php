@@ -64,8 +64,19 @@ class reolink extends eqLogic {
   /************* Static methods ************/
   // Leading underscore required: Jeedom utils::o2a() persists non-_ properties into eqLogic INSERT/UPDATE
   private static $_cnxByIp = array();
+  private static $_inActionContext = false;
 
-  public static function getReolinkConnection($id) {
+  public static function setActionContext($active) {
+    $prev = self::$_inActionContext;
+    self::$_inActionContext = (bool) $active;
+    return $prev;
+  }
+
+  public static function isActionContext() {
+    return self::$_inActionContext;
+  }
+
+  public static function getReolinkConnection($id, $bypassCooldown = null) {
     $camera = reolink::byId($id, 'reolink');
     if (!is_object($camera)) {
       log::add('reolink', 'warning', 'getReolinkConnection : équipement introuvable (' . $id . ')');
@@ -76,6 +87,7 @@ class reolink extends eqLogic {
     $username = $camera->getConfiguration('login');
     $password = $camera->getConfiguration('password');
     $cnxtype = $camera->getConfiguration('cnxtype');
+    $bypass = ($bypassCooldown === null) ? self::$_inActionContext : (bool) $bypassCooldown;
 
     if (!empty($adresseIP) && !empty($username) && !empty($password)) {
       $normType = strtolower(trim(strval($cnxtype)));
@@ -83,18 +95,24 @@ class reolink extends eqLogic {
         $bcPort = reolinkBaichuan::resolvePort($camera);
         $cacheKey = 'baichuan|' . $adresseIP . '|' . strval($bcPort);
         if (isset(self::$_cnxByIp[$cacheKey]) && is_object(self::$_cnxByIp[$cacheKey])) {
-          return self::$_cnxByIp[$cacheKey];
+          $cached = self::$_cnxByIp[$cacheKey];
+          if ($cached->is_loggedin || !$bypass || self::isEquipmentHostRecentlyFailed($camera, 10)) {
+            return $cached;
+          }
         }
-        $cnxinfo = array("adresseIP" => $adresseIP, "port" => $bcPort, "username" => $username, "password" => $password, "cnxtype" => 'baichuan');
+        $cnxinfo = array("adresseIP" => $adresseIP, "port" => $bcPort, "username" => $username, "password" => $password, "cnxtype" => 'baichuan', "bypassCooldown" => $bypass);
         $camcnx = new reolinkBaichuanAdapter($cnxinfo);
         self::$_cnxByIp[$cacheKey] = $camcnx;
         return $camcnx;
       }
       $cacheKey = $normType . '|' . $adresseIP . '|' . strval($port);
       if (isset(self::$_cnxByIp[$cacheKey]) && is_object(self::$_cnxByIp[$cacheKey])) {
-        return self::$_cnxByIp[$cacheKey];
+        $cached = self::$_cnxByIp[$cacheKey];
+        if ($cached->is_loggedin || !$bypass || self::isEquipmentHostRecentlyFailed($camera, 10)) {
+          return $cached;
+        }
       }
-      $cnxinfo = array("adresseIP" => $adresseIP, "port" => $port, "username" => $username, "password" => $password, "cnxtype" => $cnxtype);
+      $cnxinfo = array("adresseIP" => $adresseIP, "port" => $port, "username" => $username, "password" => $password, "cnxtype" => $cnxtype, "bypassCooldown" => $bypass);
       $camcnx = new reolinkAPI($cnxinfo);
       self::$_cnxByIp[$cacheKey] = $camcnx;
       return $camcnx;
@@ -382,6 +400,28 @@ class reolink extends eqLogic {
     return intval($st['down_until'] ?? 0) > time();
   }
 
+  public static function isHostRecentlyFailed($proto, $ip, $port, $windowSec = 10) {
+    $st = self::getHostCooldownState($proto, $ip, $port);
+    if (!is_array($st) || intval($st['down_until'] ?? 0) <= time()) {
+      return false;
+    }
+    $lastFail = intval($st['last_fail_at'] ?? 0);
+    return ($lastFail > 0 && (time() - $lastFail) < max(1, intval($windowSec)));
+  }
+
+  public static function shouldBlockHost($proto, $ip, $port, $bypassStaleCooldown = false) {
+    if ($bypassStaleCooldown) {
+      return self::isHostRecentlyFailed($proto, $ip, $port, 10);
+    }
+    return self::isHostInCooldown($proto, $ip, $port);
+  }
+
+  public static function formatHostCooldownReason($proto, $ip, $port) {
+    $st = self::getHostCooldownState($proto, $ip, $port);
+    $reason = is_array($st) ? trim(strval($st['reason'] ?? '')) : '';
+    return __('pause disjoncteur', __FILE__) . ($reason !== '' ? ' : ' . $reason : '');
+  }
+
   public static function isEquipmentHostInCooldown($eqLogic) {
     if (!is_object($eqLogic)) {
       return false;
@@ -400,6 +440,26 @@ class reolink extends eqLogic {
       $port = ($proto === 'https') ? '443' : '80';
     }
     return self::isHostInCooldown($proto, $ip, $port);
+  }
+
+  public static function isEquipmentHostRecentlyFailed($eqLogic, $windowSec = 10) {
+    if (!is_object($eqLogic)) {
+      return false;
+    }
+    $ip = trim(strval($eqLogic->getConfiguration('adresseip', '')));
+    if ($ip === '') {
+      return false;
+    }
+    $cnxType = strtolower(trim(strval($eqLogic->getConfiguration('cnxtype', ''))));
+    if ($cnxType === 'baichuan') {
+      return self::isHostRecentlyFailed('baichuan', $ip, reolinkBaichuan::resolvePort($eqLogic), $windowSec);
+    }
+    $proto = ($cnxType === 'https') ? 'https' : 'http';
+    $port = trim(strval($eqLogic->getConfiguration('port', '')));
+    if ($port === '' || !is_numeric($port)) {
+      $port = ($proto === 'https') ? '443' : '80';
+    }
+    return self::isHostRecentlyFailed($proto, $ip, $port, $windowSec);
   }
 
   public static function recordHostFailure($proto, $ip, $port, $reason = '') {
@@ -450,6 +510,7 @@ class reolink extends eqLogic {
     cache::set($key, array(
       'fails' => $fails,
       'down_until' => $now + $cooldown,
+      'last_fail_at' => $now,
       'last_warn' => $lastWarn,
       'reason' => $cleanReason,
     ));
@@ -502,10 +563,24 @@ class reolink extends eqLogic {
   }
 
   public static function throwConnectionException($camcnx, $context = '') {
-    $suffix = ($context !== '') ? ' (' . $context . ')' : '';
     if (is_object($camcnx) && method_exists($camcnx, 'isLoginBusy') && $camcnx->isLoginBusy()) {
-      throw new Exception(__('Connexion à la caméra temporairement occupée, veuillez réessayer', __FILE__) . $suffix);
+      $busySuffix = ($context !== '') ? ' (' . $context . ')' : '';
+      throw new Exception(__('Connexion à la caméra temporairement occupée, veuillez réessayer', __FILE__) . $busySuffix);
     }
+    $detail = '';
+    if (!is_object($camcnx)) {
+      $detail = __('identifiants ou IP manquants', __FILE__);
+    } elseif (method_exists($camcnx, 'getLastApiError')) {
+      $detail = trim(strval($camcnx->getLastApiError()));
+    }
+    $parts = array();
+    if ($context !== '') {
+      $parts[] = $context;
+    }
+    if ($detail !== '' && ($context === '' || stripos($detail, $context) === false)) {
+      $parts[] = $detail;
+    }
+    $suffix = !empty($parts) ? ' (' . implode(' — ', $parts) . ')' : '';
     throw new Exception(__('Caméra injoignable ou connexion impossible', __FILE__) . $suffix);
   }
 
@@ -2706,7 +2781,7 @@ class reolink extends eqLogic {
     if ($camera->isNvrParent()) {
       throw new Exception(__('Les rondes PTZ ne s\'appliquent pas à un NVR parent', __FILE__));
     }
-    $cnx = reolink::getReolinkConnection($id);
+    $cnx = reolink::getReolinkConnection($id, true);
     if (!is_object($cnx) || !$cnx->is_loggedin) {
       reolink::throwConnectionException($cnx);
     }
@@ -2748,7 +2823,7 @@ class reolink extends eqLogic {
     if ($camera->isNvrParent()) {
       throw new Exception(__('Les rondes PTZ ne s\'appliquent pas à un NVR parent', __FILE__));
     }
-    $cnx = reolink::getReolinkConnection($id);
+    $cnx = reolink::getReolinkConnection($id, true);
     if (!is_object($cnx) || !$cnx->is_loggedin) {
       reolink::throwConnectionException($cnx);
     }
@@ -2937,6 +3012,9 @@ class reolink extends eqLogic {
       if (!is_object($camcmd)) {
         return false;
       }
+      if (!$camcnx->is_loggedin || (method_exists($camcnx, 'hasTransportFailed') && $camcnx->hasTransportFailed())) {
+        return false;
+      }
     }
 
     log::add('reolink', 'debug', 'Rafraichissement des informations de la caméra...');
@@ -3073,7 +3151,7 @@ class reolink extends eqLogic {
       $camcnx->batteryChannelMode = false;
       return;
     }
-    $cmd_block = array_chunk($cmdarr, config::byKey('cmdblock', __CLASS__, CMD_SEND_QTY));
+    $cmd_block = array_chunk($cmdarr, self::resolveCmdBlockSize());
     $anyAlive = false;
     $anyMdSeen = false;
     $channelStatusSeen = false;
@@ -4802,6 +4880,11 @@ class reolink extends eqLogic {
     return false;
   }
 
+  private static function resolveCmdBlockSize() {
+    $raw = intval(config::byKey('cmdblock', __CLASS__, CMD_SEND_QTY));
+    return ($raw >= 2) ? $raw : CMD_SEND_QTY;
+  }
+
   /**
    * Probe Get* payloads in batches. Returns map payloadJson => ['ok'=>bool,'rsp'=>int,'value'=>array|null]
    */
@@ -4811,8 +4894,15 @@ class reolink extends eqLogic {
       return $results;
     }
     $cnx->probeMode = true;
-    $chunks = array_chunk(array_values($payloads), config::byKey('cmdblock', __CLASS__, CMD_SEND_QTY));
+    $blockSize = self::resolveCmdBlockSize();
+    if (empty($cnx->batteryChannelMode)) {
+      $blockSize = min($blockSize, 4);
+    }
+    $chunks = array_chunk(array_values($payloads), $blockSize);
     foreach ($chunks as $chunk) {
+      if (!$cnx->is_loggedin || (method_exists($cnx, 'hasTransportFailed') && $cnx->hasTransportFailed())) {
+        break;
+      }
       $body = '[' . implode(',', $chunk) . ']';
       $res = $cnx->SendCMD($body);
       $data = is_array($res) ? $res : $cnx->lastResponseData;
@@ -4994,6 +5084,10 @@ class reolink extends eqLogic {
     $cnx->batteryChannelMode = $isBatChannel;
     $probeList = array_values(array_unique($probeList));
     $probeResults = reolink::probePayloads($cnx, $probeList);
+    $probeIncomplete = !$cnx->is_loggedin || (method_exists($cnx, 'hasTransportFailed') && $cnx->hasTransportFailed());
+    if ($probeIncomplete) {
+      $pruneUnsupported = false;
+    }
 
     // Resolve dual families (channel/standalone only)
     $isBaichuanOnly = (strtolower(trim(strval($camera->getConfiguration('cnxtype', '')))) === 'baichuan');
@@ -5062,8 +5156,41 @@ class reolink extends eqLogic {
           }
         }
       } else {
-        foreach (array_merge($fam['v20'], $fam['v1']) as $lid) {
-          $deniedLogical[$lid] = true;
+        $p20Dropped = !isset($probeResults[$p20]) || intval($probeResults[$p20]['rsp'] ?? -999) === -999;
+        $p1Dropped = !isset($probeResults[$p1]) || intval($probeResults[$p1]['rsp'] ?? -999) === -999;
+        if ($p20Dropped || $p1Dropped) {
+          $hasExistingV20 = false;
+          $hasExistingV1 = false;
+          foreach ($fam['v20'] as $lid) {
+            if (is_object($camera->getCmd(null, $lid))) {
+              $hasExistingV20 = true;
+              break;
+            }
+          }
+          foreach ($fam['v1'] as $lid) {
+            if (is_object($camera->getCmd(null, $lid))) {
+              $hasExistingV1 = true;
+              break;
+            }
+          }
+          $keepV20 = $hasExistingV20 || (!$hasExistingV1 && intval($devAbilityReturn[$abilityKey]['ver'] ?? 1) >= 20);
+          foreach ($keepV20 ? $fam['v20'] : $fam['v1'] as $lid) {
+            $allowedLogical[$lid] = true;
+          }
+          foreach ($keepV20 ? $fam['v1'] : $fam['v20'] as $lid) {
+            $deniedLogical[$lid] = true;
+          }
+          if ($abilityKey === 'sdCard' && !reolink::isAbilityOk($devAbilityReturn, 'sdCard', 'recPreRecord')) {
+            $preLids = $keepV20 ? array('SetPreRecordStateV20', 'SetPreRecordV20') : array('SetPreRecordState', 'SetPreRecord');
+            foreach ($preLids as $plid) {
+              $deniedLogical[$plid] = true;
+              unset($allowedLogical[$plid]);
+            }
+          }
+        } else {
+          foreach (array_merge($fam['v20'], $fam['v1']) as $lid) {
+            $deniedLogical[$lid] = true;
+          }
         }
       }
     }
@@ -5073,24 +5200,39 @@ class reolink extends eqLogic {
 
     $ispProbe = null;
     if (!$camera->isNvrParent()) {
-      $ispProbe = $cnx->SendCMD('[{"cmd":"GetIsp","action":1,"param":{"channel":' . intval($channel) . '}}]');
-      $ispValue = $ispProbe[0]['value']['Isp'] ?? array();
-      $ispRange = $ispProbe[0]['range']['Isp'] ?? array();
-      $hasHdr = is_array($ispProbe) && array_key_exists('hdr', $ispValue);
-      if (!$hasHdr) {
-        $deniedLogical['SetHdrState'] = true;
-        $deniedLogical['SetHdr'] = true;
+      if ($cnx->is_loggedin && !$probeIncomplete) {
+        $ispProbe = $cnx->SendCMD('[{"cmd":"GetIsp","action":1,"param":{"channel":' . intval($channel) . '}}]');
       }
-      $backLightSupported = reolink::isAbilityOk($devAbilityReturn, 'ispBackLight');
-      if (is_array($ispRange) && isset($ispRange['backLight']) && is_array($ispRange['backLight']) && count($ispRange['backLight']) <= 1) {
-        $backLightSupported = false;
-      }
-      if (!array_key_exists('backLight', $ispValue) && (!is_array($ispRange) || !isset($ispRange['backLight']))) {
-        $backLightSupported = false;
-      }
-      if (!$backLightSupported) {
-        $deniedLogical['SetBackLightState'] = true;
-        $deniedLogical['SetBackLight'] = true;
+      if (!$cnx->is_loggedin || (method_exists($cnx, 'hasTransportFailed') && $cnx->hasTransportFailed())) {
+        $probeIncomplete = true;
+        $pruneUnsupported = false;
+        if (!is_object($camera->getCmd(null, 'SetHdr')) && !is_object($camera->getCmd(null, 'SetHdrState'))) {
+          $deniedLogical['SetHdrState'] = true;
+          $deniedLogical['SetHdr'] = true;
+        }
+        if (!reolink::isAbilityOk($devAbilityReturn, 'ispBackLight') && !is_object($camera->getCmd(null, 'SetBackLight'))) {
+          $deniedLogical['SetBackLightState'] = true;
+          $deniedLogical['SetBackLight'] = true;
+        }
+      } else {
+        $ispValue = $ispProbe[0]['value']['Isp'] ?? array();
+        $ispRange = $ispProbe[0]['range']['Isp'] ?? array();
+        $hasHdr = is_array($ispProbe) && array_key_exists('hdr', $ispValue);
+        if (!$hasHdr) {
+          $deniedLogical['SetHdrState'] = true;
+          $deniedLogical['SetHdr'] = true;
+        }
+        $backLightSupported = reolink::isAbilityOk($devAbilityReturn, 'ispBackLight');
+        if (is_array($ispRange) && isset($ispRange['backLight']) && is_array($ispRange['backLight']) && count($ispRange['backLight']) <= 1) {
+          $backLightSupported = false;
+        }
+        if (!array_key_exists('backLight', $ispValue) && (!is_array($ispRange) || !isset($ispRange['backLight']))) {
+          $backLightSupported = false;
+        }
+        if (!$backLightSupported) {
+          $deniedLogical['SetBackLightState'] = true;
+          $deniedLogical['SetBackLight'] = true;
+        }
       }
     }
 
@@ -5334,9 +5476,11 @@ class reolink extends eqLogic {
     }
 
     if (!$camera->isNvrParent()) {
-      reolink::applyEncListValues($camera, $cnx, $channel, $pruneUnsupported);
-      reolink::applyIspRanges($camera, $ispProbe, $cnx, $channel);
-      reolink::applyZoomFocusRanges($camera, $cnx, $channel);
+      if ($cnx->is_loggedin && !$probeIncomplete) {
+        reolink::applyEncListValues($camera, $cnx, $channel, $pruneUnsupported);
+        reolink::applyIspRanges($camera, $ispProbe, $cnx, $channel);
+        reolink::applyZoomFocusRanges($camera, $cnx, $channel);
+      }
       reolink::applyPtzDirectionListValues($camera, $devAbilityReturn);
       $speedInfo = $camera->getCmd(null, 'SetSpeedState');
       if (is_object($speedInfo) && strval($speedInfo->execCmd()) === '') {
@@ -5347,20 +5491,22 @@ class reolink extends eqLogic {
         }
         $camera->checkAndUpdateCmd('SetSpeedState', $initSpeed);
       }
-      if (is_object($camera->getCmd(null, 'StartPtzPatrol'))) {
+      if ($cnx->is_loggedin && !$probeIncomplete && is_object($camera->getCmd(null, 'StartPtzPatrol'))) {
         $patrolRefresh = $cnx->SendCMD('[{"cmd":"GetPtzPatrol","action":0,"param":{"channel":' . intval($channel) . '}}]');
         if (is_array($patrolRefresh) && isset($patrolRefresh[0])) {
           reolink::applyPtzPatrolState($camera, $patrolRefresh[0]);
         }
       }
-      if (is_object($camera->getCmd(null, 'QuickReplyPlay'))) {
-        reolink::updateQuickReplies($id);
+      if ($cnx->is_loggedin && !$probeIncomplete) {
+        if (is_object($camera->getCmd(null, 'QuickReplyPlay'))) {
+          reolink::updateQuickReplies($id);
+        }
+        if (is_object($camera->getCmd(null, 'SetDoorbellLed'))) {
+          reolink::applyDoorbellLedRange($camera, $cnx, $channel);
+        }
+        reolink::refreshDoorbellAndChimeState($camera);
       }
-      if (is_object($camera->getCmd(null, 'SetDoorbellLed'))) {
-        reolink::applyDoorbellLedRange($camera, $cnx, $channel);
-      }
-      reolink::refreshDoorbellAndChimeState($camera);
-    } else {
+    } elseif ($cnx->is_loggedin && !$probeIncomplete) {
       if (is_object($camera->getCmd(null, 'SetScene'))) {
         reolink::updateScenes($id);
       }
@@ -5372,9 +5518,27 @@ class reolink extends eqLogic {
       self::ensureGithubFirmwareCommands($camera);
     }
 
-    $camera->setConfiguration('unsupported_payloads', array_keys(array_merge($unsupportedPayloads, $keptUnsupported)));
-    $camera->setConfiguration('unsupported_fail_counts', array());
-    $camera->setConfiguration('needs_cmd_resync', 0);
+    if ($probeIncomplete) {
+      $prevUnsup = $camera->getConfiguration('unsupported_payloads', array());
+      if (!is_array($prevUnsup)) {
+        $prevUnsup = array();
+      }
+      $mergedUnsup = array_values(array_unique(array_merge($prevUnsup, array_keys(array_merge($unsupportedPayloads, $keptUnsupported)))));
+      $camera->setConfiguration('unsupported_payloads', $mergedUnsup);
+      $retries = intval($camera->getConfiguration('resync_retry_count', 0));
+      if ($retries < 1) {
+        $camera->setConfiguration('needs_cmd_resync', 1);
+        $camera->setConfiguration('resync_retry_count', $retries + 1);
+      } else {
+        $camera->setConfiguration('needs_cmd_resync', 0);
+        $camera->setConfiguration('resync_retry_count', 0);
+      }
+    } else {
+      $camera->setConfiguration('unsupported_payloads', array_keys(array_merge($unsupportedPayloads, $keptUnsupported)));
+      $camera->setConfiguration('unsupported_fail_counts', array());
+      $camera->setConfiguration('needs_cmd_resync', 0);
+      $camera->setConfiguration('resync_retry_count', 0);
+    }
     $camera->save();
     return $cmd_order;
   }
@@ -5728,6 +5892,8 @@ class reolinkCmd extends cmd {
     $eqLogic = $this->getEqLogic();
     $channel = is_object($eqLogic) ? $eqLogic->getChannel() : 0;
 
+    $prevActionCtx = reolink::setActionContext(true);
+    try {
     switch ($this->getLogicalId()) {
       case 'refresh':
         if (is_object($eqLogic)) {
@@ -6154,6 +6320,9 @@ class reolinkCmd extends cmd {
         } finally {
           reolink::endZoomFocusCoalesce($zfCtx);
         }
+    }
+    } finally {
+      reolink::setActionContext($prevActionCtx);
     }
   }
 

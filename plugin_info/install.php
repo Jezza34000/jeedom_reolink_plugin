@@ -59,6 +59,7 @@ require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
       try {
         $eqLogic->migrateLegacyPayloads();
         $eqLogic->setConfiguration('needs_cmd_resync', 1);
+        $eqLogic->setConfiguration('resync_retry_count', 0);
         $eqLogic->save();
         if (intval($eqLogic->getIsEnable()) !== 1) {
           continue;
