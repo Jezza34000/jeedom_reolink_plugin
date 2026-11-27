@@ -1,5 +1,9 @@
 # Change log
 
+27/11/2026
+
+- Fiabilité des commandes d'action en scénario (`SetAutoFocus`, PTZ, rondes, sirène…) & resynchronisation des caméras plus anciennes (#152142) : autorisation pour les commandes d'action explicites (`reolinkCmd::execute()`) de tenter la connexion malgré une mise en pause passive du disjoncteur issue d'un rafraîchissement précédent (`>= 10 s`), tout en maintenant le blocage immédiat (`< 1 ms`) en cas d'échec récent (`< 10 s`) sous verrou `flock` afin d'éviter tout engorgement Apache/PHP lors de rafales parallèles sur un équipement réellement éteint ; limitation de la taille des lots de découverte unique (`probePayloads`) à `4` commandes hors batterie, arrêt propre de la découverte en cas de coupure réseau sans déclencher la cascade d'erreurs `Envoi de la commande impossible non loggué sur la caméra` ni supprimer de commandes existantes (`Push`/`Email`/`FTP`/`Record`/`Hdr`/`BackLight`) et plafonnement à 1 relance différée automatique ; remontée du motif technique exact et anonymisé (`HTTP 0 timeout`, `HTTP 502`, `rspCode -5`, motif du disjoncteur) directement dans l'exception `Caméra injoignable ou connexion impossible (...)` pour les journaux en niveau `Defaut`, et encodage `json_encode` des identifiants `Login` supportant les caractères spéciaux dans les mots de passe
+
 26/11/2026
 
 - Compatibilité Apache `AllowOverride All` (`core/php/.htaccess`) : autorisation explicite des points d'entrée authentifiés `jeeReolink.php` (callback démon par clé API), `snap.php` et `stream.php` (tout en maintenant `Deny from all` sur `reolink.inc.php`) afin d'éviter toute erreur `HTTP 403 Forbidden` (`AH01797: client denied by server configuration`) sur les installations Jeedom 4.5 / 4.6 standard
