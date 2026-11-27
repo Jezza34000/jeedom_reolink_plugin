@@ -4,6 +4,10 @@
 >
 >Pour rappel s'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 27/11/2026
+
+- Fiabilité des actions de scénario (`SetAutoFocus`, PTZ…) & découverte sur caméras anciennes (#152142) : les commandes d'action ne sont plus bloquées à tort par une mise en pause issue d'un cron précédent (`>= 10 s`, tout en restant protégées contre les rafales sur caméra éteinte), la découverte des commandes découpe les lots par `4` hors batterie et s'interrompt proprement sur coupure réseau sans erreurs `non loggué` en cascade ni suppression de commandes existantes, l'erreur `Caméra injoignable ou connexion impossible` indique désormais la cause précise même en log `Defaut`, et l'authentification `Login` supporte tous les caractères spéciaux dans les mots de passe
+
 # 26/11/2026
 
 - Compatibilité Apache `AllowOverride All` (`core/php/.htaccess`) : autorisation des points d'entrée authentifiés du plugin (`jeeReolink.php`, `snap.php`, `stream.php`) pour éviter les refus `HTTP 403` sur les installations Jeedom 4.5 / 4.6 par défaut tout en conservant le blocage des fichiers d'inclusion internes
